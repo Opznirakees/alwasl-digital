@@ -9,8 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { sampleOrders, games } from '@/data/mock-data';
-import type { OrderStatus } from '@/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { games } from '@/data/mock-data';
+import type { Order, OrderStatus } from '@/types';
 import {
   ArrowLeft,
   Package,
@@ -24,12 +30,13 @@ import {
 import { toast } from 'sonner';
 
 export default function OrdersPage() {
-  const { t, language, dir, selectedCountry } = useApp();
+  const { t, language, dir, selectedCountry, orders, addToCart } = useApp();
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const filteredOrders = filter === 'all'
-    ? sampleOrders
-    : sampleOrders.filter(order => order.status === filter);
+    ? orders
+    : orders.filter(order => order.status === filter);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(amount);
@@ -92,6 +99,18 @@ export default function OrdersPage() {
   const copyOrderId = (orderId: string) => {
     navigator.clipboard.writeText(orderId);
     toast.success(t('Order ID copied!', 'تم نسخ رقم الطلب!'));
+  };
+
+  const reorder = (order: Order) => {
+    addToCart({
+      gameId: order.gameId,
+      packageId: order.packageId,
+      gameUserId: order.gameUserId,
+      gameUsername: order.gameUsername,
+      zoneId: order.zoneId,
+      quantity: order.quantity,
+    });
+    toast.success(t('Added to cart for reorder', 'تمت الإضافة للسلة لإعادة الطلب'));
   };
 
   return (
@@ -206,12 +225,12 @@ export default function OrdersPage() {
                   {/* Actions */}
                   <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-emerald-800/20">
                     {order.status === 'completed' && (
-                      <Button variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
+                      <Button onClick={() => reorder(order)} variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
                         <RefreshCw className="w-4 h-4 mr-2" />
                         {t('Reorder', 'إعادة الطلب')}
                       </Button>
                     )}
-                    <Button variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
+                    <Button onClick={() => setSelectedOrder(order)} variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
                       <ExternalLink className="w-4 h-4 mr-2" />
                       {t('View Details', 'عرض التفاصيل')}
                     </Button>
@@ -237,6 +256,59 @@ export default function OrdersPage() {
           </div>
         )}
       </main>
+
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
+        <DialogContent className="bg-slate-900 border-emerald-800/30 text-white">
+          {selectedOrder && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{t('Order details', 'تفاصيل الطلب')}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between rounded-xl bg-slate-800/50 p-4">
+                  <div>
+                    <p className="font-mono text-sm text-white/70">{selectedOrder.id}</p>
+                    <h3 className="font-bold mt-1">{selectedOrder.gameName}</h3>
+                    <p className="text-sm text-emerald-400">{selectedOrder.packageName}</p>
+                  </div>
+                  <Badge variant="outline" className={getStatusColor(selectedOrder.status)}>
+                    {getStatusIcon(selectedOrder.status)}
+                    <span className="ml-1">{getStatusLabel(selectedOrder.status)}</span>
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="rounded-xl bg-slate-800/40 p-3">
+                    <p className="text-white/50">{t('Game ID', 'معرف اللعبة')}</p>
+                    <p className="font-semibold mt-1">{selectedOrder.gameUserId || '-'}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-800/40 p-3">
+                    <p className="text-white/50">{t('Username', 'اسم المستخدم')}</p>
+                    <p className="font-semibold mt-1">{selectedOrder.gameUsername || '-'}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-800/40 p-3">
+                    <p className="text-white/50">{t('Payment', 'الدفع')}</p>
+                    <p className="font-semibold mt-1">{selectedOrder.paymentMethod}</p>
+                  </div>
+                  <div className="rounded-xl bg-slate-800/40 p-3">
+                    <p className="text-white/50">{t('Total', 'الإجمالي')}</p>
+                    <p className="font-semibold text-emerald-400 mt-1">
+                      {formatCurrency(selectedOrder.finalPrice)} {selectedCountry.currencySymbol}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedOrder.providerOrderId && (
+                  <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4">
+                    <p className="text-xs text-emerald-400/70">{t('Provider reference', 'مرجع المزود')}</p>
+                    <p className="font-mono text-sm text-emerald-300 mt-1">{selectedOrder.providerOrderId}</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

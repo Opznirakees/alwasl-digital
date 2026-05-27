@@ -219,30 +219,34 @@ export function Header() {
                 </Link>
 
                 {/* Notifications */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`relative ${isLight ? 'text-slate-600 hover:bg-purple-100' : 'text-white hover:bg-purple-500/10'}`}
-                >
-                  <Bell className="h-4 w-4" />
-                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-pink-500 text-white text-[10px] font-bold flex items-center justify-center">
-                    2
-                  </span>
-                </Button>
+                <Link href="/orders">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`relative ${isLight ? 'text-slate-600 hover:bg-purple-100' : 'text-white hover:bg-purple-500/10'}`}
+                  >
+                    <Bell className="h-4 w-4" />
+                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-pink-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      2
+                    </span>
+                  </Button>
+                </Link>
 
                 {/* Cart */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`relative ${isLight ? 'text-slate-600 hover:bg-purple-100' : 'text-white hover:bg-purple-500/10'}`}
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  {cartTotal > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-purple-500 text-white text-[10px] font-bold flex items-center justify-center">
-                      {cartTotal}
-                    </span>
-                  )}
-                </Button>
+                <Link href="/cart">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`relative ${isLight ? 'text-slate-600 hover:bg-purple-100' : 'text-white hover:bg-purple-500/10'}`}
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    {cartTotal > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-purple-500 text-white text-[10px] font-bold flex items-center justify-center">
+                        {cartTotal}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
 
                 {/* User Menu */}
                 <DropdownMenu>

@@ -293,11 +293,15 @@ export default function HomePage() {
               © 2026 {t('Al-Wasl Digital', 'الوصل الرقمي')}. {t('All rights reserved.', 'جميع الحقوق محفوظة.')}
             </p>
             <div className="flex items-center gap-4">
-              {['Facebook', 'Twitter', 'Instagram', 'WhatsApp'].map((social) => (
-                <Link key={social} href="#" className={`transition-colors text-xs ${isLight ? 'text-slate-400 hover:text-purple-600' : 'text-white/30 hover:text-purple-400'}`}>
-                  {social}
-                </Link>
-              ))}
+              <Link href="/demo" className={`transition-colors text-xs ${isLight ? 'text-slate-400 hover:text-purple-600' : 'text-white/30 hover:text-purple-400'}`}>
+                Demo
+              </Link>
+              <Link href="/contact" className={`transition-colors text-xs ${isLight ? 'text-slate-400 hover:text-purple-600' : 'text-white/30 hover:text-purple-400'}`}>
+                Contact
+              </Link>
+              <a href="https://wa.me/9647812345678" target="_blank" rel="noopener noreferrer" className={`transition-colors text-xs ${isLight ? 'text-slate-400 hover:text-purple-600' : 'text-white/30 hover:text-purple-400'}`}>
+                WhatsApp
+              </a>
             </div>
           </div>
         </div>

@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { demoUser, walletTransactions, levelLabels, levelDiscounts } from '@/data/mock-data';
+import { demoUser, levelLabels, levelDiscounts } from '@/data/mock-data';
 import type { WalletTransactionType } from '@/types';
 import {
   ArrowLeft,
@@ -37,7 +37,7 @@ import {
 import { toast } from 'sonner';
 
 export default function WalletPage() {
-  const { t, language, dir, user, selectedCountry } = useApp();
+  const { t, language, dir, user, selectedCountry, walletTransactions } = useApp();
   const [topUpAmount, setTopUpAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('zaincash');
   const [isLoading, setIsLoading] = useState(false);

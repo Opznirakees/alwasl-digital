@@ -21,10 +21,10 @@ import {
 import {
   dashboardStats,
   revenueData,
-  sampleOrders,
   providers,
   games,
   promotions,
+  demoUser,
 } from '@/data/mock-data';
 import {
   LayoutDashboard,
@@ -58,7 +58,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { t, language, dir } = useApp();
+  const { t, language, dir, orders, walletTransactions } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -312,7 +312,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sampleOrders.map((order) => (
+                    {orders.slice(0, 5).map((order) => (
                       <TableRow key={order.id} className="border-emerald-800/20">
                         <TableCell className="font-mono text-sm text-white">{order.id}</TableCell>
                         <TableCell className="text-white">{order.gameName}</TableCell>
@@ -365,7 +365,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sampleOrders.map((order) => (
+                    {orders.map((order) => (
                       <TableRow key={order.id} className="border-emerald-800/20">
                         <TableCell className="font-mono text-sm text-white">{order.id}</TableCell>
                         <TableCell className="text-white">{order.gameName}</TableCell>
@@ -541,7 +541,158 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab !== 'overview' && activeTab !== 'orders' && activeTab !== 'products' && activeTab !== 'providers' && activeTab !== 'promotions' && (
+          {activeTab === 'users' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">{t('Users', 'المستخدمين')}</h2>
+                <Badge variant="outline" className="border-emerald-500/30 text-emerald-400">
+                  {t('Demo CRM', 'إدارة عملاء تجريبية')}
+                </Badge>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-4">
+                {[
+                  { label: t('Active users', 'المستخدمين النشطين'), value: formatCurrency(dashboardStats.activeUsers) },
+                  { label: t('Gold members', 'أعضاء ذهبيون'), value: '1,248' },
+                  { label: t('Avg order value', 'متوسط الطلب'), value: `${formatCurrency(dashboardStats.avgOrderValue)} IQD` },
+                ].map((item) => (
+                  <Card key={item.label} className="bg-slate-900/50 border-emerald-800/20 p-5">
+                    <p className="text-xs text-white/50">{item.label}</p>
+                    <p className="text-2xl font-bold text-white mt-1">{item.value}</p>
+                  </Card>
+                ))}
+              </div>
+
+              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-emerald-800/20">
+                      <TableHead className="text-white/50">{t('Customer', 'العميل')}</TableHead>
+                      <TableHead className="text-white/50">{t('Phone', 'الهاتف')}</TableHead>
+                      <TableHead className="text-white/50">{t('Level', 'المستوى')}</TableHead>
+                      <TableHead className="text-white/50">{t('Wallet', 'المحفظة')}</TableHead>
+                      <TableHead className="text-white/50">{t('Status', 'الحالة')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {[demoUser].map((userItem) => (
+                      <TableRow key={userItem.id} className="border-emerald-800/20">
+                        <TableCell className="text-white font-medium">{userItem.name}</TableCell>
+                        <TableCell className="text-white/70">{userItem.phone}</TableCell>
+                        <TableCell className="text-amber-400">{userItem.level}</TableCell>
+                        <TableCell className="text-emerald-400">{formatCurrency(userItem.walletBalance)} IQD</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={getStatusColor('completed')}>
+                            {t('Verified', 'موثق')}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'wallets' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">{t('Wallets', 'المحافظ')}</h2>
+                <Button className="bg-gradient-to-r from-emerald-500 to-teal-600">
+                  <Wallet className="w-4 h-4 mr-2" />
+                  {t('Manual Adjustment', 'تعديل يدوي')}
+                </Button>
+              </div>
+
+              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-emerald-800/20">
+                      <TableHead className="text-white/50">{t('Reference', 'المرجع')}</TableHead>
+                      <TableHead className="text-white/50">{t('Type', 'النوع')}</TableHead>
+                      <TableHead className="text-white/50">{t('Description', 'الوصف')}</TableHead>
+                      <TableHead className="text-white/50">{t('Amount', 'المبلغ')}</TableHead>
+                      <TableHead className="text-white/50">{t('Date', 'التاريخ')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {walletTransactions.map((tx) => (
+                      <TableRow key={tx.id} className="border-emerald-800/20">
+                        <TableCell className="font-mono text-sm text-white">{tx.reference || tx.id}</TableCell>
+                        <TableCell className="text-white/70">{tx.type}</TableCell>
+                        <TableCell className="text-white">{language === 'ar' ? tx.descriptionAr : tx.description}</TableCell>
+                        <TableCell className={tx.amount > 0 ? 'text-emerald-400 font-medium' : 'text-rose-400 font-medium'}>
+                          {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)} IQD
+                        </TableCell>
+                        <TableCell className="text-white/50 text-sm">{formatDate(tx.createdAt)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'reports' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-white">{t('Reports', 'التقارير')}</h2>
+                <Button variant="outline" className="border-emerald-500/30 text-emerald-400">
+                  <Download className="w-4 h-4 mr-2" />
+                  {t('Export Demo Report', 'تصدير تقرير تجريبي')}
+                </Button>
+              </div>
+
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: t('Conversion rate', 'معدل التحويل'), value: `${dashboardStats.conversionRate}%`, icon: Activity },
+                  { label: t('Refund rate', 'معدل الاسترداد'), value: `${dashboardStats.refundRate}%`, icon: RefreshCw },
+                  { label: t('Completed orders', 'طلبات مكتملة'), value: formatCurrency(dashboardStats.completedOrders), icon: CheckCircle2 },
+                  { label: t('Failed orders', 'طلبات فاشلة'), value: formatCurrency(dashboardStats.failedOrders), icon: XCircle },
+                ].map((item) => (
+                  <Card key={item.label} className="bg-slate-900/50 border-emerald-800/20 p-5">
+                    <item.icon className="w-5 h-5 text-emerald-400" />
+                    <p className="text-xs text-white/50 mt-4">{item.label}</p>
+                    <p className="text-2xl font-bold text-white mt-1">{item.value}</p>
+                  </Card>
+                ))}
+              </div>
+
+              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+                <h3 className="text-lg font-bold text-white mb-4">{t('Revenue by day', 'الإيرادات حسب اليوم')}</h3>
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {revenueData.map((item) => (
+                    <div key={item.date} className="rounded-xl bg-slate-800/40 p-4">
+                      <p className="text-xs text-white/50">{formatDate(item.date)}</p>
+                      <p className="font-bold text-emerald-400 mt-1">{formatCurrency(item.revenue)} IQD</p>
+                      <p className="text-xs text-white/50 mt-1">{item.orders} {t('orders', 'طلب')}</p>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-white">{t('Settings', 'الإعدادات')}</h2>
+              <div className="grid md:grid-cols-2 gap-4">
+                {[
+                  { title: t('Payment routing', 'توجيه الدفع'), body: t('Wallet, ZainCash, AsiaHawala, cards, and USDT are prepared as demo channels.', 'المحفظة وزين كاش وآسيا حوالة والبطاقات وUSDT جاهزة كقنوات تجريبية.') },
+                  { title: t('Provider fallback', 'تحويل المزودين'), body: t('Providers can be prioritized and monitored before real API keys are connected.', 'يمكن ترتيب المزودين ومراقبتهم قبل ربط مفاتيح API الحقيقية.') },
+                  { title: t('Promotions', 'العروض'), body: t('Coupon rules include percentage, fixed amount, usage limits, and eligible levels.', 'قواعد الكوبونات تشمل النسبة والمبلغ الثابت وحدود الاستخدام والمستويات المؤهلة.') },
+                  { title: t('Localization', 'اللغات'), body: t('Arabic, English, RTL, multi-country pricing, and local currencies are in place.', 'العربية والإنجليزية وRTL وتسعير متعدد الدول والعملات المحلية جاهزة.') },
+                ].map((item) => (
+                  <Card key={item.title} className="bg-slate-900/50 border-emerald-800/20 p-6">
+                    <h3 className="font-bold text-white">{item.title}</h3>
+                    <p className="text-sm text-white/60 leading-6 mt-2">{item.body}</p>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab !== 'overview' && activeTab !== 'orders' && activeTab !== 'products' && activeTab !== 'providers' && activeTab !== 'promotions' && activeTab !== 'users' && activeTab !== 'wallets' && activeTab !== 'reports' && activeTab !== 'settings' && (
             <div className="flex flex-col items-center justify-center h-96">
               <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
                 <Activity className="w-10 h-10 text-white/20" />

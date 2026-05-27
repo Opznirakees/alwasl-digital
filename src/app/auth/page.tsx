@@ -92,6 +92,20 @@ export default function AuthPage() {
     }
   };
 
+  const handleDemoLogin = async () => {
+    setIsLoading(true);
+    try {
+      await login('+9647812345678');
+      const success = await verifyOtp('123456');
+      if (success) {
+        toast.success(t('Demo account loaded!', 'تم تحميل الحساب التجريبي!'));
+        router.push('/');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       {/* Background Pattern */}
@@ -181,6 +195,16 @@ export default function AuthPage() {
                       <ChevronRight className="w-4 h-4 ml-2" />
                     </>
                   )}
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={handleDemoLogin}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="w-full border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                >
+                  {t('Use Demo Account', 'استخدام الحساب التجريبي')}
                 </Button>
               </form>
             </>

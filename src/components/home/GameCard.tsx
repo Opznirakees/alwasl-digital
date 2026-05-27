@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import type { Game } from '@/types';
 import { categoryLabels } from '@/data/mock-data';
 import { Sparkles, TrendingUp, ShoppingCart, Heart } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface GameCardProps {
   game: Game;
@@ -96,11 +97,17 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
           </div>
 
           {/* Favorite Button */}
-          <button className={`absolute top-3 right-3 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all ${
+          <button
+            onClick={(event) => {
+              event.preventDefault();
+              toast.success(t('Saved to demo favorites', 'تم الحفظ في المفضلة التجريبية'));
+            }}
+            className={`absolute top-3 right-3 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all ${
             isLight
               ? 'bg-white/70 text-slate-500 hover:text-pink-500 hover:bg-white'
               : 'bg-black/30 text-white/70 hover:text-pink-400 hover:bg-black/50'
-          }`}>
+          }`}
+          >
             <Heart className="w-4 h-4" />
           </button>
 

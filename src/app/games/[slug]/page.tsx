@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { games, levelDiscounts } from '@/data/mock-data';
-import type { GamePackage } from '@/types';
+import type { GamePackage, PaymentMethod } from '@/types';
 import {
   ArrowLeft,
   Check,
@@ -34,7 +34,7 @@ interface GamePageProps {
 export default function GamePage({ params }: GamePageProps) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const { t, language, dir, user, isAuthenticated, selectedCountry } = useApp();
+  const { t, language, dir, user, isAuthenticated, selectedCountry, addToCart, createDemoOrder } = useApp();
 
   const [step, setStep] = useState<'package' | 'details' | 'payment' | 'confirm'>('package');
   const [selectedPackage, setSelectedPackage] = useState<GamePackage | null>(null);
@@ -42,7 +42,7 @@ export default function GamePage({ params }: GamePageProps) {
   const [zoneId, setZoneId] = useState('');
   const [verifiedUsername, setVerifiedUsername] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<string>('wallet');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('wallet');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const game = games.find(g => g.slug === resolvedParams.slug);
@@ -69,6 +69,10 @@ export default function GamePage({ params }: GamePageProps) {
     return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(Math.round(price));
   };
 
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(value);
+  };
+
   const handleVerifyUserId = async () => {
     if (!userId) {
       toast.error(t('Please enter your User ID', 'الرجاء إدخال معرف المستخدم'));
@@ -89,6 +93,10 @@ export default function GamePage({ params }: GamePageProps) {
   };
 
   const handleProceedToPayment = () => {
+    if (game.zoneIdRequired && !zoneId) {
+      toast.error(t('Please enter the server or zone ID', 'الرجاء إدخال معرف السيرفر'));
+      return;
+    }
     if (!verifiedUsername && game.requiresUserId) {
       toast.error(t('Please verify your account first', 'الرجاء التحقق من حسابك أولاً'));
       return;
@@ -103,13 +111,59 @@ export default function GamePage({ params }: GamePageProps) {
       return;
     }
 
+    if (!selectedPackage) {
+      toast.error(t('Please select a package', 'الرجاء اختيار باقة'));
+      return;
+    }
+
     setIsProcessing(true);
     // Simulate order processing
     await new Promise(resolve => setTimeout(resolve, 2000));
 
+    const basePrice = selectedPackage.salePrice || selectedPackage.basePrice;
+    const discountAmount = (basePrice * discount) / 100;
+    const order = createDemoOrder({
+      gameId: game.id,
+      gameName: language === 'ar' ? game.nameAr : game.name,
+      packageId: selectedPackage.id,
+      packageName: language === 'ar' ? selectedPackage.nameAr : selectedPackage.name,
+      gameUserId: game.requiresUserId ? userId : user?.email || 'demo-customer@example.com',
+      gameUsername: verifiedUsername || undefined,
+      zoneId: zoneId || undefined,
+      quantity: 1,
+      unitPrice: basePrice,
+      totalPrice: basePrice,
+      discount: discountAmount,
+      finalPrice: calculateFinalPrice(selectedPackage),
+      currency: selectedPackage.currency,
+      paymentMethod,
+    });
+
     setIsProcessing(false);
-    toast.success(t('Order placed successfully!', 'تم تأكيد الطلب بنجاح!'));
+    toast.success(t(`Order ${order.id} placed successfully!`, `تم تأكيد الطلب ${order.id} بنجاح!`));
     router.push('/orders');
+  };
+
+  const fillDemoDetails = () => {
+    if (game.zoneIdRequired) {
+      setZoneId(game.id === 'genshin' ? 'os_asia' : '5234');
+    }
+    setUserId(game.id === 'roblox' ? 'DemoPlayer2026' : game.id === 'genshin' ? '800123456' : '123456789');
+    setVerifiedUsername(game.id === 'roblox' ? 'DemoPlayer2026' : game.id === 'genshin' ? 'TravelerX' : 'ProGamer2026');
+    toast.success(t('Demo account details filled', 'تمت تعبئة بيانات الحساب التجريبية'));
+  };
+
+  const addSelectedPackageToCart = () => {
+    if (!selectedPackage) return;
+    addToCart({
+      gameId: game.id,
+      packageId: selectedPackage.id,
+      gameUserId: userId,
+      gameUsername: verifiedUsername || undefined,
+      zoneId: zoneId || undefined,
+      quantity: 1,
+    });
+    toast.success(t('Added to cart', 'تمت الإضافة إلى السلة'));
   };
 
   const paymentMethods = [
@@ -129,6 +183,7 @@ export default function GamePage({ params }: GamePageProps) {
           src={game.banner || game.image}
           alt={language === 'ar' ? game.nameAr : game.name}
           fill
+          priority
           className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
@@ -217,7 +272,7 @@ export default function GamePage({ params }: GamePageProps) {
                         </Badge>
                       )}
                       <div className="text-2xl font-bold text-white mb-1">
-                        {pkg.amount.toLocaleString()}
+                        {formatNumber(pkg.amount)}
                       </div>
                       <div className="text-sm text-emerald-400">
                         {language === 'ar' ? pkg.unitAr : pkg.unit}
@@ -245,14 +300,24 @@ export default function GamePage({ params }: GamePageProps) {
                   ))}
                 </div>
 
-                <Button
-                  onClick={() => setStep('details')}
-                  disabled={!selectedPackage}
-                  className="w-full mt-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-                >
-                  {t('Continue', 'متابعة')}
-                  <ChevronRight className="w-4 h-4 ml-2" />
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                  <Button
+                    onClick={addSelectedPackageToCart}
+                    disabled={!selectedPackage}
+                    variant="outline"
+                    className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
+                  >
+                    {t('Add to Cart', 'أضف للسلة')}
+                  </Button>
+                  <Button
+                    onClick={() => setStep('details')}
+                    disabled={!selectedPackage}
+                    className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                  >
+                    {t('Continue', 'متابعة')}
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -265,9 +330,9 @@ export default function GamePage({ params }: GamePageProps) {
                 {game.requiresUserId && (
                   <div className="space-y-4">
                     <div>
-                      <Label className="text-white/70">
-                        {language === 'ar' ? game.userIdLabelAr : game.userIdLabel}
-                      </Label>
+                        <Label className="text-white/70">
+                          {language === 'ar' ? game.userIdLabelAr : game.userIdLabel}
+                        </Label>
                       <div className="flex gap-2 mt-2">
                         <Input
                           value={userId}
@@ -288,6 +353,15 @@ export default function GamePage({ params }: GamePageProps) {
                         </Button>
                       </div>
                     </div>
+
+                    <Button
+                      type="button"
+                      onClick={fillDemoDetails}
+                      variant="outline"
+                      className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+                    >
+                      {t('Fill demo details', 'تعبئة بيانات تجريبية')}
+                    </Button>
 
                     {game.zoneIdRequired && (
                       <div>
@@ -354,7 +428,7 @@ export default function GamePage({ params }: GamePageProps) {
                   {t('Select Payment Method', 'اختر طريقة الدفع')}
                 </h2>
 
-                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PaymentMethod)} className="space-y-3">
                   {paymentMethods.map((method) => (
                     <label
                       key={method.id}
@@ -416,7 +490,7 @@ export default function GamePage({ params }: GamePageProps) {
                         {language === 'ar' ? game.nameAr : game.name}
                       </h3>
                       <p className="text-sm text-emerald-400">
-                        {selectedPackage.amount.toLocaleString()} {language === 'ar' ? selectedPackage.unitAr : selectedPackage.unit}
+                        {formatNumber(selectedPackage.amount)} {language === 'ar' ? selectedPackage.unitAr : selectedPackage.unit}
                       </p>
                     </div>
                   </div>
@@ -482,7 +556,7 @@ export default function GamePage({ params }: GamePageProps) {
                         {language === 'ar' ? game.nameAr : game.name}
                       </p>
                       <p className="text-xs text-emerald-400">
-                        {selectedPackage.amount.toLocaleString()} {language === 'ar' ? selectedPackage.unitAr : selectedPackage.unit}
+                        {formatNumber(selectedPackage.amount)} {language === 'ar' ? selectedPackage.unitAr : selectedPackage.unit}
                       </p>
                     </div>
                   </div>
