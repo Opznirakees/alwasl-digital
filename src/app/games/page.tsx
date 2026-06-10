@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 
 export default function GamesPage() {
-  const { t, language, dir, selectedCountry } = useApp();
+  const { t, dir, selectedCountry } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<GameCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popular');
@@ -43,7 +43,7 @@ export default function GamesPage() {
       result = result.sort((a, b) => (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0));
     } else if (sortBy === 'name') {
       result = result.sort((a, b) =>
-        (language === 'ar' ? a.nameAr : a.name).localeCompare(language === 'ar' ? b.nameAr : b.name)
+        t(a.name, a.nameAr).localeCompare(t(b.name, b.nameAr))
       );
     } else if (sortBy === 'price-low') {
       result = result.sort((a, b) => {
@@ -60,7 +60,7 @@ export default function GamesPage() {
     }
 
     return result;
-  }, [selectedCountry.id, selectedCategory, searchQuery, sortBy, language]);
+  }, [selectedCountry.id, selectedCategory, searchQuery, sortBy, t]);
 
   return (
     <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
@@ -73,9 +73,9 @@ export default function GamesPage() {
             <ArrowLeft className="w-4 h-4" />
             {t('Back to Home', 'العودة للرئيسية')}
           </Link>
-          <h1 className="text-3xl font-bold text-white">{t('All Games & Services', 'جميع الألعاب والخدمات')}</h1>
+          <h1 className="text-3xl font-bold text-white">{t('WAHO Services', 'خدمات WAHO')}</h1>
           <p className="text-sm text-white/50 mt-1">
-            {t('Browse our complete collection of games, gift cards, and digital services', 'تصفح مجموعتنا الكاملة من الألعاب وبطاقات الهدايا والخدمات الرقمية')}
+            {t('Browse WAHO coins, gift bundles, live room boosts, party game packs, and VIP upgrades', 'تصفح عملات WAHO وباقات الهدايا وتعزيز الغرف وباقات الألعاب وترقيات العضوية')}
           </p>
         </div>
 
@@ -112,7 +112,7 @@ export default function GamesPage() {
           </p>
         </div>
 
-        {/* Games Grid */}
+        {/* WAHO Services Grid */}
         {filteredGames.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
             {filteredGames.map((game) => (
@@ -124,7 +124,7 @@ export default function GamesPage() {
             <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
               <Filter className="w-10 h-10 text-white/20" />
             </div>
-            <h3 className="text-lg font-semibold text-white">{t('No games found', 'لم يتم العثور على ألعاب')}</h3>
+            <h3 className="text-lg font-semibold text-white">{t('No WAHO services found', 'لم يتم العثور على خدمات WAHO')}</h3>
             <p className="text-sm text-white/50 mt-1">{t('Try adjusting your search or filters', 'جرب تعديل البحث أو الفلاتر')}</p>
             <Button
               onClick={() => {

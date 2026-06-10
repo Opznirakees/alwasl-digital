@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { games, levelDiscounts } from '@/data/mock-data';
-import type { GamePackage, PaymentMethod } from '@/types';
+import type { GamePackage } from '@/types';
 import {
   ArrowLeft,
   Check,
@@ -34,7 +34,7 @@ interface GamePageProps {
 export default function GamePage({ params }: GamePageProps) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const { t, language, dir, user, isAuthenticated, selectedCountry, addToCart, createDemoOrder } = useApp();
+  const { t, language, dir, user, isAuthenticated, selectedCountry } = useApp();
 
   const [step, setStep] = useState<'package' | 'details' | 'payment' | 'confirm'>('package');
   const [selectedPackage, setSelectedPackage] = useState<GamePackage | null>(null);
@@ -42,7 +42,7 @@ export default function GamePage({ params }: GamePageProps) {
   const [zoneId, setZoneId] = useState('');
   const [verifiedUsername, setVerifiedUsername] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('wallet');
+  const [paymentMethod, setPaymentMethod] = useState<string>('wallet');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const game = games.find(g => g.slug === resolvedParams.slug);
@@ -58,6 +58,7 @@ export default function GamePage({ params }: GamePageProps) {
   }
 
   const discount = user ? levelDiscounts[user.level] : 0;
+  const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
 
   const calculateFinalPrice = (pkg: GamePackage) => {
     const basePrice = pkg.salePrice || pkg.basePrice;
@@ -66,39 +67,35 @@ export default function GamePage({ params }: GamePageProps) {
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(Math.round(price));
-  };
-
-  const formatNumber = (value: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(value);
+    return new Intl.NumberFormat(locale).format(Math.round(price));
   };
 
   const handleVerifyUserId = async () => {
     if (!userId) {
-      toast.error(t('Please enter your User ID', 'الرجاء إدخال معرف المستخدم'));
+      toast.error(t('Please enter your WAHO ID', 'الرجاء إدخال معرف WAHO'));
       return;
     }
 
     setIsVerifying(true);
-    // Simulate API verification
+    // Placeholder for the incoming WAHO account validation API.
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     // Generate a mock username
-    const mockUsernames = ['ProGamer2026', 'BattleKing', 'ShadowHunter', 'DragonSlayer', 'NightRider', 'PhoenixRising'];
+    const mockUsernames = ['AhmedLive', 'LaylaRoom', 'WahoHost', 'GiftQueen', 'VoiceStar', 'MoonParty'];
     const randomUsername = mockUsernames[Math.floor(Math.random() * mockUsernames.length)];
 
     setVerifiedUsername(randomUsername);
     setIsVerifying(false);
-    toast.success(t('Account verified!', 'تم التحقق من الحساب!'));
+    toast.success(t('WAHO account verified!', 'تم التحقق من حساب WAHO!'));
   };
 
   const handleProceedToPayment = () => {
-    if (game.zoneIdRequired && !zoneId) {
-      toast.error(t('Please enter the server or zone ID', 'الرجاء إدخال معرف السيرفر'));
+    if (!verifiedUsername && game.requiresUserId) {
+      toast.error(t('Please verify the WAHO account first', 'الرجاء التحقق من حساب WAHO أولاً'));
       return;
     }
-    if (!verifiedUsername && game.requiresUserId) {
-      toast.error(t('Please verify your account first', 'الرجاء التحقق من حسابك أولاً'));
+    if (game.zoneIdRequired && !zoneId) {
+      toast.error(t('Please enter the WAHO Room ID', 'الرجاء إدخال معرف غرفة WAHO'));
       return;
     }
     setStep('payment');
@@ -111,59 +108,13 @@ export default function GamePage({ params }: GamePageProps) {
       return;
     }
 
-    if (!selectedPackage) {
-      toast.error(t('Please select a package', 'الرجاء اختيار باقة'));
-      return;
-    }
-
     setIsProcessing(true);
     // Simulate order processing
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    const basePrice = selectedPackage.salePrice || selectedPackage.basePrice;
-    const discountAmount = (basePrice * discount) / 100;
-    const order = createDemoOrder({
-      gameId: game.id,
-      gameName: language === 'ar' ? game.nameAr : game.name,
-      packageId: selectedPackage.id,
-      packageName: language === 'ar' ? selectedPackage.nameAr : selectedPackage.name,
-      gameUserId: game.requiresUserId ? userId : user?.email || 'demo-customer@example.com',
-      gameUsername: verifiedUsername || undefined,
-      zoneId: zoneId || undefined,
-      quantity: 1,
-      unitPrice: basePrice,
-      totalPrice: basePrice,
-      discount: discountAmount,
-      finalPrice: calculateFinalPrice(selectedPackage),
-      currency: selectedPackage.currency,
-      paymentMethod,
-    });
-
     setIsProcessing(false);
-    toast.success(t(`Order ${order.id} placed successfully!`, `تم تأكيد الطلب ${order.id} بنجاح!`));
+    toast.success(t('Order placed successfully!', 'تم تأكيد الطلب بنجاح!'));
     router.push('/orders');
-  };
-
-  const fillDemoDetails = () => {
-    if (game.zoneIdRequired) {
-      setZoneId(game.id === 'genshin' ? 'os_asia' : '5234');
-    }
-    setUserId(game.id === 'roblox' ? 'DemoPlayer2026' : game.id === 'genshin' ? '800123456' : '123456789');
-    setVerifiedUsername(game.id === 'roblox' ? 'DemoPlayer2026' : game.id === 'genshin' ? 'TravelerX' : 'ProGamer2026');
-    toast.success(t('Demo account details filled', 'تمت تعبئة بيانات الحساب التجريبية'));
-  };
-
-  const addSelectedPackageToCart = () => {
-    if (!selectedPackage) return;
-    addToCart({
-      gameId: game.id,
-      packageId: selectedPackage.id,
-      gameUserId: userId,
-      gameUsername: verifiedUsername || undefined,
-      zoneId: zoneId || undefined,
-      quantity: 1,
-    });
-    toast.success(t('Added to cart', 'تمت الإضافة إلى السلة'));
   };
 
   const paymentMethods = [
@@ -181,9 +132,8 @@ export default function GamePage({ params }: GamePageProps) {
       <div className="relative h-48 md:h-64 overflow-hidden">
         <Image
           src={game.banner || game.image}
-          alt={language === 'ar' ? game.nameAr : game.name}
+          alt={t(game.name, game.nameAr)}
           fill
-          priority
           className="object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
@@ -199,9 +149,12 @@ export default function GamePage({ params }: GamePageProps) {
               </div>
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-white">
-                  {language === 'ar' ? game.nameAr : game.name}
+                  {t(game.name, game.nameAr)}
                 </h1>
                 <p className="text-sm text-white/50">{game.publisher}</p>
+                <p className="mt-1 max-w-2xl text-sm text-white/70">
+                  {t(game.description, game.descriptionAr)}
+                </p>
               </div>
             </div>
           </div>
@@ -247,7 +200,7 @@ export default function GamePage({ params }: GamePageProps) {
             {step === 'package' && (
               <div className="bg-slate-900/50 border border-emerald-800/20 rounded-2xl p-6">
                 <h2 className="text-xl font-bold text-white mb-6">
-                  {t('Select Package', 'اختر الباقة')}
+                  {t('Select WAHO Package', 'اختر باقة WAHO')}
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {game.packages.filter(pkg => pkg.inStock).map((pkg) => (
@@ -272,10 +225,10 @@ export default function GamePage({ params }: GamePageProps) {
                         </Badge>
                       )}
                       <div className="text-2xl font-bold text-white mb-1">
-                        {formatNumber(pkg.amount)}
+                        {pkg.amount.toLocaleString(locale)}
                       </div>
                       <div className="text-sm text-emerald-400">
-                        {language === 'ar' ? pkg.unitAr : pkg.unit}
+                        {t(pkg.unit, pkg.unitAr)}
                       </div>
                       <div className="mt-3 pt-3 border-t border-emerald-800/20">
                         {pkg.salePrice ? (
@@ -300,39 +253,29 @@ export default function GamePage({ params }: GamePageProps) {
                   ))}
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                  <Button
-                    onClick={addSelectedPackageToCart}
-                    disabled={!selectedPackage}
-                    variant="outline"
-                    className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
-                  >
-                    {t('Add to Cart', 'أضف للسلة')}
-                  </Button>
-                  <Button
-                    onClick={() => setStep('details')}
-                    disabled={!selectedPackage}
-                    className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-                  >
-                    {t('Continue', 'متابعة')}
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => setStep('details')}
+                  disabled={!selectedPackage}
+                  className="w-full mt-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                >
+                  {t('Continue', 'متابعة')}
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
               </div>
             )}
 
             {step === 'details' && (
               <div className="bg-slate-900/50 border border-emerald-800/20 rounded-2xl p-6">
                 <h2 className="text-xl font-bold text-white mb-6">
-                  {t('Enter Account Details', 'أدخل بيانات الحساب')}
+                  {t('Enter WAHO Account Details', 'أدخل بيانات حساب WAHO')}
                 </h2>
 
                 {game.requiresUserId && (
                   <div className="space-y-4">
                     <div>
-                        <Label className="text-white/70">
-                          {language === 'ar' ? game.userIdLabelAr : game.userIdLabel}
-                        </Label>
+                      <Label className="text-white/70">
+                        {t(game.userIdLabel, game.userIdLabelAr)}
+                      </Label>
                       <div className="flex gap-2 mt-2">
                         <Input
                           value={userId}
@@ -340,7 +283,7 @@ export default function GamePage({ params }: GamePageProps) {
                             setUserId(e.target.value);
                             setVerifiedUsername(null);
                           }}
-                          placeholder={language === 'ar' ? game.userIdPlaceholderAr : game.userIdPlaceholder}
+                          placeholder={t(game.userIdPlaceholder, game.userIdPlaceholderAr)}
                           className="bg-slate-800/50 border-emerald-800/30 text-white"
                         />
                         <Button
@@ -354,24 +297,15 @@ export default function GamePage({ params }: GamePageProps) {
                       </div>
                     </div>
 
-                    <Button
-                      type="button"
-                      onClick={fillDemoDetails}
-                      variant="outline"
-                      className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
-                    >
-                      {t('Fill demo details', 'تعبئة بيانات تجريبية')}
-                    </Button>
-
                     {game.zoneIdRequired && (
                       <div>
                         <Label className="text-white/70">
-                          {language === 'ar' ? game.zoneIdLabelAr : game.zoneIdLabel}
+                          {t(game.zoneIdLabel || 'Room ID', game.zoneIdLabelAr || 'معرف الغرفة')}
                         </Label>
                         <Input
                           value={zoneId}
                           onChange={(e) => setZoneId(e.target.value)}
-                          placeholder={t('Enter Zone/Server ID', 'أدخل معرف السيرفر')}
+                          placeholder={t('Enter WAHO Room ID', 'أدخل معرف غرفة WAHO')}
                           className="mt-2 bg-slate-800/50 border-emerald-800/30 text-white"
                         />
                       </div>
@@ -384,7 +318,7 @@ export default function GamePage({ params }: GamePageProps) {
                         </div>
                         <div>
                           <p className="text-sm text-emerald-400 font-medium">
-                            {t('Account Verified', 'تم التحقق من الحساب')}
+                            {t('WAHO Account Verified', 'تم التحقق من حساب WAHO')}
                           </p>
                           <p className="text-white font-bold">{verifiedUsername}</p>
                         </div>
@@ -428,7 +362,7 @@ export default function GamePage({ params }: GamePageProps) {
                   {t('Select Payment Method', 'اختر طريقة الدفع')}
                 </h2>
 
-                <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PaymentMethod)} className="space-y-3">
+                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
                   {paymentMethods.map((method) => (
                     <label
                       key={method.id}
@@ -467,7 +401,7 @@ export default function GamePage({ params }: GamePageProps) {
                     onClick={() => setStep('confirm')}
                     className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
                   >
-                    {t('Review Order', 'مراجعة الطلب')}
+                    {t('Review WAHO Order', 'مراجعة طلب WAHO')}
                     <ChevronRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
@@ -477,7 +411,7 @@ export default function GamePage({ params }: GamePageProps) {
             {step === 'confirm' && selectedPackage && (
               <div className="bg-slate-900/50 border border-emerald-800/20 rounded-2xl p-6">
                 <h2 className="text-xl font-bold text-white mb-6">
-                  {t('Confirm Order', 'تأكيد الطلب')}
+                  {t('Confirm WAHO Order', 'تأكيد طلب WAHO')}
                 </h2>
 
                 <div className="space-y-4">
@@ -487,10 +421,10 @@ export default function GamePage({ params }: GamePageProps) {
                     </div>
                     <div>
                       <h3 className="font-bold text-white">
-                        {language === 'ar' ? game.nameAr : game.name}
+                        {t(game.name, game.nameAr)}
                       </h3>
                       <p className="text-sm text-emerald-400">
-                        {formatNumber(selectedPackage.amount)} {language === 'ar' ? selectedPackage.unitAr : selectedPackage.unit}
+                        {selectedPackage.amount.toLocaleString(locale)} {t(selectedPackage.unit, selectedPackage.unitAr)}
                       </p>
                     </div>
                   </div>
@@ -506,7 +440,7 @@ export default function GamePage({ params }: GamePageProps) {
                   <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                     <Zap className="w-5 h-5 text-emerald-400" />
                     <p className="text-xs text-emerald-400/70">
-                      {t('Instant delivery within 30 seconds', 'التوصيل الفوري خلال 30 ثانية')}
+                      {t('Prepared for automatic WAHO API delivery', 'جاهز للتسليم التلقائي عبر WAHO API')}
                     </p>
                   </div>
                 </div>
@@ -542,7 +476,7 @@ export default function GamePage({ params }: GamePageProps) {
           <div className="lg:col-span-1">
             <div className="sticky top-24 bg-slate-900/50 border border-emerald-800/20 rounded-2xl p-6">
               <h3 className="text-lg font-bold text-white mb-4">
-                {t('Order Summary', 'ملخص الطلب')}
+                {t('WAHO Order Summary', 'ملخص طلب WAHO')}
               </h3>
 
               {selectedPackage ? (
@@ -553,10 +487,10 @@ export default function GamePage({ params }: GamePageProps) {
                     </div>
                     <div>
                       <p className="font-medium text-white text-sm">
-                        {language === 'ar' ? game.nameAr : game.name}
+                        {t(game.name, game.nameAr)}
                       </p>
                       <p className="text-xs text-emerald-400">
-                        {formatNumber(selectedPackage.amount)} {language === 'ar' ? selectedPackage.unitAr : selectedPackage.unit}
+                        {selectedPackage.amount.toLocaleString(locale)} {t(selectedPackage.unit, selectedPackage.unitAr)}
                       </p>
                     </div>
                   </div>

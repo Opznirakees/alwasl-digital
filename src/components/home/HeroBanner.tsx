@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
-import { banners, games } from '@/data/mock-data';
+import { banners } from '@/data/mock-data';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 
 export function HeroBanner() {
@@ -30,9 +30,7 @@ export function HeroBanner() {
   if (activeBanners.length === 0) return null;
 
   const currentBanner = activeBanners[currentIndex];
-  const linkedGame = currentBanner.gameId
-    ? games.find((game) => game.id === currentBanner.gameId)
-    : null;
+  const isBrandBanner = currentBanner.id === 'banner-1';
 
   const isLight = theme === 'light';
   const overlayFrom = isLight ? 'rgba(248, 246, 252, 0.95)' : 'rgba(13, 10, 20, 0.95)';
@@ -41,7 +39,7 @@ export function HeroBanner() {
 
   return (
     <div className="relative w-full overflow-hidden rounded-3xl">
-      <div className="relative aspect-[21/9] sm:aspect-[21/7] md:aspect-[21/6]">
+      <div className="relative h-[320px] sm:h-auto sm:aspect-[21/7] md:aspect-[21/6]">
         {/* Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center transition-all duration-700"
@@ -73,7 +71,7 @@ export function HeroBanner() {
               }`}>
                 <Sparkles className="w-3.5 h-3.5 text-purple-500" />
                 <span className={`text-xs font-medium ${isLight ? 'text-purple-600' : 'text-purple-300'}`}>
-                  {t('Flash Sale', 'عرض خاص')}
+                  {isBrandBanner ? t('Al-Wasl Digital', 'الوصل') : t('WAHO Recharge', 'شحن WAHO')}
                 </span>
               </div>
               <h2 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight ${
@@ -86,13 +84,13 @@ export function HeroBanner() {
                   {t(currentBanner.subtitle, currentBanner.subtitleAr || '')}
                 </p>
               )}
-              {linkedGame && (
-                <Link href={`/games/${linkedGame.slug}`}>
+              {currentBanner.gameId && (
+                <Link href={`/games/${currentBanner.gameId}`}>
                   <Button
                     size="lg"
                     className="mt-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/30 text-sm sm:text-base rounded-xl"
                   >
-                    {t('Top Up Now', 'اشحن الآن')}
+                    {isBrandBanner ? t('Explore Services', 'استعرض الخدمات') : t('Recharge WAHO', 'اشحن WAHO')}
                   </Button>
                 </Link>
               )}
@@ -105,7 +103,7 @@ export function HeroBanner() {
           <>
             <button
               onClick={goToPrev}
-              className={`absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
+              className={`absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full backdrop-blur-md border hidden sm:flex items-center justify-center transition-colors ${
                 isLight
                   ? 'bg-white/60 border-purple-200 text-slate-700 hover:bg-white/80'
                   : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
@@ -116,7 +114,7 @@ export function HeroBanner() {
             </button>
             <button
               onClick={goToNext}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full backdrop-blur-md border flex items-center justify-center transition-colors ${
+              className={`absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full backdrop-blur-md border hidden sm:flex items-center justify-center transition-colors ${
                 isLight
                   ? 'bg-white/60 border-purple-200 text-slate-700 hover:bg-white/80'
                   : 'bg-white/5 border-white/10 text-white hover:bg-white/10'

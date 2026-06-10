@@ -9,14 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { games } from '@/data/mock-data';
-import type { Order, OrderStatus } from '@/types';
+import { sampleOrders, games } from '@/data/mock-data';
+import type { OrderStatus } from '@/types';
 import {
   ArrowLeft,
   Package,
@@ -30,20 +24,20 @@ import {
 import { toast } from 'sonner';
 
 export default function OrdersPage() {
-  const { t, language, dir, selectedCountry, orders, addToCart } = useApp();
+  const { t, language, dir, selectedCountry } = useApp();
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const filteredOrders = filter === 'all'
-    ? orders
-    : orders.filter(order => order.status === filter);
+    ? sampleOrders
+    : sampleOrders.filter(order => order.status === filter);
+  const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(amount);
+    return new Intl.NumberFormat(locale).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(language === 'ar' ? 'ar-IQ' : 'en-IQ', {
+    return new Date(dateString).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -93,24 +87,16 @@ export default function OrdersPage() {
       refunded: { en: 'Refunded', ar: 'مسترد' },
       cancelled: { en: 'Cancelled', ar: 'ملغي' },
     };
-    return language === 'ar' ? labels[status].ar : labels[status].en;
+    return t(labels[status].en, labels[status].ar);
+  };
+
+  const getPaymentMethodLabel = (method: string) => {
+    return t(method, method);
   };
 
   const copyOrderId = (orderId: string) => {
     navigator.clipboard.writeText(orderId);
     toast.success(t('Order ID copied!', 'تم نسخ رقم الطلب!'));
-  };
-
-  const reorder = (order: Order) => {
-    addToCart({
-      gameId: order.gameId,
-      packageId: order.packageId,
-      gameUserId: order.gameUserId,
-      gameUsername: order.gameUsername,
-      zoneId: order.zoneId,
-      quantity: order.quantity,
-    });
-    toast.success(t('Added to cart for reorder', 'تمت الإضافة للسلة لإعادة الطلب'));
   };
 
   return (
@@ -155,14 +141,17 @@ export default function OrdersPage() {
           <div className="space-y-4">
             {filteredOrders.map((order) => {
               const game = games.find(g => g.id === order.gameId);
+              const gamePackage = game?.packages.find(pkg => pkg.id === order.packageId);
+              const orderGameName = game ? t(game.name, game.nameAr) : t(order.gameName, order.gameName);
+              const orderPackageName = gamePackage ? t(gamePackage.name, gamePackage.nameAr) : t(order.packageName, order.packageName);
               return (
                 <Card key={order.id} className="bg-slate-900/50 border-emerald-800/20 p-6 hover:border-emerald-500/30 transition-colors">
                   <div className="flex flex-col md:flex-row md:items-center gap-4">
-                    {/* Game Image */}
+                    {/* WAHO Service Image */}
                     <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                       <Image
                         src={game?.image || ''}
-                        alt={order.gameName}
+                        alt={orderGameName}
                         fill
                         className="object-cover"
                       />
@@ -172,8 +161,8 @@ export default function OrdersPage() {
                     <div className="flex-1 space-y-2">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h3 className="font-bold text-white">{order.gameName}</h3>
-                          <p className="text-sm text-emerald-400">{order.packageName}</p>
+                          <h3 className="font-bold text-white">{orderGameName}</h3>
+                          <p className="text-sm text-emerald-400">{orderPackageName}</p>
                         </div>
                         <Badge variant="outline" className={`${getStatusColor(order.status)} flex items-center gap-1`}>
                           {getStatusIcon(order.status)}
@@ -194,7 +183,7 @@ export default function OrdersPage() {
                         </div>
                         {order.gameUserId && (
                           <div className="flex items-center gap-2">
-                            <span className="text-white/50">{t('Game ID:', 'معرف اللعبة:')}</span>
+                            <span className="text-white/50">{t('WAHO ID:', 'معرف WAHO:')}</span>
                             <span className="text-white">{order.gameUserId}</span>
                             {order.gameUsername && (
                               <span className="text-emerald-400">({order.gameUsername})</span>
@@ -206,7 +195,7 @@ export default function OrdersPage() {
                       <div className="flex items-center justify-between pt-2">
                         <div className="flex items-center gap-4 text-sm text-white/50">
                           <span>{formatDate(order.createdAt)}</span>
-                          <span>{order.paymentMethod}</span>
+                          <span>{getPaymentMethodLabel(order.paymentMethod)}</span>
                         </div>
                         <div className="text-right">
                           {order.discount > 0 && (
@@ -225,12 +214,12 @@ export default function OrdersPage() {
                   {/* Actions */}
                   <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-emerald-800/20">
                     {order.status === 'completed' && (
-                      <Button onClick={() => reorder(order)} variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
+                      <Button variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
                         <RefreshCw className="w-4 h-4 mr-2" />
                         {t('Reorder', 'إعادة الطلب')}
                       </Button>
                     )}
-                    <Button onClick={() => setSelectedOrder(order)} variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
+                    <Button variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
                       <ExternalLink className="w-4 h-4 mr-2" />
                       {t('View Details', 'عرض التفاصيل')}
                     </Button>
@@ -246,69 +235,16 @@ export default function OrdersPage() {
             </div>
             <h3 className="text-lg font-semibold text-white">{t('No orders found', 'لا توجد طلبات')}</h3>
             <p className="text-sm text-white/50 mt-1">
-              {t('Start shopping to see your orders here', 'ابدأ التسوق لرؤية طلباتك هنا')}
+              {t('Recharge WAHO to see your orders here', 'اشحن WAHO لرؤية طلباتك هنا')}
             </p>
             <Link href="/">
               <Button className="mt-4 bg-gradient-to-r from-emerald-500 to-teal-600">
-                {t('Browse Games', 'تصفح الألعاب')}
+                {t('Browse WAHO Services', 'تصفح خدمات WAHO')}
               </Button>
             </Link>
           </div>
         )}
       </main>
-
-      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && setSelectedOrder(null)}>
-        <DialogContent className="bg-slate-900 border-emerald-800/30 text-white">
-          {selectedOrder && (
-            <>
-              <DialogHeader>
-                <DialogTitle>{t('Order details', 'تفاصيل الطلب')}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between rounded-xl bg-slate-800/50 p-4">
-                  <div>
-                    <p className="font-mono text-sm text-white/70">{selectedOrder.id}</p>
-                    <h3 className="font-bold mt-1">{selectedOrder.gameName}</h3>
-                    <p className="text-sm text-emerald-400">{selectedOrder.packageName}</p>
-                  </div>
-                  <Badge variant="outline" className={getStatusColor(selectedOrder.status)}>
-                    {getStatusIcon(selectedOrder.status)}
-                    <span className="ml-1">{getStatusLabel(selectedOrder.status)}</span>
-                  </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-xl bg-slate-800/40 p-3">
-                    <p className="text-white/50">{t('Game ID', 'معرف اللعبة')}</p>
-                    <p className="font-semibold mt-1">{selectedOrder.gameUserId || '-'}</p>
-                  </div>
-                  <div className="rounded-xl bg-slate-800/40 p-3">
-                    <p className="text-white/50">{t('Username', 'اسم المستخدم')}</p>
-                    <p className="font-semibold mt-1">{selectedOrder.gameUsername || '-'}</p>
-                  </div>
-                  <div className="rounded-xl bg-slate-800/40 p-3">
-                    <p className="text-white/50">{t('Payment', 'الدفع')}</p>
-                    <p className="font-semibold mt-1">{selectedOrder.paymentMethod}</p>
-                  </div>
-                  <div className="rounded-xl bg-slate-800/40 p-3">
-                    <p className="text-white/50">{t('Total', 'الإجمالي')}</p>
-                    <p className="font-semibold text-emerald-400 mt-1">
-                      {formatCurrency(selectedOrder.finalPrice)} {selectedCountry.currencySymbol}
-                    </p>
-                  </div>
-                </div>
-
-                {selectedOrder.providerOrderId && (
-                  <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4">
-                    <p className="text-xs text-emerald-400/70">{t('Provider reference', 'مرجع المزود')}</p>
-                    <p className="font-mono text-sm text-emerald-300 mt-1">{selectedOrder.providerOrderId}</p>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

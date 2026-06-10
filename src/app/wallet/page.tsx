@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { demoUser, levelLabels, levelDiscounts } from '@/data/mock-data';
+import { demoUser, walletTransactions, levelLabels, levelDiscounts } from '@/data/mock-data';
 import type { WalletTransactionType } from '@/types';
 import {
   ArrowLeft,
@@ -37,20 +37,21 @@ import {
 import { toast } from 'sonner';
 
 export default function WalletPage() {
-  const { t, language, dir, user, selectedCountry, walletTransactions } = useApp();
+  const { t, language, dir, user, selectedCountry } = useApp();
   const [topUpAmount, setTopUpAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('zaincash');
   const [isLoading, setIsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const currentUser = user || demoUser;
+  const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(Math.abs(amount));
+    return new Intl.NumberFormat(locale).format(Math.abs(amount));
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(language === 'ar' ? 'ar-IQ' : 'en-IQ', {
+    return new Date(dateString).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -258,7 +259,7 @@ export default function WalletPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-white truncate">
-                        {language === 'ar' ? tx.descriptionAr : tx.description}
+                        {t(tx.description, tx.descriptionAr)}
                       </p>
                       <p className="text-xs text-white/50 mt-0.5">{formatDate(tx.createdAt)}</p>
                     </div>
@@ -290,9 +291,7 @@ export default function WalletPage() {
                 <div>
                   <p className="text-xs text-white/50">{t('Membership Level', 'مستوى العضوية')}</p>
                   <p className="font-bold" style={{ color: levelLabels[currentUser.level].color }}>
-                    {language === 'ar'
-                      ? levelLabels[currentUser.level].ar
-                      : levelLabels[currentUser.level].en}
+                    {t(levelLabels[currentUser.level].en, levelLabels[currentUser.level].ar)}
                   </p>
                 </div>
               </div>
@@ -313,7 +312,7 @@ export default function WalletPage() {
                   <div className="flex justify-between text-xs">
                     <span className="text-white/50">{t('Progress to', 'التقدم إلى')}</span>
                     <span style={{ color: levelLabels[nextLevel].color }}>
-                      {language === 'ar' ? levelLabels[nextLevel].ar : levelLabels[nextLevel].en}
+                      {t(levelLabels[nextLevel].en, levelLabels[nextLevel].ar)}
                     </span>
                   </div>
                   <div className="h-2 rounded-full bg-slate-800 overflow-hidden">

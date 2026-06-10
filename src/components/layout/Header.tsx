@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,12 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+const languageOptions = [
+  { id: 'en', label: 'English', short: 'EN' },
+  { id: 'ar', label: 'العربية', short: 'عربي' },
+  { id: 'zh', label: '中文', short: '中文' },
+] as const;
+
 export function Header() {
   const {
     t,
@@ -49,9 +56,11 @@ export function Header() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isLight = theme === 'light';
+  const activeLanguage = languageOptions.find(option => option.id === language) || languageOptions[0];
+  const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(amount);
+    return new Intl.NumberFormat(locale).format(amount);
   };
 
   return (
@@ -79,14 +88,14 @@ export function Header() {
                   className={`text-lg font-medium transition-colors ${isLight ? 'text-slate-800 hover:text-purple-600' : 'text-white hover:text-purple-400'}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  {t('All Games', 'جميع الألعاب')}
+                  {t('WAHO Services', 'خدمات WAHO')}
                 </Link>
                 <Link
                   href="/promotions"
                   className={`text-lg font-medium transition-colors ${isLight ? 'text-slate-800 hover:text-purple-600' : 'text-white hover:text-purple-400'}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  {t('Promotions', 'العروض')}
+                  {t('WAHO Offers', 'عروض WAHO')}
                 </Link>
                 {isAuthenticated && (
                   <>
@@ -112,15 +121,22 @@ export function Header() {
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/25 group-hover:shadow-purple-500/40 transition-all">
-              <span className="text-xl font-bold text-white">و</span>
+            <div className="relative w-11 h-11 rounded-xl bg-white p-1 overflow-hidden shadow-lg shadow-blue-900/15 ring-1 ring-blue-900/10 group-hover:shadow-blue-900/25 transition-all">
+              <Image
+                src="/brand/alwasl-mark.jpg"
+                alt={t('Al-Wasl Digital Services', 'الوصل للخدمات الإلكترونية')}
+                fill
+                className="object-contain"
+                sizes="44px"
+                priority
+              />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-lg font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-                {t('Al-Wasl Digital', 'الوصل الرقمي')}
+              <h1 className="text-lg font-bold bg-gradient-to-r from-blue-700 to-amber-500 bg-clip-text text-transparent">
+                {t('Al-Wasl Digital', 'الوصل')}
               </h1>
-              <p className={`text-[10px] -mt-0.5 ${isLight ? 'text-purple-500' : 'text-purple-400/60'}`}>
-                {t('Top-Up Platform', 'منصة الشحن الرقمي')}
+              <p className={`text-[10px] -mt-0.5 ${isLight ? 'text-blue-700' : 'text-amber-300/80'}`}>
+                {t('Page promotion • app recharge', 'ترويج صفحات • شحن تطبيقات')}
               </p>
             </div>
           </Link>
@@ -131,21 +147,19 @@ export function Header() {
               {t('Home', 'الرئيسية')}
             </Link>
             <Link href="/games" className={`text-sm font-medium transition-colors ${isLight ? 'text-slate-600 hover:text-purple-600' : 'text-white/80 hover:text-purple-400'}`}>
-              {t('All Games', 'جميع الألعاب')}
+              {t('WAHO Services', 'خدمات WAHO')}
             </Link>
             <Link href="/promotions" className={`text-sm font-medium transition-colors ${isLight ? 'text-slate-600 hover:text-purple-600' : 'text-white/80 hover:text-purple-400'}`}>
-              {t('Promotions', 'العروض')}
+              {t('WAHO Offers', 'عروض WAHO')}
             </Link>
           </nav>
 
           {/* Right Side */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Search */}
-            <Link href="/games" className="hidden md:flex">
-              <Button variant="ghost" size="icon" className={isLight ? 'text-slate-500 hover:text-purple-600 hover:bg-purple-100' : 'text-white/70 hover:text-purple-400 hover:bg-purple-500/10'}>
-                <Search className="h-4 w-4" />
-              </Button>
-            </Link>
+            <Button variant="ghost" size="icon" className={`hidden md:flex ${isLight ? 'text-slate-500 hover:text-purple-600 hover:bg-purple-100' : 'text-white/70 hover:text-purple-400 hover:bg-purple-500/10'}`}>
+              <Search className="h-4 w-4" />
+            </Button>
 
             {/* Country Selector */}
             <DropdownMenu>
@@ -157,7 +171,7 @@ export function Header() {
                 >
                   <span className="text-lg">{selectedCountry.flag}</span>
                   <span className={`hidden sm:inline text-xs ${isLight ? 'text-slate-500' : 'text-white/70'}`}>
-                    {language === 'ar' ? selectedCountry.nameAr : selectedCountry.name}
+                    {t(selectedCountry.name, selectedCountry.nameAr)}
                   </span>
                   <ChevronDown className={`h-3 w-3 ${isLight ? 'text-purple-500' : 'text-purple-400/60'}`} />
                 </Button>
@@ -172,22 +186,39 @@ export function Header() {
                     }`}
                   >
                     <span className="text-lg">{country.flag}</span>
-                    <span className={isLight ? 'text-slate-700' : ''}>{language === 'ar' ? country.nameAr : country.name}</span>
+                    <span className={isLight ? 'text-slate-700' : ''}>{t(country.name, country.nameAr)}</span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Language Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLanguage(language === 'en' ? 'ar' : 'en')}
-              className={`gap-1.5 px-2 sm:px-3 ${isLight ? 'text-slate-700 hover:bg-purple-100' : 'text-white hover:bg-purple-500/10'}`}
-            >
-              <Globe className={`h-4 w-4 ${isLight ? 'text-purple-500' : 'text-purple-400'}`} />
-              <span className="text-xs font-medium">{language === 'en' ? 'عربي' : 'EN'}</span>
-            </Button>
+            {/* Language Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`gap-1.5 px-2 sm:px-3 ${isLight ? 'text-slate-700 hover:bg-purple-100' : 'text-white hover:bg-purple-500/10'}`}
+                >
+                  <Globe className={`h-4 w-4 ${isLight ? 'text-purple-500' : 'text-purple-400'}`} />
+                  <span className="text-xs font-medium">{activeLanguage.short}</span>
+                  <ChevronDown className={`h-3 w-3 ${isLight ? 'text-purple-500' : 'text-purple-400/60'}`} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className={isLight ? 'bg-white border-purple-200' : 'bg-[#1a1225] border-purple-500/20'}>
+                {languageOptions.map((option) => (
+                  <DropdownMenuItem
+                    key={option.id}
+                    onClick={() => setLanguage(option.id)}
+                    className={`cursor-pointer ${isLight ? 'hover:bg-purple-50' : 'hover:bg-purple-500/10'} ${
+                      language === option.id ? (isLight ? 'bg-purple-100' : 'bg-purple-500/20') : ''
+                    }`}
+                  >
+                    <span className={isLight ? 'text-slate-700' : ''}>{option.label}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Dark/Light Mode Toggle */}
             <Button
@@ -219,34 +250,30 @@ export function Header() {
                 </Link>
 
                 {/* Notifications */}
-                <Link href="/orders">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`relative ${isLight ? 'text-slate-600 hover:bg-purple-100' : 'text-white hover:bg-purple-500/10'}`}
-                  >
-                    <Bell className="h-4 w-4" />
-                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-pink-500 text-white text-[10px] font-bold flex items-center justify-center">
-                      2
-                    </span>
-                  </Button>
-                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`relative ${isLight ? 'text-slate-600 hover:bg-purple-100' : 'text-white hover:bg-purple-500/10'}`}
+                >
+                  <Bell className="h-4 w-4" />
+                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-pink-500 text-white text-[10px] font-bold flex items-center justify-center">
+                    2
+                  </span>
+                </Button>
 
                 {/* Cart */}
-                <Link href="/cart">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`relative ${isLight ? 'text-slate-600 hover:bg-purple-100' : 'text-white hover:bg-purple-500/10'}`}
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    {cartTotal > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-purple-500 text-white text-[10px] font-bold flex items-center justify-center">
-                        {cartTotal}
-                      </span>
-                    )}
-                  </Button>
-                </Link>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`relative ${isLight ? 'text-slate-600 hover:bg-purple-100' : 'text-white hover:bg-purple-500/10'}`}
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  {cartTotal > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-purple-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      {cartTotal}
+                    </span>
+                  )}
+                </Button>
 
                 {/* User Menu */}
                 <DropdownMenu>

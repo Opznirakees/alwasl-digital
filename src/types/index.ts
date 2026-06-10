@@ -206,7 +206,7 @@ export interface Notification {
 }
 
 // Language
-export type Language = 'en' | 'ar';
+export type Language = 'en' | 'ar' | 'zh';
 
 // Cart
 export interface CartItem {

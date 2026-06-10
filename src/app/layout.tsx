@@ -22,8 +22,8 @@ const notoKufiArabic = Noto_Kufi_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "الوصل الرقمي | Al-Wasl Digital - Gaming Top-Up Platform",
-  description: "Your trusted platform for gaming top-ups, gift cards, and digital services. Instant delivery, secure payments.",
+  title: "Al-Wasl Digital Services | Page Promotion & App Recharge",
+  description: "Al-Wasl Digital Services for page promotion, app recharge, marketing services, secure WAHO products, fast delivery, and continuous technical support.",
 };
 
 export default function RootLayout({

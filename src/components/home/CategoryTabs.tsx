@@ -30,15 +30,15 @@ const categoryIcons: Record<GameCategory | 'all', React.ReactNode> = {
 };
 
 export function CategoryTabs({ selectedCategory, onSelectCategory }: CategoryTabsProps) {
-  const { t, language, theme } = useApp();
+  const { t, theme } = useApp();
   const isLight = theme === 'light';
 
   const categories: (GameCategory | 'all')[] = [
     'all',
-    'mobile_game',
-    'pc_game',
+    'social_media',
     'gift_card',
     'streaming',
+    'mobile_game',
     'voucher',
   ];
 
@@ -46,7 +46,7 @@ export function CategoryTabs({ selectedCategory, onSelectCategory }: CategoryTab
     if (category === 'all') {
       return t('All', 'الكل');
     }
-    return language === 'ar' ? categoryLabels[category].ar : categoryLabels[category].en;
+    return t(categoryLabels[category].en, categoryLabels[category].ar);
   };
 
   return (

@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import type { Game } from '@/types';
 import { categoryLabels } from '@/data/mock-data';
 import { Sparkles, TrendingUp, ShoppingCart, Heart } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface GameCardProps {
   game: Game;
@@ -21,9 +20,10 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
 
   const lowestPrice = Math.min(...game.packages.filter(p => p.inStock).map(p => p.salePrice || p.basePrice));
   const hasSale = game.packages.some(p => p.salePrice);
+  const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(price);
+    return new Intl.NumberFormat(locale).format(price);
   };
 
   if (variant === 'compact') {
@@ -39,7 +39,7 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
           }`}>
             <Image
               src={game.image}
-              alt={language === 'ar' ? game.nameAr : game.name}
+              alt={t(game.name, game.nameAr)}
               fill
               className="object-cover group-hover:scale-110 transition-transform duration-500"
             />
@@ -48,7 +48,7 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
             <h3 className={`font-semibold text-sm truncate transition-colors ${
               isLight ? 'text-slate-800 group-hover:text-purple-600' : 'text-white group-hover:text-purple-400'
             }`}>
-              {language === 'ar' ? game.nameAr : game.name}
+              {t(game.name, game.nameAr)}
             </h3>
             <p className={`text-xs mt-0.5 ${isLight ? 'text-purple-600' : 'text-purple-400/60'}`}>
               {t('From', 'من')} {formatPrice(lowestPrice)} {selectedCountry.currencySymbol}
@@ -71,7 +71,7 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
         <div className="relative aspect-[4/3] overflow-hidden">
           <Image
             src={game.image}
-            alt={language === 'ar' ? game.nameAr : game.name}
+            alt={t(game.name, game.nameAr)}
             fill
             className="object-cover group-hover:scale-110 transition-transform duration-700"
           />
@@ -97,17 +97,11 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
           </div>
 
           {/* Favorite Button */}
-          <button
-            onClick={(event) => {
-              event.preventDefault();
-              toast.success(t('Saved to demo favorites', 'تم الحفظ في المفضلة التجريبية'));
-            }}
-            className={`absolute top-3 right-3 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all ${
+          <button className={`absolute top-3 right-3 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all ${
             isLight
               ? 'bg-white/70 text-slate-500 hover:text-pink-500 hover:bg-white'
               : 'bg-black/30 text-white/70 hover:text-pink-400 hover:bg-black/50'
-          }`}
-          >
+          }`}>
             <Heart className="w-4 h-4" />
           </button>
 
@@ -118,9 +112,7 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
                 ? 'bg-white/70 text-purple-600 border-purple-200'
                 : 'bg-black/40 text-purple-300 border-purple-500/30'
             }`}>
-              {language === 'ar'
-                ? categoryLabels[game.category].ar
-                : categoryLabels[game.category].en}
+              {t(categoryLabels[game.category].en, categoryLabels[game.category].ar)}
             </Badge>
           </div>
         </div>
@@ -130,7 +122,7 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
           <h3 className={`font-bold text-base transition-colors line-clamp-1 ${
             isLight ? 'text-slate-800 group-hover:text-purple-600' : 'text-white group-hover:text-purple-400'
           }`}>
-            {language === 'ar' ? game.nameAr : game.name}
+            {t(game.name, game.nameAr)}
           </h3>
 
           <div className="flex items-center justify-between">
