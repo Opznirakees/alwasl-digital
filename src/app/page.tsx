@@ -12,37 +12,13 @@ import { SearchBar } from '@/components/home/SearchBar';
 import { games } from '@/data/mock-data';
 import type { GameCategory } from '@/types';
 import {
-  TrendingUp,
-  Sparkles,
   Zap,
-  ChevronRight,
   BadgeCheck,
-  BarChart3,
   Gamepad2,
-  Gift,
   Headphones,
-  Megaphone,
-  Play,
-  Smartphone,
   MessageCircle,
-  Shield,
+  Sparkles,
 } from 'lucide-react';
-
-// Category icons with restrained platform colors.
-const categoryIcons = [
-  { id: 'social_media', icon: MessageCircle, tone: 'blue', label: { en: 'WAHO Coins', ar: 'عملات WAHO' } },
-  { id: 'gift_card', icon: Gift, tone: 'amber', label: { en: 'Gift Bundles', ar: 'باقات الهدايا' } },
-  { id: 'streaming', icon: Play, tone: 'green', label: { en: 'Live Rooms', ar: 'الغرف المباشرة' } },
-  { id: 'mobile_game', icon: Gamepad2, tone: 'slate', label: { en: 'Party Games', ar: 'ألعاب جماعية' } },
-  { id: 'voucher', icon: Sparkles, tone: 'blue', label: { en: 'VIP & Medals', ar: 'العضوية' } },
-];
-
-const toneClasses = {
-  blue: 'bg-blue-50 text-blue-600 border-blue-100',
-  amber: 'bg-amber-50 text-amber-700 border-amber-100',
-  green: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-  slate: 'bg-zinc-100 text-zinc-700 border-zinc-200',
-} as const;
 
 export default function HomePage() {
   const { t, dir, selectedCountry } = useApp();
@@ -62,42 +38,13 @@ export default function HomePage() {
     });
   }, [selectedCountry.id, selectedCategory, searchQuery]);
 
-  const popularGames = games.filter(g => g.isPopular && g.countries.includes(selectedCountry.id)).slice(0, 6);
-  const featuredGames = games.filter(g => g.isFeatured && g.countries.includes(selectedCountry.id));
-
   return (
     <div className={`min-h-screen ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
-      <main className="container mx-auto px-4 py-6 space-y-12">
+      <main className="container mx-auto px-4 py-6 space-y-10">
         {/* Hero Banner */}
         <HeroBanner />
-
-        {/* Category Icons Grid */}
-        <section className="py-4">
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            {categoryIcons.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id as GameCategory)}
-                className={`group flex min-w-[112px] flex-col items-center gap-2 rounded-lg border p-3 transition-colors ${
-                  selectedCategory === cat.id
-                    ? 'bg-white border-blue-300 shadow-sm'
-                    : 'bg-white/70 border-black/10 hover:bg-white hover:border-blue-200'
-                }`}
-              >
-                <div
-                  className={`w-12 h-12 rounded-lg border flex items-center justify-center transition-colors ${toneClasses[cat.tone as keyof typeof toneClasses]}`}
-                >
-                  <cat.icon className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-medium text-zinc-600 transition-colors group-hover:text-zinc-950">
-                  {t(cat.label.en, cat.label.ar)}
-                </span>
-              </button>
-            ))}
-          </div>
-        </section>
 
         {/* Quick Stats */}
         <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -119,70 +66,6 @@ export default function HomePage() {
               </div>
             </div>
           ))}
-        </section>
-
-        {/* Al-Wasl Services Banner */}
-        <section className="grid overflow-hidden rounded-lg border border-black/10 bg-white shadow-sm lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="relative min-h-[220px] lg:min-h-[320px] bg-zinc-50">
-            <Image
-              src="/brand/alwasl-banner.jpg"
-              alt={t('Al-Wasl digital services banner', 'بانر الوصل للخدمات الإلكترونية')}
-              fill
-              className="object-contain p-4"
-              sizes="(min-width: 1024px) 58vw, 100vw"
-            />
-          </div>
-          <div className="p-6 md:p-8 flex flex-col justify-center">
-            <div className="inline-flex w-fit items-center gap-2 rounded-md border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700">
-              <Shield className="w-3.5 h-3.5" />
-              {t('Secure digital service', 'خدمة آمنة موثوقة')}
-            </div>
-            <h2 className="mt-4 text-2xl md:text-3xl font-semibold leading-tight text-zinc-950">
-              {t('Al-Wasl helps you reach better results', 'الوصل يساعدك على الوصول لأفضل النتائج')}
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-zinc-600">
-              {t(
-                'Digital solutions for page promotion, app recharge, marketing services, and WAHO product delivery with continuous technical support.',
-                'حلول رقمية لترويج الصفحات وشحن التطبيقات والخدمات التسويقية وتسليم منتجات WAHO مع دعم فني مستمر.'
-              )}
-            </p>
-            <div className="grid sm:grid-cols-3 gap-3 mt-6">
-              {[
-                { icon: <Megaphone className="w-4 h-4" />, label: t('Page Promotion', 'ترويج صفحات') },
-                { icon: <Smartphone className="w-4 h-4" />, label: t('App Recharge', 'شحن تطبيقات') },
-                { icon: <BarChart3 className="w-4 h-4" />, label: t('Marketing Solutions', 'حلول تسويقية') },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center gap-2 rounded-lg bg-zinc-50 px-3 py-3 text-sm text-zinc-700">
-                  <span className="text-blue-600">{item.icon}</span>
-                  <span className="font-medium">{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Popular WAHO Section */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-amber-50 text-amber-700">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-zinc-950">{t('Popular WAHO Products', 'منتجات WAHO الشائعة')}</h2>
-                <p className="text-xs text-zinc-500">{t('Most requested for rooms, gifts, and live chats', 'الأكثر طلباً للغرف والهدايا والدردشة المباشرة')}</p>
-              </div>
-            </div>
-            <Link href="/games" className="flex items-center gap-1 text-sm text-blue-600 transition-colors hover:text-blue-700 group">
-              {t('View WAHO Services', 'عرض خدمات WAHO')}
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {popularGames.map((game) => (
-              <GameCard key={game.id} game={game} variant="compact" />
-            ))}
-          </div>
         </section>
 
         {/* Search & Filter Section */}
@@ -214,28 +97,6 @@ export default function HomePage() {
             </div>
           )}
         </section>
-
-        {/* Featured Games Banner */}
-        {featuredGames.length > 0 && (
-          <section className="overflow-hidden rounded-lg border border-black/10 bg-white p-6 shadow-sm">
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 rounded-lg bg-blue-50 text-blue-600">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-zinc-950">{t('WAHO API-Ready Catalog', 'كتالوج WAHO جاهز للـ API')}</h2>
-                  <p className="text-xs text-zinc-500">{t('Products are structured for account validation and automatic fulfillment', 'المنتجات منظمة للتحقق من الحساب والتسليم التلقائي')}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {featuredGames.slice(0, 4).map((game) => (
-                  <GameCard key={game.id} game={game} variant="compact" />
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
 
         {/* WhatsApp Contact */}
         <section className="overflow-hidden rounded-lg border border-emerald-200 bg-emerald-50 p-6">

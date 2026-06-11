@@ -386,7 +386,7 @@ const legacyGames: Game[] = [
 ];
 
 const alwaslMark = '/brand/alwasl-mark.jpg';
-const alwaslBanner = '/brand/alwasl-banner.jpg';
+const alwaslBanner = '/brand/alwasl-logo.jpg';
 
 // WAHO products. Kept under the existing Game type until the provider API contract lands.
 export const games: Game[] = [
