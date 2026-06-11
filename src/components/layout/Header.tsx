@@ -400,10 +400,12 @@ export function Header() {
             ) : (
               <Link href="/auth">
                 <Button
+                  aria-label={t('Login', 'تسجيل الدخول', '登录')}
                   size="sm"
-                  className="rounded-md bg-blue-600 text-white shadow-none hover:bg-blue-700"
+                  className="h-9 w-9 rounded-md bg-blue-600 px-0 text-white shadow-none hover:bg-blue-700 sm:w-auto sm:px-3"
                 >
-                  {t('Login', 'تسجيل الدخول')}
+                  <User className="h-4 w-4 sm:hidden" />
+                  <span className="hidden sm:inline">{t('Login', 'تسجيل الدخول')}</span>
                 </Button>
               </Link>
             )}
