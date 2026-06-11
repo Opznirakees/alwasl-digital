@@ -25,6 +25,8 @@ import {
   Settings,
   ChevronDown,
   Search,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -46,6 +48,7 @@ export function Header() {
     selectedCountry,
     cartTotal,
     theme,
+    toggleTheme,
   } = useApp();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -236,6 +239,18 @@ export function Header() {
 
           {/* Right Side */}
           <div className="flex items-center gap-2 sm:gap-3">
+            <Button
+              aria-label={theme === 'light'
+                ? t('Switch to dark mode', 'التبديل إلى الوضع الداكن', '切换到深色模式')
+                : t('Switch to light mode', 'التبديل إلى الوضع الفاتح', '切换到浅色模式')}
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className={isLight ? 'text-zinc-600 hover:bg-zinc-100 hover:text-blue-600' : 'text-zinc-200 hover:bg-white/10 hover:text-blue-300'}
+            >
+              {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </Button>
+
             {/* Search */}
             <Button aria-label={t('Search', 'بحث')} variant="ghost" size="icon" className={`hidden md:flex ${isLight ? 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-100' : 'text-zinc-300 hover:text-blue-300 hover:bg-white/10'}`}>
               <Search className="h-4 w-4" />

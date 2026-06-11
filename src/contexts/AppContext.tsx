@@ -613,7 +613,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Restore demo state for a smoother presentation flow.
   useEffect(() => {
-    localStorage.setItem(storageKeys.theme, 'light');
+    const savedTheme = localStorage.getItem(storageKeys.theme) as Theme | null;
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+      setTheme(savedTheme);
+    }
     const savedLanguage =
       (localStorage.getItem(storageKeys.language) as Language | null) ||
       (localStorage.getItem('language') as Language | null);
@@ -635,6 +638,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Apply theme class to document
   useEffect(() => {
+    if (!isHydrated) return;
     const root = document.documentElement;
     if (theme === 'dark') {
       root.classList.add('dark');
@@ -644,7 +648,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       root.classList.remove('dark');
     }
     localStorage.setItem(storageKeys.theme, theme);
-  }, [theme]);
+  }, [isHydrated, theme]);
 
   useEffect(() => {
     if (!isHydrated) return;

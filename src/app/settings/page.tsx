@@ -46,7 +46,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   {theme === 'dark' ? <Moon className="w-5 h-5 text-purple-300" /> : <Sun className="w-5 h-5 text-amber-500" />}
-                  <Switch checked={theme === 'light'} onCheckedChange={toggleTheme} />
+                  <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
                 </div>
               </div>
             </Card>
