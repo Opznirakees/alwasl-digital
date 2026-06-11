@@ -82,6 +82,13 @@ function readJson<T>(key: string, fallback: T): T {
 
 const zhTranslations: Record<string, string> = {
   'Home': '首页',
+  'Menu': '菜单',
+  'Open menu': '打开菜单',
+  'Search': '搜索',
+  'Change language': '切换语言',
+  'Notifications': '通知',
+  'Open cart': '打开购物车',
+  'Open account menu': '打开账号菜单',
   'WAHO Services': 'WAHO 服务',
   'WAHO Offers': 'WAHO 优惠',
   'My Orders': '我的订单',

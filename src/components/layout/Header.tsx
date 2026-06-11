@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Menu,
   Globe,
@@ -65,52 +64,138 @@ export function Header() {
           {/* Mobile Menu */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild className="lg:hidden">
-              <Button variant="ghost" size="icon" className={`${isLight ? 'text-zinc-700 hover:bg-zinc-100' : 'text-zinc-100 hover:bg-white/10'}`}>
+              <Button
+                aria-label={t('Open menu', 'افتح القائمة')}
+                variant="ghost"
+                size="icon"
+                className={`${isLight ? 'text-zinc-700 hover:bg-zinc-100' : 'text-zinc-100 hover:bg-white/10'}`}
+              >
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side={dir === 'rtl' ? 'right' : 'left'} className={`w-80 ${isLight ? 'bg-white border-black/10' : 'bg-zinc-950 border-white/10'}`}>
-              <nav className="flex flex-col gap-4 mt-8">
+            <SheetContent side={dir === 'rtl' ? 'right' : 'left'} className={`w-[calc(100vw-2rem)] max-w-80 overflow-y-auto ${isLight ? 'bg-white border-black/10' : 'bg-zinc-950 border-white/10'}`}>
+              <SheetHeader className={dir === 'rtl' ? 'text-right' : 'text-left'}>
+                <SheetTitle className={isLight ? 'text-zinc-950' : 'text-white'}>
+                  {t('Menu', 'القائمة')}
+                </SheetTitle>
+              </SheetHeader>
+
+              <nav className="flex flex-col gap-3 mt-8">
                 <Link
                   href="/"
-                  className={`text-lg font-medium transition-colors ${isLight ? 'text-zinc-900 hover:text-blue-600' : 'text-zinc-100 hover:text-blue-300'}`}
+                  className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${isLight ? 'text-zinc-900 hover:bg-zinc-100 hover:text-blue-600' : 'text-zinc-100 hover:bg-white/10 hover:text-blue-300'}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t('Home', 'الرئيسية')}
                 </Link>
                 <Link
                   href="/games"
-                  className={`text-lg font-medium transition-colors ${isLight ? 'text-zinc-900 hover:text-blue-600' : 'text-zinc-100 hover:text-blue-300'}`}
+                  className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${isLight ? 'text-zinc-900 hover:bg-zinc-100 hover:text-blue-600' : 'text-zinc-100 hover:bg-white/10 hover:text-blue-300'}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t('WAHO Services', 'خدمات WAHO')}
                 </Link>
                 <Link
                   href="/promotions"
-                  className={`text-lg font-medium transition-colors ${isLight ? 'text-zinc-900 hover:text-blue-600' : 'text-zinc-100 hover:text-blue-300'}`}
+                  className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${isLight ? 'text-zinc-900 hover:bg-zinc-100 hover:text-blue-600' : 'text-zinc-100 hover:bg-white/10 hover:text-blue-300'}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t('WAHO Offers', 'عروض WAHO')}
+                </Link>
+                <Link
+                  href="/cart"
+                  className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${isLight ? 'text-zinc-900 hover:bg-zinc-100 hover:text-blue-600' : 'text-zinc-100 hover:bg-white/10 hover:text-blue-300'}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t('Cart', 'السلة')}
                 </Link>
                 {isAuthenticated && (
                   <>
                     <Link
                       href="/orders"
-                      className={`text-lg font-medium transition-colors ${isLight ? 'text-zinc-900 hover:text-blue-600' : 'text-zinc-100 hover:text-blue-300'}`}
+                      className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${isLight ? 'text-zinc-900 hover:bg-zinc-100 hover:text-blue-600' : 'text-zinc-100 hover:bg-white/10 hover:text-blue-300'}`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {t('My Orders', 'طلباتي')}
                     </Link>
                     <Link
                       href="/wallet"
-                      className={`text-lg font-medium transition-colors ${isLight ? 'text-zinc-900 hover:text-blue-600' : 'text-zinc-100 hover:text-blue-300'}`}
+                      className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${isLight ? 'text-zinc-900 hover:bg-zinc-100 hover:text-blue-600' : 'text-zinc-100 hover:bg-white/10 hover:text-blue-300'}`}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       {t('Wallet', 'المحفظة')}
                     </Link>
                   </>
                 )}
+                <Link
+                  href="/settings"
+                  className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${isLight ? 'text-zinc-900 hover:bg-zinc-100 hover:text-blue-600' : 'text-zinc-100 hover:bg-white/10 hover:text-blue-300'}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t('Settings', 'الإعدادات')}
+                </Link>
               </nav>
+
+              <div className={`my-6 border-t ${isLight ? 'border-black/10' : 'border-white/10'}`} />
+
+              <section>
+                <div className="mb-3 flex items-center gap-2">
+                  <Globe className={`h-4 w-4 ${isLight ? 'text-blue-600' : 'text-blue-300'}`} />
+                  <h2 className={`text-sm font-semibold ${isLight ? 'text-zinc-950' : 'text-white'}`}>
+                    {t('Language', 'اللغة')}
+                  </h2>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {languageOptions.map((option) => (
+                    <Button
+                      key={option.id}
+                      type="button"
+                      size="sm"
+                      variant={language === option.id ? 'default' : 'outline'}
+                      onClick={() => setLanguage(option.id)}
+                      className={
+                        language === option.id
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : isLight
+                            ? 'border-black/10 bg-white text-zinc-700 hover:bg-zinc-50'
+                            : 'border-white/10 bg-transparent text-zinc-100 hover:bg-white/10'
+                      }
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </section>
+
+              <div className={`my-6 border-t ${isLight ? 'border-black/10' : 'border-white/10'}`} />
+
+              {isAuthenticated ? (
+                <div className="space-y-2">
+                  <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className={`w-full justify-start ${isLight ? 'border-black/10 bg-white text-zinc-800 hover:bg-zinc-50' : 'border-white/10 bg-transparent text-zinc-100 hover:bg-white/10'}`}>
+                      <User className="mr-2 h-4 w-4" />
+                      {t('Profile', 'الملف الشخصي')}
+                    </Button>
+                  </Link>
+                  <Button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    variant="outline"
+                    className="w-full justify-start border-red-200 bg-white text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {t('Logout', 'تسجيل الخروج')}
+                  </Button>
+                </div>
+              ) : (
+                <Link href="/auth" onClick={() => setMobileMenuOpen(false)}>
+                  <Button className="w-full bg-blue-600 text-white shadow-none hover:bg-blue-700">
+                    {t('Login', 'تسجيل الدخول')}
+                  </Button>
+                </Link>
+              )}
             </SheetContent>
           </Sheet>
 
@@ -152,7 +237,7 @@ export function Header() {
           {/* Right Side */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Search */}
-            <Button variant="ghost" size="icon" className={`hidden md:flex ${isLight ? 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-100' : 'text-zinc-300 hover:text-blue-300 hover:bg-white/10'}`}>
+            <Button aria-label={t('Search', 'بحث')} variant="ghost" size="icon" className={`hidden md:flex ${isLight ? 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-100' : 'text-zinc-300 hover:text-blue-300 hover:bg-white/10'}`}>
               <Search className="h-4 w-4" />
             </Button>
 
@@ -160,6 +245,7 @@ export function Header() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
+                  aria-label={t('Change language', 'تغيير اللغة')}
                   variant="ghost"
                   size="sm"
                   className={`gap-1.5 px-2 sm:px-3 ${isLight ? 'text-zinc-700 hover:bg-zinc-100' : 'text-zinc-100 hover:bg-white/10'}`}
@@ -205,6 +291,7 @@ export function Header() {
 
                 {/* Notifications */}
                 <Button
+                  aria-label={t('Notifications', 'الإشعارات')}
                   variant="ghost"
                   size="icon"
                   className={`relative ${isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-zinc-200 hover:bg-white/10'}`}
@@ -216,23 +303,27 @@ export function Header() {
                 </Button>
 
                 {/* Cart */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`relative ${isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-zinc-200 hover:bg-white/10'}`}
-                >
-                  <ShoppingCart className="h-4 w-4" />
-                  {cartTotal > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-blue-600 text-white text-[10px] font-semibold flex items-center justify-center">
-                      {cartTotal}
-                    </span>
-                  )}
-                </Button>
+                <Link href="/cart">
+                  <Button
+                    aria-label={t('Open cart', 'افتح السلة')}
+                    variant="ghost"
+                    size="icon"
+                    className={`relative ${isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-zinc-200 hover:bg-white/10'}`}
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    {cartTotal > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-blue-600 text-white text-[10px] font-semibold flex items-center justify-center">
+                        {cartTotal}
+                      </span>
+                    )}
+                  </Button>
+                </Link>
 
                 {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
+                      aria-label={t('Open account menu', 'افتح قائمة الحساب')}
                       variant="ghost"
                       size="sm"
                       className={`gap-2 ${isLight ? 'text-zinc-700 hover:bg-zinc-100' : 'text-zinc-100 hover:bg-white/10'}`}
