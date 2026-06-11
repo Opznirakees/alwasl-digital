@@ -11,6 +11,7 @@ import type {
   RevenueData,
   Notification,
 } from '@/types';
+import { wahoScreenshots } from './waho-images';
 
 // Countries
 export const countries: Country[] = [
@@ -385,9 +386,6 @@ const legacyGames: Game[] = [
   },
 ];
 
-const alwaslMark = '/brand/alwasl-mark.jpg';
-const alwaslBanner = '/brand/alwasl-logo.jpg';
-
 // WAHO products. Kept under the existing Game type until live fulfillment details land.
 export const games: Game[] = [
   {
@@ -397,8 +395,8 @@ export const games: Game[] = [
     nameAr: 'عملات WAHO',
     description: 'Recharge WAHO coin balance for live rooms, voice chat gifts, moments, and party interactions.',
     descriptionAr: 'اشحن رصيد عملات WAHO للغرف المباشرة والهدايا واللحظات وتفاعلات الحفلات.',
-    image: alwaslMark,
-    banner: alwaslBanner,
+    image: wahoScreenshots.liveStream,
+    banner: wahoScreenshots.liveStream,
     category: 'social_media',
     publisher: 'Waho team',
     isPopular: true,
@@ -424,8 +422,8 @@ export const games: Game[] = [
     nameAr: 'باقات هدايا WAHO',
     description: 'Send gift-ready WAHO bundles for voice rooms, live streams, themed parties, and friend surprises.',
     descriptionAr: 'أرسل باقات هدايا WAHO للغرف الصوتية والبث المباشر والحفلات والمفاجآت.',
-    image: alwaslMark,
-    banner: alwaslBanner,
+    image: wahoScreenshots.partyRoom,
+    banner: wahoScreenshots.partyRoom,
     category: 'gift_card',
     publisher: 'Waho team',
     isPopular: true,
@@ -451,8 +449,8 @@ export const games: Game[] = [
     nameAr: 'تعزيز غرف WAHO المباشرة',
     description: 'Boost WAHO voice rooms with decorations, visibility, frames, and live party upgrades.',
     descriptionAr: 'عزز غرف WAHO الصوتية بزخارف وظهور وإطارات وترقيات للحفلات المباشرة.',
-    image: alwaslMark,
-    banner: alwaslBanner,
+    image: wahoScreenshots.onlineParties,
+    banner: wahoScreenshots.onlineParties,
     category: 'streaming',
     publisher: 'Waho team',
     isPopular: true,
@@ -479,8 +477,8 @@ export const games: Game[] = [
     nameAr: 'باقات ألعاب WAHO الجماعية',
     description: 'Top up casual party-game packs for WAHO rooms, including Ludo-style sessions and group play.',
     descriptionAr: 'اشحن باقات ألعاب جماعية لغرف WAHO مثل جلسات لودو واللعب مع الأصدقاء.',
-    image: alwaslMark,
-    banner: alwaslBanner,
+    image: wahoScreenshots.casualGames,
+    banner: wahoScreenshots.casualGames,
     category: 'mobile_game',
     publisher: 'Waho team',
     isPopular: false,
@@ -505,8 +503,8 @@ export const games: Game[] = [
     nameAr: 'عضوية وميداليات WAHO',
     description: 'Activate WAHO VIP status, achievement medals, avatar frames, and profile privileges.',
     descriptionAr: 'فعّل عضوية WAHO والميداليات وإطارات الصورة وامتيازات الملف الشخصي.',
-    image: alwaslMark,
-    banner: alwaslBanner,
+    image: wahoScreenshots.friends,
+    banner: wahoScreenshots.friends,
     category: 'voucher',
     publisher: 'Waho team',
     isPopular: true,
@@ -762,7 +760,7 @@ export const banners: Banner[] = [
     titleAr: 'حلول رقمية لنمو أعمالك',
     subtitle: 'Page promotion, app recharge, marketing services, and reliable WAHO delivery.',
     subtitleAr: 'ترويج صفحات وشحن تطبيقات وخدمات تسويقية وتسليم WAHO موثوق.',
-    image: alwaslBanner,
+    image: wahoScreenshots.liveStream,
     gameId: 'waho-coins',
     startDate: '2026-05-20T00:00:00Z',
     endDate: '2026-06-01T23:59:59Z',
@@ -775,7 +773,7 @@ export const banners: Banner[] = [
     titleAr: 'عزز غرف وحفلات WAHO',
     subtitle: 'Room boosts, decorations, and party game packs in one checkout.',
     subtitleAr: 'تعزيز الغرف والزخارف وباقات الألعاب في عملية دفع واحدة.',
-    image: alwaslBanner,
+    image: wahoScreenshots.onlineParties,
     gameId: 'waho-live-rooms',
     startDate: '2026-05-15T00:00:00Z',
     endDate: '2026-06-15T23:59:59Z',
@@ -788,7 +786,7 @@ export const banners: Banner[] = [
     titleAr: 'عضوية WAHO والميداليات وإطارات الملف',
     subtitle: 'Highlight status inside the WAHO community.',
     subtitleAr: 'أبرز حالتك داخل مجتمع WAHO.',
-    image: alwaslBanner,
+    image: wahoScreenshots.friends,
     gameId: 'waho-vip-medals',
     startDate: '2026-05-01T00:00:00Z',
     endDate: '2026-06-30T23:59:59Z',

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,16 +27,27 @@ const categoryIcons: Record<GameCategory, React.ComponentType<{ className?: stri
 function ServiceVisual({ game, compact = false }: { game: Game; compact?: boolean }) {
   const { t } = useApp();
   const Icon = categoryIcons[game.category] || Sparkles;
+  const imageAlt = t(game.name, game.nameAr);
 
   return (
-    <div className={`relative overflow-hidden border border-black/10 bg-[#f5f5f7] ${compact ? 'h-12 w-12 rounded-lg' : 'aspect-[5/3]'}`}>
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className={`${compact ? 'h-8 w-8' : 'h-14 w-14'} flex items-center justify-center rounded-lg bg-white text-blue-600 ring-1 ring-black/10`}>
-          <Icon className={compact ? 'h-4 w-4' : 'h-7 w-7'} />
+    <div className={`relative overflow-hidden border border-black/10 bg-[#f5f5f7] ${compact ? 'h-12 w-12 rounded-lg' : 'aspect-[4/5]'}`}>
+      {game.image.startsWith('/waho/') ? (
+        <Image
+          src={game.image}
+          alt={imageAlt}
+          fill
+          className="object-cover"
+          sizes={compact ? '48px' : '(min-width: 1280px) 224px, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw'}
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className={`${compact ? 'h-8 w-8' : 'h-14 w-14'} flex items-center justify-center rounded-lg bg-white text-blue-600 ring-1 ring-black/10`}>
+            <Icon className={compact ? 'h-4 w-4' : 'h-7 w-7'} />
+          </div>
         </div>
-      </div>
+      )}
       {!compact && (
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[10px] font-medium uppercase text-zinc-400">
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between rounded-md bg-white/90 px-2 py-1 text-[10px] font-medium uppercase text-zinc-500 ring-1 ring-black/10 backdrop-blur">
           <span>WAHO</span>
           <span>{t(game.publisher, game.publisher)}</span>
         </div>

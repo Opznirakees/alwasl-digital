@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, CalendarDays, Copy, Gift, TicketPercent } from 'lucide-react';
 import { toast } from 'sonner';
 import { Header } from '@/components/layout/Header';
@@ -86,6 +87,26 @@ export default function PromotionsPage() {
                     </div>
                     <Badge variant="outline" className={stateClass}>{stateLabel}</Badge>
                   </div>
+
+                  {applicableGames.length > 0 && (
+                    <div className="mt-5 flex gap-2 overflow-hidden">
+                      {applicableGames.slice(0, 3).map((game) => game && (
+                        <Link
+                          key={game.id}
+                          href={`/games/${game.slug}`}
+                          className="relative aspect-[750/1624] w-14 flex-shrink-0 overflow-hidden rounded-md border border-black/10 bg-zinc-100"
+                        >
+                          <Image
+                            src={game.image}
+                            alt={t(game.name, game.nameAr)}
+                            fill
+                            className={game.image.startsWith('/waho/') ? 'object-cover' : 'object-contain p-1'}
+                            sizes="56px"
+                          />
+                        </Link>
+                      ))}
+                    </div>
+                  )}
 
                   <h2 className="mt-6 text-3xl font-semibold text-zinc-950">{discountText}</h2>
                   <div className="mt-4 inline-flex items-center gap-2 rounded-md border border-dashed border-blue-200 bg-blue-50 px-3 py-2 text-blue-700">
