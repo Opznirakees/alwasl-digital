@@ -120,17 +120,17 @@ export default function OrdersPage() {
 
         {/* Filter Tabs */}
         <Tabs value={filter} onValueChange={(v) => setFilter(v as OrderStatus | 'all')} className="mb-6">
-          <TabsList className="bg-slate-800/50 border border-emerald-800/20">
-            <TabsTrigger value="all" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-slate-800/50 border border-emerald-800/20 p-1 sm:inline-flex sm:h-9 sm:w-auto sm:grid-cols-none">
+            <TabsTrigger value="all" className="min-h-10 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
               {t('All', 'الكل')}
             </TabsTrigger>
-            <TabsTrigger value="completed" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
+            <TabsTrigger value="completed" className="min-h-10 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
               {t('Completed', 'مكتمل')}
             </TabsTrigger>
-            <TabsTrigger value="processing" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
+            <TabsTrigger value="processing" className="min-h-10 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
               {t('Processing', 'قيد المعالجة')}
             </TabsTrigger>
-            <TabsTrigger value="failed" className="data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
+            <TabsTrigger value="failed" className="min-h-10 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
               {t('Failed', 'فشل')}
             </TabsTrigger>
           </TabsList>
@@ -176,9 +176,10 @@ export default function OrdersPage() {
                           <span className="font-mono text-white">{order.id}</span>
                           <button
                             onClick={() => copyOrderId(order.id)}
-                            className="p-1 rounded hover:bg-white/10 transition-colors"
+                            aria-label={t('Copy order ID', 'نسخ رقم الطلب')}
+                            className="flex h-11 w-11 items-center justify-center rounded-md hover:bg-white/10 transition-colors"
                           >
-                            <Copy className="w-3 h-3 text-white/50" />
+                            <Copy className="w-4 h-4 text-white/50" />
                           </button>
                         </div>
                         {order.gameUserId && (

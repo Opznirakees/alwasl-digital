@@ -71,7 +71,7 @@ export function Header() {
                 aria-label={t('Open menu', 'افتح القائمة')}
                 variant="ghost"
                 size="icon"
-                className={`${isLight ? 'text-zinc-700 hover:bg-zinc-100' : 'text-zinc-100 hover:bg-white/10'}`}
+                className={`h-11 w-11 flex-shrink-0 ${isLight ? 'text-zinc-700 hover:bg-zinc-100' : 'text-zinc-100 hover:bg-white/10'}`}
               >
                 <Menu className="h-5 w-5" />
               </Button>

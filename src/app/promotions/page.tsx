@@ -111,7 +111,11 @@ export default function PromotionsPage() {
                   <h2 className="mt-6 text-3xl font-semibold text-zinc-950">{discountText}</h2>
                   <div className="mt-4 inline-flex items-center gap-2 rounded-md border border-dashed border-blue-200 bg-blue-50 px-3 py-2 text-blue-700">
                     <span className="font-mono font-bold">{promotion.code}</span>
-                    <button onClick={() => copyCode(promotion.code)} aria-label={t('Copy code', 'نسخ الكود')}>
+                    <button
+                      onClick={() => copyCode(promotion.code)}
+                      aria-label={t('Copy code', 'نسخ الكود')}
+                      className="-my-2 flex h-11 w-11 items-center justify-center rounded-md transition-colors hover:bg-blue-500/10"
+                    >
                       <Copy className="w-4 h-4" />
                     </button>
                   </div>
@@ -131,7 +135,7 @@ export default function PromotionsPage() {
                     {applicableGames.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {applicableGames.map((game) => game && (
-                          <Link key={game.id} href={`/games/${game.slug}`}>
+                          <Link key={game.id} href={`/games/${game.slug}`} className="inline-flex min-h-11 items-center">
                             <Badge variant="outline" className="border-black/10 text-zinc-600">
                               {t(game.name, game.nameAr)}
                             </Badge>

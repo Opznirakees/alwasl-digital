@@ -822,3 +822,11 @@
 .light [data-state="open"].fixed {
   background-color: #ffffff !important;
 }
+
+@media (max-width: 640px) {
+  main a.inline-flex.items-center.gap-2.text-sm {
+    min-height: 44px;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+}

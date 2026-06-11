@@ -206,6 +206,7 @@ const zhTranslations: Record<string, string> = {
   'Please enter a valid phone number': '请输入有效手机号',
   'Login': '登录',
   'Order ID copied!': '订单号已复制！',
+  'Copy order ID': '复制订单号',
   'View and track your order history': '查看并跟踪您的订单记录',
   'Completed': '已完成',
   'Processing': '处理中',

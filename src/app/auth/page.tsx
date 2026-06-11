@@ -111,7 +111,7 @@ export default function AuthPage() {
       <div className="w-full max-w-md">
         <Link
           href="/"
-          className="mb-6 inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-blue-600"
+          className="mb-6 inline-flex min-h-11 items-center gap-2 py-2 text-sm text-zinc-500 transition-colors hover:text-blue-600"
         >
           <ArrowLeft className="w-4 h-4" />
           {t('Back to Home', 'العودة للرئيسية')}
