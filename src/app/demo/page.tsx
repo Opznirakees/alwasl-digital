@@ -35,9 +35,9 @@ const demoSteps = [
 ];
 
 export default function DemoPage() {
-  const { t, language, dir, theme, resetDemoData } = useApp();
+  const { t, dir, theme, resetDemoData } = useApp();
   const isLight = theme === 'light';
-  const text = (value: { en: string; ar: string }) => language === 'ar' ? value.ar : value.en;
+  const text = (value: { en: string; ar: string }) => t(value.en, value.ar);
 
   return (
     <div className={`min-h-screen ${isLight ? 'bg-slate-50' : 'bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950'} ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>

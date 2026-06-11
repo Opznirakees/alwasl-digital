@@ -23,7 +23,7 @@ export default function CartPage() {
   const total = rows.reduce((sum, row) => sum + row.price, 0);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(amount);
+    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ').format(amount);
   };
 
   return (
@@ -62,10 +62,10 @@ export default function CartPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h2 className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                        {language === 'ar' ? game.nameAr : game.name}
+                        {t(game.name, game.nameAr)}
                       </h2>
                       <p className="text-sm text-purple-400">
-                        {language === 'ar' ? pkg.nameAr : pkg.name} x {item.quantity}
+                        {t(pkg.name, pkg.nameAr)} x {item.quantity}
                       </p>
                       {item.gameUserId && (
                         <p className={`text-xs mt-1 ${isLight ? 'text-slate-500' : 'text-white/50'}`}>

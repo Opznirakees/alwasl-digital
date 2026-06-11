@@ -317,10 +317,10 @@ export default function AdminDashboard() {
                             provider.status === 'online' ? 'bg-emerald-400' :
                             provider.status === 'degraded' ? 'bg-amber-400' : 'bg-rose-400'
                           }`} />
-                          <span className="text-sm text-white">{provider.name}</span>
+                          <span className="text-sm text-white">{t(provider.name, provider.name)}</span>
                         </div>
                         <Badge variant="outline" className={getStatusColor(provider.status)}>
-                          {provider.status}
+                          {getStatusLabel(provider.status)}
                         </Badge>
                       </div>
                     ))}
@@ -449,7 +449,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold text-white">{t(game.name, game.nameAr)}</h3>
-                        <p className="text-xs text-white/50">{game.publisher}</p>
+                        <p className="text-xs text-white/50">{t(game.publisher, game.publisher)}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-400">
                             {game.packages.length} {t('packages', 'باقات')}
@@ -484,7 +484,7 @@ export default function AdminDashboard() {
                   <Card key={provider.id} className="bg-slate-900/50 border-emerald-800/20 p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-white">{provider.name}</h3>
+                        <h3 className="text-lg font-semibold text-white">{t(provider.name, provider.name)}</h3>
                         <p className="text-xs text-white/50">{provider.apiEndpoint}</p>
                       </div>
                       <Badge variant="outline" className={getStatusColor(provider.status)}>

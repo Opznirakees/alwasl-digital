@@ -144,7 +144,7 @@ export default function GamePage({ params }: GamePageProps) {
               <h1 className="mt-1 text-2xl font-semibold text-zinc-950 md:text-3xl">
                 {t(game.name, game.nameAr)}
               </h1>
-              <p className="mt-1 text-sm text-zinc-500">{game.publisher}</p>
+              <p className="mt-1 text-sm text-zinc-500">{t(game.publisher, game.publisher)}</p>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
                 {t(game.description, game.descriptionAr)}
               </p>

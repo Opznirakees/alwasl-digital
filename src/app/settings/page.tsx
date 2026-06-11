@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useApp } from '@/contexts/AppContext';
-import { countries } from '@/data/mock-data';
 
 export default function SettingsPage() {
   const {
@@ -17,8 +16,6 @@ export default function SettingsPage() {
     dir,
     theme,
     toggleTheme,
-    selectedCountry,
-    setSelectedCountry,
   } = useApp();
   const isLight = theme === 'light';
 
@@ -37,7 +34,7 @@ export default function SettingsPage() {
             {t('Settings', 'الإعدادات')}
           </h1>
           <p className={`mt-3 ${isLight ? 'text-slate-600' : 'text-white/60'}`}>
-            {t('Manage language, region, and display preferences.', 'إدارة اللغة والمنطقة وتفضيلات العرض.')}
+            {t('Manage language and display preferences.', 'إدارة اللغة وتفضيلات العرض.')}
           </p>
 
           <div className="space-y-4 mt-8">
@@ -63,6 +60,7 @@ export default function SettingsPage() {
                 {[
                   { id: 'en' as const, label: 'English' },
                   { id: 'ar' as const, label: 'العربية' },
+                  { id: 'zh' as const, label: '中文' },
                 ].map((item) => (
                   <Button
                     key={item.id}
@@ -72,30 +70,6 @@ export default function SettingsPage() {
                   >
                     {item.label}
                   </Button>
-                ))}
-              </div>
-            </Card>
-
-            <Card className={`p-6 ${isLight ? 'bg-white border-purple-100' : 'bg-slate-900/50 border-purple-500/15'}`}>
-              <h2 className={`font-bold mb-4 ${isLight ? 'text-slate-900' : 'text-white'}`}>{t('Country', 'الدولة')}</h2>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {countries.filter((country) => country.isActive).map((country) => (
-                  <button
-                    key={country.id}
-                    onClick={() => setSelectedCountry(country)}
-                    className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-all ${
-                      selectedCountry.id === country.id
-                        ? 'border-purple-500 bg-purple-500/10'
-                        : isLight
-                          ? 'border-purple-100 bg-white hover:border-purple-200'
-                          : 'border-purple-500/15 bg-slate-800/40 hover:border-purple-500/30'
-                    }`}
-                  >
-                    <span className="text-2xl">{country.flag}</span>
-                    <span className={isLight ? 'text-slate-800' : 'text-white'}>
-                      {language === 'ar' ? country.nameAr : country.name}
-                    </span>
-                  </button>
                 ))}
               </div>
             </Card>

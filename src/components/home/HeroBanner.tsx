@@ -19,9 +19,9 @@ import {
 } from 'lucide-react';
 
 const serviceRows = [
-  { icon: Coins, label: 'WAHO Coins', value: '15,000' },
-  { icon: Gift, label: 'Gift Bundles', value: '60' },
-  { icon: Radio, label: 'Live Rooms', value: '30d' },
+  { icon: Coins, label: 'WAHO Coins', value: { en: '15,000', ar: '15,000', zh: '15,000' } },
+  { icon: Gift, label: 'Gift Bundles', value: { en: '60', ar: '60', zh: '60' } },
+  { icon: Radio, label: 'Live Rooms', value: { en: '30d', ar: '30 يوم', zh: '30天' } },
 ];
 
 const processSteps = [
@@ -114,8 +114,8 @@ export function HeroBanner() {
             {serviceRows.map((row) => (
               <div key={row.label} className="rounded-md border border-black/10 bg-zinc-50 px-3 py-3">
                 <row.icon className="mb-2 h-4 w-4 text-blue-600" />
-                <p className="truncate text-[11px] font-medium text-zinc-700">{t(row.label, row.label, row.label)}</p>
-                <p className="font-mono text-xs font-semibold text-zinc-950">{row.value}</p>
+                <p className="truncate text-[11px] font-medium text-zinc-700">{t(row.label, row.label)}</p>
+                <p className="font-mono text-xs font-semibold text-zinc-950">{t(row.value.en, row.value.ar, row.value.zh)}</p>
               </div>
             ))}
           </div>
@@ -130,7 +130,7 @@ export function HeroBanner() {
                     </span>
                     <item.icon className="h-4 w-4 text-blue-600" />
                   </div>
-                  <p className="text-sm font-medium text-zinc-950">{t(item.label, item.label, item.label)}</p>
+                  <p className="text-sm font-medium text-zinc-950">{t(item.label, item.label)}</p>
                   <p className="mt-1 text-xs leading-5 text-zinc-500">
                     {index === 0 && t('WAHO ID check', 'فحص معرف WAHO', 'WAHO ID 校验')}
                     {index === 1 && t('Clear package price', 'سعر الباقة واضح', '清晰套餐价格')}

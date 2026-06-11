@@ -24,6 +24,7 @@ const categoryIcons: Record<GameCategory, React.ComponentType<{ className?: stri
 };
 
 function ServiceVisual({ game, compact = false }: { game: Game; compact?: boolean }) {
+  const { t } = useApp();
   const Icon = categoryIcons[game.category] || Sparkles;
 
   return (
@@ -36,7 +37,7 @@ function ServiceVisual({ game, compact = false }: { game: Game; compact?: boolea
       {!compact && (
         <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[10px] font-medium uppercase text-zinc-400">
           <span>WAHO</span>
-          <span>{game.publisher}</span>
+          <span>{t(game.publisher, game.publisher)}</span>
         </div>
       )}
     </div>

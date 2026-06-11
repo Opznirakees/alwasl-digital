@@ -14,9 +14,10 @@ export default function ProfilePage() {
   const currentUser = user || demoUser;
   const isLight = theme === 'light';
   const level = levelLabels[currentUser.level];
+  const displayName = t(currentUser.name, currentUser.name);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(amount);
+    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ').format(amount);
   };
 
   return (
@@ -32,17 +33,17 @@ export default function ProfilePage() {
         <div className="grid lg:grid-cols-3 gap-6">
           <Card className={`lg:col-span-1 p-6 ${isLight ? 'bg-white border-purple-100' : 'bg-slate-900/50 border-purple-500/15'}`}>
             <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-3xl font-bold text-white">
-              {currentUser.name.charAt(0)}
+              {displayName.charAt(0)}
             </div>
             <h1 className={`text-2xl font-bold mt-5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              {currentUser.name}
+              {displayName}
             </h1>
             <p className={isLight ? 'text-slate-500' : 'text-white/50'}>
               {currentUser.phone}
             </p>
             <Badge className="mt-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
               <Star className="w-3 h-3 mr-1" />
-              {language === 'ar' ? level.ar : level.en}
+              {t(level.en, level.ar)}
             </Badge>
           </Card>
 

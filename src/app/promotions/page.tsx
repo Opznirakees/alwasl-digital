@@ -15,11 +15,11 @@ export default function PromotionsPage() {
   const now = new Date();
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : 'en-IQ').format(amount);
+    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ').format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(language === 'ar' ? 'ar-IQ' : 'en-IQ', {
+    return new Date(dateString).toLocaleDateString(language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -112,7 +112,7 @@ export default function PromotionsPage() {
                         {applicableGames.map((game) => game && (
                           <Link key={game.id} href={`/games/${game.slug}`}>
                             <Badge variant="outline" className="border-black/10 text-zinc-600">
-                              {language === 'ar' ? game.nameAr : game.name}
+                              {t(game.name, game.nameAr)}
                             </Badge>
                           </Link>
                         ))}
