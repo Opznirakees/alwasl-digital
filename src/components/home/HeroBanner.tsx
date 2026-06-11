@@ -12,9 +12,30 @@ import {
 } from 'lucide-react';
 
 const heroScreenshots = [
-  { src: wahoScreenshots.liveStream, label: 'WAHO live stream screenshot' },
-  { src: wahoScreenshots.onlineParties, label: 'WAHO online party screenshot' },
-  { src: wahoScreenshots.casualGames, label: 'WAHO casual games screenshot' },
+  {
+    src: wahoScreenshots.liveStream,
+    alt: {
+      en: 'WAHO live stream screenshot',
+      ar: 'لقطة شاشة للبث المباشر في WAHO',
+      zh: 'WAHO 直播截图',
+    },
+  },
+  {
+    src: wahoScreenshots.onlineParties,
+    alt: {
+      en: 'WAHO online party screenshot',
+      ar: 'لقطة شاشة لحفلة WAHO عبر الإنترنت',
+      zh: 'WAHO 在线派对截图',
+    },
+  },
+  {
+    src: wahoScreenshots.casualGames,
+    alt: {
+      en: 'WAHO casual games screenshot',
+      ar: 'لقطة شاشة لألعاب WAHO الجماعية',
+      zh: 'WAHO 休闲游戏截图',
+    },
+  },
 ];
 
 export function HeroBanner() {
@@ -80,7 +101,7 @@ export function HeroBanner() {
                 <div className="relative aspect-[750/1624] overflow-hidden rounded-md bg-zinc-100">
                   <Image
                     src={shot.src}
-                    alt={shot.label}
+                    alt={t(shot.alt.en, shot.alt.ar, shot.alt.zh)}
                     fill
                     className="object-cover"
                     sizes="132px"
@@ -98,7 +119,7 @@ export function HeroBanner() {
                 <div className="relative aspect-[750/1624] overflow-hidden rounded-[30px] border-[6px] border-zinc-950 bg-zinc-950 shadow-sm">
                   <Image
                     src={wahoScreenshots.liveStream}
-                    alt="WAHO live stream screenshot"
+                    alt={t('WAHO live stream screenshot', 'لقطة شاشة للبث المباشر في WAHO', 'WAHO 直播截图')}
                     fill
                     className="object-cover"
                     sizes="245px"
@@ -112,7 +133,7 @@ export function HeroBanner() {
                   <div key={src} className="relative aspect-[750/1624] overflow-hidden rounded-lg border border-black/10 bg-zinc-100">
                     <Image
                       src={src}
-                      alt="WAHO app screenshot"
+                      alt={t('WAHO app screenshot', 'لقطة شاشة لتطبيق WAHO', 'WAHO 应用截图')}
                       fill
                       className="object-cover"
                       sizes="160px"

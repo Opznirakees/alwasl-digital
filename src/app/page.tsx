@@ -93,7 +93,7 @@ export default function HomePage() {
                   <div className="relative aspect-[750/1624] overflow-hidden rounded-md bg-zinc-100">
                     <Image
                       src={item.src}
-                      alt={`WAHO ${item.label.en}`}
+                      alt={t(`WAHO ${item.label.en}`, `WAHO ${item.label.ar}`, `WAHO ${item.label.zh}`)}
                       fill
                       className="object-cover"
                       sizes="(min-width: 768px) 14vw, 148px"
