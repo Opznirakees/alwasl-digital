@@ -58,7 +58,7 @@ export function CategoryTabs({ selectedCategory, onSelectCategory }: CategoryTab
             onClick={() => onSelectCategory(category)}
             className={`flex items-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
               selectedCategory === category
-                ? 'bg-white text-zinc-950 shadow-sm'
+                ? 'bg-white text-zinc-950'
                 : 'text-zinc-600 hover:bg-white/60 hover:text-zinc-950'
             }`}
           >

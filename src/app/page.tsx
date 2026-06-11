@@ -47,16 +47,19 @@ export default function HomePage() {
         <HeroBanner />
 
         {/* Quick Stats */}
-        <section className="grid grid-cols-2 gap-3 border-y border-black/10 py-4 md:grid-cols-4 md:gap-4">
+        <section className="grid grid-cols-2 overflow-hidden rounded-lg border border-black/10 bg-white md:grid-cols-4">
           {[
             { icon: <BadgeCheck className="w-4 h-4" />, label: t('High Quality', 'جودة عالية'), value: t('Trusted', 'موثوق') },
             { icon: <Zap className="w-4 h-4" />, label: t('Fast Fulfillment', 'إنجاز فوري'), value: t('Quick', 'سريع') },
             { icon: <Sparkles className="w-4 h-4" />, label: t('Competitive Prices', 'أسعار تنافسية'), value: t('Fair', 'مناسبة') },
             { icon: <Headphones className="w-4 h-4" />, label: t('Technical Support', 'دعم فني'), value: '24/7' },
           ].map((stat, i) => (
-            <div key={i} className="rounded-lg bg-white p-4 ring-1 ring-black/10">
+            <div
+              key={i}
+              className={`border-black/10 p-4 ${i % 2 === 1 ? 'border-l' : ''} ${i > 1 ? 'border-t' : ''} ${i > 0 ? 'md:border-l' : ''} md:border-t-0`}
+            >
               <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-zinc-100 text-blue-600">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-zinc-50 text-blue-600">
                   {stat.icon}
                 </div>
                 <div>
@@ -102,7 +105,7 @@ export default function HomePage() {
         <section className="overflow-hidden rounded-lg border border-black/10 bg-white p-6">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-100 text-[#34c759]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-50 text-[#1f8f3a]">
                 <MessageCircle className="w-6 h-6" />
               </div>
               <div>
@@ -114,7 +117,7 @@ export default function HomePage() {
               href="https://wa.me/9647812345678"
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-md bg-[#34c759] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#2fb350]"
+              className="rounded-md border border-black/10 bg-white px-6 py-3 font-semibold text-zinc-800 transition-colors hover:bg-zinc-50"
             >
               {t('Chat on WhatsApp', 'تواصل عبر واتساب')}
             </a>

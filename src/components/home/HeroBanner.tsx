@@ -9,22 +9,25 @@ import {
   CheckCircle2,
   ChevronRight,
   Coins,
+  CreditCard,
   Gift,
+  ListChecks,
   Radio,
   ShieldCheck,
   Sparkles,
   Zap,
 } from 'lucide-react';
 
-const wahoScreenshots = [
-  'https://play-lh.googleusercontent.com/lIMMJNhZ_y4OJSwz_BOmxBfC043fH833-xLy05ev3hnF9SHbWbQayj8kWkPDyT_N0o-bmZ8SuojTmcsl6ttK=w750-h1624-rw',
-  'https://play-lh.googleusercontent.com/aDoXznur5K5tgL5NCVa2pLoJSGByBvVagBhUw-l9TZg1jkrpS3cTLcnMFUZHFnB3j42blKgGMu0aPxyrtOi6xhM=w750-h1624-rw',
-];
-
 const serviceRows = [
   { icon: Coins, label: 'WAHO Coins', value: '15,000' },
   { icon: Gift, label: 'Gift Bundles', value: '60' },
   { icon: Radio, label: 'Live Rooms', value: '30d' },
+];
+
+const processSteps = [
+  { icon: ListChecks, label: 'Validate' },
+  { icon: CreditCard, label: 'Price' },
+  { icon: BadgeCheck, label: 'Deliver' },
 ];
 
 export function HeroBanner() {
@@ -82,52 +85,34 @@ export function HeroBanner() {
         </div>
       </div>
 
-      <div className="relative hidden min-h-[420px] md:block">
-        <div className="absolute left-8 top-10 h-[360px] w-[166px] overflow-hidden rounded-[2rem] border-[10px] border-zinc-950 bg-zinc-950 shadow-[0_18px_45px_rgba(0,0,0,0.18)]">
-          <Image
-            src={wahoScreenshots[0]}
-            alt={t('WAHO live stream app screenshot', 'لقطة شاشة لتطبيق WAHO', 'WAHO 应用截图')}
-            fill
-            className="object-cover"
-            sizes="166px"
-            priority
-          />
-        </div>
-
-        <div className="absolute right-4 top-0 h-[390px] w-[180px] overflow-hidden rounded-[2.15rem] border-[10px] border-zinc-950 bg-zinc-950 shadow-[0_18px_45px_rgba(0,0,0,0.16)]">
-          <Image
-            src={wahoScreenshots[1]}
-            alt={t('WAHO voice room app screenshot', 'لقطة شاشة لغرف WAHO الصوتية', 'WAHO 语音房截图')}
-            fill
-            className="object-cover"
-            sizes="180px"
-            priority
-          />
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 mx-auto w-[82%] rounded-lg border border-black/10 bg-white/95 p-4 shadow-sm backdrop-blur">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-black/10 bg-white">
+      <div className="hidden md:block">
+        <div className="rounded-lg border border-black/10 bg-white p-5">
+          <div className="flex items-center justify-between gap-4 border-b border-black/10 pb-4">
+            <div className="flex items-center gap-4">
+              <div className="relative h-16 w-16 overflow-hidden rounded-lg border border-black/10 bg-white">
                 <Image
-                  src="/brand/alwasl-mark.jpg"
+                  src="/brand/alwasl-logo.jpg"
                   alt={t('Al-Wasl Digital Services', 'الوصل للخدمات الإلكترونية', 'Al-Wasl 数字服务')}
                   fill
                   className="object-contain p-1"
-                  sizes="40px"
+                  sizes="64px"
+                  priority
                 />
               </div>
               <div>
-                <p className="text-sm font-semibold text-zinc-950">{t('WAHO fulfillment', 'تنفيذ WAHO', 'WAHO 交付')}</p>
-                <p className="text-xs text-zinc-500">{t('API-ready services', 'خدمات جاهزة للـ API', 'API 就绪服务')}</p>
+                <p className="text-xs font-medium uppercase text-blue-600">WAHO</p>
+                <p className="text-base font-semibold text-zinc-950">{t('Service desk', 'مكتب الخدمات', '服务台')}</p>
+                <p className="text-sm text-zinc-500">{t('Clean catalog for API delivery', 'كتالوج واضح للتسليم عبر API', '面向 API 交付的清晰目录')}</p>
               </div>
             </div>
-            <BadgeCheck className="h-5 w-5 text-blue-600" />
+            <div className="rounded-md border border-black/10 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-600">
+              {t('Ready', 'جاهز', '就绪')}
+            </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
+          <div className="mt-5 grid grid-cols-3 gap-2">
             {serviceRows.map((row) => (
-              <div key={row.label} className="rounded-md bg-zinc-100 px-3 py-2">
+              <div key={row.label} className="rounded-md border border-black/10 bg-zinc-50 px-3 py-3">
                 <row.icon className="mb-2 h-4 w-4 text-blue-600" />
                 <p className="truncate text-[11px] font-medium text-zinc-700">{t(row.label, row.label, row.label)}</p>
                 <p className="font-mono text-xs font-semibold text-zinc-950">{row.value}</p>
@@ -135,13 +120,34 @@ export function HeroBanner() {
             ))}
           </div>
 
-          <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-zinc-600">
+          <div className="mt-5 rounded-lg bg-zinc-50 p-4">
+            <div className="grid grid-cols-3 gap-3">
+              {processSteps.map((item, index) => (
+                <div key={item.label} className="min-w-0">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-semibold text-zinc-500 ring-1 ring-black/10">
+                      {index + 1}
+                    </span>
+                    <item.icon className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <p className="text-sm font-medium text-zinc-950">{t(item.label, item.label, item.label)}</p>
+                  <p className="mt-1 text-xs leading-5 text-zinc-500">
+                    {index === 0 && t('WAHO ID check', 'فحص معرف WAHO', 'WAHO ID 校验')}
+                    {index === 1 && t('Clear package price', 'سعر الباقة واضح', '清晰套餐价格')}
+                    {index === 2 && t('Order handoff', 'تسليم الطلب', '订单交付')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[11px] font-medium text-zinc-600">
             {[
               { icon: Zap, label: t('Quick', 'سريع', '快速') },
               { icon: ShieldCheck, label: t('Secure', 'آمن', '安全') },
-              { icon: Sparkles, label: t('Clean', 'واضح', '清晰') },
+              { icon: Sparkles, label: t('Clear', 'واضح', '清晰') },
             ].map((item) => (
-              <div key={item.label} className="flex items-center justify-center gap-1">
+              <div key={item.label} className="flex items-center justify-center gap-1 rounded-md bg-white py-2 ring-1 ring-black/10">
                 <item.icon className="h-3.5 w-3.5 text-blue-600" />
                 <span>{item.label}</span>
               </div>

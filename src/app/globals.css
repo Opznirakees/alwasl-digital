@@ -305,20 +305,22 @@
 
 /* WhatsApp button */
 .whatsapp-btn {
-  background: #34c759;
-  color: white;
+  background: #ffffff;
+  color: #1f8f3a;
+  border: 1px solid rgba(60, 60, 67, 0.14);
   border-radius: 999px;
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 24px rgba(52, 199, 89, 0.24);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .whatsapp-btn:hover {
-  box-shadow: 0 12px 28px rgba(52, 199, 89, 0.28);
+  background: #f5f5f7;
+  border-color: rgba(52, 199, 89, 0.32);
 }
 
 /* ========================================

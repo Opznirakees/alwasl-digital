@@ -223,7 +223,7 @@ export default function GamePage({ params }: GamePageProps) {
                         </Badge>
                       )}
                       {pkg.salePrice && (
-                        <Badge className="absolute -top-2 left-2 bg-rose-500 text-white text-[10px] px-2 py-0.5 border-0">
+                        <Badge className="absolute -top-2 left-2 border border-black/10 bg-white px-2 py-0.5 text-[10px] text-zinc-600">
                           {t('Sale', 'خصم')}
                         </Badge>
                       )}
