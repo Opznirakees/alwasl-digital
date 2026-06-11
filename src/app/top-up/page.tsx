@@ -1,143 +1,135 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useApp } from '@/contexts/AppContext';
 import { Header } from '@/components/layout/Header';
-import { GameCard } from '@/components/home/GameCard';
-import { CategoryTabs } from '@/components/home/CategoryTabs';
-import { SearchBar } from '@/components/home/SearchBar';
-import { games } from '@/data/mock-data';
-import type { GameCategory } from '@/types';
-import { ArrowLeft, Filter, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { games } from '@/data/mock-data';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  ShieldCheck,
+  Zap,
+} from 'lucide-react';
 
-export default function GamesPage() {
-  const { t, dir, selectedCountry } = useApp();
-  const [selectedCategory, setSelectedCategory] = useState<GameCategory | 'all'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('popular');
-
-  const filteredGames = useMemo(() => {
-    let result = games.filter((game) => {
-      if (!game.countries.includes(selectedCountry.id)) return false;
-      if (selectedCategory !== 'all' && game.category !== selectedCategory) return false;
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const nameMatch = game.name.toLowerCase().includes(query) ||
-                         game.nameAr.includes(query);
-        return nameMatch;
-      }
-      return true;
-    });
-
-    // Sort
-    if (sortBy === 'popular') {
-      result = result.sort((a, b) => (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0));
-    } else if (sortBy === 'name') {
-      result = result.sort((a, b) =>
-        t(a.name, a.nameAr).localeCompare(t(b.name, b.nameAr))
-      );
-    } else if (sortBy === 'price-low') {
-      result = result.sort((a, b) => {
-        const aPrice = Math.min(...a.packages.map(p => p.salePrice || p.basePrice));
-        const bPrice = Math.min(...b.packages.map(p => p.salePrice || p.basePrice));
-        return aPrice - bPrice;
-      });
-    } else if (sortBy === 'price-high') {
-      result = result.sort((a, b) => {
-        const aPrice = Math.min(...a.packages.map(p => p.salePrice || p.basePrice));
-        const bPrice = Math.min(...b.packages.map(p => p.salePrice || p.basePrice));
-        return bPrice - aPrice;
-      });
-    }
-
-    return result;
-  }, [selectedCountry.id, selectedCategory, searchQuery, sortBy, t]);
+export default function TopUpPage() {
+  const { t, dir, language } = useApp();
+  const wahoTopUp = games[0];
+  const topUpPackages = wahoTopUp.packages.filter((pkg) => pkg.inStock);
+  const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
+  const formatAmount = (amount: number) => new Intl.NumberFormat(locale).format(amount);
 
   return (
     <div className={`min-h-screen bg-[#f5f5f7] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
       <main className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-blue-600 mb-4">
-            <ArrowLeft className="w-4 h-4" />
-            {t('Back to Home', 'العودة للرئيسية')}
+          <Link href="/" className="mb-4 inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-300">
+            <ArrowLeft className="h-4 w-4" />
+            {t('Back to Home', 'العودة للرئيسية', '返回首页')}
           </Link>
-          <h1 className="text-3xl font-semibold text-zinc-950">{t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}</h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            {t('Choose the WAHO top-up amount, confirm the account ID, and continue to payment.', 'اختر مبلغ شحن WAHO وتأكد من معرف الحساب ثم تابع للدفع.', '选择 WAHO 充值金额，确认账号 ID，然后继续支付。')}
+          <h1 className="text-3xl font-semibold text-zinc-950 dark:text-white">
+            {t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+            {t(
+              'One clear recharge flow: choose the IQD amount, confirm the WAHO ID, and continue to secure payment.',
+              'مسار شحن واضح واحد: اختر مبلغ الدينار، أكد معرف WAHO، ثم تابع إلى الدفع الآمن.',
+              '一个清晰的充值流程：选择 IQD 金额，确认 WAHO ID，然后安全支付。'
+            )}
           </p>
         </div>
 
-        {/* Filters Row */}
-        <div className="flex flex-col lg:flex-row gap-4 mb-8">
-          <div className="flex-1">
-            <SearchBar value={searchQuery} onChange={setSearchQuery} />
-          </div>
-          <div className="flex items-center gap-3">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-48 bg-white border-black/10 text-zinc-950">
-                <SlidersHorizontal className="w-4 h-4 mr-2" />
-                <SelectValue placeholder={t('Sort by', 'ترتيب حسب')} />
-              </SelectTrigger>
-              <SelectContent className="bg-white border-black/10">
-                <SelectItem value="popular">{t('Most Popular', 'الأكثر شيوعاً')}</SelectItem>
-                <SelectItem value="name">{t('Name A-Z', 'الاسم أ-ي')}</SelectItem>
-                <SelectItem value="price-low">{t('Price: Low to High', 'السعر: من الأقل للأعلى')}</SelectItem>
-                <SelectItem value="price-high">{t('Price: High to Low', 'السعر: من الأعلى للأقل')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {/* Category Tabs */}
-        <div className="mb-8">
-          <CategoryTabs selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
-        </div>
-
-        {/* Results Count */}
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-sm text-zinc-500">
-            {t('Showing', 'عرض')} <span className="text-zinc-950 font-medium">{filteredGames.length}</span> {t('results', 'نتيجة')}
-          </p>
-        </div>
-
-        {/* WAHO top-up grid */}
-        {filteredGames.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-            {filteredGames.map((game) => (
-              <GameCard key={game.id} game={game} />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 rounded-lg bg-zinc-100 flex items-center justify-center mb-4">
-              <Filter className="w-10 h-10 text-zinc-400" />
+        <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+          <div className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 md:p-6">
+            <div className="flex items-start gap-4">
+              <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-zinc-100 dark:border-white/10 dark:bg-zinc-950">
+                <Image
+                  src={wahoTopUp.image}
+                  alt={t(wahoTopUp.name, wahoTopUp.nameAr, 'WAHO 账号充值')}
+                  fill
+                  className="object-cover"
+                  sizes="64px"
+                  priority
+                />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700 dark:bg-blue-950/40 dark:text-blue-200">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  {t('Focused on WAHO only', 'مخصص لشحن WAHO فقط', '仅专注 WAHO')}
+                </div>
+                <h2 className="mt-3 text-xl font-semibold text-zinc-950 dark:text-white">
+                  {t(wahoTopUp.name, wahoTopUp.nameAr, 'WAHO 账号充值')}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                  {t(wahoTopUp.description, wahoTopUp.descriptionAr, '输入 WAHO ID，选择金额并安全支付，即可充值 WAHO 账号余额。')}
+                </p>
+              </div>
             </div>
-            <h3 className="text-lg font-semibold text-zinc-950">{t('No WAHO top-up found', 'لم يتم العثور على شحن WAHO', '未找到 WAHO 充值')}</h3>
-            <p className="text-sm text-zinc-500 mt-1">{t('Try adjusting your search or filters', 'جرب تعديل البحث أو الفلاتر')}</p>
-            <Button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedCategory('all');
-              }}
-              variant="outline"
-              className="mt-4 border-black/10 bg-white text-blue-600 hover:bg-blue-50"
-            >
-              {t('Clear Filters', 'مسح الفلاتر')}
+
+            <div className="mt-6 space-y-3">
+              {[
+                t('Choose from the available IQD top-up amounts.', 'اختر من مبالغ الشحن المتاحة بالدينار العراقي.', '从可用的 IQD 充值金额中选择。'),
+                t('Check the WAHO ID before payment.', 'تحقق من معرف WAHO قبل الدفع.', '付款前检查 WAHO ID。'),
+                t('Continue directly to checkout and order tracking.', 'تابع مباشرة إلى الدفع وتتبع الطلب.', '直接继续结账并跟踪订单。'),
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3">
+                  <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-300" />
+                  <span className="text-sm text-zinc-600 dark:text-zinc-300">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 md:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-zinc-950 dark:text-white">
+                  {t('Available top-up amounts', 'مبالغ الشحن المتاحة', '可选充值金额')}
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  {t('Open the recharge flow and choose the exact IQD value there.', 'افتح مسار الشحن واختر قيمة الدينار المناسبة هناك.', '打开充值流程，并在那里选择准确的 IQD 金额。')}
+                </p>
+              </div>
+              <div className="inline-flex w-fit items-center gap-2 rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+                <Zap className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />
+                {t('Fast top-up', 'شحن سريع', '快速充值')}
+              </div>
+            </div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {topUpPackages.map((pkg) => (
+                <Link
+                  key={pkg.id}
+                  href={`/top-up/${wahoTopUp.slug}`}
+                  className="group rounded-lg border border-black/10 bg-zinc-50 p-4 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-white/10 dark:bg-zinc-950 dark:hover:border-blue-300/60 dark:hover:bg-blue-950/30"
+                >
+                  <p className="text-2xl font-semibold text-zinc-950 dark:text-white">
+                    {formatAmount(pkg.amount)}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-300">
+                    {t(pkg.unit, pkg.unitAr, 'IQD 充值')}
+                  </p>
+                  {pkg.isPopular && (
+                    <span className="mt-3 inline-flex rounded-md bg-[#ffcc00] px-2 py-1 text-[10px] font-semibold text-zinc-950">
+                      {t('Popular', 'الأكثر شراءً', '热门')}
+                    </span>
+                  )}
+                </Link>
+              ))}
+            </div>
+
+            <Button asChild className="mt-6 w-full bg-blue-600 text-white shadow-none hover:bg-blue-700">
+              <Link href={`/top-up/${wahoTopUp.slug}`}>
+                {t('Start top-up', 'ابدأ الشحن', '开始充值')}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
-        )}
+        </section>
       </main>
     </div>
   );

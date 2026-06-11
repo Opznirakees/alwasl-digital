@@ -1,20 +1,17 @@
 'use client';
 
-import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { Header } from '@/components/layout/Header';
 import { HeroBanner } from '@/components/home/HeroBanner';
-import { GameCard } from '@/components/home/GameCard';
-import { CategoryTabs } from '@/components/home/CategoryTabs';
-import { SearchBar } from '@/components/home/SearchBar';
 import { games } from '@/data/mock-data';
 import { wahoShowcaseImages } from '@/data/waho-images';
-import type { GameCategory } from '@/types';
 import {
+  ArrowRight,
   Zap,
   BadgeCheck,
+  CheckCircle2,
   Headphones,
   MessageCircle,
   Sparkles,
@@ -22,22 +19,11 @@ import {
 } from 'lucide-react';
 
 export default function HomePage() {
-  const { t, dir, selectedCountry } = useApp();
-  const [selectedCategory, setSelectedCategory] = useState<GameCategory | 'all'>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredGames = useMemo(() => {
-    return games.filter((game) => {
-      if (!game.countries.includes(selectedCountry.id)) return false;
-      if (selectedCategory !== 'all' && game.category !== selectedCategory) return false;
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const nameMatch = game.name.toLowerCase().includes(query) || game.nameAr.includes(query);
-        return nameMatch;
-      }
-      return true;
-    });
-  }, [selectedCountry.id, selectedCategory, searchQuery]);
+  const { t, dir, language } = useApp();
+  const wahoTopUp = games[0];
+  const topUpPackages = wahoTopUp.packages.filter((pkg) => pkg.inStock);
+  const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
+  const formatAmount = (amount: number) => new Intl.NumberFormat(locale).format(amount);
 
   return (
     <div className={`min-h-screen ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
@@ -47,7 +33,7 @@ export default function HomePage() {
         {/* Hero Banner */}
         <HeroBanner />
 
-        <section className="grid items-center gap-6 md:grid-cols-[0.82fr_1.18fr]">
+        <section className="grid items-center gap-6 md:grid-cols-[0.9fr_1.1fr]">
           <div className="max-w-2xl">
             <div className="inline-flex w-fit items-center gap-2 rounded-md border border-black/10 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300">
               <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />
@@ -77,14 +63,25 @@ export default function HomePage() {
           </div>
 
           <figure className="order-first min-w-0 md:order-none">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-black/10 bg-zinc-950 shadow-sm dark:border-white/10 sm:aspect-[16/10] md:aspect-[4/3]">
+            <div className="relative aspect-[1200/921] overflow-hidden rounded-lg border border-black/10 bg-zinc-950 shadow-sm dark:border-white/10">
               <Image
                 src="/brand/leo-waho-agent.jpeg"
                 alt={t('LEO trusted WAHO top-up agent', 'LEO وكيل شحن WAHO الموثوق', 'LEO 可信 WAHO 充值代理')}
                 fill
-                className="object-contain"
+                className="object-cover"
                 sizes="(min-width: 1024px) 45vw, (min-width: 640px) 90vw, 100vw"
               />
+              <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-md border border-white/15 bg-zinc-950/78 px-3 py-3 text-white backdrop-blur">
+                <div>
+                  <p className="text-lg font-semibold leading-none">LEO</p>
+                  <p className="mt-1 text-xs text-white/70">
+                    {t('WAHO top-up contact', 'جهة شحن WAHO', 'WAHO 充值联系人')}
+                  </p>
+                </div>
+                <span className="rounded-md bg-[#ffcc00] px-2.5 py-1 text-xs font-semibold text-zinc-950">
+                  {t('Trusted', 'موثوق', '可信赖')}
+                </span>
+              </div>
             </div>
             <figcaption className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
               {t('LEO is highlighted as a familiar WAHO user and trusted top-up contact.', 'يظهر LEO كمستخدم معروف على WAHO وجهة موثوقة للشحن.', 'LEO 被展示为 WAHO 熟悉用户和可信充值联系人。')}
@@ -153,34 +150,70 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Search & Filter Section */}
-        <section className="space-y-5">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold text-zinc-950">{t('Top up WAHO balance', 'اشحن رصيد WAHO', '充值 WAHO 余额')}</h2>
-              <p className="text-sm mt-1 text-zinc-500">{t('Choose the amount, confirm the WAHO ID, and complete payment securely.', 'اختر المبلغ وتأكد من معرف WAHO وأكمل الدفع بأمان.', '选择金额，确认 WAHO ID，并安全完成支付。')}</p>
+        {/* Direct WAHO top-up section */}
+        <section className="grid gap-6 rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 md:grid-cols-[1.1fr_0.9fr] md:p-6">
+          <div>
+            <div className="inline-flex w-fit items-center gap-2 rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+              <Zap className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />
+              {t('One WAHO recharge flow', 'مسار شحن WAHO واحد', '一个 WAHO 充值流程')}
             </div>
-            <SearchBar value={searchQuery} onChange={setSearchQuery} />
-          </div>
+            <h2 className="mt-4 text-2xl font-semibold text-zinc-950 dark:text-white">
+              {t('Choose the WAHO amount', 'اختر مبلغ شحن WAHO', '选择 WAHO 充值金额')}
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              {t(
+                'Select the balance amount, enter the WAHO ID, and continue to payment without extra product steps.',
+                'اختر مبلغ الرصيد وأدخل معرف WAHO ثم تابع الدفع بدون خطوات منتجات إضافية.',
+                '选择余额金额，输入 WAHO ID，然后直接继续支付。'
+              )}
+            </p>
 
-          <CategoryTabs selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
-
-          {/* WAHO top-up grid */}
-          {filteredGames.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
-              {filteredGames.map((game) => (
-                <GameCard key={game.id} game={game} />
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {topUpPackages.map((pkg) => (
+                <Link
+                  key={pkg.id}
+                  href={`/top-up/${wahoTopUp.slug}`}
+                  className="group rounded-lg border border-black/10 bg-zinc-50 p-4 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-white/10 dark:bg-zinc-950 dark:hover:border-blue-300/60 dark:hover:bg-blue-950/30"
+                >
+                  <p className="text-xl font-semibold text-zinc-950 dark:text-white">
+                    {formatAmount(pkg.amount)}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-300">
+                    {t(pkg.unit, pkg.unitAr, 'IQD 充值')}
+                  </p>
+                  <div className="mt-4 flex items-center text-xs font-semibold text-zinc-500 transition-colors group-hover:text-blue-700 dark:text-zinc-400 dark:group-hover:text-blue-200">
+                    {t('Start top-up', 'ابدأ الشحن', '开始充值')}
+                    <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                  </div>
+                </Link>
               ))}
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-20 h-20 rounded-lg bg-zinc-100 flex items-center justify-center mb-4">
-                <MessageCircle className="w-10 h-10 text-zinc-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-zinc-950">{t('No WAHO top-up found', 'لم يتم العثور على شحن WAHO', '未找到 WAHO 充值')}</h3>
-              <p className="text-sm mt-1 text-zinc-500">{t('Try another amount or clear filters', 'جرب مبلغاً آخر أو امسح الفلاتر', '尝试其他金额或清除筛选')}</p>
+          </div>
+
+          <div className="rounded-lg bg-zinc-50 p-4 ring-1 ring-black/10 dark:bg-zinc-950 dark:ring-white/10">
+            <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
+              {t('Ready in three steps', 'جاهز بثلاث خطوات', '三步完成')}
+            </h3>
+            <div className="mt-4 space-y-3">
+              {[
+                t('Choose an IQD top-up amount', 'اختر مبلغ شحن بالدينار', '选择 IQD 充值金额'),
+                t('Confirm the WAHO account ID', 'أكد معرف حساب WAHO', '确认 WAHO 账号 ID'),
+                t('Pay securely and track the order', 'ادفع بأمان وتابع الطلب', '安全支付并跟踪订单'),
+              ].map((item) => (
+                <div key={item} className="flex items-center gap-3">
+                  <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-300" />
+                  <span className="text-sm text-zinc-600 dark:text-zinc-300">{item}</span>
+                </div>
+              ))}
             </div>
-          )}
+            <Link
+              href={`/top-up/${wahoTopUp.slug}`}
+              className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+            >
+              {t('Top up WAHO', 'اشحن WAHO', '充值 WAHO')}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </div>
         </section>
 
         {/* WhatsApp Contact */}
