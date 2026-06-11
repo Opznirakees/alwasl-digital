@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { countries, levelLabels } from '@/data/mock-data';
 import {
   Menu,
   Globe,
@@ -46,7 +45,6 @@ export function Header() {
     isAuthenticated,
     logout,
     selectedCountry,
-    setSelectedCountry,
     cartTotal,
     theme,
   } = useApp();
@@ -157,37 +155,6 @@ export function Header() {
             <Button variant="ghost" size="icon" className={`hidden md:flex ${isLight ? 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-100' : 'text-zinc-300 hover:text-blue-300 hover:bg-white/10'}`}>
               <Search className="h-4 w-4" />
             </Button>
-
-            {/* Country Selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`gap-1.5 px-2 sm:px-3 ${isLight ? 'text-zinc-700 hover:bg-zinc-100' : 'text-zinc-100 hover:bg-white/10'}`}
-                >
-                  <span className="text-lg">{selectedCountry.flag}</span>
-                  <span className={`hidden sm:inline text-xs ${isLight ? 'text-slate-500' : 'text-white/70'}`}>
-                    {t(selectedCountry.name, selectedCountry.nameAr)}
-                  </span>
-                  <ChevronDown className={`h-3 w-3 ${isLight ? 'text-zinc-400' : 'text-zinc-500'}`} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className={isLight ? 'bg-white border-black/10' : 'bg-zinc-950 border-white/10'}>
-                {countries.filter(c => c.isActive).map((country) => (
-                  <DropdownMenuItem
-                    key={country.id}
-                    onClick={() => setSelectedCountry(country)}
-                    className={`gap-2 cursor-pointer ${isLight ? 'hover:bg-zinc-100' : 'hover:bg-white/10'} ${
-                      selectedCountry.id === country.id ? (isLight ? 'bg-blue-50 text-blue-700' : 'bg-blue-500/15 text-blue-200') : ''
-                    }`}
-                  >
-                    <span className="text-lg">{country.flag}</span>
-                    <span className={isLight ? 'text-slate-700' : ''}>{t(country.name, country.nameAr)}</span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
 
             {/* Language Selector */}
             <DropdownMenu>
