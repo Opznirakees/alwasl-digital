@@ -125,39 +125,41 @@ export default function GamePage({ params }: GamePageProps) {
   ];
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-[#f5f5f7] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
       {/* Hero Banner */}
-      <div className="relative h-48 md:h-64 overflow-hidden">
+      <div className="relative overflow-hidden border-b border-black/10 bg-white">
+        <div className="relative h-52 md:h-64">
         <Image
           src={game.banner || game.image}
           alt={t(game.name, game.nameAr)}
           fill
-          className="object-cover"
+          className="object-contain p-4"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
+        <div className="absolute inset-0 bg-white/70" />
         <div className="absolute bottom-0 left-0 right-0 p-6">
           <div className="container mx-auto">
-            <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white mb-4">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-blue-600 mb-4">
               <ArrowLeft className="w-4 h-4" />
               {t('Back', 'رجوع')}
             </Link>
             <div className="flex items-center gap-4">
-              <div className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-emerald-500/30">
-                <Image src={game.image} alt="" fill className="object-cover" />
+              <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-black/10 bg-white shadow-sm">
+                <Image src={game.image} alt="" fill className="object-contain p-1" />
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-white">
+                <h1 className="text-2xl md:text-3xl font-semibold text-zinc-950">
                   {t(game.name, game.nameAr)}
                 </h1>
-                <p className="text-sm text-white/50">{game.publisher}</p>
-                <p className="mt-1 max-w-2xl text-sm text-white/70">
+                <p className="text-sm text-zinc-500">{game.publisher}</p>
+                <p className="mt-1 max-w-2xl text-sm text-zinc-600">
                   {t(game.description, game.descriptionAr)}
                 </p>
               </div>
             </div>
           </div>
+        </div>
         </div>
       </div>
 

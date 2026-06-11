@@ -354,7 +354,7 @@ const languageLabels: Record<Language, { short: string; locale: string; htmlLang
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
-  const [theme, setTheme] = useState<Theme>('dark');
+  const [theme, setTheme] = useState<Theme>('light');
   const [user, setUser] = useState<User | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -365,10 +365,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Restore demo state for a smoother presentation flow.
   useEffect(() => {
-    const savedTheme = localStorage.getItem(storageKeys.theme) as Theme | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
+    localStorage.setItem(storageKeys.theme, 'light');
     const savedLanguage =
       (localStorage.getItem(storageKeys.language) as Language | null) ||
       (localStorage.getItem('language') as Language | null);

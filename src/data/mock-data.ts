@@ -385,11 +385,8 @@ const legacyGames: Game[] = [
   },
 ];
 
-const wahoIcon = 'https://play-lh.googleusercontent.com/-wN-Mp0Iet3iwTm3SBBotB2BBF6LJFGYcojPJ2cjQqqNzK_uj-E_MyHbfqa7gqRANz0wLX8jhCi2n6SOgrEwpAw=w480-h480';
-const wahoRoomScreenshot = 'https://play-lh.googleusercontent.com/lIMMJNhZ_y4OJSwz_BOmxBfC043fH833-xLy05ev3hnF9SHbWbQayj8kWkPDyT_N0o-bmZ8SuojTmcsl6ttK=w1052-h592';
-const wahoPartyScreenshot = 'https://play-lh.googleusercontent.com/aDoXznur5K5tgL5NCVa2pLoJSGByBvVagBhUw-l9TZg1jkrpS3cTLcnMFUZHFnB3j42blKgGMu0aPxyrtOi6xhM=w1052-h592';
-const wahoGiftsScreenshot = 'https://play-lh.googleusercontent.com/wIiMQlIpp7y6c2i48IMA4R_QQWXnZMrlSvT-fw8ybuJExMiDj9hYtKTf270t9fIssctxvSFTw67ZxcHqViPvLg=w1052-h592';
-const wahoMomentsScreenshot = 'https://play-lh.googleusercontent.com/1bybNylDOkXW_Iox_8EeVka8k7QB4Ns6REz7RqoHYq5AIlyWpD8KEp7bHKMIvXF1qjUKU-kMjtZechM6Y8gIccc=w1052-h592';
+const alwaslMark = '/brand/alwasl-mark.jpg';
+const alwaslBanner = '/brand/alwasl-banner.jpg';
 
 // WAHO products. Kept under the existing Game type until the provider API contract lands.
 export const games: Game[] = [
@@ -400,8 +397,8 @@ export const games: Game[] = [
     nameAr: 'عملات WAHO',
     description: 'Recharge WAHO coin balance for live rooms, voice chat gifts, moments, and party interactions.',
     descriptionAr: 'اشحن رصيد عملات WAHO للغرف المباشرة والهدايا واللحظات وتفاعلات الحفلات.',
-    image: wahoIcon,
-    banner: wahoRoomScreenshot,
+    image: alwaslMark,
+    banner: alwaslBanner,
     category: 'social_media',
     publisher: 'Waho team',
     isPopular: true,
@@ -427,8 +424,8 @@ export const games: Game[] = [
     nameAr: 'باقات هدايا WAHO',
     description: 'Send gift-ready WAHO bundles for voice rooms, live streams, themed parties, and friend surprises.',
     descriptionAr: 'أرسل باقات هدايا WAHO للغرف الصوتية والبث المباشر والحفلات والمفاجآت.',
-    image: wahoGiftsScreenshot,
-    banner: wahoGiftsScreenshot,
+    image: alwaslMark,
+    banner: alwaslBanner,
     category: 'gift_card',
     publisher: 'Waho team',
     isPopular: true,
@@ -454,8 +451,8 @@ export const games: Game[] = [
     nameAr: 'تعزيز غرف WAHO المباشرة',
     description: 'Boost WAHO voice rooms with decorations, visibility, frames, and live party upgrades.',
     descriptionAr: 'عزز غرف WAHO الصوتية بزخارف وظهور وإطارات وترقيات للحفلات المباشرة.',
-    image: wahoRoomScreenshot,
-    banner: wahoRoomScreenshot,
+    image: alwaslMark,
+    banner: alwaslBanner,
     category: 'streaming',
     publisher: 'Waho team',
     isPopular: true,
@@ -482,8 +479,8 @@ export const games: Game[] = [
     nameAr: 'باقات ألعاب WAHO الجماعية',
     description: 'Top up casual party-game packs for WAHO rooms, including Ludo-style sessions and group play.',
     descriptionAr: 'اشحن باقات ألعاب جماعية لغرف WAHO مثل جلسات لودو واللعب مع الأصدقاء.',
-    image: wahoPartyScreenshot,
-    banner: wahoPartyScreenshot,
+    image: alwaslMark,
+    banner: alwaslBanner,
     category: 'mobile_game',
     publisher: 'Waho team',
     isPopular: false,
@@ -508,8 +505,8 @@ export const games: Game[] = [
     nameAr: 'عضوية وميداليات WAHO',
     description: 'Activate WAHO VIP status, achievement medals, avatar frames, and profile privileges.',
     descriptionAr: 'فعّل عضوية WAHO والميداليات وإطارات الصورة وامتيازات الملف الشخصي.',
-    image: wahoMomentsScreenshot,
-    banner: wahoMomentsScreenshot,
+    image: alwaslMark,
+    banner: alwaslBanner,
     category: 'voucher',
     publisher: 'Waho team',
     isPopular: true,
@@ -765,7 +762,7 @@ export const banners: Banner[] = [
     titleAr: 'حلول رقمية لنمو أعمالك',
     subtitle: 'Page promotion, app recharge, marketing services, and reliable WAHO delivery.',
     subtitleAr: 'ترويج صفحات وشحن تطبيقات وخدمات تسويقية وتسليم WAHO موثوق.',
-    image: '/brand/alwasl-banner.jpg',
+    image: alwaslBanner,
     gameId: 'waho-coins',
     startDate: '2026-05-20T00:00:00Z',
     endDate: '2026-06-01T23:59:59Z',
@@ -778,11 +775,11 @@ export const banners: Banner[] = [
     titleAr: 'عزز غرف وحفلات WAHO',
     subtitle: 'Room boosts, decorations, and party game packs in one checkout.',
     subtitleAr: 'تعزيز الغرف والزخارف وباقات الألعاب في عملية دفع واحدة.',
-    image: wahoPartyScreenshot,
+    image: alwaslBanner,
     gameId: 'waho-live-rooms',
     startDate: '2026-05-15T00:00:00Z',
     endDate: '2026-06-15T23:59:59Z',
-    isActive: true,
+    isActive: false,
     order: 2,
   },
   {
@@ -791,11 +788,11 @@ export const banners: Banner[] = [
     titleAr: 'عضوية WAHO والميداليات وإطارات الملف',
     subtitle: 'Highlight status inside the WAHO community.',
     subtitleAr: 'أبرز حالتك داخل مجتمع WAHO.',
-    image: wahoMomentsScreenshot,
+    image: alwaslBanner,
     gameId: 'waho-vip-medals',
     startDate: '2026-05-01T00:00:00Z',
     endDate: '2026-06-30T23:59:59Z',
-    isActive: true,
+    isActive: false,
     order: 3,
   },
 ];

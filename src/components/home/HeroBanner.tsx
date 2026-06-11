@@ -8,7 +8,7 @@ import { banners } from '@/data/mock-data';
 import { ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 
 export function HeroBanner() {
-  const { t, dir, theme } = useApp();
+  const { t, dir } = useApp();
   const [currentIndex, setCurrentIndex] = useState(0);
   const activeBanners = banners.filter(b => b.isActive);
 
@@ -32,55 +32,50 @@ export function HeroBanner() {
   const currentBanner = activeBanners[currentIndex];
   const isBrandBanner = currentBanner.id === 'banner-1';
 
-  const isLight = theme === 'light';
-  const overlayFrom = isLight ? 'rgba(248, 246, 252, 0.95)' : 'rgba(13, 10, 20, 0.95)';
-  const overlayVia = isLight ? 'rgba(248, 246, 252, 0.7)' : 'rgba(13, 10, 20, 0.7)';
-  const overlayBottom = isLight ? 'rgba(248, 246, 252, 0.9)' : 'rgba(13, 10, 20, 0.9)';
+  const overlayFrom = 'rgba(255, 255, 255, 1)';
+  const overlayVia = 'rgba(255, 255, 255, 0.94)';
+  const overlayTo = 'rgba(255, 255, 255, 0.5)';
+  const overlayBottom = 'rgba(255, 255, 255, 0.92)';
 
   return (
-    <div className="relative w-full overflow-hidden rounded-3xl">
-      <div className="relative h-[320px] sm:h-auto sm:aspect-[21/7] md:aspect-[21/6]">
+    <div className="relative w-full overflow-hidden rounded-lg border border-black/10 bg-white shadow-sm">
+      <div className="relative min-h-[360px] sm:aspect-[21/7] md:aspect-[21/6]">
         {/* Background Image */}
         <div
-          className="absolute inset-0 bg-cover bg-center transition-all duration-700"
-          style={{ backgroundImage: `url(${currentBanner.image})` }}
+          className="absolute inset-0 bg-center bg-no-repeat transition-all duration-700"
+          style={{
+            backgroundImage: `url(${currentBanner.image})`,
+            backgroundColor: '#ffffff',
+            backgroundPosition: isBrandBanner ? 'right center' : 'center',
+            backgroundSize: isBrandBanner ? 'clamp(900px, 78vw, 1120px) auto' : 'cover',
+          }}
         />
 
         {/* Overlay Gradient - Theme aware */}
         <div
           className="absolute inset-0"
-          style={{ background: `linear-gradient(to right, ${overlayFrom}, ${overlayVia}, transparent)` }}
+          style={{ background: `linear-gradient(to right, ${overlayFrom} 0%, ${overlayVia} 58%, ${overlayTo} 100%)` }}
         />
         <div
           className="absolute inset-0"
           style={{ background: `linear-gradient(to top, ${overlayBottom}, transparent, transparent)` }}
         />
 
-        {/* Decorative Elements */}
-        <div className={`absolute top-1/4 right-1/4 w-64 h-64 rounded-full blur-3xl ${isLight ? 'bg-purple-400/15' : 'bg-purple-500/20'}`} />
-        <div className={`absolute bottom-0 left-1/3 w-48 h-48 rounded-full blur-3xl ${isLight ? 'bg-pink-400/15' : 'bg-pink-500/20'}`} />
-
         {/* Content */}
         <div className="absolute inset-0 flex items-center">
           <div className={`container mx-auto px-6 md:px-12 ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>
-            <div className="max-w-xl space-y-4">
-              <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border backdrop-blur-sm ${
-                isLight
-                  ? 'bg-purple-500/10 border-purple-500/30'
-                  : 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30'
-              }`}>
-                <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-                <span className={`text-xs font-medium ${isLight ? 'text-purple-600' : 'text-purple-300'}`}>
+            <div className="max-w-xl space-y-5">
+              <div className="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white/85 px-3 py-1.5 text-xs font-medium text-zinc-600 backdrop-blur">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                <span>
                   {isBrandBanner ? t('Al-Wasl Digital', 'الوصل') : t('WAHO Recharge', 'شحن WAHO')}
                 </span>
               </div>
-              <h2 className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight ${
-                isLight ? 'text-slate-900' : 'text-white'
-              }`}>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight leading-tight text-zinc-950">
                 {t(currentBanner.title, currentBanner.titleAr)}
               </h2>
               {currentBanner.subtitle && (
-                <p className={`text-sm sm:text-base md:text-lg ${isLight ? 'text-slate-600' : 'text-white/70'}`}>
+                <p className="max-w-lg text-sm sm:text-base md:text-lg leading-7 text-zinc-600">
                   {t(currentBanner.subtitle, currentBanner.subtitleAr || '')}
                 </p>
               )}
@@ -88,7 +83,7 @@ export function HeroBanner() {
                 <Link href={`/games/${currentBanner.gameId}`}>
                   <Button
                     size="lg"
-                    className="mt-4 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/30 text-sm sm:text-base rounded-xl"
+                    className="mt-2 rounded-md bg-blue-600 px-5 text-sm sm:text-base font-semibold text-white shadow-none hover:bg-blue-700"
                   >
                     {isBrandBanner ? t('Explore Services', 'استعرض الخدمات') : t('Recharge WAHO', 'اشحن WAHO')}
                   </Button>
@@ -103,22 +98,14 @@ export function HeroBanner() {
           <>
             <button
               onClick={goToPrev}
-              className={`absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full backdrop-blur-md border hidden sm:flex items-center justify-center transition-colors ${
-                isLight
-                  ? 'bg-white/60 border-purple-200 text-slate-700 hover:bg-white/80'
-                  : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
-              }`}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full backdrop-blur-md border hidden sm:flex items-center justify-center transition-colors bg-white/80 border-black/10 text-zinc-700 hover:bg-white"
               aria-label="Previous"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={goToNext}
-              className={`absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full backdrop-blur-md border hidden sm:flex items-center justify-center transition-colors ${
-                isLight
-                  ? 'bg-white/60 border-purple-200 text-slate-700 hover:bg-white/80'
-                  : 'bg-white/5 border-white/10 text-white hover:bg-white/10'
-              }`}
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full backdrop-blur-md border hidden sm:flex items-center justify-center transition-colors bg-white/80 border-black/10 text-zinc-700 hover:bg-white"
               aria-label="Next"
             >
               <ChevronRight className="w-5 h-5" />
@@ -135,8 +122,8 @@ export function HeroBanner() {
                 onClick={() => setCurrentIndex(index)}
                 className={`h-2 rounded-full transition-all ${
                   index === currentIndex
-                    ? 'w-8 bg-gradient-to-r from-purple-400 to-pink-400'
-                    : isLight ? 'w-2 bg-slate-400/50 hover:bg-slate-400/70' : 'w-2 bg-white/30 hover:bg-white/50'
+                    ? 'w-8 bg-blue-600'
+                    : 'w-2 bg-zinc-300 hover:bg-zinc-400'
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />

@@ -63,18 +63,18 @@ export default function GamesPage() {
   }, [selectedCountry.id, selectedCategory, searchQuery, sortBy, t]);
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-[#f5f5f7] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white mb-4">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-zinc-500 hover:text-blue-600 mb-4">
             <ArrowLeft className="w-4 h-4" />
             {t('Back to Home', 'العودة للرئيسية')}
           </Link>
-          <h1 className="text-3xl font-bold text-white">{t('WAHO Services', 'خدمات WAHO')}</h1>
-          <p className="text-sm text-white/50 mt-1">
+          <h1 className="text-3xl font-semibold text-zinc-950">{t('WAHO Services', 'خدمات WAHO')}</h1>
+          <p className="text-sm text-zinc-500 mt-1">
             {t('Browse WAHO coins, gift bundles, live room boosts, party game packs, and VIP upgrades', 'تصفح عملات WAHO وباقات الهدايا وتعزيز الغرف وباقات الألعاب وترقيات العضوية')}
           </p>
         </div>
@@ -86,11 +86,11 @@ export default function GamesPage() {
           </div>
           <div className="flex items-center gap-3">
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-48 bg-slate-800/50 border-emerald-800/30 text-white">
+              <SelectTrigger className="w-48 bg-white border-black/10 text-zinc-950">
                 <SlidersHorizontal className="w-4 h-4 mr-2" />
                 <SelectValue placeholder={t('Sort by', 'ترتيب حسب')} />
               </SelectTrigger>
-              <SelectContent className="bg-slate-900 border-emerald-800/30">
+              <SelectContent className="bg-white border-black/10">
                 <SelectItem value="popular">{t('Most Popular', 'الأكثر شيوعاً')}</SelectItem>
                 <SelectItem value="name">{t('Name A-Z', 'الاسم أ-ي')}</SelectItem>
                 <SelectItem value="price-low">{t('Price: Low to High', 'السعر: من الأقل للأعلى')}</SelectItem>
@@ -107,8 +107,8 @@ export default function GamesPage() {
 
         {/* Results Count */}
         <div className="flex items-center justify-between mb-6">
-          <p className="text-sm text-white/50">
-            {t('Showing', 'عرض')} <span className="text-white font-medium">{filteredGames.length}</span> {t('results', 'نتيجة')}
+          <p className="text-sm text-zinc-500">
+            {t('Showing', 'عرض')} <span className="text-zinc-950 font-medium">{filteredGames.length}</span> {t('results', 'نتيجة')}
           </p>
         </div>
 
@@ -121,18 +121,18 @@ export default function GamesPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-              <Filter className="w-10 h-10 text-white/20" />
+            <div className="w-20 h-20 rounded-lg bg-zinc-100 flex items-center justify-center mb-4">
+              <Filter className="w-10 h-10 text-zinc-400" />
             </div>
-            <h3 className="text-lg font-semibold text-white">{t('No WAHO services found', 'لم يتم العثور على خدمات WAHO')}</h3>
-            <p className="text-sm text-white/50 mt-1">{t('Try adjusting your search or filters', 'جرب تعديل البحث أو الفلاتر')}</p>
+            <h3 className="text-lg font-semibold text-zinc-950">{t('No WAHO services found', 'لم يتم العثور على خدمات WAHO')}</h3>
+            <p className="text-sm text-zinc-500 mt-1">{t('Try adjusting your search or filters', 'جرب تعديل البحث أو الفلاتر')}</p>
             <Button
               onClick={() => {
                 setSearchQuery('');
                 setSelectedCategory('all');
               }}
               variant="outline"
-              className="mt-4 border-emerald-500/30 text-emerald-400"
+              className="mt-4 border-black/10 bg-white text-blue-600 hover:bg-blue-50"
             >
               {t('Clear Filters', 'مسح الفلاتر')}
             </Button>

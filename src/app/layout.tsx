@@ -34,7 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${notoKufiArabic.variable} font-sans antialiased bg-slate-950 text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} ${notoKufiArabic.variable} font-sans antialiased bg-[#f5f5f7] text-zinc-950`}
       >
         <AppProvider>
           {children}

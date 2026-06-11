@@ -30,8 +30,7 @@ const categoryIcons: Record<GameCategory | 'all', React.ReactNode> = {
 };
 
 export function CategoryTabs({ selectedCategory, onSelectCategory }: CategoryTabsProps) {
-  const { t, theme } = useApp();
-  const isLight = theme === 'light';
+  const { t } = useApp();
 
   const categories: (GameCategory | 'all')[] = [
     'all',
@@ -56,12 +55,10 @@ export function CategoryTabs({ selectedCategory, onSelectCategory }: CategoryTab
           <button
             key={category}
             onClick={() => onSelectCategory(category)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-300 ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-md border text-sm font-medium whitespace-nowrap transition-colors ${
               selectedCategory === category
-                ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25'
-                : isLight
-                  ? 'bg-white/80 text-slate-600 hover:bg-white hover:text-slate-900 border border-purple-100 hover:border-purple-200'
-                  : 'bg-[#1a1225]/80 text-white/70 hover:bg-[#1a1225] hover:text-white border border-purple-500/10 hover:border-purple-500/30'
+                ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
+                : 'bg-white/80 text-zinc-600 border-black/10 hover:bg-white hover:text-zinc-950 hover:border-blue-200'
             }`}
           >
             {categoryIcons[category]}

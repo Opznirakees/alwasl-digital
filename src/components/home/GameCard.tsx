@@ -5,13 +5,52 @@ import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import type { Game } from '@/types';
+import type { Game, GameCategory } from '@/types';
 import { categoryLabels } from '@/data/mock-data';
-import { Sparkles, TrendingUp, ShoppingCart, Heart } from 'lucide-react';
+import { Gift, Gamepad2, MessageCircle, Play, ShoppingCart, Sparkles, Ticket, TrendingUp } from 'lucide-react';
 
 interface GameCardProps {
   game: Game;
   variant?: 'default' | 'compact';
+}
+
+const categoryIcons: Record<GameCategory, React.ComponentType<{ className?: string }>> = {
+  mobile_game: Gamepad2,
+  pc_game: Gamepad2,
+  console: Gamepad2,
+  gift_card: Gift,
+  streaming: Play,
+  social_media: MessageCircle,
+  voucher: Ticket,
+};
+
+function ServiceVisual({ game, compact = false }: { game: Game; compact?: boolean }) {
+  const Icon = categoryIcons[game.category] || Sparkles;
+
+  return (
+    <div className={`relative overflow-hidden bg-[#f5f5f7] border border-black/10 ${compact ? 'h-14 w-14 rounded-lg' : 'aspect-[4/3]'}`}>
+      <div className="absolute inset-0 bg-white" />
+      <div className="absolute left-3 top-3 flex items-center gap-2">
+        <div className={`${compact ? 'h-6 w-6' : 'h-9 w-9'} relative rounded-md bg-white shadow-sm border border-black/10`}>
+          <Image
+            src="/brand/alwasl-mark.jpg"
+            alt=""
+            fill
+            className="object-contain p-1"
+            sizes={compact ? '24px' : '36px'}
+          />
+        </div>
+      </div>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className={`${compact ? 'h-8 w-8' : 'h-16 w-16'} rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center`}>
+          <Icon className={compact ? 'h-4 w-4' : 'h-8 w-8'} />
+        </div>
+      </div>
+      {!compact && (
+        <div className="absolute bottom-3 left-3 right-3 h-1 rounded-full bg-blue-600 opacity-80" />
+      )}
+    </div>
+  );
 }
 
 export function GameCard({ game, variant = 'default' }: GameCardProps) {
@@ -29,34 +68,25 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
   if (variant === 'compact') {
     return (
       <Link href={`/games/${game.slug}`}>
-        <div className={`group relative flex items-center gap-4 p-4 rounded-2xl border transition-all duration-300 hover:shadow-lg ${
+        <div className={`group relative flex items-center gap-4 rounded-lg border p-3 transition-all duration-200 ${
           isLight
-            ? 'bg-white border-purple-200/50 hover:border-purple-300 hover:shadow-purple-100'
-            : 'bg-gradient-to-br from-[#1e1433] to-[#15102a] border-purple-500/10 hover:border-purple-500/30 hover:shadow-purple-500/10'
+            ? 'bg-white border-black/10 hover:border-blue-300 hover:shadow-sm'
+            : 'bg-white border-black/10 hover:border-blue-300 hover:shadow-sm'
         }`}>
-          <div className={`relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 ring-2 transition-all ${
-            isLight ? 'ring-purple-200 group-hover:ring-purple-300' : 'ring-purple-500/20 group-hover:ring-purple-500/40'
-          }`}>
-            <Image
-              src={game.image}
-              alt={t(game.name, game.nameAr)}
-              fill
-              className="object-cover group-hover:scale-110 transition-transform duration-500"
-            />
-          </div>
+          <ServiceVisual game={game} compact />
           <div className="flex-1 min-w-0">
             <h3 className={`font-semibold text-sm truncate transition-colors ${
-              isLight ? 'text-slate-800 group-hover:text-purple-600' : 'text-white group-hover:text-purple-400'
+              isLight ? 'text-zinc-950 group-hover:text-blue-700' : 'text-zinc-950 group-hover:text-blue-700'
             }`}>
               {t(game.name, game.nameAr)}
             </h3>
-            <p className={`text-xs mt-0.5 ${isLight ? 'text-purple-600' : 'text-purple-400/60'}`}>
+            <p className={`text-xs mt-0.5 ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
               {t('From', 'من')} {formatPrice(lowestPrice)} {selectedCountry.currencySymbol}
             </p>
           </div>
           {game.isPopular && (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4" />
             </div>
           )}
         </div>
@@ -66,20 +96,10 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
 
   return (
     <Link href={`/games/${game.slug}`}>
-      <div className="group relative rounded-2xl overflow-hidden product-card card-hover">
+      <div className="group relative overflow-hidden product-card card-hover">
         {/* Image Container */}
-        <div className="relative aspect-[4/3] overflow-hidden">
-          <Image
-            src={game.image}
-            alt={t(game.name, game.nameAr)}
-            fill
-            className="object-cover group-hover:scale-110 transition-transform duration-700"
-          />
-          <div className={`absolute inset-0 ${
-            isLight
-              ? 'bg-gradient-to-t from-white via-white/40 to-transparent'
-              : 'bg-gradient-to-t from-[#0d0a14] via-[#0d0a14]/40 to-transparent'
-          }`} />
+        <div className="relative">
+          <ServiceVisual game={game} />
 
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
@@ -96,21 +116,12 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
             )}
           </div>
 
-          {/* Favorite Button */}
-          <button className={`absolute top-3 right-3 w-8 h-8 rounded-full backdrop-blur-sm flex items-center justify-center transition-all ${
-            isLight
-              ? 'bg-white/70 text-slate-500 hover:text-pink-500 hover:bg-white'
-              : 'bg-black/30 text-white/70 hover:text-pink-400 hover:bg-black/50'
-          }`}>
-            <Heart className="w-4 h-4" />
-          </button>
-
           {/* Category Badge */}
           <div className="absolute bottom-3 left-3">
-            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 rounded-full backdrop-blur-sm ${
+            <Badge variant="outline" className={`text-[10px] px-2 py-0.5 rounded-md backdrop-blur-sm ${
               isLight
-                ? 'bg-white/70 text-purple-600 border-purple-200'
-                : 'bg-black/40 text-purple-300 border-purple-500/30'
+                ? 'bg-white/90 text-zinc-700 border-black/10'
+                : 'bg-white/90 text-zinc-700 border-black/10'
             }`}>
               {t(categoryLabels[game.category].en, categoryLabels[game.category].ar)}
             </Badge>
@@ -120,19 +131,19 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
         {/* Content */}
         <div className="p-4 space-y-3">
           <h3 className={`font-bold text-base transition-colors line-clamp-1 ${
-            isLight ? 'text-slate-800 group-hover:text-purple-600' : 'text-white group-hover:text-purple-400'
+            isLight ? 'text-zinc-950 group-hover:text-blue-700' : 'text-zinc-950 group-hover:text-blue-700'
           }`}>
             {t(game.name, game.nameAr)}
           </h3>
 
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-[10px] uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-purple-400/50'}`}>
+              <p className={`text-[10px] uppercase tracking-wider ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
                 {t('Starting from', 'يبدأ من')}
               </p>
-              <p className="text-xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+              <p className="text-xl font-semibold text-zinc-950">
                 {formatPrice(lowestPrice)}
-                <span className={`text-xs ml-1 ${isLight ? 'text-slate-500' : 'text-purple-400/60'}`}>
+                <span className={`text-xs ml-1 ${isLight ? 'text-zinc-500' : 'text-zinc-500'}`}>
                   {selectedCountry.currencySymbol}
                 </span>
               </p>
@@ -140,7 +151,7 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
 
             <Button
               size="sm"
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-xl px-4 shadow-lg shadow-purple-500/25 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0"
+              className="rounded-md bg-blue-600 px-4 text-white shadow-none transition-all duration-200 hover:bg-blue-700"
             >
               <ShoppingCart className="w-4 h-4" />
             </Button>
