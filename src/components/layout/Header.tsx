@@ -127,7 +127,7 @@ export function Header() {
               />
             </div>
             <div className="hidden sm:block">
-              <h1 className={`text-base font-semibold tracking-tight ${isLight ? 'text-zinc-950' : 'text-white'}`}>
+              <h1 className={`text-base font-semibold ${isLight ? 'text-zinc-950' : 'text-white'}`}>
                 {t('Al-Wasl Digital', 'الوصل')}
               </h1>
               <p className={`text-[10px] -mt-0.5 ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>

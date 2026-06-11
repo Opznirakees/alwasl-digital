@@ -50,21 +50,23 @@ export function CategoryTabs({ selectedCategory, onSelectCategory }: CategoryTab
 
   return (
     <div className="relative">
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4">
+      <div className="-mx-4 overflow-x-auto px-4 pb-1 scrollbar-hide sm:mx-0 sm:px-0">
+        <div className="inline-flex min-w-full items-center gap-1 rounded-lg bg-zinc-200/70 p-1">
         {categories.map((category) => (
           <button
             key={category}
             onClick={() => onSelectCategory(category)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-md border text-sm font-medium whitespace-nowrap transition-colors ${
+            className={`flex items-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors ${
               selectedCategory === category
-                ? 'bg-blue-600 border-blue-600 text-white shadow-sm'
-                : 'bg-white/80 text-zinc-600 border-black/10 hover:bg-white hover:text-zinc-950 hover:border-blue-200'
+                ? 'bg-white text-zinc-950 shadow-sm'
+                : 'text-zinc-600 hover:bg-white/60 hover:text-zinc-950'
             }`}
           >
             {categoryIcons[category]}
             <span>{getCategoryLabel(category)}</span>
           </button>
         ))}
+        </div>
       </div>
     </div>
   );

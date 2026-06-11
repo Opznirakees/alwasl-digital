@@ -192,12 +192,11 @@
 
 /* Card hover effects */
 .card-hover {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* Product card styles */
@@ -206,12 +205,12 @@
   border: 1px solid rgba(60, 60, 67, 0.12);
   border-radius: 0.5rem;
   overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .product-card:hover {
   border-color: rgba(0, 122, 255, 0.28);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* Category icon styles */
@@ -219,11 +218,10 @@
   background: #f2f2f7;
   border-radius: 0.5rem;
   padding: 1rem;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .category-icon:hover {
-  transform: translateY(-1px);
   box-shadow: none;
 }
 
@@ -235,12 +233,11 @@
   font-weight: 600;
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
-  transition: background-color 0.2s ease, transform 0.2s ease;
+  transition: background-color 0.2s ease;
 }
 
 .btn-primary:hover {
   background: #006edb;
-  transform: translateY(-1px);
   box-shadow: none;
 }
 
@@ -321,7 +318,6 @@
 }
 
 .whatsapp-btn:hover {
-  transform: translateY(-1px);
   box-shadow: 0 12px 28px rgba(52, 199, 89, 0.28);
 }
 
@@ -347,7 +343,7 @@
 .light .product-card:hover,
 .light .card-hover:hover {
   border-color: rgba(0, 122, 255, 0.28) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .light .text-white,
