@@ -122,26 +122,32 @@ export function HeroBanner() {
               </div>
             </div>
 
-            <div className="mt-5 flex items-center justify-between gap-4 border-t border-black/10 pt-4">
-              <div className="flex items-center gap-4">
-                <div className="relative h-14 w-14 overflow-hidden rounded-lg border border-black/10 bg-white">
-                  <Image
-                    src="/brand/alwasl-logo.jpg"
-                    alt={t('Al-Wasl Digital Services', 'الوصل للخدمات الإلكترونية', 'Al-Wasl 数字服务')}
-                    fill
-                    className="object-contain p-1"
-                    sizes="56px"
-                  />
+            <div className="mt-5 grid gap-2 border-t border-black/10 pt-4 sm:grid-cols-3">
+              {[
+                {
+                  step: '1',
+                  title: t('Choose package', 'اختر الباقة', '选择套餐'),
+                  body: t('Coins, gifts, rooms or VIP', 'عملات أو هدايا أو غرف أو VIP', '金币、礼物、房间或 VIP'),
+                },
+                {
+                  step: '2',
+                  title: t('Add WAHO ID', 'أضف معرف WAHO', '填写 WAHO ID'),
+                  body: t('Use the correct account details', 'استخدم بيانات الحساب الصحيحة', '使用正确账号信息'),
+                },
+                {
+                  step: '3',
+                  title: t('Top up quickly', 'اشحن بسرعة', '快速充值'),
+                  body: t('Finish with secure checkout', 'أكمل بدفع آمن', '安全结账完成'),
+                },
+              ].map((item) => (
+                <div key={item.step} className="rounded-md bg-zinc-50 p-3 ring-1 ring-black/10">
+                  <div className="mb-2 flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-semibold text-blue-600 ring-1 ring-black/10">
+                    {item.step}
+                  </div>
+                  <p className="text-sm font-semibold text-zinc-950">{item.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-zinc-500">{item.body}</p>
                 </div>
-                <div>
-                  <p className="text-xs font-medium uppercase text-blue-600">WAHO</p>
-                  <p className="text-base font-semibold text-zinc-950">{t('Service desk', 'مكتب الخدمات', '服务台')}</p>
-                  <p className="text-sm text-zinc-500">{t('Clear choices for WAHO top-ups', 'خيارات واضحة لشحن WAHO', '清晰的 WAHO 充值选择')}</p>
-                </div>
-              </div>
-              <div className="rounded-md border border-black/10 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-600">
-                {t('Ready', 'جاهز', '就绪')}
-              </div>
+              ))}
             </div>
           </div>
         </div>
