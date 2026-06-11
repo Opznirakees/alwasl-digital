@@ -18,6 +18,7 @@ import {
   Headphones,
   MessageCircle,
   Sparkles,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -45,6 +46,51 @@ export default function HomePage() {
       <main className="container mx-auto px-4 py-5 md:py-8 space-y-9 md:space-y-12">
         {/* Hero Banner */}
         <HeroBanner />
+
+        <section className="grid items-center gap-6 md:grid-cols-[0.82fr_1.18fr]">
+          <div className="max-w-2xl">
+            <div className="inline-flex w-fit items-center gap-2 rounded-md border border-black/10 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300">
+              <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />
+              {t('Recognized on WAHO', 'معروف على WAHO', 'WAHO 知名用户')}
+            </div>
+            <h2 className="mt-4 text-2xl font-semibold leading-tight text-zinc-950 dark:text-white md:text-3xl">
+              {t('LEO, the trusted face behind these WAHO top-ups', 'LEO، الوجه الموثوق خلف شحن WAHO', 'LEO，WAHO 充值背后的可信面孔')}
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-zinc-600 dark:text-zinc-300 md:text-base">
+              {t(
+                'Customers who know LEO on WAHO can recognize the service immediately: clear amounts, quick support, and a focused top-up experience.',
+                'العملاء الذين يعرفون LEO على WAHO يتعرفون على الخدمة فوراً: مبالغ واضحة ودعم سريع وتجربة شحن مركزة.',
+                '熟悉 WAHO 上 LEO 的用户可以立即识别这项服务：金额清晰、支持快速、充值体验专注。'
+              )}
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2 text-xs font-medium">
+              {[
+                t('Verified WAHO presence', 'حضور موثق على WAHO', 'WAHO 认证形象'),
+                t('Fast recharge support', 'دعم شحن سريع', '快速充值支持'),
+                t('Clear IQD top-up values', 'مبالغ شحن واضحة بالدينار', '清晰 IQD 充值金额'),
+              ].map((item) => (
+                <span key={item} className="rounded-md border border-black/10 bg-white px-3 py-2 text-zinc-600 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <figure className="order-first min-w-0 md:order-none">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-lg border border-black/10 bg-zinc-950 shadow-sm dark:border-white/10 sm:aspect-[16/10] md:aspect-[4/3]">
+              <Image
+                src="/brand/leo-waho-agent.jpeg"
+                alt={t('LEO trusted WAHO top-up agent', 'LEO وكيل شحن WAHO الموثوق', 'LEO 可信 WAHO 充值代理')}
+                fill
+                className="object-contain"
+                sizes="(min-width: 1024px) 45vw, (min-width: 640px) 90vw, 100vw"
+              />
+            </div>
+            <figcaption className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+              {t('LEO is highlighted as a familiar WAHO user and trusted top-up contact.', 'يظهر LEO كمستخدم معروف على WAHO وجهة موثوقة للشحن.', 'LEO 被展示为 WAHO 熟悉用户和可信充值联系人。')}
+            </figcaption>
+          </figure>
+        </section>
 
         {/* Quick Stats */}
         <section className="grid grid-cols-2 overflow-hidden rounded-lg border border-black/10 bg-white md:grid-cols-4">
