@@ -30,7 +30,7 @@ export function SearchBar({ value, onChange }: SearchBarProps) {
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder={t('Search WAHO coins, gifts, rooms...', 'ابحث عن عملات وهدايا وغرف WAHO...')}
+          placeholder={t('Search WAHO top-up amounts...', 'ابحث عن مبالغ شحن WAHO...', '搜索 WAHO 充值金额...')}
           className={`w-full bg-transparent border-0 ${dir === 'rtl' ? 'pr-12 pl-10' : 'pl-12 pr-10'} py-3 text-zinc-950 placeholder:text-zinc-400 focus-visible:ring-0 focus-visible:ring-offset-0`}
         />
         {value && (

@@ -31,16 +31,16 @@ export default function CartPage() {
       <Header />
 
       <main className="container mx-auto px-4 py-8">
-        <Link href="/games" className={`inline-flex items-center gap-2 text-sm mb-8 ${isLight ? 'text-slate-600 hover:text-purple-600' : 'text-white/70 hover:text-white'}`}>
+        <Link href="/top-up" className={`inline-flex items-center gap-2 text-sm mb-8 ${isLight ? 'text-slate-600 hover:text-purple-600' : 'text-white/70 hover:text-white'}`}>
           <ArrowLeft className="w-4 h-4" />
-          {t('Continue shopping', 'متابعة التسوق')}
+          {t('Continue top-up', 'متابعة الشحن', '继续充值')}
         </Link>
 
         <div className="flex items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className={`text-3xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{t('Cart', 'السلة')}</h1>
+            <h1 className={`text-3xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{t('Top-up cart', 'سلة الشحن', '充值清单')}</h1>
             <p className={`text-sm mt-1 ${isLight ? 'text-slate-500' : 'text-white/50'}`}>
-              {t('Saved demo items for follow-up checkout', 'عناصر تجريبية محفوظة للمتابعة')}
+              {t('Saved top-up items for checkout', 'عمليات شحن محفوظة لإتمام الدفع', '已保存待结账的充值项目')}
             </p>
           </div>
           {rows.length > 0 && (
@@ -73,7 +73,7 @@ export default function CartPage() {
                         </p>
                       )}
                       <div className="flex flex-wrap items-center gap-3 mt-4">
-                        <Link href={`/games/${game.slug}`}>
+                        <Link href={`/top-up/${game.slug}`}>
                           <Button size="sm" className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
                             {t('Checkout', 'الدفع')}
                           </Button>
@@ -110,9 +110,9 @@ export default function CartPage() {
               <ShoppingCart className={`w-10 h-10 ${isLight ? 'text-purple-500' : 'text-purple-300'}`} />
             </div>
             <h2 className={`text-xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{t('Your cart is empty', 'السلة فارغة')}</h2>
-            <Link href="/games">
+            <Link href="/top-up">
               <Button className="mt-5 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-                {t('Browse products', 'تصفح المنتجات')}
+                {t('Browse top-ups', 'تصفح الشحن', '浏览充值')}
               </Button>
             </Link>
           </div>

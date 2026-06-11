@@ -92,11 +92,11 @@ export function Header() {
                   {t('Home', 'الرئيسية')}
                 </Link>
                 <Link
-                  href="/games"
+                  href="/top-up"
                   className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${isLight ? 'text-zinc-900 hover:bg-zinc-100 hover:text-blue-600' : 'text-zinc-100 hover:bg-white/10 hover:text-blue-300'}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  {t('WAHO Services', 'خدمات WAHO')}
+                  {t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}
                 </Link>
                 <Link
                   href="/promotions"
@@ -110,7 +110,7 @@ export function Header() {
                   className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${isLight ? 'text-zinc-900 hover:bg-zinc-100 hover:text-blue-600' : 'text-zinc-100 hover:bg-white/10 hover:text-blue-300'}`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  {t('Cart', 'السلة')}
+                  {t('Top-up cart', 'سلة الشحن', '充值清单')}
                 </Link>
                 {isAuthenticated && (
                   <>
@@ -219,7 +219,7 @@ export function Header() {
                 {t('Al-Wasl Digital', 'الوصل')}
               </h1>
               <p className={`text-[10px] -mt-0.5 ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                {t('WAHO top-ups • digital services', 'شحن WAHO • خدمات رقمية')}
+                {t('WAHO top-ups', 'شحن WAHO', 'WAHO 充值')}
               </p>
             </div>
           </Link>
@@ -229,8 +229,8 @@ export function Header() {
             <Link href="/" className={`text-sm font-medium transition-colors ${isLight ? 'text-zinc-600 hover:text-blue-600' : 'text-zinc-300 hover:text-blue-300'}`}>
               {t('Home', 'الرئيسية')}
             </Link>
-            <Link href="/games" className={`text-sm font-medium transition-colors ${isLight ? 'text-zinc-600 hover:text-blue-600' : 'text-zinc-300 hover:text-blue-300'}`}>
-              {t('WAHO Services', 'خدمات WAHO')}
+            <Link href="/top-up" className={`text-sm font-medium transition-colors ${isLight ? 'text-zinc-600 hover:text-blue-600' : 'text-zinc-300 hover:text-blue-300'}`}>
+              {t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}
             </Link>
             <Link href="/promotions" className={`text-sm font-medium transition-colors ${isLight ? 'text-zinc-600 hover:text-blue-600' : 'text-zinc-300 hover:text-blue-300'}`}>
               {t('WAHO Offers', 'عروض WAHO')}

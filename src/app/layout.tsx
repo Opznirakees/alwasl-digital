@@ -23,7 +23,7 @@ const notoKufiArabic = Noto_Kufi_Arabic({
 
 export const metadata: Metadata = {
   title: "Al-Wasl Digital Services | Fast WAHO Top-ups",
-  description: "Fast WAHO top-ups for coins, gifts, room boosts, VIP upgrades, and digital services with clear packages and support.",
+  description: "Fast WAHO account top-ups with clear amounts, secure payment steps, order tracking, and support.",
 };
 
 export default function RootLayout({

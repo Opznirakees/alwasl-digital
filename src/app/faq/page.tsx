@@ -6,7 +6,7 @@ export default function FaqPage() {
       eyebrow={{ en: 'FAQ', ar: 'الأسئلة الشائعة' }}
       title={{ en: 'Quick answers before you place an order.', ar: 'إجابات سريعة قبل تنفيذ الطلب.' }}
       subtitle={{ en: 'These answers describe the current demo behavior and the intended production flow.', ar: 'هذه الإجابات تشرح سلوك النسخة التجريبية والمسار المتوقع في الإنتاج.' }}
-      actions={[{ label: { en: 'Start shopping', ar: 'ابدأ التسوق' }, href: '/games' }]}
+      actions={[{ label: { en: 'Start top-up', ar: 'ابدأ الشحن' }, href: '/top-up' }]}
       sections={[
         {
           title: { en: 'How do I log in?', ar: 'كيف أسجل الدخول؟' },
@@ -17,8 +17,8 @@ export default function FaqPage() {
           body: { en: 'Orders are simulated in the demo. Live orders will move through pending, processing, completed, failed, or refunded states.', ar: 'الطلبات محاكاة في النسخة التجريبية. في التشغيل الفعلي ستنتقل الطلبات بين حالات الانتظار والمعالجة والاكتمال أو الفشل أو الاسترداد.' },
         },
         {
-          title: { en: 'Which countries are supported?', ar: 'ما الدول المدعومة؟' },
-          body: { en: 'The interface currently includes Iraq, Saudi Arabia, UAE, Egypt, Jordan, and Kuwait.', ar: 'الواجهة الحالية تشمل العراق والسعودية والإمارات ومصر والأردن والكويت.' },
+          title: { en: 'Which currency is used?', ar: 'ما العملة المستخدمة؟' },
+          body: { en: 'WAHO top-up prices are shown clearly with IQD-first pricing in the current flow.', ar: 'تظهر أسعار شحن WAHO بوضوح مع اعتماد الدينار العراقي أولاً في المسار الحالي.' },
         },
         {
           title: { en: 'Can I use wallet balance?', ar: 'هل يمكن استخدام رصيد المحفظة؟' },

@@ -11,30 +11,30 @@ export const wahoScreenshots = {
 export const wahoShowcaseImages = [
   {
     src: wahoScreenshots.liveStream,
-    label: { en: 'Live', ar: 'البث المباشر', zh: '直播' },
+    label: { en: 'WAHO app', ar: 'تطبيق WAHO', zh: 'WAHO 应用' },
   },
   {
     src: wahoScreenshots.onlineParties,
-    label: { en: 'Parties', ar: 'الحفلات', zh: '派对' },
+    label: { en: 'Account', ar: 'الحساب', zh: '账号' },
   },
   {
     src: wahoScreenshots.friends,
-    label: { en: 'Friends', ar: 'الأصدقاء', zh: '好友' },
+    label: { en: 'Profile', ar: 'الملف', zh: '资料' },
   },
   {
     src: wahoScreenshots.casualGames,
-    label: { en: 'Games', ar: 'الألعاب', zh: '游戏' },
+    label: { en: 'Top-up amount', ar: 'مبلغ الشحن', zh: '充值金额' },
   },
   {
     src: wahoScreenshots.privateChat,
-    label: { en: 'Private chat', ar: 'الدردشة الخاصة', zh: '私聊' },
+    label: { en: 'Confirmation', ar: 'التأكيد', zh: '确认' },
   },
   {
     src: wahoScreenshots.partyRoom,
-    label: { en: 'Gift effects', ar: 'مؤثرات الهدايا', zh: '礼物特效' },
+    label: { en: 'Order status', ar: 'حالة الطلب', zh: '订单状态' },
   },
   {
     src: wahoScreenshots.audioRoom,
-    label: { en: 'Community', ar: 'المجتمع', zh: '社区' },
+    label: { en: 'Support', ar: 'الدعم', zh: '支持' },
   },
 ] as const;

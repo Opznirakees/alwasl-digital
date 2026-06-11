@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Game, GameCategory } from '@/types';
 import { categoryLabels } from '@/data/mock-data';
-import { ArrowRight, Gift, Gamepad2, MessageCircle, Play, Sparkles, Ticket, TrendingUp } from 'lucide-react';
+import { ArrowRight, MessageCircle, Sparkles, TrendingUp } from 'lucide-react';
 
 interface GameCardProps {
   game: Game;
@@ -15,13 +15,13 @@ interface GameCardProps {
 }
 
 const categoryIcons: Record<GameCategory, React.ComponentType<{ className?: string }>> = {
-  mobile_game: Gamepad2,
-  pc_game: Gamepad2,
-  console: Gamepad2,
-  gift_card: Gift,
-  streaming: Play,
+  mobile_game: MessageCircle,
+  pc_game: MessageCircle,
+  console: MessageCircle,
+  gift_card: MessageCircle,
+  streaming: MessageCircle,
   social_media: MessageCircle,
-  voucher: Ticket,
+  voucher: MessageCircle,
 };
 
 function ServiceVisual({ game, compact = false }: { game: Game; compact?: boolean }) {
@@ -68,7 +68,7 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
 
   if (variant === 'compact') {
     return (
-      <Link href={`/games/${game.slug}`}>
+      <Link href={`/top-up/${game.slug}`}>
         <div className="group relative flex items-center gap-4 rounded-lg border border-black/10 bg-white p-3 transition-colors hover:border-blue-300">
           <ServiceVisual game={game} compact />
           <div className="flex-1 min-w-0">
@@ -90,7 +90,7 @@ export function GameCard({ game, variant = 'default' }: GameCardProps) {
   }
 
   return (
-    <Link href={`/games/${game.slug}`}>
+    <Link href={`/top-up/${game.slug}`}>
       <div className="group relative h-full overflow-hidden product-card">
         <div className="relative">
           <ServiceVisual game={game} />

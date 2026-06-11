@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, CreditCard, Gamepad2, LayoutDashboard, ShieldCheck, Sparkles, Wallet } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, CreditCard, LayoutDashboard, MessageCircle, ShieldCheck, Sparkles, Wallet } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -15,10 +15,10 @@ const demoSteps = [
     href: '/auth',
   },
   {
-    icon: Gamepad2,
+    icon: MessageCircle,
     title: { en: '2. Place a WAHO top-up', ar: '٢. نفذ شحن WAHO' },
-    body: { en: 'Choose a WAHO package, fill in the demo details, pay from wallet, then watch the order appear.', ar: 'اختر باقة WAHO، عبئ البيانات التجريبية، ادفع من المحفظة وشاهد ظهور الطلب.' },
-    href: '/games/waho-coins',
+    body: { en: 'Choose a top-up amount, fill in the WAHO ID, pay from wallet, then watch the order appear.', ar: 'اختر مبلغ الشحن وأدخل معرف WAHO وادفع من المحفظة ثم شاهد ظهور الطلب.' },
+    href: '/top-up/waho-top-up',
   },
   {
     icon: Wallet,
@@ -29,7 +29,7 @@ const demoSteps = [
   {
     icon: LayoutDashboard,
     title: { en: '4. Review the operator view', ar: '٤. مراجعة لوحة التشغيل' },
-    body: { en: 'Admin dashboard shows revenue, orders, products, promotions, and wallet activity.', ar: 'تعرض لوحة الإدارة الإيرادات والطلبات والمنتجات والعروض وحركة المحفظة.' },
+    body: { en: 'Admin dashboard shows revenue, top-up orders, offers, providers, and wallet activity.', ar: 'تعرض لوحة الإدارة الإيرادات وطلبات الشحن والعروض والموردين وحركة المحفظة.' },
     href: '/admin',
   },
 ];

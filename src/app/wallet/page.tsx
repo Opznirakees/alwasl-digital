@@ -25,11 +25,11 @@ import {
   Plus,
   ArrowUpRight,
   ArrowDownLeft,
-  Gift,
   RefreshCw,
   TrendingUp,
   Shield,
   Star,
+  Sparkles,
   ChevronRight,
   CreditCard,
   Loader2,
@@ -71,7 +71,7 @@ export default function WalletPage() {
         return <RefreshCw className="w-4 h-4" />;
       case 'bonus':
       case 'cashback':
-        return <Gift className="w-4 h-4" />;
+        return <Sparkles className="w-4 h-4" />;
       default:
         return <Wallet className="w-4 h-4" />;
     }
@@ -338,7 +338,7 @@ export default function WalletPage() {
                 {[
                   { icon: Shield, text: t('Secure transactions', 'معاملات آمنة') },
                   { icon: TrendingUp, text: t('Earn cashback', 'احصل على استرداد نقدي') },
-                  { icon: Gift, text: t('Exclusive bonuses', 'مكافآت حصرية') },
+                  { icon: Sparkles, text: t('Exclusive bonuses', 'مكافآت حصرية') },
                 ].map((benefit, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-emerald-500/10">

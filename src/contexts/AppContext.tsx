@@ -593,6 +593,52 @@ const zhTranslations: Record<string, string> = {
   'Production payments should be confirmed through the connected payment provider before fulfillment.': '生产环境中，交付前应通过已连接的支付服务商确认付款。',
   'Demo notice': '演示说明',
   'This deployment uses sample data and simulated flows until real integrations are connected.': '在真实集成接入之前，此部署使用示例数据和模拟流程。',
+  'Fast WAHO account top-ups with clear payment steps.': '清晰支付步骤，快速完成 WAHO 账号充值。',
+  'Al-Wasl Digital helps customers top up a WAHO account quickly with clear amounts and local payment options.': 'Al-Wasl 数字服务帮助客户通过清晰金额和本地支付方式快速充值 WAHO 账号。',
+  'Customers choose a WAHO top-up amount, enter the WAHO ID, confirm the account details, and continue to payment.': '客户选择 WAHO 充值金额，输入 WAHO ID，确认账号信息，然后继续支付。',
+  'The app supports Arabic, English, and Chinese, local payment expectations, wallet behavior, and IQD-first pricing.': '应用支持阿拉伯语、英语和中文，并符合本地支付预期、钱包流程和以伊拉克第纳尔优先的定价。',
+  'Choose the amount, confirm the WAHO ID, pay securely, and track the order.': '选择金额，确认 WAHO ID，安全支付并跟踪订单。',
+  'Choose the WAHO top-up amount that matches what the customer needs.': '选择符合客户需求的 WAHO 充值金额。',
+  'Confirm the WAHO ID before payment.': '付款前确认 WAHO ID。',
+  'Select a top-up amount, check the account details, then choose a payment method.': '选择充值金额，检查账号信息，然后选择支付方式。',
+  'The admin dashboard keeps top-up orders, offers, wallets, providers, and reporting in one place.': '管理后台将充值订单、优惠、钱包、供应商和报表集中在一个位置。',
+  'Start top-up': '开始充值',
+  'Which currency is used?': '使用什么货币？',
+  'WAHO top-up prices are shown clearly with IQD-first pricing in the current flow.': '当前流程以伊拉克第纳尔优先显示 WAHO 充值价格，金额清晰。',
+  'Use WhatsApp for urgent top-up help, payment questions, or account checks.': '如需紧急充值帮助、支付问题或账号检查，请使用 WhatsApp。',
+  'A production version may collect phone numbers, top-up order details, wallet transactions, payment references, and WAHO account identifiers.': '生产版本可能会收集电话号码、充值订单详情、钱包交易、支付参考号和 WAHO 账号标识。',
+  'Customers are responsible for entering the correct WAHO account ID and contact details.': '客户负责输入正确的 WAHO 账号 ID 和联系方式。',
+  'WAHO top-ups may be irreversible after successful fulfillment.': 'WAHO 充值成功完成后可能无法撤销。',
+  'Choose a top-up amount, fill in the WAHO ID, pay from wallet, then watch the order appear.': '选择充值金额，填写 WAHO ID，使用钱包支付，然后查看订单生成。',
+  'Admin dashboard shows revenue, top-up orders, offers, providers, and wallet activity.': '管理后台显示收入、充值订单、优惠、供应商和钱包动态。',
+  'WAHO Account Top-Up': 'WAHO 账号充值',
+  'WAHO Top-Up': 'WAHO 充值',
+  'Top-Up': '充值',
+  'Top up a WAHO account balance by entering the WAHO ID, choosing the amount, and paying securely.': '输入 WAHO ID，选择金额并安全支付，即可充值 WAHO 账号余额。',
+  'Enter the WAHO account ID': '输入 WAHO 账号 ID',
+  '5,000 IQD WAHO Top-Up': '5,000 IQD WAHO 充值',
+  '10,000 IQD WAHO Top-Up': '10,000 IQD WAHO 充值',
+  '25,000 IQD WAHO Top-Up': '25,000 IQD WAHO 充值',
+  '50,000 IQD WAHO Top-Up': '50,000 IQD WAHO 充值',
+  '100,000 IQD WAHO Top-Up': '100,000 IQD WAHO 充值',
+  'IQD top-up': 'IQD 充值',
+  'WAHO Direct Top-Up': 'WAHO 直连充值',
+  'WAHO Backup Top-Up': 'WAHO 备用充值',
+  'Manual Top-Up Review': '人工充值审核',
+  'Purchase: WAHO top-up 25,000 IQD': '购买：WAHO 充值 25,000 IQD',
+  'Refund: WAHO top-up failed': '退款：WAHO 充值失败',
+  'WAHO top-up timeout': 'WAHO 充值超时',
+  'Confirm before you pay': '付款前确认',
+  'Check the WAHO account details first so every top-up goes to the right account.': '先检查 WAHO 账号信息，确保每次充值都进入正确账号。',
+  'Track every WAHO top-up': '跟踪每一笔 WAHO 充值',
+  'Follow pending, processing, completed, failed, and refunded statuses from one place.': '在一个页面查看待处理、处理中、已完成、失败和已退款状态。',
+  'Top-up offer available': '有可用充值优惠',
+  'Your WAHO top-up has been completed!': '您的 WAHO 充值已完成！',
+  'WAHO top-up discounts are available this week!': '本周有 WAHO 充值折扣！',
+  'Continue top-up': '继续充值',
+  'Top-up cart': '充值清单',
+  'Saved top-up items for checkout': '已保存待结账的充值项目',
+  'Browse top-ups': '浏览充值',
 };
 
 const languageLabels: Record<Language, { short: string; locale: string; htmlLang: string }> = {
@@ -624,11 +670,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (savedLanguage && savedLanguage in languageLabels) {
       setLanguage(savedLanguage);
     }
-    const savedCountryId = localStorage.getItem(storageKeys.country);
-    if (savedCountryId) {
-      const country = countries.find((item) => item.id === savedCountryId);
-      if (country) setSelectedCountry(country);
-    }
+    localStorage.removeItem(storageKeys.country);
 
     setUser(readJson<User | null>(storageKeys.user, null));
     setCart(readJson<CartItem[]>(storageKeys.cart, []));
@@ -650,11 +692,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     localStorage.setItem(storageKeys.theme, theme);
   }, [isHydrated, theme]);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    localStorage.setItem(storageKeys.country, selectedCountry.id);
-  }, [isHydrated, selectedCountry.id]);
 
   useEffect(() => {
     if (!isHydrated) return;

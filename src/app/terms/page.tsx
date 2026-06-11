@@ -9,11 +9,11 @@ export default function TermsPage() {
       sections={[
         {
           title: { en: 'Account use', ar: 'استخدام الحساب' },
-          body: { en: 'Customers are responsible for entering accurate account, player, server, and contact details.', ar: 'العميل مسؤول عن إدخال بيانات الحساب واللاعب والسيرفر والتواصل بشكل صحيح.' },
+          body: { en: 'Customers are responsible for entering the correct WAHO account ID and contact details.', ar: 'العميل مسؤول عن إدخال معرف حساب WAHO وبيانات التواصل بشكل صحيح.' },
         },
         {
           title: { en: 'Orders', ar: 'الطلبات' },
-          body: { en: 'Digital top-ups and gift cards may be irreversible after successful fulfillment.', ar: 'قد لا يمكن إلغاء الشحن الرقمي أو البطاقات بعد التنفيذ الناجح.' },
+          body: { en: 'WAHO top-ups may be irreversible after successful fulfillment.', ar: 'قد لا يمكن إلغاء شحن WAHO بعد التنفيذ الناجح.' },
         },
         {
           title: { en: 'Payments', ar: 'الدفع' },

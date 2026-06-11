@@ -23,17 +23,17 @@ const heroScreenshots = [
   {
     src: wahoScreenshots.onlineParties,
     alt: {
-      en: 'WAHO online party screenshot',
-      ar: 'لقطة شاشة لحفلة WAHO عبر الإنترنت',
-      zh: 'WAHO 在线派对截图',
+      en: 'WAHO account screenshot',
+      ar: 'لقطة شاشة لحساب WAHO',
+      zh: 'WAHO 账号截图',
     },
   },
   {
     src: wahoScreenshots.casualGames,
     alt: {
-      en: 'WAHO casual games screenshot',
-      ar: 'لقطة شاشة لألعاب WAHO الجماعية',
-      zh: 'WAHO 休闲游戏截图',
+      en: 'WAHO top-up amount screenshot',
+      ar: 'لقطة شاشة لمبلغ شحن WAHO',
+      zh: 'WAHO 充值金额截图',
     },
   },
 ];
@@ -55,14 +55,14 @@ export function HeroBanner() {
 
         <p className="mt-5 max-w-2xl break-words text-base leading-7 text-zinc-600 md:text-lg">
           {t(
-            'Choose coins, gifts, room boosts, games, VIP medals, or profile upgrades, then enter the WAHO details and pay securely.',
-            'اختر العملات أو الهدايا أو تعزيز الغرف أو الألعاب أو VIP والميداليات، ثم أدخل بيانات WAHO وادفع بأمان.',
-            '选择金币、礼物、房间提升、游戏、VIP 勋章或资料升级，然后输入 WAHO 信息并安全支付。'
+            'Enter the WAHO ID, choose the top-up amount, confirm the account, and pay securely.',
+            'أدخل معرف WAHO واختر مبلغ الشحن وتأكد من الحساب وادفع بأمان.',
+            '输入 WAHO ID，选择充值金额，确认账号并安全支付。'
           )}
         </p>
 
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <Link href="/games">
+          <Link href="/top-up">
             <Button
               size="lg"
               className="w-full rounded-md bg-blue-600 px-5 text-sm font-semibold text-white shadow-none hover:bg-blue-700 sm:w-auto"
@@ -147,8 +147,8 @@ export function HeroBanner() {
               {[
                 {
                   step: '1',
-                  title: t('Choose package', 'اختر الباقة', '选择套餐'),
-                  body: t('Coins, gifts, rooms or VIP', 'عملات أو هدايا أو غرف أو VIP', '金币、礼物、房间或 VIP'),
+                  title: t('Choose amount', 'اختر المبلغ', '选择金额'),
+                  body: t('Pick the WAHO top-up value', 'اختر قيمة شحن WAHO', '选择 WAHO 充值金额'),
                 },
                 {
                   step: '2',

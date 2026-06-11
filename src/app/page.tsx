@@ -15,7 +15,6 @@ import type { GameCategory } from '@/types';
 import {
   Zap,
   BadgeCheck,
-  Gamepad2,
   Headphones,
   MessageCircle,
   Sparkles,
@@ -75,13 +74,13 @@ export default function HomePage() {
         <section className="space-y-5">
           <div className="max-w-2xl">
             <h2 className="text-2xl font-semibold text-zinc-950">
-              {t('WAHO inside the app', 'WAHO داخل التطبيق', 'WAHO 应用内场景')}
+              {t('WAHO top-up flow', 'مسار شحن WAHO', 'WAHO 充值流程')}
             </h2>
             <p className="mt-1 text-sm leading-6 text-zinc-500">
               {t(
-                'Live rooms, gifts, games, and private chats give each top-up clear context.',
-                'الغرف المباشرة والهدايا والألعاب والدردشة الخاصة تجعل كل شحن أوضح.',
-                '直播房间、礼物、游戏和私聊让每次充值都有清晰场景。'
+                'The flow stays focused on one task: confirm the WAHO account and complete the top-up clearly.',
+                'يبقى المسار مركزاً على مهمة واحدة: تأكيد حساب WAHO وإكمال الشحن بوضوح.',
+                '流程专注于一件事：确认 WAHO 账号并清晰完成充值。'
               )}
             </p>
           </div>
@@ -112,15 +111,15 @@ export default function HomePage() {
         <section className="space-y-5">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div>
-              <h2 className="text-2xl font-semibold text-zinc-950">{t('Top up WAHO services', 'اشحن خدمات WAHO')}</h2>
-              <p className="text-sm mt-1 text-zinc-500">{t('Pick coins, gifts, rooms, games, or VIP upgrades and top up quickly.', 'اختر العملات أو الهدايا أو الغرف أو الألعاب أو VIP واشحن بسرعة.')}</p>
+              <h2 className="text-2xl font-semibold text-zinc-950">{t('Top up WAHO balance', 'اشحن رصيد WAHO', '充值 WAHO 余额')}</h2>
+              <p className="text-sm mt-1 text-zinc-500">{t('Choose the amount, confirm the WAHO ID, and complete payment securely.', 'اختر المبلغ وتأكد من معرف WAHO وأكمل الدفع بأمان.', '选择金额，确认 WAHO ID，并安全完成支付。')}</p>
             </div>
             <SearchBar value={searchQuery} onChange={setSearchQuery} />
           </div>
 
           <CategoryTabs selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />
 
-          {/* WAHO Services Grid */}
+          {/* WAHO top-up grid */}
           {filteredGames.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
               {filteredGames.map((game) => (
@@ -130,10 +129,10 @@ export default function HomePage() {
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="w-20 h-20 rounded-lg bg-zinc-100 flex items-center justify-center mb-4">
-                <Gamepad2 className="w-10 h-10 text-zinc-400" />
+                <MessageCircle className="w-10 h-10 text-zinc-400" />
               </div>
-              <h3 className="text-lg font-semibold text-zinc-950">{t('No WAHO services found', 'لم يتم العثور على خدمات WAHO')}</h3>
-              <p className="text-sm mt-1 text-zinc-500">{t('Try another WAHO service or clear filters', 'جرب خدمة WAHO أخرى أو امسح الفلاتر')}</p>
+              <h3 className="text-lg font-semibold text-zinc-950">{t('No WAHO top-up found', 'لم يتم العثور على شحن WAHO', '未找到 WAHO 充值')}</h3>
+              <p className="text-sm mt-1 text-zinc-500">{t('Try another amount or clear filters', 'جرب مبلغاً آخر أو امسح الفلاتر', '尝试其他金额或清除筛选')}</p>
             </div>
           )}
         </section>
@@ -183,14 +182,14 @@ export default function HomePage() {
                 </div>
               </div>
               <p className="text-sm text-zinc-500">
-                {t('Fast WAHO top-ups with digital services for promotion, recharge, and customer support.', 'شحن WAHO سريع مع خدمات رقمية للترويج والشحن ودعم العملاء.')}
+                {t('Fast WAHO top-ups with clear amounts, local payment options, and customer support.', 'شحن WAHO سريع بمبالغ واضحة وخيارات دفع محلية ودعم للعملاء.', '快速 WAHO 充值，金额清晰，支持本地支付和客户服务。')}
               </p>
             </div>
 
             <div>
               <h4 className="font-semibold mb-4 text-zinc-950">{t('WAHO Links', 'روابط WAHO')}</h4>
               <ul className="space-y-2 text-sm text-zinc-500">
-                <li><Link href="/games" className="transition-colors hover:text-blue-600">{t('WAHO Services', 'خدمات WAHO')}</Link></li>
+                <li><Link href="/top-up" className="transition-colors hover:text-blue-600">{t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}</Link></li>
                 <li><Link href="/promotions" className="transition-colors hover:text-blue-600">{t('WAHO Offers', 'عروض WAHO')}</Link></li>
                 <li><Link href="/help" className="transition-colors hover:text-blue-600">{t('How it works', 'كيف تعمل الخدمة')}</Link></li>
                 <li><Link href="/contact" className="transition-colors hover:text-blue-600">{t('Contact', 'اتصل بنا')}</Link></li>

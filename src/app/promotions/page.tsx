@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, CalendarDays, Copy, Gift, TicketPercent } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Copy, TicketPercent } from 'lucide-react';
 import { toast } from 'sonner';
 import { Header } from '@/components/layout/Header';
 import { Badge } from '@/components/ui/badge';
@@ -83,7 +83,7 @@ export default function PromotionsPage() {
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-100">
-                      <Gift className="w-6 h-6 text-blue-600" />
+                      <TicketPercent className="w-6 h-6 text-blue-600" />
                     </div>
                     <Badge variant="outline" className={stateClass}>{stateLabel}</Badge>
                   </div>
@@ -93,7 +93,7 @@ export default function PromotionsPage() {
                       {applicableGames.slice(0, 3).map((game) => game && (
                         <Link
                           key={game.id}
-                          href={`/games/${game.slug}`}
+                          href={`/top-up/${game.slug}`}
                           className="relative aspect-[750/1624] w-14 flex-shrink-0 overflow-hidden rounded-md border border-black/10 bg-zinc-100"
                         >
                           <Image
@@ -135,7 +135,7 @@ export default function PromotionsPage() {
                     {applicableGames.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
                         {applicableGames.map((game) => game && (
-                          <Link key={game.id} href={`/games/${game.slug}`} className="inline-flex min-h-11 items-center">
+                          <Link key={game.id} href={`/top-up/${game.slug}`} className="inline-flex min-h-11 items-center">
                             <Badge variant="outline" className="border-black/10 text-zinc-600">
                               {t(game.name, game.nameAr)}
                             </Badge>
@@ -144,7 +144,7 @@ export default function PromotionsPage() {
                       </div>
                     ) : (
                       <Badge variant="outline" className="border-black/10 text-zinc-600">
-                        {t('All products', 'كل المنتجات')}
+                        {t('All top-ups', 'كل عمليات الشحن', '全部充值')}
                       </Badge>
                     )}
                   </div>

@@ -4,20 +4,20 @@ export default function AboutPage() {
   return (
     <InfoPage
       eyebrow={{ en: 'About Al-Wasl Digital', ar: 'عن الوصل الرقمي' }}
-      title={{ en: 'Fast WAHO top-ups for coins, gifts, rooms, and VIP upgrades.', ar: 'شحن WAHO سريع للعملات والهدايا والغرف وترقيات VIP.' }}
-      subtitle={{ en: 'Al-Wasl Digital helps customers top up WAHO quickly with clear packages and local payment options.', ar: 'الوصل الرقمي يساعد العملاء على شحن WAHO بسرعة عبر باقات واضحة وخيارات دفع محلية.' }}
+      title={{ en: 'Fast WAHO account top-ups with clear payment steps.', ar: 'شحن سريع لحسابات WAHO بخطوات دفع واضحة.' }}
+      subtitle={{ en: 'Al-Wasl Digital helps customers top up a WAHO account quickly with clear amounts and local payment options.', ar: 'الوصل الرقمي يساعد العملاء على شحن حساب WAHO بسرعة عبر مبالغ واضحة وخيارات دفع محلية.' }}
       actions={[
-        { label: { en: 'Browse WAHO top-ups', ar: 'تصفح شحن WAHO' }, href: '/games' },
+        { label: { en: 'Browse WAHO top-ups', ar: 'تصفح شحن WAHO' }, href: '/top-up' },
         { label: { en: 'Contact support', ar: 'تواصل مع الدعم' }, href: '/contact' },
       ]}
       sections={[
         {
           title: { en: 'What we offer', ar: 'ماذا نقدم' },
-          body: { en: 'Customers can choose WAHO coins, gift bundles, room boosts, party games, and VIP upgrades with clear pricing.', ar: 'يمكن للعملاء اختيار عملات WAHO وباقات الهدايا وتعزيز الغرف والألعاب وترقيات VIP بأسعار واضحة.' },
+          body: { en: 'Customers choose a WAHO top-up amount, enter the WAHO ID, confirm the account details, and continue to payment.', ar: 'يختار العملاء مبلغ شحن WAHO ويدخلون معرف WAHO ويتأكدون من بيانات الحساب ثم يتابعون للدفع.' },
         },
         {
           title: { en: 'Designed for the region', ar: 'مصمم للمنطقة' },
-          body: { en: 'The app supports Arabic and English, multiple countries, local currencies, and payment flows common in the Iraqi market.', ar: 'يدعم التطبيق العربية والإنجليزية وعدة دول وعملات محلية ومسارات دفع مناسبة للسوق العراقي.' },
+          body: { en: 'The app supports Arabic, English, and Chinese, local payment expectations, wallet behavior, and IQD-first pricing.', ar: 'يدعم التطبيق العربية والإنجليزية والصينية ومتطلبات الدفع المحلي وسلوك المحفظة والتسعير بالدينار العراقي أولاً.' },
         },
         {
           title: { en: 'Demo-ready platform', ar: 'منصة جاهزة للعرض' },

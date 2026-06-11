@@ -44,8 +44,8 @@ import {
   Search,
   Filter,
   Download,
-  Gamepad2,
-  Gift,
+  MessageCircle,
+  TicketPercent,
   Globe,
   Bell,
   Menu,
@@ -128,10 +128,10 @@ export default function AdminDashboard() {
   const sidebarItems = [
     { id: 'overview', icon: LayoutDashboard, label: t('Overview', 'نظرة عامة') },
     { id: 'orders', icon: ShoppingCart, label: t('Orders', 'الطلبات') },
-    { id: 'products', icon: Gamepad2, label: t('Products', 'المنتجات') },
+    { id: 'products', icon: MessageCircle, label: t('Top-up amounts', 'مبالغ الشحن', '充值金额') },
     { id: 'users', icon: Users, label: t('Users', 'المستخدمين') },
     { id: 'providers', icon: Server, label: t('Providers', 'الموردين') },
-    { id: 'promotions', icon: Gift, label: t('WAHO Offers', 'عروض WAHO') },
+    { id: 'promotions', icon: TicketPercent, label: t('WAHO Offers', 'عروض WAHO') },
     { id: 'wallets', icon: Wallet, label: t('Wallets', 'المحافظ') },
     { id: 'reports', icon: TrendingUp, label: t('Reports', 'التقارير') },
     { id: 'settings', icon: Settings, label: t('Settings', 'الإعدادات') },
@@ -341,7 +341,7 @@ export default function AdminDashboard() {
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
                       <TableHead className="text-white/50">{t('Order ID', 'رقم الطلب')}</TableHead>
-                      <TableHead className="text-white/50">{t('WAHO Service', 'خدمة WAHO')}</TableHead>
+                      <TableHead className="text-white/50">{t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}</TableHead>
                       <TableHead className="text-white/50">{t('Amount', 'المبلغ')}</TableHead>
                       <TableHead className="text-white/50">{t('Status', 'الحالة')}</TableHead>
                       <TableHead className="text-white/50">{t('Date', 'التاريخ')}</TableHead>
@@ -390,8 +390,8 @@ export default function AdminDashboard() {
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
                       <TableHead className="text-white/50">{t('Order ID', 'رقم الطلب')}</TableHead>
-                      <TableHead className="text-white/50">{t('WAHO Service', 'خدمة WAHO')}</TableHead>
-                      <TableHead className="text-white/50">{t('Package', 'الباقة')}</TableHead>
+                      <TableHead className="text-white/50">{t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}</TableHead>
+                      <TableHead className="text-white/50">{t('Top-up amount', 'مبلغ الشحن', '充值金额')}</TableHead>
                       <TableHead className="text-white/50">{t('WAHO ID', 'معرف WAHO')}</TableHead>
                       <TableHead className="text-white/50">{t('Amount', 'المبلغ')}</TableHead>
                       <TableHead className="text-white/50">{t('Payment', 'الدفع')}</TableHead>
@@ -433,10 +433,10 @@ export default function AdminDashboard() {
           {activeTab === 'products' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">{t('WAHO Services Management', 'إدارة خدمات WAHO')}</h2>
+                <h2 className="text-2xl font-bold text-white">{t('WAHO Top-Up Amounts', 'إدارة مبالغ شحن WAHO', 'WAHO 充值金额管理')}</h2>
                 <Button className="bg-gradient-to-r from-emerald-500 to-teal-600">
-                  <Gamepad2 className="w-4 h-4 mr-2" />
-                  {t('Add WAHO Service', 'إضافة خدمة WAHO')}
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  {t('Add top-up amount', 'إضافة مبلغ شحن', '添加充值金额')}
                 </Button>
               </div>
 
@@ -452,7 +452,7 @@ export default function AdminDashboard() {
                         <p className="text-xs text-white/50">{t(game.publisher, game.publisher)}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-400">
-                            {game.packages.length} {t('packages', 'باقات')}
+                            {game.packages.length} {t('top-up amounts', 'مبالغ شحن', '充值金额')}
                           </Badge>
                           {game.isPopular && (
                             <Badge className="text-[10px] bg-amber-500/20 text-amber-400 border-0">
@@ -529,7 +529,7 @@ export default function AdminDashboard() {
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white">{t('Promotions', 'العروض')}</h2>
                 <Button className="bg-gradient-to-r from-emerald-500 to-teal-600">
-                  <Gift className="w-4 h-4 mr-2" />
+                  <TicketPercent className="w-4 h-4 mr-2" />
                   {t('Create Promotion', 'إنشاء عرض')}
                 </Button>
               </div>

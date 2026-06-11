@@ -147,7 +147,7 @@ export default function OrdersPage() {
               return (
                 <Card key={order.id} className="bg-slate-900/50 border-emerald-800/20 p-6 hover:border-emerald-500/30 transition-colors">
                   <div className="flex flex-col md:flex-row md:items-center gap-4">
-                    {/* WAHO Service Image */}
+                    {/* WAHO top-up image */}
                     <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                       <Image
                         src={game?.image || ''}
@@ -240,7 +240,7 @@ export default function OrdersPage() {
             </p>
             <Link href="/">
               <Button className="mt-4 bg-gradient-to-r from-emerald-500 to-teal-600">
-                {t('Browse WAHO Services', 'تصفح خدمات WAHO')}
+                {t('Browse WAHO top-ups', 'تصفح شحن WAHO', '浏览 WAHO 充值')}
               </Button>
             </Link>
           </div>

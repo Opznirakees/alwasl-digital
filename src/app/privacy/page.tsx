@@ -9,7 +9,7 @@ export default function PrivacyPage() {
       sections={[
         {
           title: { en: 'Data collected', ar: 'البيانات التي يتم جمعها' },
-          body: { en: 'A production version may collect phone numbers, order details, wallet transactions, payment references, and game account identifiers.', ar: 'قد تجمع نسخة الإنتاج أرقام الهاتف وتفاصيل الطلبات ومعاملات المحفظة ومراجع الدفع ومعرفات حسابات الألعاب.' },
+          body: { en: 'A production version may collect phone numbers, top-up order details, wallet transactions, payment references, and WAHO account identifiers.', ar: 'قد تجمع نسخة الإنتاج أرقام الهاتف وتفاصيل طلبات الشحن ومعاملات المحفظة ومراجع الدفع ومعرفات حسابات WAHO.' },
         },
         {
           title: { en: 'Why it is used', ar: 'سبب الاستخدام' },

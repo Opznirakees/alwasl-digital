@@ -5,7 +5,7 @@ export default function HelpPage() {
     <InfoPage
       eyebrow={{ en: 'Help Center', ar: 'مركز المساعدة' }}
       title={{ en: 'Everything needed to top up WAHO smoothly.', ar: 'كل ما تحتاجه لشحن WAHO بسهولة.' }}
-      subtitle={{ en: 'Pick a package, confirm the WAHO details, pay securely, and track the order.', ar: 'اختر الباقة، أكد بيانات WAHO، ادفع بأمان، ثم تابع الطلب.' }}
+      subtitle={{ en: 'Choose the amount, confirm the WAHO ID, pay securely, and track the order.', ar: 'اختر المبلغ وتأكد من معرف WAHO وادفع بأمان ثم تابع الطلب.' }}
       actions={[
         { label: { en: 'Contact support', ar: 'تواصل مع الدعم' }, href: '/contact' },
         { label: { en: 'My orders', ar: 'طلباتي' }, href: '/orders' },
@@ -14,14 +14,14 @@ export default function HelpPage() {
         {
           title: { en: 'Before ordering', ar: 'قبل الطلب' },
           items: [
-            { en: 'Choose the WAHO package that matches what the customer needs.', ar: 'اختر باقة WAHO التي تناسب احتياج العميل.' },
-            { en: 'Confirm the WAHO ID, room ID, or email before payment.', ar: 'تأكد من معرف WAHO أو معرف الغرفة أو البريد قبل الدفع.' },
+            { en: 'Choose the WAHO top-up amount that matches what the customer needs.', ar: 'اختر مبلغ شحن WAHO الذي يناسب احتياج العميل.' },
+            { en: 'Confirm the WAHO ID before payment.', ar: 'تأكد من معرف WAHO قبل الدفع.' },
           ],
         },
         {
           title: { en: 'During checkout', ar: 'أثناء الدفع' },
           items: [
-            { en: 'Select a package, check the account details, then choose a payment method.', ar: 'اختر الباقة وتحقق من بيانات الحساب ثم اختر طريقة الدفع.' },
+            { en: 'Select a top-up amount, check the account details, then choose a payment method.', ar: 'اختر مبلغ الشحن وتحقق من بيانات الحساب ثم اختر طريقة الدفع.' },
             { en: 'Checkout asks users to log in before creating the order.', ar: 'يطلب الدفع تسجيل الدخول قبل إنشاء الطلب.' },
           ],
         },
@@ -34,7 +34,7 @@ export default function HelpPage() {
         },
         {
           title: { en: 'Admin checks', ar: 'فحوصات الإدارة' },
-          body: { en: 'The admin dashboard keeps orders, products, promotions, wallets, and reporting in one place.', ar: 'تجمع لوحة الإدارة الطلبات والمنتجات والعروض والمحافظ والتقارير في مكان واحد.' },
+          body: { en: 'The admin dashboard keeps top-up orders, offers, wallets, providers, and reporting in one place.', ar: 'تجمع لوحة الإدارة طلبات الشحن والعروض والمحافظ والموردين والتقارير في مكان واحد.' },
         },
       ]}
     />
