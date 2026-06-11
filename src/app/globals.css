@@ -372,12 +372,36 @@
   background-color: #18181b !important;
 }
 
+.dark .bg-white\/90,
+.dark .bg-white\/80,
+.dark .bg-white\/60 {
+  background-color: rgba(24, 24, 27, 0.88) !important;
+}
+
+.dark .bg-zinc-200,
+.dark .bg-zinc-200\/70,
+.dark .bg-slate-200,
+.dark .bg-gray-100,
+.dark .bg-gray-200 {
+  background-color: rgba(39, 39, 42, 0.86) !important;
+}
+
 .dark .bg-blue-50 {
   background-color: rgba(10, 132, 255, 0.14) !important;
 }
 
+.dark .bg-amber-50 {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+}
+
+.dark .bg-emerald-50 {
+  background-color: rgba(52, 199, 89, 0.13) !important;
+}
+
 .dark .hover\:bg-zinc-50:hover,
 .dark .hover\:bg-zinc-100:hover,
+.dark .hover\:bg-zinc-200:hover,
+.dark .hover\:bg-white\/60:hover,
 .dark .hover\:bg-blue-50:hover {
   background-color: rgba(255, 255, 255, 0.08) !important;
 }
@@ -409,7 +433,24 @@
   color: #66b3ff !important;
 }
 
+.dark .text-amber-800,
+.dark .text-amber-700,
+.dark .text-amber-600 {
+  color: #f6c86b !important;
+}
+
+.dark .text-emerald-800,
+.dark .text-emerald-700,
+.dark .text-green-700 {
+  color: #6ee7a0 !important;
+}
+
 .dark .border-black\/10,
+.dark .border-blue-200,
+.dark .border-amber-200,
+.dark .border-emerald-200,
+.dark .border-zinc-200,
+.dark .border-gray-200,
 .dark .border-purple-100,
 .dark .border-purple-200 {
   border-color: rgba(255, 255, 255, 0.1) !important;

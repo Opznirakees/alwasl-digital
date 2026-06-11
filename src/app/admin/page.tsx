@@ -141,8 +141,8 @@ export default function AdminDashboard() {
     <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       {/* Top Navigation */}
       <header className="sticky top-0 z-50 border-b border-emerald-800/30 bg-slate-950/90 backdrop-blur-xl">
-        <div className="flex items-center justify-between px-4 h-16">
-          <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-3 px-3 sm:px-4 h-16">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <Button
               variant="ghost"
               size="icon"
@@ -151,7 +151,7 @@ export default function AdminDashboard() {
             >
               <Menu className="w-5 h-5" />
             </Button>
-            <div className="flex items-center gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-white p-1 overflow-hidden ring-1 ring-blue-900/10">
                 <img
                   src="/brand/alwasl-mark.jpg"
@@ -159,22 +159,22 @@ export default function AdminDashboard() {
                   className="w-full h-full object-contain"
                 />
               </div>
-              <div>
-                <h1 className="text-sm font-bold text-white">{t('Admin Dashboard', 'لوحة التحكم')}</h1>
-                <p className="text-[10px] text-amber-300/80">{t('Al-Wasl Digital Services', 'الوصل للخدمات الإلكترونية')}</p>
+              <div className="min-w-0">
+                <h1 className="truncate text-sm font-bold text-white">{t('Admin Dashboard', 'لوحة التحكم')}</h1>
+                <p className="hidden truncate text-[10px] text-amber-300/80 sm:block">{t('Al-Wasl Digital Services', 'الوصل للخدمات الإلكترونية')}</p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
+            <div className="relative hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
               <Input
                 placeholder={t('Search...', 'بحث...')}
                 className="w-64 pl-10 bg-slate-800/50 border-emerald-800/30 text-white text-sm"
               />
             </div>
-            <Button variant="ghost" size="icon" className="relative text-white hover:bg-emerald-900/50">
+            <Button variant="ghost" size="icon" className="relative flex-shrink-0 text-white hover:bg-emerald-900/50">
               <Bell className="w-5 h-5" />
               <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-500 text-[10px] font-bold rounded-full flex items-center justify-center">
                 3
@@ -182,8 +182,8 @@ export default function AdminDashboard() {
             </Button>
             <Link href="/">
               <Button variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
-                <Globe className="w-4 h-4 mr-2" />
-                {t('View Site', 'عرض الموقع')}
+                <Globe className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{t('View Site', 'عرض الموقع')}</span>
               </Button>
             </Link>
           </div>
@@ -193,7 +193,7 @@ export default function AdminDashboard() {
       <div className="flex">
         {/* Sidebar */}
         <aside
-          className={`fixed left-0 top-16 h-[calc(100vh-4rem)] bg-slate-900/50 border-r border-emerald-800/30 transition-all duration-300 z-40 ${
+          className={`fixed left-0 top-16 z-40 hidden h-[calc(100vh-4rem)] bg-slate-900/50 border-r border-emerald-800/30 transition-all duration-300 md:block ${
             sidebarOpen ? 'w-64' : 'w-20'
           }`}
         >
@@ -216,7 +216,7 @@ export default function AdminDashboard() {
         </aside>
 
         {/* Main Content */}
-        <main className={`flex-1 p-6 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
+        <main className={`min-w-0 flex-1 p-4 transition-all duration-300 sm:p-6 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Stats Grid */}

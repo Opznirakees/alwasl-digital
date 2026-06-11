@@ -137,28 +137,28 @@ export default function WalletPage() {
           <h1 className="text-3xl font-bold text-white">{t('My Wallet', 'محفظتي')}</h1>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid min-w-0 lg:grid-cols-3 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="min-w-0 lg:col-span-2 space-y-6">
             {/* Balance Card */}
-            <Card className="bg-gradient-to-br from-emerald-900/50 via-teal-900/30 to-slate-900/50 border-emerald-500/30 p-6 md:p-8">
-              <div className="flex items-start justify-between mb-6">
-                <div>
+            <Card className="min-w-0 bg-gradient-to-br from-emerald-900/50 via-teal-900/30 to-slate-900/50 border-emerald-500/30 p-5 md:p-8">
+              <div className="flex items-start justify-between gap-4 mb-6">
+                <div className="min-w-0">
                   <p className="text-sm text-emerald-400/70">{t('Available Balance', 'الرصيد المتاح')}</p>
-                  <p className="text-4xl md:text-5xl font-bold text-white mt-1">
+                  <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mt-1 break-words">
                     {formatCurrency(currentUser.walletBalance)}
                     <span className="text-lg text-white/50 ml-2">{selectedCountry.currencySymbol}</span>
                   </p>
                 </div>
-                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
+                <div className="flex-shrink-0 p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
                   <Wallet className="w-6 h-6 text-emerald-400" />
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex min-w-0 gap-3">
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/30">
+                    <Button className="min-w-0 flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/30">
                       <Plus className="w-4 h-4 mr-2" />
                       {t('Top Up', 'شحن الرصيد')}
                     </Button>
@@ -239,7 +239,7 @@ export default function WalletPage() {
             </Card>
 
             {/* Transaction History */}
-            <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+            <Card className="min-w-0 bg-slate-900/50 border-emerald-800/20 p-5 md:p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-white">{t('Transaction History', 'سجل المعاملات')}</h2>
                 <Button variant="ghost" size="sm" className="text-emerald-400 hover:text-emerald-300">
@@ -278,9 +278,9 @@ export default function WalletPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             {/* Membership Level */}
-            <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+            <Card className="min-w-0 bg-slate-900/50 border-emerald-800/20 p-6">
               <div className="flex items-center gap-3 mb-4">
                 <div
                   className="p-2 rounded-lg"
@@ -332,7 +332,7 @@ export default function WalletPage() {
             </Card>
 
             {/* Benefits */}
-            <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+            <Card className="min-w-0 bg-slate-900/50 border-emerald-800/20 p-6">
               <h3 className="font-bold text-white mb-4">{t('Wallet Benefits', 'مزايا المحفظة')}</h3>
               <div className="space-y-3">
                 {[
