@@ -19,15 +19,15 @@ import {
 } from 'lucide-react';
 
 const serviceRows = [
-  { icon: Coins, label: 'WAHO Coins', value: { en: '15,000', ar: '15,000', zh: '15,000' } },
-  { icon: Gift, label: 'Gift Bundles', value: { en: '60', ar: '60', zh: '60' } },
-  { icon: Radio, label: 'Live Rooms', value: { en: '30d', ar: '30 يوم', zh: '30天' } },
+  { icon: Coins, label: { en: 'WAHO Coins', ar: 'عملات WAHO', zh: 'WAHO 金币' }, value: { en: '15,000', ar: '15,000', zh: '15,000' } },
+  { icon: Gift, label: { en: 'Gift Bundles', ar: 'باقات الهدايا', zh: '礼物套餐' }, value: { en: '60', ar: '60', zh: '60' } },
+  { icon: Radio, label: { en: 'Live Rooms', ar: 'الغرف المباشرة', zh: '直播房间' }, value: { en: '30d', ar: '30 يوم', zh: '30天' } },
 ];
 
 const processSteps = [
-  { icon: ListChecks, label: 'Validate' },
-  { icon: CreditCard, label: 'Price' },
-  { icon: BadgeCheck, label: 'Deliver' },
+  { icon: ListChecks, label: { en: 'Choose', ar: 'اختر', zh: '选择' } },
+  { icon: CreditCard, label: { en: 'Check', ar: 'تحقق', zh: '确认' } },
+  { icon: BadgeCheck, label: { en: 'Top up', ar: 'اشحن', zh: '充值' } },
 ];
 
 export function HeroBanner() {
@@ -38,18 +38,18 @@ export function HeroBanner() {
       <div className={dir === 'rtl' ? 'text-right' : 'text-left'}>
         <div className="inline-flex w-fit items-center gap-2 rounded-md border border-black/10 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600">
             <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-            {t('WAHO API-ready service catalog', 'كتالوج خدمات WAHO جاهز للـ API', '支持 WAHO API 的服务目录')}
+            {t('Fast WAHO top-ups', 'شحن WAHO سريع', '快速 WAHO 充值')}
         </div>
 
         <h2 className="mt-5 max-w-3xl text-4xl font-semibold leading-tight text-zinc-950 sm:text-5xl lg:text-6xl">
-          {t('WAHO recharge that feels clear and controlled', 'شحن WAHO بتجربة واضحة ومنظمة', '清晰可控的 WAHO 充值体验')}
+          {t('Top up WAHO in a few clear steps', 'اشحن WAHO بخطوات واضحة وسريعة', '几步即可快速充值 WAHO')}
         </h2>
 
         <p className="mt-5 max-w-2xl text-base leading-7 text-zinc-600 md:text-lg">
           {t(
-            'Coins, gifts, room boosts, casual games, VIP medals, and profile upgrades arranged for the incoming WAHO API.',
-            'عملات وهدايا وتعزيز غرف وألعاب جماعية وميداليات VIP وترقيات ملف مرتبة للربط القادم مع WAHO API.',
-            '金币、礼物、房间提升、休闲游戏、VIP 勋章和资料升级，已按即将接入的 WAHO API 结构整理。'
+            'Choose coins, gifts, room boosts, games, VIP medals, or profile upgrades, then enter the WAHO details and pay securely.',
+            'اختر العملات أو الهدايا أو تعزيز الغرف أو الألعاب أو VIP والميداليات، ثم أدخل بيانات WAHO وادفع بأمان.',
+            '选择金币、礼物、房间提升、游戏、VIP 勋章或资料升级，然后输入 WAHO 信息并安全支付。'
           )}
         </p>
 
@@ -59,22 +59,22 @@ export function HeroBanner() {
               size="lg"
               className="w-full rounded-md bg-blue-600 px-5 text-sm font-semibold text-white shadow-none hover:bg-blue-700 sm:w-auto"
             >
-              {t('Browse WAHO Services', 'تصفح خدمات WAHO', '浏览 WAHO 服务')}
+              {t('Top up WAHO', 'اشحن WAHO', '充值 WAHO')}
               <ChevronRight className="h-4 w-4" />
             </Button>
           </Link>
           <Link
-            href="/about"
+            href="/help"
             className="inline-flex h-10 items-center justify-center rounded-md border border-black/10 bg-white px-5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50"
           >
-            {t('API Roadmap', 'خطة API', 'API 路线图')}
+            {t('How it works', 'كيف تعمل الخدمة', '服务流程')}
           </Link>
         </div>
 
         <div className="mt-8 grid max-w-xl grid-cols-1 gap-2 text-sm text-zinc-600 sm:grid-cols-3">
           {[
             t('Trusted delivery', 'تسليم موثوق', '可靠交付'),
-            t('Fast fulfillment', 'إنجاز سريع', '快速完成'),
+            t('Fast top-up', 'شحن سريع', '快速充值'),
             t('24/7 support', 'دعم 24/7', '24/7 支持'),
           ].map((item) => (
             <div key={item} className="flex items-center gap-2">
@@ -102,7 +102,7 @@ export function HeroBanner() {
               <div>
                 <p className="text-xs font-medium uppercase text-blue-600">WAHO</p>
                 <p className="text-base font-semibold text-zinc-950">{t('Service desk', 'مكتب الخدمات', '服务台')}</p>
-                <p className="text-sm text-zinc-500">{t('Clean catalog for API delivery', 'كتالوج واضح للتسليم عبر API', '面向 API 交付的清晰目录')}</p>
+                <p className="text-sm text-zinc-500">{t('Clear choices for WAHO top-ups', 'خيارات واضحة لشحن WAHO', '清晰的 WAHO 充值选择')}</p>
               </div>
             </div>
             <div className="rounded-md border border-black/10 bg-zinc-50 px-3 py-1.5 text-xs font-medium text-zinc-600">
@@ -112,9 +112,9 @@ export function HeroBanner() {
 
           <div className="mt-5 grid grid-cols-3 gap-2">
             {serviceRows.map((row) => (
-              <div key={row.label} className="rounded-md border border-black/10 bg-zinc-50 px-3 py-3">
+              <div key={row.label.en} className="rounded-md border border-black/10 bg-zinc-50 px-3 py-3">
                 <row.icon className="mb-2 h-4 w-4 text-blue-600" />
-                <p className="truncate text-[11px] font-medium text-zinc-700">{t(row.label, row.label)}</p>
+                <p className="truncate text-[11px] font-medium text-zinc-700">{t(row.label.en, row.label.ar, row.label.zh)}</p>
                 <p className="font-mono text-xs font-semibold text-zinc-950">{t(row.value.en, row.value.ar, row.value.zh)}</p>
               </div>
             ))}
@@ -123,18 +123,18 @@ export function HeroBanner() {
           <div className="mt-5 rounded-lg bg-zinc-50 p-4">
             <div className="grid grid-cols-3 gap-3">
               {processSteps.map((item, index) => (
-                <div key={item.label} className="min-w-0">
+                <div key={item.label.en} className="min-w-0">
                   <div className="mb-2 flex items-center gap-2">
                     <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs font-semibold text-zinc-500 ring-1 ring-black/10">
                       {index + 1}
                     </span>
                     <item.icon className="h-4 w-4 text-blue-600" />
                   </div>
-                  <p className="text-sm font-medium text-zinc-950">{t(item.label, item.label)}</p>
+                  <p className="text-sm font-medium text-zinc-950">{t(item.label.en, item.label.ar, item.label.zh)}</p>
                   <p className="mt-1 text-xs leading-5 text-zinc-500">
-                    {index === 0 && t('WAHO ID check', 'فحص معرف WAHO', 'WAHO ID 校验')}
-                    {index === 1 && t('Clear package price', 'سعر الباقة واضح', '清晰套餐价格')}
-                    {index === 2 && t('Order handoff', 'تسليم الطلب', '订单交付')}
+                    {index === 0 && t('Pick your package', 'اختر الباقة', '选择套餐')}
+                    {index === 1 && t('Confirm WAHO ID', 'أكد معرف WAHO', '确认 WAHO ID')}
+                    {index === 2 && t('Complete order', 'أكمل الطلب', '完成订单')}
                   </p>
                 </div>
               ))}

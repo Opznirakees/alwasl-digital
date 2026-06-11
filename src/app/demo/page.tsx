@@ -16,9 +16,9 @@ const demoSteps = [
   },
   {
     icon: Gamepad2,
-    title: { en: '2. Place a top-up order', ar: '٢. تنفيذ طلب شحن' },
-    body: { en: 'Choose Mobile Legends, fill demo details, pay from wallet, then watch the order appear.', ar: 'اختر موبايل ليجندز، عبئ البيانات التجريبية، ادفع من المحفظة وشاهد ظهور الطلب.' },
-    href: '/games/mobile-legends',
+    title: { en: '2. Place a WAHO top-up', ar: '٢. نفذ شحن WAHO' },
+    body: { en: 'Choose a WAHO package, fill in the demo details, pay from wallet, then watch the order appear.', ar: 'اختر باقة WAHO، عبئ البيانات التجريبية، ادفع من المحفظة وشاهد ظهور الطلب.' },
+    href: '/games/waho-coins',
   },
   {
     icon: Wallet,
@@ -29,7 +29,7 @@ const demoSteps = [
   {
     icon: LayoutDashboard,
     title: { en: '4. Review the operator view', ar: '٤. مراجعة لوحة التشغيل' },
-    body: { en: 'Admin dashboard shows revenue, orders, providers, products, and promotions.', ar: 'تعرض لوحة الإدارة الإيرادات والطلبات والمزودين والمنتجات والعروض.' },
+    body: { en: 'Admin dashboard shows revenue, orders, products, promotions, and wallet activity.', ar: 'تعرض لوحة الإدارة الإيرادات والطلبات والمنتجات والعروض وحركة المحفظة.' },
     href: '/admin',
   },
 ];
@@ -88,7 +88,7 @@ export default function DemoPage() {
           {[
             { icon: CheckCircle2, label: t('Demo OTP', 'رمز التجربة'), value: '123456' },
             { icon: CreditCard, label: t('Wallet balance', 'رصيد المحفظة'), value: '250,000 IQD' },
-            { icon: ShieldCheck, label: t('Production scope', 'نطاق الإنتاج'), value: t('Payments + provider APIs', 'الدفع + واجهات المزودين') },
+            { icon: ShieldCheck, label: t('Production scope', 'نطاق الإنتاج'), value: t('Payments + order handling', 'الدفع + معالجة الطلبات') },
           ].map((item) => (
             <Card key={item.label} className={`p-5 ${isLight ? 'bg-white border-purple-100' : 'bg-slate-900/50 border-purple-500/15'}`}>
               <item.icon className={isLight ? 'w-5 h-5 text-purple-600' : 'w-5 h-5 text-purple-300'} />

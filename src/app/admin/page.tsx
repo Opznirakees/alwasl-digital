@@ -472,7 +472,7 @@ export default function AdminDashboard() {
           {activeTab === 'providers' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">{t('API Providers', 'موردي الـ API')}</h2>
+                <h2 className="text-2xl font-bold text-white">{t('Delivery Partners', 'شركاء التسليم')}</h2>
                 <Button className="bg-gradient-to-r from-emerald-500 to-teal-600">
                   <Server className="w-4 h-4 mr-2" />
                   {t('Add Provider', 'إضافة مورد')}
@@ -485,7 +485,7 @@ export default function AdminDashboard() {
                     <div className="flex items-start justify-between mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-white">{t(provider.name, provider.name)}</h3>
-                        <p className="text-xs text-white/50">{provider.apiEndpoint}</p>
+                        <p className="text-xs text-white/50">{t('Connected top-up route', 'مسار شحن متصل')}</p>
                       </div>
                       <Badge variant="outline" className={getStatusColor(provider.status)}>
                         {getStatusLabel(provider.status)}

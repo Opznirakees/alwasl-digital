@@ -14,7 +14,7 @@ export default function FaqPage() {
         },
         {
           title: { en: 'Are orders real?', ar: 'هل الطلبات حقيقية؟' },
-          body: { en: 'Orders are simulated until production provider APIs and payment gateways are connected.', ar: 'الطلبات محاكاة إلى أن يتم ربط مزودي التنفيذ وبوابات الدفع الحقيقية.' },
+          body: { en: 'Orders are simulated in the demo. Live orders will move through pending, processing, completed, failed, or refunded states.', ar: 'الطلبات محاكاة في النسخة التجريبية. في التشغيل الفعلي ستنتقل الطلبات بين حالات الانتظار والمعالجة والاكتمال أو الفشل أو الاسترداد.' },
         },
         {
           title: { en: 'Which countries are supported?', ar: 'ما الدول المدعومة؟' },
@@ -22,7 +22,7 @@ export default function FaqPage() {
         },
         {
           title: { en: 'Can I use wallet balance?', ar: 'هل يمكن استخدام رصيد المحفظة؟' },
-          body: { en: 'Yes. The demo wallet includes sample balance, transactions, and a simulated top-up request.', ar: 'نعم. المحفظة التجريبية تشمل رصيداً ومعاملات وطلب شحن محاكاة.' },
+          body: { en: 'Yes. The wallet shows balance, transactions, and a clear way to request a top-up.', ar: 'نعم. تعرض المحفظة الرصيد والمعاملات وطريقة واضحة لطلب الشحن.' },
         },
       ]}
     />

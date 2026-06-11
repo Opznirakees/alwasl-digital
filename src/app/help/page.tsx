@@ -4,8 +4,8 @@ export default function HelpPage() {
   return (
     <InfoPage
       eyebrow={{ en: 'Help Center', ar: 'مركز المساعدة' }}
-      title={{ en: 'Everything needed to complete a top-up smoothly.', ar: 'كل ما تحتاجه لإتمام الشحن بسهولة.' }}
-      subtitle={{ en: 'Follow these steps when testing the storefront or helping a customer.', ar: 'اتبع هذه الخطوات عند اختبار المتجر أو مساعدة عميل.' }}
+      title={{ en: 'Everything needed to top up WAHO smoothly.', ar: 'كل ما تحتاجه لشحن WAHO بسهولة.' }}
+      subtitle={{ en: 'Pick a package, confirm the WAHO details, pay securely, and track the order.', ar: 'اختر الباقة، أكد بيانات WAHO، ادفع بأمان، ثم تابع الطلب.' }}
       actions={[
         { label: { en: 'Contact support', ar: 'تواصل مع الدعم' }, href: '/contact' },
         { label: { en: 'My orders', ar: 'طلباتي' }, href: '/orders' },
@@ -14,15 +14,15 @@ export default function HelpPage() {
         {
           title: { en: 'Before ordering', ar: 'قبل الطلب' },
           items: [
-            { en: 'Pick the correct country so prices and currency match the customer.', ar: 'اختر الدولة الصحيحة حتى تطابق الأسعار والعملة العميل.' },
-            { en: 'Confirm the player ID, server, or email before payment.', ar: 'تأكد من معرف اللاعب أو السيرفر أو البريد قبل الدفع.' },
+            { en: 'Choose the WAHO package that matches what the customer needs.', ar: 'اختر باقة WAHO التي تناسب احتياج العميل.' },
+            { en: 'Confirm the WAHO ID, room ID, or email before payment.', ar: 'تأكد من معرف WAHO أو معرف الغرفة أو البريد قبل الدفع.' },
           ],
         },
         {
           title: { en: 'During checkout', ar: 'أثناء الدفع' },
           items: [
-            { en: 'Select a package, verify the account, then choose a payment method.', ar: 'اختر الباقة وتحقق من الحساب ثم اختر طريقة الدفع.' },
-            { en: 'Demo checkout asks users to log in before creating the order.', ar: 'الدفع التجريبي يطلب تسجيل الدخول قبل إنشاء الطلب.' },
+            { en: 'Select a package, check the account details, then choose a payment method.', ar: 'اختر الباقة وتحقق من بيانات الحساب ثم اختر طريقة الدفع.' },
+            { en: 'Checkout asks users to log in before creating the order.', ar: 'يطلب الدفع تسجيل الدخول قبل إنشاء الطلب.' },
           ],
         },
         {
@@ -34,7 +34,7 @@ export default function HelpPage() {
         },
         {
           title: { en: 'Admin checks', ar: 'فحوصات الإدارة' },
-          body: { en: 'The admin dashboard includes demo revenue, orders, providers, products, promotions, wallets, and reporting tabs.', ar: 'لوحة الإدارة تتضمن إيرادات وطلبات ومزودين ومنتجات وعروض ومحافظ وتقارير تجريبية.' },
+          body: { en: 'The admin dashboard keeps orders, products, promotions, wallets, and reporting in one place.', ar: 'تجمع لوحة الإدارة الطلبات والمنتجات والعروض والمحافظ والتقارير في مكان واحد.' },
         },
       ]}
     />

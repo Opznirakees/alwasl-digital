@@ -50,7 +50,7 @@ export default function HomePage() {
         <section className="grid grid-cols-2 overflow-hidden rounded-lg border border-black/10 bg-white md:grid-cols-4">
           {[
             { icon: <BadgeCheck className="w-4 h-4" />, label: t('High Quality', 'جودة عالية'), value: t('Trusted', 'موثوق') },
-            { icon: <Zap className="w-4 h-4" />, label: t('Fast Fulfillment', 'إنجاز فوري'), value: t('Quick', 'سريع') },
+            { icon: <Zap className="w-4 h-4" />, label: t('Fast top-up', 'شحن سريع'), value: t('Quick', 'سريع') },
             { icon: <Sparkles className="w-4 h-4" />, label: t('Competitive Prices', 'أسعار تنافسية'), value: t('Fair', 'مناسبة') },
             { icon: <Headphones className="w-4 h-4" />, label: t('Technical Support', 'دعم فني'), value: '24/7' },
           ].map((stat, i) => (
@@ -75,8 +75,8 @@ export default function HomePage() {
         <section className="space-y-5">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div>
-              <h2 className="text-2xl font-semibold text-zinc-950">{t('All WAHO Services', 'جميع خدمات WAHO')}</h2>
-              <p className="text-sm mt-1 text-zinc-500">{t('Find coins, gifts, room boosts, games, and VIP packages', 'اعثر على العملات والهدايا وتعزيز الغرف والألعاب والعضويات')}</p>
+              <h2 className="text-2xl font-semibold text-zinc-950">{t('Top up WAHO services', 'اشحن خدمات WAHO')}</h2>
+              <p className="text-sm mt-1 text-zinc-500">{t('Pick coins, gifts, rooms, games, or VIP upgrades and top up quickly.', 'اختر العملات أو الهدايا أو الغرف أو الألعاب أو VIP واشحن بسرعة.')}</p>
             </div>
             <SearchBar value={searchQuery} onChange={setSearchQuery} />
           </div>
@@ -110,7 +110,7 @@ export default function HomePage() {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-zinc-950">{t('Need WAHO Support?', 'تحتاج دعم WAHO؟')}</h3>
-                <p className="text-sm text-zinc-600">{t('Contact us for WAHO recharge, API, or order support', 'تواصل معنا لدعم شحن WAHO أو API أو الطلبات')}</p>
+                <p className="text-sm text-zinc-600">{t('Contact us for WAHO top-ups, orders, or account help.', 'تواصل معنا لدعم شحن WAHO أو الطلبات أو الحساب.')}</p>
               </div>
             </div>
             <a
@@ -146,7 +146,7 @@ export default function HomePage() {
                 </div>
               </div>
               <p className="text-sm text-zinc-500">
-                {t('Digital services for social page promotion, app recharge, marketing solutions, and WAHO product delivery.', 'خدمات رقمية لترويج صفحات التواصل وشحن التطبيقات والحلول التسويقية وتسليم منتجات WAHO.')}
+                {t('Fast WAHO top-ups with digital services for promotion, recharge, and customer support.', 'شحن WAHO سريع مع خدمات رقمية للترويج والشحن ودعم العملاء.')}
               </p>
             </div>
 
@@ -155,7 +155,7 @@ export default function HomePage() {
               <ul className="space-y-2 text-sm text-zinc-500">
                 <li><Link href="/games" className="transition-colors hover:text-blue-600">{t('WAHO Services', 'خدمات WAHO')}</Link></li>
                 <li><Link href="/promotions" className="transition-colors hover:text-blue-600">{t('WAHO Offers', 'عروض WAHO')}</Link></li>
-                <li><Link href="/about" className="transition-colors hover:text-blue-600">{t('API Roadmap', 'خطة API')}</Link></li>
+                <li><Link href="/help" className="transition-colors hover:text-blue-600">{t('How it works', 'كيف تعمل الخدمة')}</Link></li>
                 <li><Link href="/contact" className="transition-colors hover:text-blue-600">{t('Contact', 'اتصل بنا')}</Link></li>
               </ul>
             </div>

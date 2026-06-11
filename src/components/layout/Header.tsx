@@ -131,7 +131,7 @@ export function Header() {
                 {t('Al-Wasl Digital', 'الوصل')}
               </h1>
               <p className={`text-[10px] -mt-0.5 ${isLight ? 'text-zinc-500' : 'text-zinc-400'}`}>
-                {t('Page promotion • app recharge', 'ترويج صفحات • شحن تطبيقات')}
+                {t('WAHO top-ups • digital services', 'شحن WAHO • خدمات رقمية')}
               </p>
             </div>
           </Link>

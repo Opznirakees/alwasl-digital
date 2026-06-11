@@ -388,7 +388,7 @@ const legacyGames: Game[] = [
 const alwaslMark = '/brand/alwasl-mark.jpg';
 const alwaslBanner = '/brand/alwasl-logo.jpg';
 
-// WAHO products. Kept under the existing Game type until the provider API contract lands.
+// WAHO products. Kept under the existing Game type until live fulfillment details land.
 export const games: Game[] = [
   {
     id: 'waho-coins',
@@ -635,7 +635,7 @@ export const sampleOrders: Order[] = [
     createdAt: '2026-05-23T16:45:00Z',
     updatedAt: '2026-05-23T16:50:00Z',
     refundedAt: '2026-05-23T16:50:00Z',
-    refundReason: 'WAHO API timeout',
+    refundReason: 'WAHO order timeout',
   },
 ];
 
@@ -643,7 +643,7 @@ export const sampleOrders: Order[] = [
 export const providers: Provider[] = [
   {
     id: 'provider-1',
-    name: 'WAHO Direct API',
+    name: 'WAHO Direct Top-up',
     apiEndpoint: 'https://api.waho.live/v1',
     isActive: true,
     priority: 1,

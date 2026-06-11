@@ -77,7 +77,7 @@ export default function GamePage({ params }: GamePageProps) {
     }
 
     setIsVerifying(true);
-    // Placeholder for the incoming WAHO account validation API.
+    // Placeholder for the incoming WAHO account validation flow.
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     // Generate a mock username
@@ -154,8 +154,8 @@ export default function GamePage({ params }: GamePageProps) {
           <div className="grid grid-cols-3 gap-2 md:w-64">
             {[
               { label: t('Secure checkout', 'دفع آمن'), icon: Shield },
-              { label: t('Fast fulfillment', 'إنجاز سريع'), icon: Zap },
-              { label: t('API Roadmap', 'خطة API'), icon: Sparkles },
+              { label: t('Fast top-up', 'شحن سريع'), icon: Zap },
+              { label: t('Simple steps', 'خطوات بسيطة'), icon: Sparkles },
             ].map((item) => (
               <div key={item.label} className="rounded-md bg-zinc-100 p-3 text-center">
                 <item.icon className="mx-auto h-4 w-4 text-blue-600" />
@@ -443,7 +443,7 @@ export default function GamePage({ params }: GamePageProps) {
                   <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
                     <Zap className="w-5 h-5 text-blue-600" />
                     <p className="text-xs text-blue-700">
-                      {t('Prepared for automatic WAHO API delivery', 'جاهز للتسليم التلقائي عبر WAHO API')}
+                      {t('Ready for a quick WAHO top-up', 'جاهز لشحن WAHO بسرعة')}
                     </p>
                   </div>
                 </div>
