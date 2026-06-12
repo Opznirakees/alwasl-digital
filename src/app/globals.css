@@ -583,6 +583,16 @@
   color: #ffffff !important;
 }
 
+.leo-overlay-text,
+.leo-overlay-text *,
+.light .leo-overlay-text,
+.light .leo-overlay-text *,
+.dark .leo-overlay-text,
+.dark .leo-overlay-text * {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
 .light .bg-gradient-to-r.from-emerald-500.to-teal-600,
 .light .bg-gradient-to-r.from-purple-500.to-pink-500,
 .light .bg-gradient-to-br.from-purple-500.to-pink-500 {
