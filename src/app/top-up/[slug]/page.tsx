@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -31,12 +31,14 @@ interface GamePageProps {
   params: Promise<{ slug: string }>;
 }
 
+type CheckoutStep = 'package' | 'details' | 'payment' | 'confirm';
+
 export default function GamePage({ params }: GamePageProps) {
   const resolvedParams = use(params);
   const router = useRouter();
   const { t, language, dir, user, isAuthenticated, selectedCountry } = useApp();
 
-  const [step, setStep] = useState<'package' | 'details' | 'payment' | 'confirm'>('package');
+  const [step, setStep] = useState<CheckoutStep>('package');
   const [selectedPackage, setSelectedPackage] = useState<GamePackage | null>(null);
   const [userId, setUserId] = useState('');
   const [zoneId, setZoneId] = useState('');
@@ -44,6 +46,7 @@ export default function GamePage({ params }: GamePageProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('wallet');
   const [isProcessing, setIsProcessing] = useState(false);
+  const wizardRef = useRef<HTMLDivElement>(null);
 
   const game = games.find(g => g.slug === resolvedParams.slug);
 
@@ -69,6 +72,13 @@ export default function GamePage({ params }: GamePageProps) {
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat(locale).format(Math.round(price));
+  };
+
+  const goToStep = (nextStep: CheckoutStep) => {
+    setStep(nextStep);
+    window.requestAnimationFrame(() => {
+      wizardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
   };
 
   const handleVerifyUserId = async () => {
@@ -99,7 +109,7 @@ export default function GamePage({ params }: GamePageProps) {
       toast.error(t('Please enter the required WAHO reference', 'الرجاء إدخال مرجع WAHO المطلوب', '请输入所需的 WAHO 参考信息'));
       return;
     }
-    setStep('payment');
+    goToStep('payment');
   };
 
   const handleConfirmOrder = async () => {
@@ -129,37 +139,37 @@ export default function GamePage({ params }: GamePageProps) {
     <div className={`min-h-screen bg-[#f5f5f7] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
-      <main className="container mx-auto px-4 py-6 md:py-8">
-        <Link href="/" className="mb-5 inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-blue-600">
+      <main className="container mx-auto px-4 py-5 md:py-6">
+        <Link href="/" className="mb-4 inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-blue-600">
           <ArrowLeft className="w-4 h-4" />
           {t('Back', 'رجوع')}
         </Link>
 
-        <section className="mb-8 grid gap-5 rounded-lg border border-black/10 bg-white p-5 md:grid-cols-[1fr_220px] md:p-6">
+        <section className="mb-5 grid gap-4 rounded-lg border border-black/10 bg-white p-4 md:grid-cols-[1fr_auto] md:p-5">
           <div className="flex items-start gap-4">
-            <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
+            <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
               <Image src={game.image} alt="" fill className={isWahoImage ? 'object-cover' : 'object-contain p-1'} priority />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-medium uppercase text-blue-600">WAHO</p>
-              <h1 className="mt-1 text-2xl font-semibold text-zinc-950 md:text-3xl">
+              <h1 className="mt-1 text-2xl font-semibold leading-tight text-zinc-950">
                 {t(game.name, game.nameAr)}
               </h1>
               <p className="mt-1 text-sm text-zinc-500">{t(game.publisher, game.publisher)}</p>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600">
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
                 {t(game.description, game.descriptionAr)}
               </p>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="relative mx-auto aspect-[750/1624] w-full max-w-[180px] overflow-hidden rounded-lg border border-black/10 bg-zinc-100">
+          <div className="hidden items-center gap-3 md:flex">
+            <div className="relative h-28 w-14 flex-shrink-0 overflow-hidden rounded-md border border-black/10 bg-zinc-100">
               <Image
                 src={game.banner || game.image}
                 alt={t(game.name, game.nameAr)}
                 fill
                 className={isWahoImage ? 'object-cover' : 'object-contain p-3'}
-                sizes="180px"
+                sizes="56px"
               />
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -168,53 +178,54 @@ export default function GamePage({ params }: GamePageProps) {
                 { label: t('Fast top-up', 'شحن سريع'), icon: Zap },
                 { label: t('Simple steps', 'خطوات بسيطة'), icon: Sparkles },
               ].map((item) => (
-                <div key={item.label} className="rounded-md bg-zinc-100 p-3 text-center">
+                <div key={item.label} className="w-20 rounded-md bg-zinc-100 p-2 text-center">
                   <item.icon className="mx-auto h-4 w-4 text-blue-600" />
-                  <p className="mt-2 text-[11px] font-medium leading-4 text-zinc-600">{item.label}</p>
+                  <p className="mt-1.5 text-[11px] font-medium leading-4 text-zinc-600">{item.label}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          {['package', 'details', 'payment', 'confirm'].map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
-                  step === s
-                    ? 'bg-blue-600 text-white'
-                    : ['package', 'details', 'payment', 'confirm'].indexOf(step) > i
-                    ? 'border border-blue-200 bg-blue-50 text-blue-600'
-                    : 'border border-black/10 bg-white text-zinc-400'
-                }`}
-              >
-                {['package', 'details', 'payment', 'confirm'].indexOf(step) > i ? (
-                  <Check className="w-4 h-4" />
-                ) : (
-                  i + 1
+        <div ref={wizardRef} id="top-up-wizard" className="scroll-mt-24">
+          {/* Progress Steps */}
+          <div className="mb-5 flex items-center justify-center gap-2">
+            {(['package', 'details', 'payment', 'confirm'] as CheckoutStep[]).map((s, i) => (
+              <div key={s} className="flex items-center gap-2">
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
+                    step === s
+                      ? 'bg-blue-600 text-white'
+                      : ['package', 'details', 'payment', 'confirm'].indexOf(step) > i
+                      ? 'border border-blue-200 bg-blue-50 text-blue-600'
+                      : 'border border-black/10 bg-white text-zinc-400'
+                  }`}
+                >
+                  {['package', 'details', 'payment', 'confirm'].indexOf(step) > i ? (
+                    <Check className="w-4 h-4" />
+                  ) : (
+                    i + 1
+                  )}
+                </div>
+                {i < 3 && (
+                  <div
+                    className={`w-12 h-0.5 ${
+                      ['package', 'details', 'payment', 'confirm'].indexOf(step) > i
+                        ? 'bg-blue-500'
+                        : 'bg-zinc-200'
+                    }`}
+                  />
                 )}
               </div>
-              {i < 3 && (
-                <div
-                  className={`w-12 h-0.5 ${
-                    ['package', 'details', 'payment', 'confirm'].indexOf(step) > i
-                      ? 'bg-blue-500'
-                      : 'bg-zinc-200'
-                  }`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid gap-6 lg:grid-cols-3">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {step === 'package' && (
-              <div className="rounded-lg border border-black/10 bg-white p-6">
-                <h2 className="mb-6 text-xl font-semibold text-zinc-950">
+              <div className="rounded-lg border border-black/10 bg-white p-5">
+                <h2 className="mb-4 text-xl font-semibold text-zinc-950">
                   {t('Select top-up amount', 'اختر مبلغ الشحن', '选择充值金额')}
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -269,7 +280,7 @@ export default function GamePage({ params }: GamePageProps) {
                 </div>
 
                 <Button
-                  onClick={() => setStep('details')}
+                  onClick={() => goToStep('details')}
                   disabled={!selectedPackage}
                   className="mt-6 w-full bg-blue-600 text-white shadow-none hover:bg-blue-700"
                 >
@@ -353,7 +364,7 @@ export default function GamePage({ params }: GamePageProps) {
 
                 <div className="flex gap-3 mt-6">
                   <Button
-                    onClick={() => setStep('package')}
+                    onClick={() => goToStep('package')}
                     variant="outline"
                     className="border-black/10 bg-white text-zinc-700 hover:bg-zinc-50"
                   >
@@ -406,14 +417,14 @@ export default function GamePage({ params }: GamePageProps) {
 
                 <div className="flex gap-3 mt-6">
                   <Button
-                    onClick={() => setStep('details')}
+                    onClick={() => goToStep('details')}
                     variant="outline"
                     className="border-black/10 bg-white text-zinc-700 hover:bg-zinc-50"
                   >
                     {t('Back', 'رجوع')}
                   </Button>
                   <Button
-                    onClick={() => setStep('confirm')}
+                    onClick={() => goToStep('confirm')}
                     className="flex-1 bg-blue-600 text-white shadow-none hover:bg-blue-700"
                   >
                     {t('Review WAHO Order', 'مراجعة طلب WAHO')}
@@ -462,7 +473,7 @@ export default function GamePage({ params }: GamePageProps) {
 
                 <div className="flex gap-3 mt-6">
                   <Button
-                    onClick={() => setStep('payment')}
+                    onClick={() => goToStep('payment')}
                     variant="outline"
                     className="border-black/10 bg-white text-zinc-700 hover:bg-zinc-50"
                   >
@@ -552,6 +563,7 @@ export default function GamePage({ params }: GamePageProps) {
               )}
             </div>
           </div>
+        </div>
         </div>
       </main>
     </div>
