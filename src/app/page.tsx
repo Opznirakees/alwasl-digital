@@ -71,10 +71,10 @@ export default function HomePage() {
                 className="object-cover"
                 sizes="(min-width: 1024px) 45vw, (min-width: 640px) 90vw, 100vw"
               />
-              <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-md border border-white/20 bg-zinc-950/90 px-3 py-3 text-white shadow-lg backdrop-blur-md">
-                <div>
-                  <p className="text-lg font-semibold leading-none text-white drop-shadow-sm">LEO</p>
-                  <p className="mt-1 text-xs font-medium text-white drop-shadow-sm">
+              <div className="absolute inset-x-3 bottom-3 flex items-center justify-between gap-3 rounded-md border border-white/25 bg-black px-3.5 py-3 text-white shadow-[0_14px_40px_rgba(0,0,0,0.45)]">
+                <div className="min-w-0" style={{ color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>
+                  <p className="text-xl font-bold leading-none text-white" style={{ color: '#fff' }}>LEO</p>
+                  <p className="mt-1 text-sm font-semibold leading-snug text-white" style={{ color: '#fff' }}>
                     {t('WAHO top-up contact', 'جهة شحن WAHO', 'WAHO 充值联系人')}
                   </p>
                 </div>
