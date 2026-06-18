@@ -13,12 +13,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { levelLabels, levelDiscounts } from '@/data/mock-data';
 import type { WalletTransactionType } from '@/types';
+import { walletTopUpDialogCopy } from './wallet-dialog-copy';
 import {
   ArrowLeft,
   Wallet,
@@ -207,6 +209,13 @@ export default function WalletPage() {
                   <DialogContent className="bg-slate-900 border-emerald-800/30">
                     <DialogHeader>
                       <DialogTitle className="text-white">{t('Top Up Wallet', 'شحن المحفظة')}</DialogTitle>
+                      <DialogDescription className="text-white/60">
+                        {t(
+                          walletTopUpDialogCopy.description.en,
+                          walletTopUpDialogCopy.description.ar,
+                          walletTopUpDialogCopy.description.zh
+                        )}
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-6 py-4">
                       <div className="space-y-2">

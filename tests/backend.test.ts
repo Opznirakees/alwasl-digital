@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { shouldLoadAdminSummary } from '../src/app/admin/admin-access';
 import { getPromotionState } from '../src/app/promotions/promotion-state';
+import { walletTopUpDialogCopy } from '../src/app/wallet/wallet-dialog-copy';
 import { resolveOtpPhone } from '../src/contexts/auth-flow';
 import { hashOtp, safeCompare } from '../src/server/crypto';
 import { calculateOrderPricing, createOrderId } from '../src/server/domain/orders';
@@ -99,6 +100,14 @@ describe('auth flow rules', () => {
     expect(resolveOtpPhone('', '+9647812345678')).toBe('+9647812345678');
     expect(resolveOtpPhone('+964700000001')).toBe('+964700000001');
     expect(resolveOtpPhone('')).toBeNull();
+  });
+});
+
+describe('wallet accessibility copy', () => {
+  test('provides a description for the wallet top-up dialog', () => {
+    expect(walletTopUpDialogCopy.description.en).toContain('wallet balance');
+    expect(walletTopUpDialogCopy.description.ar.length).toBeGreaterThan(10);
+    expect(walletTopUpDialogCopy.description.zh.length).toBeGreaterThan(5);
   });
 });
 
