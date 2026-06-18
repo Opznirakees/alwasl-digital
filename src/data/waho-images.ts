@@ -10,33 +10,33 @@ export const wahoScreenshots = {
 
 export const wahoShowcaseIntro = {
   title: {
-    en: 'Screenshots from the WAHO app',
-    ar: 'لقطات من تطبيق WAHO',
-    zh: 'WAHO 应用截图',
+    en: 'What your WAHO balance is used for',
+    ar: 'استخدامات رصيد WAHO',
+    zh: 'WAHO 余额可用于什么',
   },
   body: {
-    en: 'These app screenshots help customers recognize WAHO clearly before choosing a recharge amount.',
-    ar: 'هذه الصور للتعرّف على التطبيق: يمكن للعملاء تمييز WAHO بوضوح قبل اختيار مبلغ الشحن.',
-    zh: '这些图片用于识别应用：客户可清楚确认 WAHO，然后选择充值金额。',
+    en: 'Use your balance inside WAHO for live rooms, private chats, and virtual gifts. Choose an amount below and top up the correct WAHO ID.',
+    ar: 'استخدم رصيدك داخل WAHO للبث والغرف الصوتية والمحادثات الخاصة والهدايا. اختر المبلغ بالأسفل واشحن معرف WAHO الصحيح.',
+    zh: '余额可在 WAHO 内用于直播房间、私聊和虚拟礼物。请在下方选择金额，并为正确的 WAHO ID 充值。',
   },
 } as const;
 
 export const wahoShowcaseImages = [
   {
     src: wahoScreenshots.liveStream,
-    label: { en: 'Live screen', ar: 'شاشة البث', zh: '直播界面' },
+    label: { en: 'Live rooms', ar: 'غرف البث', zh: '直播房间' },
   },
   {
     src: wahoScreenshots.onlineParties,
-    label: { en: 'Voice room', ar: 'غرفة صوتية', zh: '语音房间' },
+    label: { en: 'Voice rooms', ar: 'غرف صوتية', zh: '语音房间' },
   },
   {
     src: wahoScreenshots.friends,
-    label: { en: 'Friends screen', ar: 'شاشة الأصدقاء', zh: '好友界面' },
+    label: { en: 'Friends', ar: 'الأصدقاء', zh: '好友' },
   },
   {
     src: wahoScreenshots.casualGames,
-    label: { en: 'App screen', ar: 'شاشة التطبيق', zh: '应用界面' },
+    label: { en: 'WAHO app', ar: 'تطبيق WAHO', zh: 'WAHO 应用' },
   },
   {
     src: wahoScreenshots.privateChat,
@@ -44,10 +44,10 @@ export const wahoShowcaseImages = [
   },
   {
     src: wahoScreenshots.partyRoom,
-    label: { en: 'Gift screen', ar: 'شاشة الهدايا', zh: '礼物界面' },
+    label: { en: 'Virtual gifts', ar: 'هدايا افتراضية', zh: '虚拟礼物' },
   },
   {
     src: wahoScreenshots.audioRoom,
-    label: { en: 'Audio room', ar: 'غرفة صوتية', zh: '语音房间' },
+    label: { en: 'Audio rooms', ar: 'غرف صوتية', zh: '语音房间' },
   },
 ] as const;

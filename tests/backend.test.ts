@@ -122,13 +122,19 @@ describe('mobile menu accessibility copy', () => {
 });
 
 describe('WAHO screenshot showcase copy', () => {
-  test('presents the images as WAHO app screenshots instead of a fake top-up flow', () => {
-    expect(wahoShowcaseIntro.title.en).toBe('Screenshots from the WAHO app');
-    expect(wahoShowcaseIntro.body.en).toContain('recognize');
+  test('explains what WAHO balance is used for instead of describing screenshots', () => {
+    expect(wahoShowcaseIntro.title.en).toBe('What your WAHO balance is used for');
+    expect(wahoShowcaseIntro.body.en).toContain('correct WAHO ID');
+    expect(wahoShowcaseIntro.body.en).toContain('virtual gifts');
+    expect(wahoShowcaseIntro.title.en.toLowerCase()).not.toContain('screenshots');
+    expect(wahoShowcaseIntro.body.en.toLowerCase()).not.toContain('screenshots');
+    expect(wahoShowcaseIntro.body.en.toLowerCase()).not.toContain('recognize');
     expect(wahoShowcaseIntro.body.en.toLowerCase()).not.toContain('top-up flow');
 
     const labels = wahoShowcaseImages.map((item) => item.label.en);
 
+    expect(labels).toContain('Live rooms');
+    expect(labels).toContain('Virtual gifts');
     expect(labels).not.toContain('Top-up amount');
     expect(labels).not.toContain('Order status');
     expect(labels).not.toContain('Confirmation');
