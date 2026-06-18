@@ -12,14 +12,16 @@ import { Card } from '@/components/ui/card';
 import { promotions } from '@/data/mock-data';
 import { useApp } from '@/contexts/AppContext';
 import type { Game } from '@/types';
+import { formatPromotionDate, getPromotionState } from './promotion-state';
 
 export default function PromotionsPage() {
   const { t, language, dir, selectedCountry } = useApp();
   const [products, setProducts] = useState<Game[]>([]);
-  const now = new Date();
+  const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
     let active = true;
+    setNow(new Date());
 
     async function loadProducts() {
       const response = await fetch('/api/products');
@@ -41,11 +43,7 @@ export default function PromotionsPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
+    return formatPromotionDate(dateString, language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ');
   };
 
   const copyCode = async (code: string) => {
@@ -78,10 +76,9 @@ export default function PromotionsPage() {
 
         <section className="grid md:grid-cols-2 xl:grid-cols-3 gap-5 mt-10">
           {promotions.map((promotion) => {
-            const startsAt = new Date(promotion.startDate);
-            const endsAt = new Date(promotion.endDate);
-            const isUpcoming = startsAt > now;
-            const isExpired = endsAt < now;
+            const promotionState = now ? getPromotionState(promotion.startDate, promotion.endDate, now) : 'live';
+            const isUpcoming = promotionState === 'upcoming';
+            const isExpired = promotionState === 'expired';
             const stateLabel = isUpcoming
               ? t('Upcoming', 'قادم')
               : isExpired

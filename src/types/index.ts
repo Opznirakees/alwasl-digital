@@ -5,6 +5,7 @@ export interface User {
   name: string;
   email?: string;
   avatar?: string;
+  role?: UserRole;
   level: UserLevel;
   walletBalance: number;
   totalSpent: number;
@@ -14,6 +15,7 @@ export interface User {
   discountPercentage: number;
 }
 
+export type UserRole = 'user' | 'admin';
 export type UserLevel = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
 
 export interface AuthState {

@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { Language, User, Country, CartItem, Order, WalletTransaction } from '@/types';
 import { countries } from '@/data/mock-data';
+import { resolveOtpPhone } from './auth-flow';
 
 type Theme = 'dark' | 'light';
 
@@ -22,7 +23,7 @@ interface AppContextType {
   isAuthenticated: boolean;
   login: (phone: string) => Promise<boolean>;
   logout: () => void;
-  verifyOtp: (otp: string) => Promise<boolean>;
+  verifyOtp: (otp: string, phoneOverride?: string) => Promise<boolean>;
   refreshAccount: () => Promise<void>;
 
   // Country
@@ -754,13 +755,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return true;
   }, []);
 
-  const verifyOtp = useCallback(async (otp: string): Promise<boolean> => {
-    if (!pendingPhone) return false;
+  const verifyOtp = useCallback(async (otp: string, phoneOverride?: string): Promise<boolean> => {
+    const phone = resolveOtpPhone(pendingPhone, phoneOverride);
+    if (!phone) return false;
 
     const response = await fetch('/api/auth/verify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: pendingPhone, otp }),
+      body: JSON.stringify({ phone, otp }),
       credentials: 'include',
     });
 

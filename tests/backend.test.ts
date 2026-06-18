@@ -1,9 +1,14 @@
 import { describe, expect, test } from 'bun:test';
+import { shouldLoadAdminSummary } from '../src/app/admin/admin-access';
+import { getPromotionState } from '../src/app/promotions/promotion-state';
+import { resolveOtpPhone } from '../src/contexts/auth-flow';
 import { hashOtp, safeCompare } from '../src/server/crypto';
 import { calculateOrderPricing, createOrderId } from '../src/server/domain/orders';
 import { resolveFakePaymentResult } from '../src/server/domain/payments';
 import { nextWalletBalance } from '../src/server/domain/wallet';
+import { mapUser } from '../src/server/mappers';
 import { normalizePhone } from '../src/server/validation';
+import type { User } from '../src/types';
 
 describe('auth helpers', () => {
   test('normalizes phone numbers and hashes OTP codes predictably', () => {
@@ -67,5 +72,54 @@ describe('wallet ledger rules', () => {
   test('debits wallet balances only when funds are available', () => {
     expect(nextWalletBalance(250000, 9500)).toBe(240500);
     expect(() => nextWalletBalance(1000, 5000)).toThrow('INSUFFICIENT_WALLET_BALANCE');
+  });
+});
+
+describe('promotion display rules', () => {
+  test('calculates promotion state with an explicit clock', () => {
+    expect(getPromotionState('2026-06-01T00:00:00Z', '2026-08-31T23:59:59Z', new Date('2026-06-18T12:00:00Z'))).toBe('live');
+    expect(getPromotionState('2026-07-01T00:00:00Z', '2026-08-31T23:59:59Z', new Date('2026-06-18T12:00:00Z'))).toBe('upcoming');
+    expect(getPromotionState('2026-05-01T00:00:00Z', '2026-05-31T23:59:59Z', new Date('2026-06-18T12:00:00Z'))).toBe('expired');
+  });
+});
+
+describe('admin access rules', () => {
+  test('loads admin summary only for admin users', () => {
+    const admin = { role: 'admin' } as User;
+    const user = { role: 'user' } as User;
+
+    expect(shouldLoadAdminSummary(admin)).toBe(true);
+    expect(shouldLoadAdminSummary(user)).toBe(false);
+    expect(shouldLoadAdminSummary(null)).toBe(false);
+  });
+});
+
+describe('auth flow rules', () => {
+  test('allows immediate demo OTP verification with an explicit phone override', () => {
+    expect(resolveOtpPhone('', '+9647812345678')).toBe('+9647812345678');
+    expect(resolveOtpPhone('+964700000001')).toBe('+964700000001');
+    expect(resolveOtpPhone('')).toBeNull();
+  });
+});
+
+describe('mappers', () => {
+  test('maps the database role into the frontend user', () => {
+    const mapped = mapUser({
+      id: 'user-1',
+      phone: '+9647812345678',
+      name: 'Admin',
+      email: null,
+      avatar: null,
+      role: 'ADMIN',
+      level: 'GOLD',
+      walletBalance: 250000,
+      totalSpent: 0,
+      isVerified: true,
+      discountPercentage: 5,
+      registeredAt: new Date('2026-06-18T10:00:00Z'),
+      lastLogin: new Date('2026-06-18T11:00:00Z'),
+    });
+
+    expect(mapped.role).toBe('admin');
   });
 });

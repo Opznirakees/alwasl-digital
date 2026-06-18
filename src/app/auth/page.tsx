@@ -94,12 +94,15 @@ export default function AuthPage() {
 
   const handleDemoLogin = async () => {
     setIsLoading(true);
+    const demoPhone = '+9647812345678';
     try {
-      await login('+9647812345678');
-      const success = await verifyOtp('123456');
+      await login(demoPhone);
+      const success = await verifyOtp('123456', demoPhone);
       if (success) {
         toast.success(t('Demo account loaded!', 'تم تحميل الحساب التجريبي!'));
         router.push('/');
+      } else {
+        toast.error(t('Demo login failed', 'فشل تسجيل الدخول التجريبي'));
       }
     } finally {
       setIsLoading(false);

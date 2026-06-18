@@ -54,6 +54,7 @@ export function mapUser(user: DbUser): User {
     name: user.name,
     email: user.email ?? undefined,
     avatar: user.avatar ?? undefined,
+    role: user.role.toLowerCase() as User['role'],
     level: levelMap[user.level] ?? 'bronze',
     walletBalance: user.walletBalance,
     totalSpent: user.totalSpent,

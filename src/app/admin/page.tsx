@@ -22,6 +22,7 @@ import {
   promotions,
 } from '@/data/mock-data';
 import type { DashboardStats, Game, Order, Provider, User, WalletTransaction } from '@/types';
+import { shouldLoadAdminSummary } from './admin-access';
 import {
   LayoutDashboard,
   Users,
@@ -54,7 +55,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminDashboard() {
-  const { t, language, dir } = useApp();
+  const { t, language, dir, user } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
@@ -81,6 +82,16 @@ export default function AdminDashboard() {
     let active = true;
 
     async function loadSummary() {
+      if (!user) {
+        setAdminError(t('Please login as an admin to view this dashboard.', 'يرجى تسجيل الدخول كمسؤول لعرض لوحة التحكم.', '请以管理员身份登录以查看此仪表板。'));
+        return;
+      }
+
+      if (!shouldLoadAdminSummary(user)) {
+        setAdminError(t('Admin access is required to view this dashboard.', 'تحتاج إلى صلاحيات المسؤول لعرض لوحة التحكم.', '需要管理员权限才能查看此仪表板。'));
+        return;
+      }
+
       const response = await fetch('/api/admin/summary', { credentials: 'include' });
       const payload = await response.json().catch(() => null);
 
@@ -105,7 +116,7 @@ export default function AdminDashboard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [t, user]);
 
   const revenueData = useMemo(() => {
     const days = Array.from({ length: 7 }, (_, index) => {
