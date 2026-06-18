@@ -11,8 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { games, levelDiscounts } from '@/data/mock-data';
-import type { GamePackage } from '@/types';
+import type { Game, GamePackage } from '@/types';
 import {
   ArrowLeft,
   Check,
@@ -36,8 +35,10 @@ type CheckoutStep = 'package' | 'details' | 'payment' | 'confirm';
 export default function GamePage({ params }: GamePageProps) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const { t, language, dir, user, isAuthenticated, selectedCountry } = useApp();
+  const { t, language, dir, user, isAuthenticated, selectedCountry, refreshAccount } = useApp();
 
+  const [game, setGame] = useState<Game | null>(null);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const [step, setStep] = useState<CheckoutStep>('package');
   const [selectedPackage, setSelectedPackage] = useState<GamePackage | null>(null);
   const [userId, setUserId] = useState('');
@@ -48,19 +49,42 @@ export default function GamePage({ params }: GamePageProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const wizardRef = useRef<HTMLDivElement>(null);
 
-  const game = games.find(g => g.slug === resolvedParams.slug);
-
   useEffect(() => {
-    if (!game) {
-      router.push('/');
-    }
-  }, [game, router]);
+    let active = true;
 
-  if (!game) {
-    return null;
+    async function loadProduct() {
+      setIsLoadingProduct(true);
+      const response = await fetch(`/api/products/${resolvedParams.slug}`);
+      if (!response.ok) {
+        router.push('/');
+        return;
+      }
+      const payload = await response.json();
+      if (active) {
+        setGame(payload.product);
+        setIsLoadingProduct(false);
+      }
+    }
+
+    void loadProduct();
+
+    return () => {
+      active = false;
+    };
+  }, [resolvedParams.slug, router]);
+
+  if (isLoadingProduct || !game) {
+    return (
+      <div className={`min-h-screen bg-[#f5f5f7] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+        <Header />
+        <main className="container mx-auto flex min-h-[60vh] items-center justify-center px-4">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+        </main>
+      </div>
+    );
   }
 
-  const discount = user ? levelDiscounts[user.level] : 0;
+  const discount = user ? user.discountPercentage : 0;
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
   const isWahoImage = game.image.startsWith('/waho/');
 
@@ -88,16 +112,26 @@ export default function GamePage({ params }: GamePageProps) {
     }
 
     setIsVerifying(true);
-    // Placeholder for the incoming WAHO account validation flow.
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const response = await fetch('/api/waho/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ wahoId: userId }),
+      });
+      const payload = await response.json();
 
-    // Generate a mock username
-    const mockUsernames = ['AhmedLive', 'LaylaLive', 'OmarLive', 'NoorWaho', 'ZainLive', 'HudaWaho'];
-    const randomUsername = mockUsernames[Math.floor(Math.random() * mockUsernames.length)];
+      if (!response.ok || !payload.account?.valid) {
+        toast.error(t('Invalid WAHO account', 'حساب WAHO غير صحيح', 'WAHO 账号无效'));
+        return;
+      }
 
-    setVerifiedUsername(randomUsername);
-    setIsVerifying(false);
-    toast.success(t('WAHO account verified!', 'تم التحقق من حساب WAHO!'));
+      setVerifiedUsername(payload.account.username);
+      toast.success(t('WAHO account verified!', 'تم التحقق من حساب WAHO!'));
+    } catch {
+      toast.error(t('Verification failed', 'فشل في التحقق', '验证失败'));
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   const handleProceedToPayment = () => {
@@ -119,13 +153,52 @@ export default function GamePage({ params }: GamePageProps) {
       return;
     }
 
-    setIsProcessing(true);
-    // Simulate order processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    if (!selectedPackage) return;
 
-    setIsProcessing(false);
-    toast.success(t('Order placed successfully!', 'تم تأكيد الطلب بنجاح!'));
-    router.push('/orders');
+    setIsProcessing(true);
+    try {
+      const orderResponse = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          productSlug: game.slug,
+          packageId: selectedPackage.id,
+          wahoId: userId,
+          zoneId,
+          paymentMethod,
+        }),
+      });
+      const orderPayload = await orderResponse.json();
+
+      if (!orderResponse.ok) {
+        throw new Error(orderPayload.error || 'Order creation failed');
+      }
+
+      const paymentResponse = await fetch('/api/payments/fake/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          orderId: orderPayload.order.id,
+          success: true,
+        }),
+      });
+      const paymentPayload = await paymentResponse.json();
+
+      if (!paymentResponse.ok) {
+        throw new Error(paymentPayload.error || 'Payment confirmation failed');
+      }
+
+      await refreshAccount();
+      toast.success(t('Order placed successfully!', 'تم تأكيد الطلب بنجاح!'));
+      router.push('/orders');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Order failed';
+      toast.error(message);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const paymentMethods = [

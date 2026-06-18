@@ -7,18 +7,41 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
-import { demoUser, levelLabels } from '@/data/mock-data';
+import { levelLabels } from '@/data/mock-data';
 
 export default function ProfilePage() {
   const { t, language, dir, theme, user, selectedCountry } = useApp();
-  const currentUser = user || demoUser;
+  const currentUser = user;
   const isLight = theme === 'light';
-  const level = levelLabels[currentUser.level];
-  const displayName = t(currentUser.name, currentUser.name);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ').format(amount);
   };
+
+  if (!currentUser) {
+    return (
+      <div className={`min-h-screen ${isLight ? 'bg-slate-50' : 'bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950'} ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+        <Header />
+        <main className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
+          <Shield className={isLight ? 'mb-4 h-10 w-10 text-purple-600' : 'mb-4 h-10 w-10 text-purple-300'} />
+          <h1 className={`text-2xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            {t('Login required', 'تسجيل الدخول مطلوب', '需要登录')}
+          </h1>
+          <p className={`mt-2 text-sm ${isLight ? 'text-slate-500' : 'text-white/50'}`}>
+            {t('Login to view your profile and account details.', 'سجل الدخول لعرض ملفك وبيانات حسابك.', '登录后查看您的资料和账号信息。')}
+          </p>
+          <Link href="/auth">
+            <Button className="mt-5 bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+              {t('Login', 'تسجيل الدخول', '登录')}
+            </Button>
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
+  const level = levelLabels[currentUser.level];
+  const displayName = t(currentUser.name, currentUser.name);
 
   return (
     <div className={`min-h-screen ${isLight ? 'bg-slate-50' : 'bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950'} ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, CalendarDays, Copy, TicketPercent } from 'lucide-react';
@@ -8,12 +9,32 @@ import { Header } from '@/components/layout/Header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { games, promotions } from '@/data/mock-data';
+import { promotions } from '@/data/mock-data';
 import { useApp } from '@/contexts/AppContext';
+import type { Game } from '@/types';
 
 export default function PromotionsPage() {
   const { t, language, dir, selectedCountry } = useApp();
+  const [products, setProducts] = useState<Game[]>([]);
   const now = new Date();
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProducts() {
+      const response = await fetch('/api/products');
+      if (response.ok) {
+        const payload = await response.json();
+        if (active) setProducts(payload.products ?? []);
+      }
+    }
+
+    void loadProducts();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ').format(amount);
@@ -72,7 +93,7 @@ export default function PromotionsPage() {
                 ? 'bg-zinc-100 text-zinc-500 border-black/10'
                 : 'bg-[#34c759]/10 text-[#1f8f3a] border-[#34c759]/25';
             const applicableGames = promotion.applicableGames
-              .map((gameId) => games.find((game) => game.id === gameId))
+              .map((gameId) => products.find((game) => game.id === gameId))
               .filter(Boolean);
             const discountText = promotion.type === 'percentage'
               ? `${promotion.value}% ${t('off', 'خصم')}`

@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { demoUser, walletTransactions, levelLabels, levelDiscounts } from '@/data/mock-data';
+import { levelLabels, levelDiscounts } from '@/data/mock-data';
 import type { WalletTransactionType } from '@/types';
 import {
   ArrowLeft,
@@ -37,13 +37,13 @@ import {
 import { toast } from 'sonner';
 
 export default function WalletPage() {
-  const { t, language, dir, user, selectedCountry } = useApp();
+  const { t, language, dir, user, selectedCountry, walletTransactions, refreshAccount } = useApp();
   const [topUpAmount, setTopUpAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('zaincash');
   const [isLoading, setIsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const currentUser = user || demoUser;
+  const currentUser = user;
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
 
   const formatCurrency = (amount: number) => {
@@ -98,15 +98,38 @@ export default function WalletPage() {
     }
 
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsLoading(false);
-    setDialogOpen(false);
-    toast.success(t('Top-up request submitted!', 'تم إرسال طلب الشحن!'));
+    try {
+      const response = await fetch('/api/wallet/top-up', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          amount: Number(topUpAmount),
+          paymentMethod,
+        }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'Wallet top-up failed');
+      }
+
+      await refreshAccount();
+      setTopUpAmount('');
+      setDialogOpen(false);
+      toast.success(t('Top-up request submitted!', 'تم إرسال طلب الشحن!'));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('Top-up request failed', 'فشل طلب الشحن'));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const quickAmounts = [10000, 25000, 50000, 100000];
 
   const levelProgress = () => {
+    if (!currentUser) return { progress: 0, remaining: 0, nextLevel: null };
+
     const levels = ['bronze', 'silver', 'gold', 'platinum', 'diamond'] as const;
     const currentLevelIndex = levels.indexOf(currentUser.level);
     const nextLevel = levels[currentLevelIndex + 1];
@@ -120,6 +143,24 @@ export default function WalletPage() {
 
     return { progress: Math.min(100, progress), remaining, nextLevel };
   };
+
+  if (!currentUser) {
+    return (
+      <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+        <Header />
+        <main className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
+          <Wallet className="mb-4 h-10 w-10 text-emerald-400" />
+          <h1 className="text-2xl font-bold text-white">{t('Login required', 'تسجيل الدخول مطلوب', '需要登录')}</h1>
+          <p className="mt-2 text-sm text-white/50">{t('Login to view your wallet balance and transactions.', 'سجل الدخول لعرض رصيد المحفظة والمعاملات.', '登录后查看钱包余额和交易记录。')}</p>
+          <Link href="/auth">
+            <Button className="mt-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
+              {t('Login', 'تسجيل الدخول', '登录')}
+            </Button>
+          </Link>
+        </main>
+      </div>
+    );
+  }
 
   const { progress, remaining, nextLevel } = levelProgress();
 

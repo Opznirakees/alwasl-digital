@@ -1,31 +1,60 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useApp } from '@/contexts/AppContext';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
-import { games } from '@/data/mock-data';
+import type { Game } from '@/types';
 import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  Loader2,
   ShieldCheck,
   Zap,
 } from 'lucide-react';
 
 export default function TopUpPage() {
   const { t, dir, language } = useApp();
-  const wahoTopUp = games[0];
-  const topUpPackages = wahoTopUp.packages.filter((pkg) => pkg.inStock);
+  const [wahoTopUp, setWahoTopUp] = useState<Game | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
   const formatAmount = (amount: number) => new Intl.NumberFormat(locale).format(amount);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProduct() {
+      const response = await fetch('/api/products/waho-top-up');
+      if (response.ok) {
+        const payload = await response.json();
+        if (active) setWahoTopUp(payload.product);
+      }
+      if (active) setIsLoading(false);
+    }
+
+    void loadProduct();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const topUpPackages = wahoTopUp?.packages.filter((pkg) => pkg.inStock) ?? [];
 
   return (
     <div className={`min-h-screen bg-[#f5f5f7] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
       <main className="container mx-auto px-4 py-8">
+        {isLoading || !wahoTopUp ? (
+          <div className="flex min-h-[50vh] items-center justify-center">
+            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+          </div>
+        ) : (
+          <>
         <div className="mb-8">
           <Link href="/" className="mb-4 inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-300">
             <ArrowLeft className="h-4 w-4" />
@@ -130,6 +159,8 @@ export default function TopUpPage() {
             </Button>
           </div>
         </section>
+          </>
+        )}
       </main>
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
@@ -9,8 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { sampleOrders, games } from '@/data/mock-data';
-import type { OrderStatus } from '@/types';
+import type { Game, OrderStatus } from '@/types';
 import {
   ArrowLeft,
   Package,
@@ -24,13 +23,32 @@ import {
 import { toast } from 'sonner';
 
 export default function OrdersPage() {
-  const { t, language, dir, selectedCountry } = useApp();
+  const { t, language, dir, selectedCountry, orders } = useApp();
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+  const [products, setProducts] = useState<Game[]>([]);
 
   const filteredOrders = filter === 'all'
-    ? sampleOrders
-    : sampleOrders.filter(order => order.status === filter);
+    ? orders
+    : orders.filter(order => order.status === filter);
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProducts() {
+      const response = await fetch('/api/products');
+      if (response.ok) {
+        const payload = await response.json();
+        if (active) setProducts(payload.products ?? []);
+      }
+    }
+
+    void loadProducts();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale).format(amount);
@@ -140,7 +158,7 @@ export default function OrdersPage() {
         {filteredOrders.length > 0 ? (
           <div className="space-y-4">
             {filteredOrders.map((order) => {
-              const game = games.find(g => g.id === order.gameId);
+              const game = products.find(g => g.id === order.gameId);
               const gamePackage = game?.packages.find(pkg => pkg.id === order.packageId);
               const orderGameName = game ? t(game.name, game.nameAr) : t(order.gameName, order.gameName);
               const orderPackageName = gamePackage ? t(gamePackage.name, gamePackage.nameAr) : t(order.packageName, order.packageName);
@@ -150,7 +168,7 @@ export default function OrdersPage() {
                     {/* WAHO top-up image */}
                     <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
                       <Image
-                        src={game?.image || ''}
+                        src={game?.image || '/brand/alwasl-mark.jpg'}
                         alt={orderGameName}
                         fill
                         className="object-cover"

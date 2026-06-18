@@ -1,20 +1,40 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, ShoppingCart, Trash2 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { games } from '@/data/mock-data';
 import { useApp } from '@/contexts/AppContext';
+import type { Game } from '@/types';
 
 export default function CartPage() {
   const { t, language, dir, theme, cart, removeFromCart, clearCart, selectedCountry } = useApp();
   const isLight = theme === 'light';
+  const [products, setProducts] = useState<Game[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProducts() {
+      const response = await fetch('/api/products');
+      if (response.ok) {
+        const payload = await response.json();
+        if (active) setProducts(payload.products ?? []);
+      }
+    }
+
+    void loadProducts();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const rows = cart.map((item) => {
-    const game = games.find((entry) => entry.id === item.gameId);
+    const game = products.find((entry) => entry.id === item.gameId);
     const pkg = game?.packages.find((entry) => entry.id === item.packageId);
     const price = pkg ? (pkg.salePrice || pkg.basePrice) * item.quantity : 0;
     return { item, game, pkg, price };

@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import type { Language, User, Country, CartItem, Order, PaymentMethod, WalletTransaction } from '@/types';
-import { demoUser, countries, sampleOrders, walletTransactions as sampleWalletTransactions } from '@/data/mock-data';
+import type { Language, User, Country, CartItem, Order, WalletTransaction } from '@/types';
+import { countries } from '@/data/mock-data';
 
 type Theme = 'dark' | 'light';
 
@@ -23,6 +23,7 @@ interface AppContextType {
   login: (phone: string) => Promise<boolean>;
   logout: () => void;
   verifyOtp: (otp: string) => Promise<boolean>;
+  refreshAccount: () => Promise<void>;
 
   // Country
   selectedCountry: Country;
@@ -35,40 +36,19 @@ interface AppContextType {
   clearCart: () => void;
   cartTotal: number;
 
-  // Demo data
+  // Server data
   orders: Order[];
   walletTransactions: WalletTransaction[];
-  createDemoOrder: (order: DemoOrderInput) => Order;
   resetDemoData: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-interface DemoOrderInput {
-  gameId: string;
-  gameName: string;
-  packageId: string;
-  packageName: string;
-  gameUserId: string;
-  gameUsername?: string;
-  zoneId?: string;
-  quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  discount: number;
-  finalPrice: number;
-  currency: string;
-  paymentMethod: PaymentMethod;
-}
-
 const storageKeys = {
   language: 'alwasl-language',
   theme: 'theme',
   country: 'alwasl-country',
-  user: 'alwasl-demo-user',
   cart: 'alwasl-demo-cart',
-  orders: 'alwasl-demo-orders',
-  walletTransactions: 'alwasl-demo-wallet-transactions',
 };
 
 function readJson<T>(key: string, fallback: T): T {
@@ -653,12 +633,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [orders, setOrders] = useState<Order[]>(sampleOrders);
-  const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>(sampleWalletTransactions);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
   const [pendingPhone, setPendingPhone] = useState<string>('');
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Restore demo state for a smoother presentation flow.
+  const refreshAccount = useCallback(async () => {
+    const [meResponse, ordersResponse, walletResponse] = await Promise.all([
+      fetch('/api/auth/me', { credentials: 'include' }),
+      fetch('/api/orders', { credentials: 'include' }),
+      fetch('/api/wallet', { credentials: 'include' }),
+    ]);
+
+    if (meResponse.ok) {
+      const payload = await meResponse.json();
+      setUser(payload.user ?? null);
+    }
+
+    if (ordersResponse.ok) {
+      const payload = await ordersResponse.json();
+      setOrders(payload.orders ?? []);
+    } else if (ordersResponse.status === 401) {
+      setOrders([]);
+    }
+
+    if (walletResponse.ok) {
+      const payload = await walletResponse.json();
+      setWalletTransactions(payload.transactions ?? []);
+      if (payload.user) {
+        setUser(payload.user);
+      }
+    } else if (walletResponse.status === 401) {
+      setWalletTransactions([]);
+    }
+  }, []);
+
+  // Restore browser preferences. Account/order/wallet data is loaded from the API.
   useEffect(() => {
     const savedTheme = localStorage.getItem(storageKeys.theme) as Theme | null;
     if (savedTheme === 'dark' || savedTheme === 'light') {
@@ -672,10 +682,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     localStorage.removeItem(storageKeys.country);
 
-    setUser(readJson<User | null>(storageKeys.user, null));
     setCart(readJson<CartItem[]>(storageKeys.cart, []));
-    setOrders(readJson<Order[]>(storageKeys.orders, sampleOrders));
-    setWalletTransactions(readJson<WalletTransaction[]>(storageKeys.walletTransactions, sampleWalletTransactions));
     setIsHydrated(true);
   }, []);
 
@@ -695,27 +702,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isHydrated) return;
-    if (user) {
-      localStorage.setItem(storageKeys.user, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(storageKeys.user);
-    }
-  }, [isHydrated, user]);
+    void refreshAccount();
+  }, [isHydrated, refreshAccount]);
 
   useEffect(() => {
     if (!isHydrated) return;
     localStorage.setItem(storageKeys.cart, JSON.stringify(cart));
   }, [cart, isHydrated]);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    localStorage.setItem(storageKeys.orders, JSON.stringify(orders));
-  }, [isHydrated, orders]);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    localStorage.setItem(storageKeys.walletTransactions, JSON.stringify(walletTransactions));
-  }, [isHydrated, walletTransactions]);
 
   const toggleTheme = useCallback(() => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -737,30 +730,50 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [dir, language]);
 
   const login = useCallback(async (phone: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) return false;
+    const payload = await response.json();
+    if (payload.debugOtp) {
+      console.info(`Al-Wasl OTP for ${phone}: ${payload.debugOtp}`);
+    }
     setPendingPhone(phone);
     return true;
   }, []);
 
   const verifyOtp = useCallback(async (otp: string): Promise<boolean> => {
-    // Simulate OTP verification
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    if (otp === '123456' || otp.length === 6) {
-      setUser({
-        ...demoUser,
-        phone: pendingPhone || demoUser.phone,
-        lastLogin: new Date().toISOString(),
-      });
-      setPendingPhone('');
-      return true;
-    }
-    return false;
-  }, [pendingPhone]);
+    if (!pendingPhone) return false;
+
+    const response = await fetch('/api/auth/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: pendingPhone, otp }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) return false;
+
+    const payload = await response.json();
+    setUser(payload.user);
+    setPendingPhone('');
+    await refreshAccount();
+    return true;
+  }, [pendingPhone, refreshAccount]);
 
   const logout = useCallback(() => {
+    void fetch('/api/auth/logout', {
+      method: 'POST',
+      credentials: 'include',
+    });
     setUser(null);
     setCart([]);
+    setOrders([]);
+    setWalletTransactions([]);
   }, []);
 
   const addToCart = useCallback((item: CartItem) => {
@@ -789,62 +802,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCart([]);
   }, []);
 
-  const createDemoOrder = useCallback((orderInput: DemoOrderInput) => {
-    const now = new Date();
-    const orderId = `ORD-${now.toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const isInstantPayment = orderInput.paymentMethod === 'wallet';
-    const order: Order = {
-      id: orderId,
-      userId: user?.id || demoUser.id,
-      ...orderInput,
-      status: isInstantPayment ? 'completed' : 'processing',
-      paymentStatus: isInstantPayment ? 'completed' : 'pending',
-      providerId: isInstantPayment ? 'provider-1' : undefined,
-      providerOrderId: isInstantPayment ? `PROV-${Math.floor(100000 + Math.random() * 900000)}` : undefined,
-      createdAt: now.toISOString(),
-      updatedAt: now.toISOString(),
-      completedAt: isInstantPayment ? new Date(now.getTime() + 22000).toISOString() : undefined,
-    };
-
-    setOrders((current) => [order, ...current]);
-
-    if (isInstantPayment && user) {
-      const nextBalance = Math.max(0, user.walletBalance - order.finalPrice);
-      setUser({
-        ...user,
-        walletBalance: nextBalance,
-        totalSpent: user.totalSpent + order.finalPrice,
-      });
-      setWalletTransactions((current) => [
-        {
-          id: `wt-${orderId.toLowerCase()}`,
-          userId: user.id,
-          type: 'purchase',
-          amount: -order.finalPrice,
-          currency: order.currency,
-          balance: nextBalance,
-          description: `Purchase: ${order.gameName} ${order.packageName}`,
-          descriptionAr: `شراء: ${order.gameName} ${order.packageName}`,
-          reference: order.id,
-          createdAt: now.toISOString(),
-        },
-        ...current,
-      ]);
-    }
-
-    return order;
-  }, [user]);
-
   const resetDemoData = useCallback(() => {
-    setUser(null);
+    logout();
     setCart([]);
-    setOrders(sampleOrders);
-    setWalletTransactions(sampleWalletTransactions);
-    localStorage.removeItem(storageKeys.user);
+    setOrders([]);
+    setWalletTransactions([]);
     localStorage.removeItem(storageKeys.cart);
-    localStorage.removeItem(storageKeys.orders);
-    localStorage.removeItem(storageKeys.walletTransactions);
-  }, []);
+  }, [logout]);
 
   const cartTotal = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -861,6 +825,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       verifyOtp,
+      refreshAccount,
       selectedCountry,
       setSelectedCountry,
       cart,
@@ -870,7 +835,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       cartTotal,
       orders,
       walletTransactions,
-      createDemoOrder,
       resetDemoData,
     }}>
       {children}

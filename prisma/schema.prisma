@@ -1,0 +1,284 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserLevel {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+}
+
+enum ProductCategory {
+  SOCIAL_MEDIA
+  VOUCHER
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  WALLET
+  ZAINCASH
+  ASIAHAWALA
+  CARD
+  USDT
+}
+
+enum WalletTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  PURCHASE
+  REFUND
+  BONUS
+  CASHBACK
+}
+
+enum OtpPurpose {
+  LOGIN
+}
+
+enum ProviderRequestStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  phone              String              @unique
+  name               String
+  email              String?             @unique
+  avatar             String?
+  role               UserRole            @default(USER)
+  level              UserLevel           @default(BRONZE)
+  walletBalance      Int                 @default(0)
+  totalSpent         Int                 @default(0)
+  isVerified         Boolean             @default(false)
+  discountPercentage Int                 @default(0)
+  registeredAt       DateTime            @default(now())
+  lastLogin          DateTime?
+  orders             Order[]
+  sessions           Session[]
+  otpCodes           OtpCode[]
+  walletTransactions WalletTransaction[]
+  adminAuditLogs     AdminAuditLog[]     @relation("AdminAuditActor")
+
+  @@map("users")
+}
+
+model OtpCode {
+  id         String     @id @default(cuid())
+  phone      String
+  userId     String?
+  user       User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose    OtpPurpose @default(LOGIN)
+  codeHash   String
+  attempts   Int        @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime   @default(now())
+
+  @@index([phone, purpose, consumedAt, expiresAt])
+  @@map("otp_codes")
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, expiresAt, revokedAt])
+  @@map("sessions")
+}
+
+model Product {
+  id                String         @id
+  slug              String         @unique
+  name              String
+  nameAr            String
+  description       String
+  descriptionAr     String
+  image             String
+  banner            String?
+  category          ProductCategory @default(SOCIAL_MEDIA)
+  publisher         String
+  isPopular         Boolean        @default(false)
+  isFeatured        Boolean        @default(false)
+  isActive          Boolean        @default(true)
+  requiresUserId    Boolean        @default(true)
+  userIdLabel       String
+  userIdLabelAr     String
+  userIdPlaceholder String
+  userIdPlaceholderAr String
+  zoneIdRequired    Boolean        @default(false)
+  zoneIdLabel       String?
+  zoneIdLabelAr     String?
+  countries         String[]
+  packages          TopupPackage[]
+  orders            Order[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@map("products")
+}
+
+model TopupPackage {
+  id        String   @id
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  nameAr    String
+  amount    Int
+  unit      String
+  unitAr    String
+  basePrice Int
+  salePrice Int?
+  currency  String   @default("IQD")
+  inStock   Boolean  @default(true)
+  isPopular Boolean  @default(false)
+  sortOrder Int      @default(0)
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([productId, inStock, sortOrder])
+  @@map("topup_packages")
+}
+
+model Order {
+  id              String           @id
+  userId          String
+  user            User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+  productId       String
+  product         Product          @relation(fields: [productId], references: [id], onDelete: Restrict)
+  packageId       String
+  package         TopupPackage     @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  gameName        String
+  packageName     String
+  gameUserId      String
+  gameUsername    String?
+  zoneId          String?
+  quantity        Int              @default(1)
+  unitPrice       Int
+  totalPrice      Int
+  discount        Int              @default(0)
+  finalPrice      Int
+  currency        String           @default("IQD")
+  status          OrderStatus      @default(PENDING)
+  paymentMethod   PaymentMethod
+  paymentStatus   PaymentStatus    @default(PENDING)
+  providerId      String?
+  providerOrderId String?
+  paymentAttempts PaymentAttempt[]
+  providerRequests ProviderRequest[]
+  walletTransactions WalletTransaction[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  completedAt     DateTime?
+  refundedAt      DateTime?
+  refundReason    String?
+
+  @@index([userId, createdAt])
+  @@index([status, paymentStatus])
+  @@map("orders")
+}
+
+model PaymentAttempt {
+  id          String        @id @default(cuid())
+  orderId     String
+  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  method      PaymentMethod
+  status      PaymentStatus @default(PENDING)
+  amount      Int
+  currency    String        @default("IQD")
+  providerRef String?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([orderId, status])
+  @@map("payment_attempts")
+}
+
+model WalletTransaction {
+  id            String                @id @default(cuid())
+  userId        String
+  user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId       String?
+  order         Order?                @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  type          WalletTransactionType
+  amount        Int
+  currency      String                @default("IQD")
+  balance       Int
+  description   String
+  descriptionAr String
+  reference     String?
+  createdAt     DateTime              @default(now())
+
+  @@index([userId, createdAt])
+  @@map("wallet_transactions")
+}
+
+model ProviderRequest {
+  id              String                @id @default(cuid())
+  orderId         String?
+  order           Order?                @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  provider        String
+  action          String
+  status          ProviderRequestStatus @default(PENDING)
+  providerOrderId String?
+  requestPayload  Json?
+  responsePayload Json?
+  error           String?
+  createdAt       DateTime              @default(now())
+
+  @@index([orderId, provider, action])
+  @@map("provider_requests")
+}
+
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  adminId    String?
+  admin      User?    @relation("AdminAuditActor", fields: [adminId], references: [id], onDelete: SetNull)
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([adminId, createdAt])
+  @@map("admin_audit_logs")
+}

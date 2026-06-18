@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
@@ -19,13 +19,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  dashboardStats,
-  revenueData,
-  sampleOrders,
-  providers,
-  games,
   promotions,
 } from '@/data/mock-data';
+import type { DashboardStats, Game, Order, Provider, User, WalletTransaction } from '@/types';
 import {
   LayoutDashboard,
   Users,
@@ -61,7 +57,79 @@ export default function AdminDashboard() {
   const { t, language, dir } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    activeUsers: 0,
+    totalOrders: 0,
+    completedOrders: 0,
+    failedOrders: 0,
+    totalRevenue: 0,
+    todayRevenue: 0,
+    avgOrderValue: 0,
+    conversionRate: 0,
+    refundRate: 0,
+  });
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Game[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
+  const [adminError, setAdminError] = useState<string | null>(null);
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSummary() {
+      const response = await fetch('/api/admin/summary', { credentials: 'include' });
+      const payload = await response.json().catch(() => null);
+
+      if (!active) return;
+
+      if (!response.ok) {
+        setAdminError(payload?.error ?? 'Admin data unavailable');
+        return;
+      }
+
+      setDashboardStats(payload.stats);
+      setOrders(payload.orders ?? []);
+      setProducts(payload.products ?? []);
+      setProviders(payload.providers ?? []);
+      setUsers(payload.users ?? []);
+      setWalletTransactions(payload.walletTransactions ?? []);
+      setAdminError(null);
+    }
+
+    void loadSummary();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const revenueData = useMemo(() => {
+    const days = Array.from({ length: 7 }, (_, index) => {
+      const date = new Date();
+      date.setDate(date.getDate() - (6 - index));
+      date.setHours(0, 0, 0, 0);
+      return {
+        date: date.toISOString(),
+        revenue: 0,
+        orders: 0,
+        refunds: 0,
+      };
+    });
+
+    for (const order of orders) {
+      const day = days.find((item) => item.date.slice(0, 10) === order.createdAt.slice(0, 10));
+      if (!day) continue;
+      day.orders += 1;
+      if (order.paymentStatus === 'completed') day.revenue += order.finalPrice;
+      if (order.status === 'refunded') day.refunds += 1;
+    }
+
+    return days;
+  }, [orders]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale).format(amount);
@@ -110,13 +178,13 @@ export default function AdminDashboard() {
     return t(labels[status]?.en ?? status, labels[status]?.ar ?? status);
   };
 
-  const getOrderGameName = (order: (typeof sampleOrders)[number]) => {
-    const game = games.find(item => item.id === order.gameId);
+  const getOrderGameName = (order: Order) => {
+    const game = products.find(item => item.id === order.gameId);
     return game ? t(game.name, game.nameAr) : t(order.gameName, order.gameName);
   };
 
-  const getOrderPackageName = (order: (typeof sampleOrders)[number]) => {
-    const game = games.find(item => item.id === order.gameId);
+  const getOrderPackageName = (order: Order) => {
+    const game = products.find(item => item.id === order.gameId);
     const gamePackage = game?.packages.find(item => item.id === order.packageId);
     return gamePackage ? t(gamePackage.name, gamePackage.nameAr) : t(order.packageName, order.packageName);
   };
@@ -217,6 +285,12 @@ export default function AdminDashboard() {
 
         {/* Main Content */}
         <main className={`min-w-0 flex-1 p-4 transition-all duration-300 sm:p-6 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
+          {adminError && (
+            <Card className="mb-6 border-rose-500/30 bg-rose-500/10 p-4">
+              <p className="text-sm text-rose-200">{adminError}</p>
+            </Card>
+          )}
+
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Stats Grid */}
@@ -348,7 +422,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sampleOrders.map((order) => (
+                    {orders.map((order) => (
                       <TableRow key={order.id} className="border-emerald-800/20">
                         <TableCell className="font-mono text-sm text-white">{order.id}</TableCell>
                         <TableCell className="text-white">{getOrderGameName(order)}</TableCell>
@@ -401,7 +475,7 @@ export default function AdminDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sampleOrders.map((order) => (
+                    {orders.map((order) => (
                       <TableRow key={order.id} className="border-emerald-800/20">
                         <TableCell className="font-mono text-sm text-white">{order.id}</TableCell>
                         <TableCell className="text-white">{getOrderGameName(order)}</TableCell>
@@ -441,7 +515,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {games.slice(0, 6).map((game) => (
+                {products.slice(0, 6).map((game) => (
                   <Card key={game.id} className="bg-slate-900/50 border-emerald-800/20 p-4">
                     <div className="flex items-start gap-4">
                       <div className="w-16 h-16 rounded-lg bg-slate-800 overflow-hidden">
@@ -577,7 +651,69 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab !== 'overview' && activeTab !== 'orders' && activeTab !== 'products' && activeTab !== 'providers' && activeTab !== 'promotions' && (
+          {activeTab === 'users' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-white">{t('Users', 'المستخدمين')}</h2>
+              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-emerald-800/20">
+                      <TableHead className="text-white/50">{t('Name', 'الاسم')}</TableHead>
+                      <TableHead className="text-white/50">{t('Phone Number', 'رقم الهاتف')}</TableHead>
+                      <TableHead className="text-white/50">{t('Wallet', 'المحفظة')}</TableHead>
+                      <TableHead className="text-white/50">{t('Total Spent', 'إجمالي الإنفاق')}</TableHead>
+                      <TableHead className="text-white/50">{t('Last Login', 'آخر دخول')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((account) => (
+                      <TableRow key={account.id} className="border-emerald-800/20">
+                        <TableCell className="text-white">{account.name}</TableCell>
+                        <TableCell className="text-white/70">{account.phone}</TableCell>
+                        <TableCell className="text-emerald-400">{formatCurrency(account.walletBalance)} IQD</TableCell>
+                        <TableCell className="text-white/70">{formatCurrency(account.totalSpent)} IQD</TableCell>
+                        <TableCell className="text-white/50 text-sm">{formatDate(account.lastLogin)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === 'wallets' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-white">{t('Wallets', 'المحافظ')}</h2>
+              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-emerald-800/20">
+                      <TableHead className="text-white/50">{t('Reference', 'المرجع')}</TableHead>
+                      <TableHead className="text-white/50">{t('Description', 'الوصف')}</TableHead>
+                      <TableHead className="text-white/50">{t('Amount', 'المبلغ')}</TableHead>
+                      <TableHead className="text-white/50">{t('Balance', 'الرصيد')}</TableHead>
+                      <TableHead className="text-white/50">{t('Date', 'التاريخ')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {walletTransactions.map((transaction) => (
+                      <TableRow key={transaction.id} className="border-emerald-800/20">
+                        <TableCell className="font-mono text-xs text-white/70">{transaction.reference ?? transaction.id}</TableCell>
+                        <TableCell className="text-white">{t(transaction.description, transaction.descriptionAr)}</TableCell>
+                        <TableCell className={transaction.amount >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                          {transaction.amount >= 0 ? '+' : ''}{formatCurrency(transaction.amount)} IQD
+                        </TableCell>
+                        <TableCell className="text-white/70">{formatCurrency(transaction.balance)} IQD</TableCell>
+                        <TableCell className="text-white/50 text-sm">{formatDate(transaction.createdAt)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
+            </div>
+          )}
+
+          {activeTab !== 'overview' && activeTab !== 'orders' && activeTab !== 'products' && activeTab !== 'providers' && activeTab !== 'promotions' && activeTab !== 'users' && activeTab !== 'wallets' && (
             <div className="flex flex-col items-center justify-center h-96">
               <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
                 <Activity className="w-10 h-10 text-white/20" />

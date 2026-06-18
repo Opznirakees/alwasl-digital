@@ -1,12 +1,13 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { Header } from '@/components/layout/Header';
 import { HeroBanner } from '@/components/home/HeroBanner';
-import { games } from '@/data/mock-data';
 import { wahoShowcaseImages } from '@/data/waho-images';
+import type { Game } from '@/types';
 import {
   ArrowRight,
   Zap,
@@ -20,10 +21,28 @@ import {
 
 export default function HomePage() {
   const { t, dir, language } = useApp();
-  const wahoTopUp = games[0];
-  const topUpPackages = wahoTopUp.packages.filter((pkg) => pkg.inStock);
+  const [wahoTopUp, setWahoTopUp] = useState<Game | null>(null);
+  const topUpPackages = wahoTopUp?.packages.filter((pkg) => pkg.inStock) ?? [];
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
   const formatAmount = (amount: number) => new Intl.NumberFormat(locale).format(amount);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProduct() {
+      const response = await fetch('/api/products/waho-top-up');
+      if (response.ok) {
+        const payload = await response.json();
+        if (active) setWahoTopUp(payload.product);
+      }
+    }
+
+    void loadProduct();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <div className={`min-h-screen ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
@@ -172,7 +191,7 @@ export default function HomePage() {
               {topUpPackages.map((pkg) => (
                 <Link
                   key={pkg.id}
-                  href={`/top-up/${wahoTopUp.slug}`}
+                  href={`/top-up/${wahoTopUp?.slug ?? 'waho-top-up'}`}
                   className="group rounded-lg border border-black/10 bg-zinc-50 p-4 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-white/10 dark:bg-zinc-950 dark:hover:border-blue-300/60 dark:hover:bg-blue-950/30"
                 >
                   <p className="text-xl font-semibold text-zinc-950 dark:text-white">
@@ -207,7 +226,7 @@ export default function HomePage() {
               ))}
             </div>
             <Link
-              href={`/top-up/${wahoTopUp.slug}`}
+              href={`/top-up/${wahoTopUp?.slug ?? 'waho-top-up'}`}
               className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
             >
               {t('Top up WAHO', 'اشحن WAHO', '充值 WAHO')}
