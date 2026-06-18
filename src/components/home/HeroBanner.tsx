@@ -144,7 +144,7 @@ export function HeroBanner() {
           <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-black/10 bg-zinc-950 p-3 text-white dark:border-white/10">
             <div className="flex items-center gap-2">
               <ReceiptText className="h-4 w-4 text-blue-300" />
-              <span className="text-xs font-medium">{t('Order ID after payment', 'رقم الطلب بعد الدفع', '付款后生成订单号')}</span>
+              <span className="text-xs font-medium text-zinc-100">{t('Order ID after payment', 'رقم الطلب بعد الدفع', '付款后生成订单号')}</span>
             </div>
             <CheckCircle2 className="h-4 w-4 text-[#34c759]" />
           </div>

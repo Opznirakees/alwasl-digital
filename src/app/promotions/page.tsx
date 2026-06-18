@@ -113,7 +113,7 @@ export default function PromotionsPage() {
                         <Link
                           key={game.id}
                           href={`/top-up/${game.slug}`}
-                          className="relative aspect-[750/1624] w-14 flex-shrink-0 overflow-hidden rounded-md border border-black/10 bg-zinc-100"
+                          className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-md border border-black/10 bg-zinc-100"
                         >
                           <Image
                             src={topUpIconSrc}
