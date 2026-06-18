@@ -4,6 +4,7 @@ import { getPromotionState } from '../src/app/promotions/promotion-state';
 import { walletTopUpDialogCopy } from '../src/app/wallet/wallet-dialog-copy';
 import { mobileMenuSheetCopy } from '../src/components/layout/mobile-menu-copy';
 import { resolveOtpPhone } from '../src/contexts/auth-flow';
+import { wahoShowcaseImages, wahoShowcaseIntro } from '../src/data/waho-images';
 import { hashOtp, safeCompare } from '../src/server/crypto';
 import { calculateOrderPricing, createOrderId } from '../src/server/domain/orders';
 import { resolveFakePaymentResult } from '../src/server/domain/payments';
@@ -117,6 +118,21 @@ describe('mobile menu accessibility copy', () => {
     expect(mobileMenuSheetCopy.description.en).toContain('navigation');
     expect(mobileMenuSheetCopy.description.ar.length).toBeGreaterThan(10);
     expect(mobileMenuSheetCopy.description.zh.length).toBeGreaterThan(5);
+  });
+});
+
+describe('WAHO screenshot showcase copy', () => {
+  test('presents the images as WAHO app screenshots instead of a fake top-up flow', () => {
+    expect(wahoShowcaseIntro.title.en).toBe('Screenshots from the WAHO app');
+    expect(wahoShowcaseIntro.body.en).toContain('recognize');
+    expect(wahoShowcaseIntro.body.en.toLowerCase()).not.toContain('top-up flow');
+
+    const labels = wahoShowcaseImages.map((item) => item.label.en);
+
+    expect(labels).not.toContain('Top-up amount');
+    expect(labels).not.toContain('Order status');
+    expect(labels).not.toContain('Confirmation');
+    expect(wahoShowcaseImages.every((item) => item.src.startsWith('/waho/'))).toBe(true);
   });
 });
 

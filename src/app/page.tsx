@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { Header } from '@/components/layout/Header';
 import { HeroBanner } from '@/components/home/HeroBanner';
-import { wahoShowcaseImages } from '@/data/waho-images';
+import { wahoShowcaseImages, wahoShowcaseIntro } from '@/data/waho-images';
 import type { Game } from '@/types';
 import {
   ArrowRight,
@@ -135,32 +135,29 @@ export default function HomePage() {
 
         <section className="space-y-5">
           <div className="max-w-2xl">
-            <h2 className="text-2xl font-semibold text-zinc-950">
-              {t('WAHO top-up flow', 'مسار شحن WAHO', 'WAHO 充值流程')}
+            <h2 className="text-2xl font-semibold text-zinc-950 dark:text-white">
+              {t(wahoShowcaseIntro.title.en, wahoShowcaseIntro.title.ar, wahoShowcaseIntro.title.zh)}
             </h2>
-            <p className="mt-1 text-sm leading-6 text-zinc-500">
-              {t(
-                'The flow stays focused on one task: confirm the WAHO account and complete the top-up clearly.',
-                'يبقى المسار مركزاً على مهمة واحدة: تأكيد حساب WAHO وإكمال الشحن بوضوح.',
-                '流程专注于一件事：确认 WAHO 账号并清晰完成充值。'
-              )}
+            <p className="mt-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              {t(wahoShowcaseIntro.body.en, wahoShowcaseIntro.body.ar, wahoShowcaseIntro.body.zh)}
             </p>
           </div>
 
           <div className="-mx-4 overflow-x-auto px-4 pb-2 md:mx-0 md:overflow-visible md:px-0">
             <div className="grid auto-cols-[148px] grid-flow-col gap-3 md:grid-flow-row md:grid-cols-7 md:auto-cols-auto">
               {wahoShowcaseImages.map((item) => (
-                <article key={item.src} className="rounded-lg border border-black/10 bg-white p-1.5">
-                  <div className="relative aspect-[750/1624] overflow-hidden rounded-md bg-zinc-100">
+                <article key={item.src} className="rounded-lg border border-black/10 bg-white p-1.5 dark:border-white/10 dark:bg-zinc-900">
+                  <div className="relative aspect-[750/1624] overflow-hidden rounded-md bg-zinc-100 dark:bg-zinc-950">
                     <Image
                       src={item.src}
                       alt={t(`WAHO ${item.label.en}`, `WAHO ${item.label.ar}`, `WAHO ${item.label.zh}`)}
                       fill
                       className="object-cover"
                       sizes="(min-width: 768px) 14vw, 148px"
+                      quality={90}
                     />
                   </div>
-                  <p className="truncate px-1.5 py-2 text-center text-xs font-medium text-zinc-700">
+                  <p className="truncate px-1.5 py-2 text-center text-xs font-medium text-zinc-700 dark:text-zinc-300">
                     {t(item.label.en, item.label.ar, item.label.zh)}
                   </p>
                 </article>

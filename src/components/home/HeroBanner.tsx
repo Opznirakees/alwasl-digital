@@ -23,17 +23,17 @@ const heroScreenshots = [
   {
     src: wahoScreenshots.onlineParties,
     alt: {
-      en: 'WAHO account screenshot',
-      ar: 'لقطة شاشة لحساب WAHO',
-      zh: 'WAHO 账号截图',
+      en: 'WAHO voice room screenshot',
+      ar: 'لقطة شاشة لغرفة صوتية في WAHO',
+      zh: 'WAHO 语音房间截图',
     },
   },
   {
     src: wahoScreenshots.casualGames,
     alt: {
-      en: 'WAHO top-up amount screenshot',
-      ar: 'لقطة شاشة لمبلغ شحن WAHO',
-      zh: 'WAHO 充值金额截图',
+      en: 'WAHO app screenshot',
+      ar: 'لقطة شاشة من تطبيق WAHO',
+      zh: 'WAHO 应用截图',
     },
   },
 ];

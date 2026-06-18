@@ -8,33 +8,46 @@ export const wahoScreenshots = {
   audioRoom: '/waho/audio-room.webp',
 } as const;
 
+export const wahoShowcaseIntro = {
+  title: {
+    en: 'Screenshots from the WAHO app',
+    ar: 'لقطات من تطبيق WAHO',
+    zh: 'WAHO 应用截图',
+  },
+  body: {
+    en: 'These app screenshots help customers recognize WAHO clearly before choosing a recharge amount.',
+    ar: 'هذه الصور للتعرّف على التطبيق: يمكن للعملاء تمييز WAHO بوضوح قبل اختيار مبلغ الشحن.',
+    zh: '这些图片用于识别应用：客户可清楚确认 WAHO，然后选择充值金额。',
+  },
+} as const;
+
 export const wahoShowcaseImages = [
   {
     src: wahoScreenshots.liveStream,
-    label: { en: 'WAHO app', ar: 'تطبيق WAHO', zh: 'WAHO 应用' },
+    label: { en: 'Live screen', ar: 'شاشة البث', zh: '直播界面' },
   },
   {
     src: wahoScreenshots.onlineParties,
-    label: { en: 'Account', ar: 'الحساب', zh: '账号' },
+    label: { en: 'Voice room', ar: 'غرفة صوتية', zh: '语音房间' },
   },
   {
     src: wahoScreenshots.friends,
-    label: { en: 'Profile', ar: 'الملف', zh: '资料' },
+    label: { en: 'Friends screen', ar: 'شاشة الأصدقاء', zh: '好友界面' },
   },
   {
     src: wahoScreenshots.casualGames,
-    label: { en: 'Top-up amount', ar: 'مبلغ الشحن', zh: '充值金额' },
+    label: { en: 'App screen', ar: 'شاشة التطبيق', zh: '应用界面' },
   },
   {
     src: wahoScreenshots.privateChat,
-    label: { en: 'Confirmation', ar: 'التأكيد', zh: '确认' },
+    label: { en: 'Private chat', ar: 'محادثة خاصة', zh: '私聊界面' },
   },
   {
     src: wahoScreenshots.partyRoom,
-    label: { en: 'Order status', ar: 'حالة الطلب', zh: '订单状态' },
+    label: { en: 'Gift screen', ar: 'شاشة الهدايا', zh: '礼物界面' },
   },
   {
     src: wahoScreenshots.audioRoom,
-    label: { en: 'Support', ar: 'الدعم', zh: '支持' },
+    label: { en: 'Audio room', ar: 'غرفة صوتية', zh: '语音房间' },
   },
 ] as const;
