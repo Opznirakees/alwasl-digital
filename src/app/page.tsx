@@ -109,7 +109,7 @@ export default function HomePage() {
         </section>
 
         {/* Quick Stats */}
-        <section className="grid grid-cols-2 overflow-hidden rounded-lg border border-black/10 bg-white md:grid-cols-4">
+        <section className="grid grid-cols-2 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10 dark:bg-zinc-900 md:grid-cols-4">
           {[
             { icon: <BadgeCheck className="w-4 h-4" />, label: t('WAHO ID', 'معرف WAHO', 'WAHO ID'), value: t('Checked', 'يتم فحصه', '已检查') },
             { icon: <Zap className="w-4 h-4" />, label: t('Recharge', 'الشحن', '充值'), value: t('After payment', 'بعد الدفع', '付款后') },
@@ -118,15 +118,15 @@ export default function HomePage() {
           ].map((stat, i) => (
             <div
               key={i}
-              className={`border-black/10 p-4 ${i % 2 === 1 ? 'border-l' : ''} ${i > 1 ? 'border-t' : ''} ${i > 0 ? 'md:border-l' : ''} md:border-t-0`}
+              className={`border-black/10 p-4 dark:border-white/10 ${i % 2 === 1 ? 'border-l' : ''} ${i > 1 ? 'border-t' : ''} ${i > 0 ? 'md:border-l' : ''} md:border-t-0`}
             >
               <div className="flex items-start gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-zinc-50 text-blue-600">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-zinc-50 text-blue-600 dark:bg-zinc-950 dark:text-blue-300">
                   {stat.icon}
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500">{stat.label}</p>
-                  <p className="mt-0.5 text-lg font-semibold text-zinc-950">{stat.value}</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">{stat.label}</p>
+                  <p className="mt-0.5 text-lg font-semibold text-zinc-950 dark:text-white">{stat.value}</p>
                 </div>
               </div>
             </div>
@@ -235,22 +235,22 @@ export default function HomePage() {
         </section>
 
         {/* WhatsApp Contact */}
-        <section className="overflow-hidden rounded-lg border border-black/10 bg-white p-6">
+        <section className="overflow-hidden rounded-lg border border-black/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-900">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-50 text-[#1f8f3a]">
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-50 text-[#1f8f3a] dark:bg-zinc-950 dark:text-[#34c759]">
                 <MessageCircle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-zinc-950">{t('Need WAHO Support?', 'تحتاج دعم WAHO؟')}</h3>
-                <p className="text-sm text-zinc-600">{t('Contact us for WAHO top-ups, orders, or account help.', 'تواصل معنا لدعم شحن WAHO أو الطلبات أو الحساب.')}</p>
+                <h3 className="text-lg font-semibold text-zinc-950 dark:text-white">{t('Need WAHO Support?', 'تحتاج دعم WAHO؟')}</h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-300">{t('Contact us for WAHO top-ups, orders, or account help.', 'تواصل معنا لدعم شحن WAHO أو الطلبات أو الحساب.')}</p>
               </div>
             </div>
             <a
               href="https://wa.me/9647812345678"
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-md border border-black/10 bg-white px-6 py-3 font-semibold text-zinc-800 transition-colors hover:bg-zinc-50"
+              className="rounded-md border border-black/10 bg-white px-6 py-3 font-semibold text-zinc-800 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:hover:bg-white/10"
             >
               {t('Chat on WhatsApp', 'تواصل عبر واتساب')}
             </a>
@@ -259,12 +259,12 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-black/10 bg-white mt-20">
+      <footer className="border-t border-black/10 bg-white mt-20 dark:border-white/10 dark:bg-zinc-950">
         <div className="container mx-auto px-4 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-3 mb-4">
-                <div className="relative w-12 h-12 rounded-xl bg-white p-1 overflow-hidden ring-1 ring-blue-900/10">
+                <div className="relative w-12 h-12 rounded-xl bg-white p-1 overflow-hidden ring-1 ring-blue-900/10 dark:ring-white/10">
                   <Image
                     src="/brand/alwasl-mark.jpg"
                     alt={t('Al-Wasl Digital Services', 'الوصل للخدمات الإلكترونية')}
@@ -274,18 +274,18 @@ export default function HomePage() {
                   />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-zinc-950">{t('Al-Wasl Digital', 'الوصل')}</h3>
-                  <p className="text-[10px] text-blue-700">{t('Electronic services', 'للخدمات الإلكترونية')}</p>
+                  <h3 className="font-semibold text-zinc-950 dark:text-white">{t('Al-Wasl Digital', 'الوصل')}</h3>
+                  <p className="text-[10px] text-blue-700 dark:text-blue-300">{t('Electronic services', 'للخدمات الإلكترونية')}</p>
                 </div>
               </div>
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 {t('Fast WAHO top-ups with clear amounts, local payment options, and customer support.', 'شحن WAHO سريع بمبالغ واضحة وخيارات دفع محلية ودعم للعملاء.', '快速 WAHO 充值，金额清晰，支持本地支付和客户服务。')}
               </p>
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4 text-zinc-950">{t('WAHO Links', 'روابط WAHO')}</h4>
-              <ul className="space-y-2 text-sm text-zinc-500">
+              <h4 className="font-semibold mb-4 text-zinc-950 dark:text-white">{t('WAHO Links', 'روابط WAHO')}</h4>
+              <ul className="space-y-2 text-sm text-zinc-500 dark:text-zinc-400">
                 <li><Link href="/top-up" className="transition-colors hover:text-blue-600">{t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}</Link></li>
                 <li><Link href="/promotions" className="transition-colors hover:text-blue-600">{t('WAHO Offers', 'عروض WAHO')}</Link></li>
                 <li><Link href="/help" className="transition-colors hover:text-blue-600">{t('How it works', 'كيف تعمل الخدمة')}</Link></li>
@@ -294,8 +294,8 @@ export default function HomePage() {
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4 text-zinc-950">{t('Support', 'الدعم')}</h4>
-              <ul className="space-y-2 text-sm text-zinc-500">
+              <h4 className="font-semibold mb-4 text-zinc-950 dark:text-white">{t('Support', 'الدعم')}</h4>
+              <ul className="space-y-2 text-sm text-zinc-500 dark:text-zinc-400">
                 <li><Link href="/faq" className="transition-colors hover:text-blue-600">{t('FAQ', 'الأسئلة الشائعة')}</Link></li>
                 <li><Link href="/help" className="transition-colors hover:text-blue-600">{t('Help Center', 'مركز المساعدة')}</Link></li>
                 <li><Link href="/terms" className="transition-colors hover:text-blue-600">{t('Terms of Service', 'شروط الخدمة')}</Link></li>
@@ -304,10 +304,10 @@ export default function HomePage() {
             </div>
 
             <div>
-              <h4 className="font-semibold mb-4 text-zinc-950">{t('Payment Methods', 'طرق الدفع')}</h4>
+              <h4 className="font-semibold mb-4 text-zinc-950 dark:text-white">{t('Payment Methods', 'طرق الدفع')}</h4>
               <div className="flex flex-wrap gap-2">
                 {['ZainCash', 'AsiaHawala', 'Visa', 'Mastercard', 'USDT'].map((method) => (
-                  <span key={method} className="px-3 py-1.5 rounded-md border border-black/10 bg-zinc-50 text-xs text-zinc-600">
+                  <span key={method} className="px-3 py-1.5 rounded-md border border-black/10 bg-zinc-50 text-xs text-zinc-600 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300">
                     {method}
                   </span>
                 ))}
@@ -315,16 +315,22 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="border-t border-black/10 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="border-t border-black/10 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 dark:border-white/10">
             <p className="text-xs text-zinc-400">
               © 2026 {t('Al-Wasl Digital Services', 'الوصل للخدمات الإلكترونية')}. {t('All rights reserved.', 'جميع الحقوق محفوظة.')}
             </p>
             <div className="flex items-center gap-4">
-              {['Facebook', 'Twitter', 'Instagram', 'WhatsApp'].map((social) => (
-                <Link key={social} href="#" className="transition-colors text-xs text-zinc-400 hover:text-blue-600">
-                  {social}
-                </Link>
-              ))}
+              <Link href="/contact" className="transition-colors text-xs text-zinc-400 hover:text-blue-600 dark:hover:text-blue-300">
+                {t('Contact', 'اتصل بنا')}
+              </Link>
+              <a
+                href="https://wa.me/9647812345678"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors text-xs text-zinc-400 hover:text-blue-600 dark:hover:text-blue-300"
+              >
+                {t('WhatsApp support', 'دعم واتساب', 'WhatsApp 支持')}
+              </a>
             </div>
           </div>
         </div>

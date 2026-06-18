@@ -86,7 +86,12 @@ export default function GamePage({ params }: GamePageProps) {
 
   const discount = user ? user.discountPercentage : 0;
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
-  const isWahoImage = game.image.startsWith('/waho/');
+  const topUpIconSrc = '/brand/alwasl-mark.jpg';
+  const topUpSignals = [
+    { label: t('Secure checkout', 'دفع آمن', '安全结账'), icon: Shield },
+    { label: t('Fast top-up', 'شحن سريع', '快速充值'), icon: Zap },
+    { label: t('Simple steps', 'خطوات بسيطة', '简单步骤'), icon: Sparkles },
+  ];
 
   const calculateFinalPrice = (pkg: GamePackage) => {
     const basePrice = pkg.salePrice || pkg.basePrice;
@@ -218,42 +223,41 @@ export default function GamePage({ params }: GamePageProps) {
           {t('Back', 'رجوع')}
         </Link>
 
-        <section className="mb-5 grid gap-4 rounded-lg border border-black/10 bg-white p-4 md:grid-cols-[1fr_auto] md:p-5">
+        <section className="mb-5 grid gap-4 rounded-lg border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-900 md:grid-cols-[1fr_auto] md:p-5">
           <div className="flex items-start gap-4">
             <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white">
-              <Image src={game.image} alt="" fill className={isWahoImage ? 'object-cover' : 'object-contain p-1'} priority />
+              <Image src={topUpIconSrc} alt="" fill className="object-contain p-1" priority />
             </div>
             <div className="min-w-0">
               <p className="text-xs font-medium uppercase text-blue-600">WAHO</p>
-              <h1 className="mt-1 text-2xl font-semibold leading-tight text-zinc-950">
+              <h1 className="mt-1 text-2xl font-semibold leading-tight text-zinc-950 dark:text-white">
                 {t(game.name, game.nameAr)}
               </h1>
-              <p className="mt-1 text-sm text-zinc-500">{t(game.publisher, game.publisher)}</p>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{t(game.publisher, game.publisher)}</p>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">
                 {t(game.description, game.descriptionAr)}
               </p>
             </div>
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
-            <div className="relative h-28 w-14 flex-shrink-0 overflow-hidden rounded-md border border-black/10 bg-zinc-100">
-              <Image
-                src={game.banner || game.image}
-                alt={t(game.name, game.nameAr)}
-                fill
-                className={isWahoImage ? 'object-cover' : 'object-contain p-3'}
-                sizes="56px"
-              />
+            <div className="w-44 rounded-lg border border-black/10 bg-zinc-50 p-3 dark:border-white/10 dark:bg-zinc-950">
+              <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                {t('Top-up route', 'مسار الشحن', '充值流程')}
+              </p>
+              <div className="mt-2 flex items-center gap-2 text-sm font-semibold text-zinc-950 dark:text-white">
+                <span>WAHO ID</span>
+                <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
+                <span>IQD</span>
+                <ChevronRight className="h-3.5 w-3.5 text-zinc-400" />
+                <span>{t('Pay', 'ادفع', '付款')}</span>
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              {[
-                { label: t('Secure checkout', 'دفع آمن'), icon: Shield },
-                { label: t('Fast top-up', 'شحن سريع'), icon: Zap },
-                { label: t('Simple steps', 'خطوات بسيطة'), icon: Sparkles },
-              ].map((item) => (
-                <div key={item.label} className="w-20 rounded-md bg-zinc-100 p-2 text-center">
+              {topUpSignals.map((item) => (
+                <div key={item.label} className="w-20 rounded-md bg-zinc-100 p-2 text-center dark:bg-zinc-950">
                   <item.icon className="mx-auto h-4 w-4 text-blue-600" />
-                  <p className="mt-1.5 text-[11px] font-medium leading-4 text-zinc-600">{item.label}</p>
+                  <p className="mt-1.5 text-[11px] font-medium leading-4 text-zinc-600 dark:text-zinc-300">{item.label}</p>
                 </div>
               ))}
             </div>
@@ -516,7 +520,7 @@ export default function GamePage({ params }: GamePageProps) {
                 <div className="space-y-4">
                   <div className="flex items-center gap-4 rounded-lg bg-zinc-100 p-4">
                     <div className="relative w-16 h-16 overflow-hidden rounded-lg bg-white ring-1 ring-black/10">
-                      <Image src={game.image} alt="" fill className={isWahoImage ? 'object-cover' : 'object-contain p-1'} />
+                      <Image src={topUpIconSrc} alt="" fill className="object-contain p-1" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-zinc-950">
@@ -582,7 +586,7 @@ export default function GamePage({ params }: GamePageProps) {
                 <div className="space-y-4">
                   <div className="flex items-center gap-4">
                     <div className="relative w-12 h-12 overflow-hidden rounded-lg bg-zinc-100 ring-1 ring-black/10">
-                      <Image src={game.image} alt="" fill className={isWahoImage ? 'object-cover' : 'object-contain p-1'} />
+                      <Image src={topUpIconSrc} alt="" fill className="object-contain p-1" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-zinc-950">

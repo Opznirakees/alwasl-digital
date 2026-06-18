@@ -18,6 +18,7 @@ export default function PromotionsPage() {
   const { t, language, dir, selectedCountry } = useApp();
   const [products, setProducts] = useState<Game[]>([]);
   const [now, setNow] = useState<Date | null>(null);
+  const topUpIconSrc = '/brand/alwasl-mark.jpg';
 
   useEffect(() => {
     let active = true;
@@ -115,10 +116,10 @@ export default function PromotionsPage() {
                           className="relative aspect-[750/1624] w-14 flex-shrink-0 overflow-hidden rounded-md border border-black/10 bg-zinc-100"
                         >
                           <Image
-                            src={game.image}
+                            src={topUpIconSrc}
                             alt={t(game.name, game.nameAr)}
                             fill
-                            className={game.image.startsWith('/waho/') ? 'object-cover' : 'object-contain p-1'}
+                            className="object-contain p-1"
                             sizes="56px"
                           />
                         </Link>

@@ -68,7 +68,6 @@ const zhTranslations: Record<string, string> = {
   'Search': '搜索',
   'Change language': '切换语言',
   'Notifications': '通知',
-  'Open cart': '打开购物车',
   'Open account menu': '打开账号菜单',
   'WAHO Services': 'WAHO 服务',
   'WAHO Offers': 'WAHO 优惠',
@@ -545,7 +544,6 @@ const zhTranslations: Record<string, string> = {
   'Your WAHO top-up has been completed!': '您的 WAHO 充值已完成！',
   'WAHO top-up discounts are available this week!': '本周有 WAHO 充值折扣！',
   'Continue top-up': '继续充值',
-  'Top-up cart': '充值清单',
   'Saved top-up items for checkout': '已保存待结账的充值项目',
   'Browse top-ups': '浏览充值',
 };

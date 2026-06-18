@@ -11,7 +11,9 @@ import type {
   RevenueData,
   Notification,
 } from '@/types';
-import { wahoScreenshots } from './waho-images';
+
+const wahoTopUpMark = '/brand/alwasl-mark.jpg';
+const wahoTopUpBanner = '/brand/alwasl-banner.jpg';
 
 // Countries
 export const countries: Country[] = [
@@ -86,8 +88,8 @@ export const games: Game[] = [
     nameAr: 'شحن حساب WAHO',
     description: 'Top up a WAHO account balance by entering the WAHO ID, choosing the amount, and paying securely.',
     descriptionAr: 'اشحن رصيد حساب WAHO عبر إدخال معرف WAHO واختيار المبلغ والدفع بأمان.',
-    image: wahoScreenshots.liveStream,
-    banner: wahoScreenshots.privateChat,
+    image: wahoTopUpMark,
+    banner: wahoTopUpBanner,
     category: 'social_media',
     publisher: 'Al-Wasl Digital',
     isPopular: true,
@@ -334,7 +336,7 @@ export const banners: Banner[] = [
     titleAr: 'شحن WAHO سريع',
     subtitle: 'Enter the WAHO ID, choose the amount, and complete the top-up securely.',
     subtitleAr: 'أدخل معرف WAHO واختر المبلغ وأكمل الشحن بأمان.',
-    image: wahoScreenshots.liveStream,
+    image: wahoTopUpBanner,
     gameId: 'waho-top-up',
     startDate: '2026-05-20T00:00:00Z',
     endDate: '2026-06-01T23:59:59Z',
@@ -347,7 +349,7 @@ export const banners: Banner[] = [
     titleAr: 'تأكد قبل الدفع',
     subtitle: 'Check the WAHO account details first so every top-up goes to the right account.',
     subtitleAr: 'تحقق من بيانات حساب WAHO أولاً ليصل كل شحن إلى الحساب الصحيح.',
-    image: wahoScreenshots.privateChat,
+    image: wahoTopUpMark,
     gameId: 'waho-top-up',
     startDate: '2026-05-15T00:00:00Z',
     endDate: '2026-06-15T23:59:59Z',
@@ -360,7 +362,7 @@ export const banners: Banner[] = [
     titleAr: 'تابع كل عملية شحن WAHO',
     subtitle: 'Follow pending, processing, completed, failed, and refunded statuses from one place.',
     subtitleAr: 'تابع حالات الانتظار والمعالجة والاكتمال والفشل والاسترداد من مكان واحد.',
-    image: wahoScreenshots.audioRoom,
+    image: wahoTopUpMark,
     gameId: 'waho-top-up',
     startDate: '2026-05-01T00:00:00Z',
     endDate: '2026-06-30T23:59:59Z',

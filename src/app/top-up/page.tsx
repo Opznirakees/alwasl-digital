@@ -22,6 +22,7 @@ export default function TopUpPage() {
   const [isLoading, setIsLoading] = useState(true);
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
   const formatAmount = (amount: number) => new Intl.NumberFormat(locale).format(amount);
+  const topUpIconSrc = '/brand/alwasl-mark.jpg';
 
   useEffect(() => {
     let active = true;
@@ -77,10 +78,10 @@ export default function TopUpPage() {
             <div className="flex items-start gap-4">
               <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-zinc-100 dark:border-white/10 dark:bg-zinc-950">
                 <Image
-                  src={wahoTopUp.image}
+                  src={topUpIconSrc}
                   alt={t(wahoTopUp.name, wahoTopUp.nameAr, 'WAHO 账号充值')}
                   fill
-                  className="object-cover"
+                  className="object-contain p-1"
                   sizes="64px"
                   priority
                 />

@@ -17,14 +17,12 @@ import {
   Menu,
   Globe,
   Wallet,
-  ShoppingCart,
   User,
   LogOut,
   History,
   Bell,
   Settings,
   ChevronDown,
-  Search,
   Moon,
   Sun,
 } from 'lucide-react';
@@ -47,7 +45,6 @@ export function Header() {
     isAuthenticated,
     logout,
     selectedCountry,
-    cartTotal,
     theme,
     toggleTheme,
   } = useApp();
@@ -112,13 +109,6 @@ export function Header() {
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   {t('WAHO Offers', 'عروض WAHO')}
-                </Link>
-                <Link
-                  href="/cart"
-                  className={`rounded-md px-3 py-2 text-base font-medium transition-colors ${isLight ? 'text-zinc-900 hover:bg-zinc-100 hover:text-blue-600' : 'text-zinc-100 hover:bg-white/10 hover:text-blue-300'}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {t('Top-up cart', 'سلة الشحن', '充值清单')}
                 </Link>
                 {isAuthenticated && (
                   <>
@@ -259,11 +249,6 @@ export function Header() {
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </Button>
 
-            {/* Search */}
-            <Button aria-label={t('Search', 'بحث')} variant="ghost" size="icon" className={`hidden md:flex ${isLight ? 'text-zinc-500 hover:text-blue-600 hover:bg-zinc-100' : 'text-zinc-300 hover:text-blue-300 hover:bg-white/10'}`}>
-              <Search className="h-4 w-4" />
-            </Button>
-
             {/* Language Selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -324,23 +309,6 @@ export function Header() {
                     2
                   </span>
                 </Button>
-
-                {/* Cart */}
-                <Link href="/cart">
-                  <Button
-                    aria-label={t('Open cart', 'افتح السلة')}
-                    variant="ghost"
-                    size="icon"
-                    className={`relative ${isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-zinc-200 hover:bg-white/10'}`}
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    {cartTotal > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-blue-600 text-white text-[10px] font-semibold flex items-center justify-center">
-                        {cartTotal}
-                      </span>
-                    )}
-                  </Button>
-                </Link>
 
                 {/* User Menu */}
                 <DropdownMenu>

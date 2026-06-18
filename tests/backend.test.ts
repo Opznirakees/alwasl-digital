@@ -6,6 +6,7 @@ import { getPromotionState } from '../src/app/promotions/promotion-state';
 import { walletTopUpDialogCopy } from '../src/app/wallet/wallet-dialog-copy';
 import { mobileMenuSheetCopy } from '../src/components/layout/mobile-menu-copy';
 import { resolveOtpPhone } from '../src/contexts/auth-flow';
+import { banners, games } from '../src/data/mock-data';
 import { wahoRechargeInfo } from '../src/data/waho-recharge-info';
 import { hashOtp, safeCompare } from '../src/server/crypto';
 import { calculateOrderPricing, createOrderId } from '../src/server/domain/orders';
@@ -146,6 +147,24 @@ describe('WAHO recharge section copy', () => {
       '3. Payment',
       '4. Order ID',
     ]);
+  });
+});
+
+describe('WAHO storefront visual assets', () => {
+  test('uses recharge and brand assets instead of app feature screenshots', () => {
+    const wahoProduct = games.find((game) => game.slug === 'waho-top-up');
+    expect(wahoProduct?.image).toBe('/brand/alwasl-mark.jpg');
+    expect(wahoProduct?.banner).toBe('/brand/alwasl-banner.jpg');
+
+    const storefrontImages = [
+      wahoProduct?.image,
+      wahoProduct?.banner,
+      ...banners.filter((banner) => banner.gameId === 'waho-top-up').map((banner) => banner.image),
+    ].filter(Boolean);
+
+    expect(storefrontImages.length).toBeGreaterThan(0);
+    expect(storefrontImages.every((image) => image?.startsWith('/brand/'))).toBe(true);
+    expect(storefrontImages.some((image) => image?.startsWith('/waho/'))).toBe(false);
   });
 });
 
