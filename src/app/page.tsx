@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { Header } from '@/components/layout/Header';
 import { HeroBanner } from '@/components/home/HeroBanner';
-import { wahoShowcaseImages, wahoShowcaseIntro } from '@/data/waho-images';
+import { wahoRechargeInfo } from '@/data/waho-recharge-info';
 import type { Game } from '@/types';
 import {
   ArrowRight,
@@ -133,36 +133,38 @@ export default function HomePage() {
           ))}
         </section>
 
-        <section className="space-y-5">
-          <div className="max-w-2xl">
-            <h2 className="text-2xl font-semibold text-zinc-950 dark:text-white">
-              {t(wahoShowcaseIntro.title.en, wahoShowcaseIntro.title.ar, wahoShowcaseIntro.title.zh)}
+        <section className="grid gap-5 md:grid-cols-[0.72fr_1.28fr] md:items-start">
+          <div>
+            <div className="inline-flex w-fit items-center gap-2 rounded-md border border-black/10 bg-white px-3 py-1.5 text-xs font-medium text-zinc-600 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300">
+              <BadgeCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-300" />
+              {t('Recharge checklist', 'قائمة فحص الشحن', '充值检查清单')}
+            </div>
+            <h2 className="mt-4 text-2xl font-semibold text-zinc-950 dark:text-white">
+              {t(wahoRechargeInfo.title.en, wahoRechargeInfo.title.ar, wahoRechargeInfo.title.zh)}
             </h2>
-            <p className="mt-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-              {t(wahoShowcaseIntro.body.en, wahoShowcaseIntro.body.ar, wahoShowcaseIntro.body.zh)}
+            <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              {t(wahoRechargeInfo.body.en, wahoRechargeInfo.body.ar, wahoRechargeInfo.body.zh)}
             </p>
+            <Link
+              href={`/top-up/${wahoTopUp?.slug ?? 'waho-top-up'}`}
+              className="mt-5 inline-flex h-10 items-center justify-center rounded-md bg-blue-600 px-4 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+            >
+              {t('Choose amount', 'اختر المبلغ', '选择金额')}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
           </div>
 
-          <div className="-mx-4 overflow-x-auto px-4 pb-2 md:mx-0 md:overflow-visible md:px-0">
-            <div className="grid auto-cols-[148px] grid-flow-col gap-3 md:grid-flow-row md:grid-cols-7 md:auto-cols-auto">
-              {wahoShowcaseImages.map((item) => (
-                <article key={item.src} className="rounded-lg border border-black/10 bg-white p-1.5 dark:border-white/10 dark:bg-zinc-900">
-                  <div className="relative aspect-[750/1624] overflow-hidden rounded-md bg-zinc-100 dark:bg-zinc-950">
-                    <Image
-                      src={item.src}
-                      alt={t(`WAHO ${item.label.en}`, `WAHO ${item.label.ar}`, `WAHO ${item.label.zh}`)}
-                      fill
-                      className="object-cover"
-                      sizes="(min-width: 768px) 14vw, 148px"
-                      quality={90}
-                    />
-                  </div>
-                  <p className="truncate px-1.5 py-2 text-center text-xs font-medium text-zinc-700 dark:text-zinc-300">
-                    {t(item.label.en, item.label.ar, item.label.zh)}
-                  </p>
-                </article>
-              ))}
-            </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {wahoRechargeInfo.cards.map((item) => (
+              <article key={item.title.en} className="rounded-lg border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-900">
+                <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                  {t(item.title.en, item.title.ar, item.title.zh)}
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                  {t(item.body.en, item.body.ar, item.body.zh)}
+                </p>
+              </article>
+            ))}
           </div>
         </section>
 

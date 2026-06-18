@@ -6,7 +6,7 @@ import { getPromotionState } from '../src/app/promotions/promotion-state';
 import { walletTopUpDialogCopy } from '../src/app/wallet/wallet-dialog-copy';
 import { mobileMenuSheetCopy } from '../src/components/layout/mobile-menu-copy';
 import { resolveOtpPhone } from '../src/contexts/auth-flow';
-import { wahoShowcaseImages, wahoShowcaseIntro } from '../src/data/waho-images';
+import { wahoRechargeInfo } from '../src/data/waho-recharge-info';
 import { hashOtp, safeCompare } from '../src/server/crypto';
 import { calculateOrderPricing, createOrderId } from '../src/server/domain/orders';
 import { resolveFakePaymentResult } from '../src/server/domain/payments';
@@ -123,24 +123,29 @@ describe('mobile menu accessibility copy', () => {
   });
 });
 
-describe('WAHO screenshot showcase copy', () => {
-  test('explains what WAHO balance is used for instead of describing screenshots', () => {
-    expect(wahoShowcaseIntro.title.en).toBe('What your WAHO balance is used for');
-    expect(wahoShowcaseIntro.body.en).toContain('correct WAHO ID');
-    expect(wahoShowcaseIntro.body.en).toContain('virtual gifts');
-    expect(wahoShowcaseIntro.title.en.toLowerCase()).not.toContain('screenshots');
-    expect(wahoShowcaseIntro.body.en.toLowerCase()).not.toContain('screenshots');
-    expect(wahoShowcaseIntro.body.en.toLowerCase()).not.toContain('recognize');
-    expect(wahoShowcaseIntro.body.en.toLowerCase()).not.toContain('top-up flow');
+describe('WAHO recharge section copy', () => {
+  test('keeps the homepage section focused on topping up instead of promoting app features', () => {
+    expect(wahoRechargeInfo.title.en).toBe('Before you top up WAHO');
+    expect(wahoRechargeInfo.body.en).toContain('only for WAHO account balance');
+    expect(wahoRechargeInfo.body.en).toContain('order ID');
 
-    const labels = wahoShowcaseImages.map((item) => item.label.en);
+    const content = [
+      wahoRechargeInfo.title.en,
+      wahoRechargeInfo.body.en,
+      ...wahoRechargeInfo.cards.flatMap((item) => [item.title.en, item.body.en]),
+    ].join(' ');
 
-    expect(labels).toContain('Live rooms');
-    expect(labels).toContain('Virtual gifts');
-    expect(labels).not.toContain('Top-up amount');
-    expect(labels).not.toContain('Order status');
-    expect(labels).not.toContain('Confirmation');
-    expect(wahoShowcaseImages.every((item) => item.src.startsWith('/waho/'))).toBe(true);
+    expect(content.toLowerCase()).not.toContain('screenshots');
+    expect(content.toLowerCase()).not.toContain('live rooms');
+    expect(content.toLowerCase()).not.toContain('private chats');
+    expect(content.toLowerCase()).not.toContain('virtual gifts');
+    expect(content.toLowerCase()).not.toContain('recognize');
+    expect(wahoRechargeInfo.cards.map((item) => item.title.en)).toEqual([
+      '1. WAHO ID',
+      '2. IQD amount',
+      '3. Payment',
+      '4. Order ID',
+    ]);
   });
 });
 
