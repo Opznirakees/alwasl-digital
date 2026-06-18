@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { shouldLoadAdminSummary } from '../src/app/admin/admin-access';
 import { getPromotionState } from '../src/app/promotions/promotion-state';
 import { walletTopUpDialogCopy } from '../src/app/wallet/wallet-dialog-copy';
@@ -139,6 +141,46 @@ describe('WAHO screenshot showcase copy', () => {
     expect(labels).not.toContain('Order status');
     expect(labels).not.toContain('Confirmation');
     expect(wahoShowcaseImages.every((item) => item.src.startsWith('/waho/'))).toBe(true);
+  });
+});
+
+describe('customer-facing copy quality', () => {
+  test('keeps public pages free from internal demo and placeholder language', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const customerFacingFiles = [
+      'src/app/about/page.tsx',
+      'src/app/contact/page.tsx',
+      'src/app/faq/page.tsx',
+      'src/app/privacy/page.tsx',
+      'src/app/terms/page.tsx',
+      'src/app/promotions/page.tsx',
+      'src/app/page.tsx',
+      'src/app/top-up/[slug]/page.tsx',
+      'src/app/auth/page.tsx',
+    ];
+    const bannedPatterns = [
+      /current release/i,
+      /demo-ready/i,
+      /placeholder policy/i,
+      /demo terms/i,
+      /sample data/i,
+      /simulated flows/i,
+      /most demo orders/i,
+      /demo support/i,
+      /use these demo offers/i,
+      /Demo Mode:/i,
+      /Use Demo Account/i,
+      /ready for a quick WAHO top-up/i,
+      /customers who know LEO.*recognize/i,
+      /LEO is highlighted/i,
+    ];
+
+    for (const file of customerFacingFiles) {
+      const source = readFileSync(join(repoRoot, file), 'utf8');
+      for (const pattern of bannedPatterns) {
+        expect(source, `${file} should not contain ${pattern}`).not.toMatch(pattern);
+      }
+    }
   });
 });
 

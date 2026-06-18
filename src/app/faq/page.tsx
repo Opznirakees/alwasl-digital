@@ -5,16 +5,16 @@ export default function FaqPage() {
     <InfoPage
       eyebrow={{ en: 'FAQ', ar: 'الأسئلة الشائعة' }}
       title={{ en: 'Quick answers before you place an order.', ar: 'إجابات سريعة قبل تنفيذ الطلب.' }}
-      subtitle={{ en: 'These answers describe the current demo behavior and the intended production flow.', ar: 'هذه الإجابات تشرح سلوك النسخة التجريبية والمسار المتوقع في الإنتاج.' }}
+      subtitle={{ en: 'Check the WAHO ID, payment method, currency, and order status before you continue.', ar: 'تحقق من معرف WAHO وطريقة الدفع والعملة وحالة الطلب قبل المتابعة.' }}
       actions={[{ label: { en: 'Start top-up', ar: 'ابدأ الشحن' }, href: '/top-up' }]}
       sections={[
         {
-          title: { en: 'How do I log in?', ar: 'كيف أسجل الدخول؟' },
-          body: { en: 'Enter any phone number and use OTP 123456 in demo mode.', ar: 'أدخل أي رقم هاتف واستخدم رمز 123456 في وضع التجربة.' },
+          title: { en: 'What do I need before ordering?', ar: 'ماذا أحتاج قبل الطلب؟' },
+          body: { en: 'Have the correct WAHO ID ready. The recharge is tied to that account, so check it before payment.', ar: 'جهز معرف WAHO الصحيح. الشحن مرتبط بهذا الحساب، لذلك تحقق منه قبل الدفع.' },
         },
         {
-          title: { en: 'Are orders real?', ar: 'هل الطلبات حقيقية؟' },
-          body: { en: 'Orders are simulated in the demo. Live orders will move through pending, processing, completed, failed, or refunded states.', ar: 'الطلبات محاكاة في النسخة التجريبية. في التشغيل الفعلي ستنتقل الطلبات بين حالات الانتظار والمعالجة والاكتمال أو الفشل أو الاسترداد.' },
+          title: { en: 'How do I follow an order?', ar: 'كيف أتابع الطلب؟' },
+          body: { en: 'Open My Orders to see whether the WAHO recharge is pending, processing, completed, failed, or refunded.', ar: 'افتح طلباتي لمعرفة ما إذا كان شحن WAHO قيد الانتظار أو المعالجة أو مكتمل أو فشل أو مسترد.' },
         },
         {
           title: { en: 'Which currency is used?', ar: 'ما العملة المستخدمة؟' },

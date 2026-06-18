@@ -5,11 +5,11 @@ export default function PrivacyPage() {
     <InfoPage
       eyebrow={{ en: 'Privacy Policy', ar: 'سياسة الخصوصية' }}
       title={{ en: 'Customer data should stay minimal, useful, and protected.', ar: 'يجب أن تبقى بيانات العملاء قليلة ومفيدة ومحمية.' }}
-      subtitle={{ en: 'This placeholder policy describes the intended data handling for the storefront.', ar: 'هذه السياسة المؤقتة تشرح طريقة التعامل المقصودة مع بيانات المتجر.' }}
+      subtitle={{ en: 'We only ask for the details needed to log in, process a WAHO recharge, verify payment, and support the order.', ar: 'نطلب فقط البيانات اللازمة لتسجيل الدخول وتنفيذ شحن WAHO والتحقق من الدفع ودعم الطلب.' }}
       sections={[
         {
           title: { en: 'Data collected', ar: 'البيانات التي يتم جمعها' },
-          body: { en: 'A production version may collect phone numbers, top-up order details, wallet transactions, payment references, and WAHO account identifiers.', ar: 'قد تجمع نسخة الإنتاج أرقام الهاتف وتفاصيل طلبات الشحن ومعاملات المحفظة ومراجع الدفع ومعرفات حسابات WAHO.' },
+          body: { en: 'We may collect phone numbers, WAHO account identifiers, order details, wallet transactions, and payment references.', ar: 'قد نجمع أرقام الهاتف ومعرفات حساب WAHO وتفاصيل الطلب ومعاملات المحفظة ومراجع الدفع.' },
         },
         {
           title: { en: 'Why it is used', ar: 'سبب الاستخدام' },
@@ -20,8 +20,8 @@ export default function PrivacyPage() {
           body: { en: 'Order data may be shared with payment and fulfillment providers only where needed to complete the service.', ar: 'قد تتم مشاركة بيانات الطلب مع مزودي الدفع والتنفيذ فقط عند الحاجة لإتمام الخدمة.' },
         },
         {
-          title: { en: 'Demo storage', ar: 'تخزين النسخة التجريبية' },
-          body: { en: 'The current demo stores theme preferences in the browser and uses mock data for accounts, orders, and payments.', ar: 'النسخة التجريبية الحالية تخزن تفضيل الثيم في المتصفح وتستخدم بيانات محاكاة للحسابات والطلبات والدفع.' },
+          title: { en: 'Local preferences', ar: 'التفضيلات المحلية' },
+          body: { en: 'Language and theme choices can be stored in the browser so the site opens the way you prefer next time.', ar: 'يمكن تخزين اختيار اللغة والثيم في المتصفح حتى يفتح الموقع بالطريقة التي تفضلها في المرة القادمة.' },
         },
       ]}
     />

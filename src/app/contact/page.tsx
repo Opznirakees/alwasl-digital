@@ -17,7 +17,7 @@ export default function ContactPage() {
         },
         {
           title: { en: 'Order questions', ar: 'أسئلة الطلبات' },
-          body: { en: 'Most demo orders complete instantly. Real production orders should show processing, completed, failed, or refunded states.', ar: 'معظم الطلبات التجريبية تكتمل فوراً. في الإنتاج ستظهر حالات المعالجة أو الاكتمال أو الفشل أو الاسترداد.' },
+          body: { en: 'Send the order ID if a WAHO recharge is pending, failed, refunded, or sent to the wrong account details.', ar: 'أرسل رقم الطلب إذا كان شحن WAHO قيد الانتظار أو فشل أو تم استرداده أو أُرسل إلى بيانات حساب غير صحيحة.' },
         },
         {
           title: { en: 'Payments', ar: 'الدفع' },
@@ -25,7 +25,7 @@ export default function ContactPage() {
         },
         {
           title: { en: 'Business hours', ar: 'ساعات العمل' },
-          body: { en: 'Demo support content is always visible. Add real operating hours once the store is live.', ar: 'محتوى الدعم التجريبي ظاهر دائماً. أضف ساعات العمل الفعلية عند إطلاق المتجر.' },
+          body: { en: 'WhatsApp is the fastest channel for urgent payment checks and WAHO ID corrections.', ar: 'واتساب هو أسرع قناة لفحص الدفع العاجل وتصحيح معرف WAHO.' },
         },
       ]}
     />

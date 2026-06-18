@@ -63,16 +63,16 @@ export default function HomePage() {
             </h2>
             <p className="mt-3 text-sm leading-7 text-zinc-600 dark:text-zinc-300 md:text-base">
               {t(
-                'Customers who know LEO on WAHO can recognize the service immediately: clear amounts, quick support, and a focused top-up experience.',
-                'العملاء الذين يعرفون LEO على WAHO يتعرفون على الخدمة فوراً: مبالغ واضحة ودعم سريع وتجربة شحن مركزة.',
-                '熟悉 WAHO 上 LEO 的用户可以立即识别这项服务：金额清晰、支持快速、充值体验专注。'
+                'LEO is the WAHO contact for checking the correct account ID, answering payment questions, and following up when an order needs attention.',
+                'LEO هو جهة التواصل في WAHO للتحقق من معرف الحساب الصحيح والإجابة عن أسئلة الدفع ومتابعة الطلبات عند الحاجة.',
+                'LEO 是 WAHO 联系人，可协助确认正确账号 ID、解答支付问题，并在订单需要处理时跟进。'
               )}
             </p>
             <div className="mt-5 flex flex-wrap gap-2 text-xs font-medium">
               {[
-                t('Verified WAHO presence', 'حضور موثق على WAHO', 'WAHO 认证形象'),
-                t('Fast recharge support', 'دعم شحن سريع', '快速充值支持'),
-                t('Clear IQD top-up values', 'مبالغ شحن واضحة بالدينار', '清晰 IQD 充值金额'),
+                t('WAHO ID check help', 'مساعدة في فحص معرف WAHO', 'WAHO ID 检查协助'),
+                t('Payment follow-up', 'متابعة الدفع', '支付跟进'),
+                t('Order status support', 'دعم حالة الطلب', '订单状态支持'),
               ].map((item) => (
                 <span key={item} className="rounded-md border border-black/10 bg-white px-3 py-2 text-zinc-600 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300">
                   {item}
@@ -103,7 +103,7 @@ export default function HomePage() {
               </div>
             </div>
             <figcaption className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-              {t('LEO is highlighted as a familiar WAHO user and trusted top-up contact.', 'يظهر LEO كمستخدم معروف على WAHO وجهة موثوقة للشحن.', 'LEO 被展示为 WAHO 熟悉用户和可信充值联系人。')}
+              {t('For support, send the WAHO ID, order ID, and payment reference when available.', 'للدعم أرسل معرف WAHO ورقم الطلب ومرجع الدفع عند توفره.', '如需支持，请发送 WAHO ID、订单号以及付款参考信息。')}
             </figcaption>
           </figure>
         </section>
@@ -111,10 +111,10 @@ export default function HomePage() {
         {/* Quick Stats */}
         <section className="grid grid-cols-2 overflow-hidden rounded-lg border border-black/10 bg-white md:grid-cols-4">
           {[
-            { icon: <BadgeCheck className="w-4 h-4" />, label: t('High Quality', 'جودة عالية'), value: t('Trusted', 'موثوق') },
-            { icon: <Zap className="w-4 h-4" />, label: t('Fast top-up', 'شحن سريع'), value: t('Quick', 'سريع') },
-            { icon: <Sparkles className="w-4 h-4" />, label: t('Competitive Prices', 'أسعار تنافسية'), value: t('Fair', 'مناسبة') },
-            { icon: <Headphones className="w-4 h-4" />, label: t('Technical Support', 'دعم فني'), value: '24/7' },
+            { icon: <BadgeCheck className="w-4 h-4" />, label: t('WAHO ID', 'معرف WAHO', 'WAHO ID'), value: t('Checked', 'يتم فحصه', '已检查') },
+            { icon: <Zap className="w-4 h-4" />, label: t('Recharge', 'الشحن', '充值'), value: t('After payment', 'بعد الدفع', '付款后') },
+            { icon: <Sparkles className="w-4 h-4" />, label: t('Pricing', 'التسعير', '价格'), value: t('IQD amounts', 'مبالغ بالدينار', 'IQD 金额') },
+            { icon: <Headphones className="w-4 h-4" />, label: t('Support', 'الدعم', '支持'), value: t('WhatsApp', 'واتساب', 'WhatsApp') },
           ].map((stat, i) => (
             <div
               key={i}
@@ -208,7 +208,7 @@ export default function HomePage() {
 
           <div className="rounded-lg bg-zinc-50 p-4 ring-1 ring-black/10 dark:bg-zinc-950 dark:ring-white/10">
             <h3 className="text-base font-semibold text-zinc-950 dark:text-white">
-              {t('Ready in three steps', 'جاهز بثلاث خطوات', '三步完成')}
+              {t('Complete the recharge in three steps', 'أكمل الشحن بثلاث خطوات', '三步完成充值')}
             </h3>
             <div className="mt-4 space-y-3">
               {[

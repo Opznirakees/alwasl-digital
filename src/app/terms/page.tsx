@@ -5,7 +5,7 @@ export default function TermsPage() {
     <InfoPage
       eyebrow={{ en: 'Terms of Service', ar: 'شروط الخدمة' }}
       title={{ en: 'Clear rules for using Al-Wasl Digital.', ar: 'قواعد واضحة لاستخدام الوصل الرقمي.' }}
-      subtitle={{ en: 'These demo terms are placeholders and should be reviewed before production launch.', ar: 'هذه الشروط التجريبية مؤقتة ويجب مراجعتها قبل الإطلاق الفعلي.' }}
+      subtitle={{ en: 'Please check the WAHO ID, selected amount, and payment details before confirming a recharge.', ar: 'يرجى التحقق من معرف WAHO والمبلغ المختار وبيانات الدفع قبل تأكيد الشحن.' }}
       sections={[
         {
           title: { en: 'Account use', ar: 'استخدام الحساب' },
@@ -17,11 +17,11 @@ export default function TermsPage() {
         },
         {
           title: { en: 'Payments', ar: 'الدفع' },
-          body: { en: 'Production payments should be confirmed through the connected payment provider before fulfillment.', ar: 'في الإنتاج يجب تأكيد الدفع عبر مزود الدفع المتصل قبل تنفيذ الطلب.' },
+          body: { en: 'Orders are processed after payment is confirmed. Keep your order ID if support needs to review a payment.', ar: 'تتم معالجة الطلبات بعد تأكيد الدفع. احتفظ برقم الطلب إذا احتاج الدعم إلى مراجعة الدفع.' },
         },
         {
-          title: { en: 'Demo notice', ar: 'تنبيه النسخة التجريبية' },
-          body: { en: 'This deployment uses sample data and simulated flows until real integrations are connected.', ar: 'هذا النشر يستخدم بيانات ومسارات محاكاة حتى يتم ربط التكاملات الحقيقية.' },
+          title: { en: 'Support review', ar: 'مراجعة الدعم' },
+          body: { en: 'If a recharge cannot be completed, support may ask for the order ID, WAHO ID, phone number, and payment reference.', ar: 'إذا تعذر إكمال الشحن، قد يطلب الدعم رقم الطلب ومعرف WAHO ورقم الهاتف ومرجع الدفع.' },
         },
       ]}
     />

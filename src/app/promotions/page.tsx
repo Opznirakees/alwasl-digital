@@ -70,7 +70,7 @@ export default function PromotionsPage() {
             {t('Promotions and coupon codes', 'العروض وكوبونات الخصم')}
           </h1>
           <p className="mt-4 text-base leading-7 text-zinc-600 md:text-lg">
-            {t('Use these demo offers during checkout and adapt them later for real campaigns.', 'استخدم هذه العروض التجريبية أثناء الدفع وعدلها لاحقاً للحملات الحقيقية.')}
+            {t('Copy an active code and apply it during checkout when your WAHO top-up amount meets the offer rules.', 'انسخ كوداً نشطاً واستخدمه أثناء الدفع عندما يطابق مبلغ شحن WAHO شروط العرض.')}
           </p>
         </section>
 

@@ -99,10 +99,10 @@ export default function AuthPage() {
       await login(demoPhone);
       const success = await verifyOtp('123456', demoPhone);
       if (success) {
-        toast.success(t('Demo account loaded!', 'تم تحميل الحساب التجريبي!'));
+        toast.success(t('Test account opened', 'تم فتح حساب الاختبار', '测试账号已打开'));
         router.push('/');
       } else {
-        toast.error(t('Demo login failed', 'فشل تسجيل الدخول التجريبي'));
+        toast.error(t('Test login failed', 'فشل تسجيل الدخول الاختباري', '测试登录失败'));
       }
     } finally {
       setIsLoading(false);
@@ -208,7 +208,7 @@ export default function AuthPage() {
                   variant="outline"
                   className="w-full border-black/10 bg-white text-zinc-700 hover:bg-zinc-50"
                 >
-                  {t('Use Demo Account', 'استخدام الحساب التجريبي')}
+                  {t('Use test account', 'استخدام حساب الاختبار', '使用测试账号')}
                 </Button>
               </form>
             </>
@@ -280,11 +280,6 @@ export default function AuthPage() {
           </p>
         </div>
 
-        <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <p className="text-center text-xs text-amber-800">
-            <strong>{t('Demo Mode:', 'وضع التجربة:')}</strong> {t('Enter any phone number and use OTP "123456" to login', 'أدخل أي رقم هاتف واستخدم الرمز "123456" للدخول')}
-          </p>
-        </div>
       </div>
     </div>
   );

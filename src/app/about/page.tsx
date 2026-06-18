@@ -20,15 +20,15 @@ export default function AboutPage() {
           body: { en: 'The app supports Arabic, English, and Chinese, local payment expectations, wallet behavior, and IQD-first pricing.', ar: 'يدعم التطبيق العربية والإنجليزية والصينية ومتطلبات الدفع المحلي وسلوك المحفظة والتسعير بالدينار العراقي أولاً.' },
         },
         {
-          title: { en: 'Demo-ready platform', ar: 'منصة جاهزة للعرض' },
-          body: { en: 'The current release shows the WAHO top-up flow from login to payment and order tracking.', ar: 'يعرض الإصدار الحالي مسار شحن WAHO من تسجيل الدخول إلى الدفع وتتبع الطلب.' },
+          title: { en: 'Built for WAHO recharges', ar: 'مصمم لشحن WAHO' },
+          body: { en: 'Every step is focused on one outcome: the right WAHO ID, the selected IQD amount, payment confirmation, and order status.', ar: 'كل خطوة تركز على نتيجة واحدة: معرف WAHO الصحيح، مبلغ الدينار المختار، تأكيد الدفع، وحالة الطلب.' },
         },
         {
-          title: { en: 'Next steps', ar: 'الخطوات القادمة' },
+          title: { en: 'What customers should expect', ar: 'ما يتوقعه العملاء' },
           items: [
-            { en: 'Connect live payment methods.', ar: 'ربط طرق الدفع الفعلية.' },
-            { en: 'Speed up order handling.', ar: 'تسريع معالجة الطلبات.' },
-            { en: 'Add production authentication and admin permissions.', ar: 'إضافة تسجيل دخول وصلاحيات إدارة للإنتاج.' },
+            { en: 'Clear WAHO top-up amounts in IQD.', ar: 'مبالغ شحن WAHO واضحة بالدينار العراقي.' },
+            { en: 'A required WAHO ID check before payment.', ar: 'فحص معرف WAHO قبل الدفع.' },
+            { en: 'Support when a payment or order needs review.', ar: 'دعم عند الحاجة لمراجعة الدفع أو الطلب.' },
           ],
         },
       ]}

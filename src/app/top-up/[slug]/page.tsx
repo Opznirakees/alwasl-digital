@@ -539,7 +539,7 @@ export default function GamePage({ params }: GamePageProps) {
                   <div className="flex items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3">
                     <Zap className="w-5 h-5 text-blue-600" />
                     <p className="text-xs text-blue-700">
-                      {t('Ready for a quick WAHO top-up', 'جاهز لشحن WAHO بسرعة')}
+                      {t('After payment is confirmed, this amount will be sent to the WAHO ID shown above.', 'بعد تأكيد الدفع سيتم إرسال هذا المبلغ إلى معرف WAHO الظاهر أعلاه.', '付款确认后，此金额将充值到上方显示的 WAHO ID。')}
                     </p>
                   </div>
                 </div>
