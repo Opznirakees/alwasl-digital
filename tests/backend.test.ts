@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { shouldLoadAdminSummary } from '../src/app/admin/admin-access';
 import { getPromotionState } from '../src/app/promotions/promotion-state';
 import { walletTopUpDialogCopy } from '../src/app/wallet/wallet-dialog-copy';
+import { mobileMenuSheetCopy } from '../src/components/layout/mobile-menu-copy';
 import { resolveOtpPhone } from '../src/contexts/auth-flow';
 import { hashOtp, safeCompare } from '../src/server/crypto';
 import { calculateOrderPricing, createOrderId } from '../src/server/domain/orders';
@@ -108,6 +109,14 @@ describe('wallet accessibility copy', () => {
     expect(walletTopUpDialogCopy.description.en).toContain('wallet balance');
     expect(walletTopUpDialogCopy.description.ar.length).toBeGreaterThan(10);
     expect(walletTopUpDialogCopy.description.zh.length).toBeGreaterThan(5);
+  });
+});
+
+describe('mobile menu accessibility copy', () => {
+  test('provides a description for the mobile navigation sheet', () => {
+    expect(mobileMenuSheetCopy.description.en).toContain('navigation');
+    expect(mobileMenuSheetCopy.description.ar.length).toBeGreaterThan(10);
+    expect(mobileMenuSheetCopy.description.zh.length).toBeGreaterThan(5);
   });
 });
 

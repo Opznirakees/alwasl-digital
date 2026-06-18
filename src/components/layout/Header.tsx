@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   Menu,
   Globe,
@@ -29,6 +29,7 @@ import {
   Sun,
 } from 'lucide-react';
 import { useState } from 'react';
+import { mobileMenuSheetCopy } from './mobile-menu-copy';
 
 const languageOptions = [
   { id: 'en', label: 'English', short: 'EN' },
@@ -81,6 +82,13 @@ export function Header() {
                 <SheetTitle className={isLight ? 'text-zinc-950' : 'text-white'}>
                   {t('Menu', 'القائمة')}
                 </SheetTitle>
+                <SheetDescription className={isLight ? 'text-zinc-500' : 'text-zinc-400'}>
+                  {t(
+                    mobileMenuSheetCopy.description.en,
+                    mobileMenuSheetCopy.description.ar,
+                    mobileMenuSheetCopy.description.zh
+                  )}
+                </SheetDescription>
               </SheetHeader>
 
               <nav className="flex flex-col gap-3 mt-8">
