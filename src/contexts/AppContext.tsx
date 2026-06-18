@@ -639,22 +639,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
 
   const refreshAccount = useCallback(async () => {
-    const [meResponse, ordersResponse, walletResponse] = await Promise.all([
-      fetch('/api/auth/me', { credentials: 'include' }),
+    const meResponse = await fetch('/api/auth/me', { credentials: 'include' });
+
+    if (!meResponse.ok) {
+      setUser(null);
+      setOrders([]);
+      setWalletTransactions([]);
+      return;
+    }
+
+    const mePayload = await meResponse.json();
+    setUser(mePayload.user ?? null);
+
+    if (!mePayload.user) {
+      setOrders([]);
+      setWalletTransactions([]);
+      return;
+    }
+
+    const [ordersResponse, walletResponse] = await Promise.all([
       fetch('/api/orders', { credentials: 'include' }),
       fetch('/api/wallet', { credentials: 'include' }),
     ]);
 
-    if (meResponse.ok) {
-      const payload = await meResponse.json();
-      setUser(payload.user ?? null);
-    }
-
     if (ordersResponse.ok) {
       const payload = await ordersResponse.json();
       setOrders(payload.orders ?? []);
-    } else if (ordersResponse.status === 401) {
-      setOrders([]);
     }
 
     if (walletResponse.ok) {
@@ -663,8 +673,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (payload.user) {
         setUser(payload.user);
       }
-    } else if (walletResponse.status === 401) {
-      setWalletTransactions([]);
     }
   }, []);
 

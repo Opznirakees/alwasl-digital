@@ -1,7 +1,12 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { demoUser, games } from '../src/data/mock-data';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({
+    connectionString: process.env.DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/alwasl_digital?schema=public',
+  }),
+});
 
 async function main() {
   const adminPhone = process.env.SEED_ADMIN_PHONE ?? demoUser.phone;

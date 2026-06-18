@@ -66,6 +66,12 @@ Important production variables:
 
 1. Create or attach a managed PostgreSQL database.
 2. Add the environment variables from `.env.example` to the App Platform component.
+   For DigitalOcean managed PostgreSQL, keep SSL enabled and add `uselibpqcompat=true` to the URL, for example:
+
+```bash
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:25060/alwasl_digital?sslmode=require&uselibpqcompat=true&schema=public"
+```
+
 3. Run Prisma migrations before or during deployment:
 
 ```bash
