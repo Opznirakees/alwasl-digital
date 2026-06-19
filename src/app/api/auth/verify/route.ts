@@ -4,6 +4,7 @@ import { hashOtp, safeCompare } from '@/server/crypto';
 import { isBlockedProductionDemoOtp } from '@/server/demo-auth';
 import { handleApiError, fail, ok } from '@/server/http';
 import { mapUser } from '@/server/mappers';
+import { isOtpAttemptLocked, nextOtpAttemptCount } from '@/server/otp-policy';
 import { prisma } from '@/server/prisma';
 import { assertRateLimit } from '@/server/rate-limit';
 import { normalizePhone, verifyOtpSchema } from '@/server/validation';
@@ -16,8 +17,8 @@ export async function POST(request: NextRequest) {
     const phone = normalizePhone(body.phone);
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
 
-    assertRateLimit(`auth-verify:${ip}`, { limit: 30, windowMs: 15 * 60 * 1000 });
-    assertRateLimit(`auth-verify:${phone}`, { limit: 8, windowMs: 10 * 60 * 1000 });
+    await assertRateLimit(`auth-verify:${ip}`, { limit: 30, windowMs: 15 * 60 * 1000 });
+    await assertRateLimit(`auth-verify:${phone}`, { limit: 8, windowMs: 10 * 60 * 1000 });
 
     if (isBlockedProductionDemoOtp(phone, body.otp)) {
       return fail('Invalid OTP', 401);
@@ -33,13 +34,17 @@ export async function POST(request: NextRequest) {
     });
 
     if (!otp) return fail('Invalid or expired OTP', 401);
+    if (isOtpAttemptLocked(otp.attempts)) return fail('Too many OTP attempts', 429);
 
     const valid = safeCompare(hashOtp(phone, body.otp), otp.codeHash);
     if (!valid) {
-      await prisma.otpCode.update({
+      const updated = await prisma.otpCode.update({
         where: { id: otp.id },
         data: { attempts: { increment: 1 } },
       });
+      if (isOtpAttemptLocked(nextOtpAttemptCount(otp.attempts)) || isOtpAttemptLocked(updated.attempts)) {
+        return fail('Too many OTP attempts', 429);
+      }
       return fail('Invalid OTP', 401);
     }
 

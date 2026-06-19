@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = wahoVerifySchema.parse(await request.json());
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
-    assertRateLimit(`waho-verify:${ip}`, { limit: 60, windowMs: 15 * 60 * 1000 });
+    await assertRateLimit(`waho-verify:${ip}`, { limit: 60, windowMs: 15 * 60 * 1000 });
 
     const account = await getWahoProvider().verifyWahoAccount(body.wahoId);
     return ok({ account });

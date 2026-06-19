@@ -14,8 +14,10 @@ import { calculateOrderPricing, createOrderId } from '../src/server/domain/order
 import { resolveFakePaymentResult } from '../src/server/domain/payments';
 import { nextWalletBalance } from '../src/server/domain/wallet';
 import { mapUser } from '../src/server/mappers';
+import { isOtpAttemptLocked, nextOtpAttemptCount } from '../src/server/otp-policy';
 import { isFakePaymentEnabled } from '../src/server/payment-policy';
 import { getWahoProvider, getWahoProviderInfo, isMockWahoEnabled } from '../src/server/providers/waho';
+import { isRateLimitExceeded } from '../src/server/rate-limit';
 import { normalizePhone } from '../src/server/validation';
 import type { User } from '../src/types';
 
@@ -169,6 +171,20 @@ describe('auth flow rules', () => {
     expect(resolveOtpPhone('', '+9647812345678')).toBe('+9647812345678');
     expect(resolveOtpPhone('+964700000001')).toBe('+964700000001');
     expect(resolveOtpPhone('')).toBeNull();
+  });
+});
+
+describe('auth abuse protection rules', () => {
+  test('blocks OTP verification once the attempt limit is reached', () => {
+    expect(isOtpAttemptLocked(0)).toBe(false);
+    expect(isOtpAttemptLocked(4)).toBe(false);
+    expect(nextOtpAttemptCount(4)).toBe(5);
+    expect(isOtpAttemptLocked(5)).toBe(true);
+  });
+
+  test('treats the persisted rate-limit counter as blocked only after the limit is exceeded', () => {
+    expect(isRateLimitExceeded(5, 5)).toBe(false);
+    expect(isRateLimitExceeded(6, 5)).toBe(true);
   });
 });
 

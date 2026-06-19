@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const user = await requireUser();
     const body = createOrderSchema.parse(await request.json());
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
-    assertRateLimit(`orders:create:${user.id}:${ip}`, { limit: 30, windowMs: 15 * 60 * 1000 });
+    await assertRateLimit(`orders:create:${user.id}:${ip}`, { limit: 30, windowMs: 15 * 60 * 1000 });
 
     const order = await createPendingOrder(user, body);
     return ok({ order: mapOrder(order) }, { status: 201 });

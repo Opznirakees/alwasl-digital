@@ -25,7 +25,9 @@ COPY --from=builder /app/bun.lock ./bun.lock
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 EXPOSE 3000
 
-CMD ["bun", "run", "start"]
+CMD ["sh", "-c", "bun run db:migrate && bun run start"]

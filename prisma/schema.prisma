@@ -282,3 +282,13 @@ model AdminAuditLog {
   @@index([adminId, createdAt])
   @@map("admin_audit_logs")
 }
+
+model RateLimit {
+  key       String   @id
+  count     Int      @default(0)
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+  @@map("rate_limits")
+}

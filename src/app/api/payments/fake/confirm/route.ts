@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     assertFakePaymentEndpointEnabled();
     const user = await requireUser();
     const body = fakePaymentConfirmSchema.parse(await request.json());
-    assertRateLimit(`payments:fake:${user.id}`, { limit: 40, windowMs: 15 * 60 * 1000 });
+    await assertRateLimit(`payments:fake:${user.id}`, { limit: 40, windowMs: 15 * 60 * 1000 });
 
     const order = await confirmFakePayment(user, body);
     return ok({ order: mapOrder(order) });

@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireUser();
     walletTopUpSchema.parse(await request.json());
-    assertRateLimit(`wallet:top-up:${user.id}`, { limit: 20, windowMs: 15 * 60 * 1000 });
+    await assertRateLimit(`wallet:top-up:${user.id}`, { limit: 20, windowMs: 15 * 60 * 1000 });
 
     throw new Error('PAYMENT_PROVIDER_NOT_CONFIGURED');
   } catch (error) {
