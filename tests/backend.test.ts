@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { shouldLoadAdminSummary } from '../src/app/admin/admin-access';
 import { getPromotionState } from '../src/app/promotions/promotion-state';
@@ -22,6 +23,8 @@ import { isRateLimitExceeded } from '../src/server/rate-limit';
 import { normalizePhone } from '../src/server/validation';
 import type { User } from '../src/types';
 
+const require = createRequire(import.meta.url);
+
 describe('auth helpers', () => {
   test('normalizes phone numbers and hashes OTP codes predictably', () => {
     const phone = normalizePhone('964 781 234 5678');
@@ -30,6 +33,32 @@ describe('auth helpers', () => {
     expect(phone).toBe('+9647812345678');
     expect(safeCompare(hash, hashOtp(phone, '123456'))).toBe(true);
     expect(safeCompare(hash, hashOtp(phone, '654321'))).toBe(false);
+  });
+});
+
+describe('security headers', () => {
+  test('disables Next.js fingerprinting and sends browser hardening headers', async () => {
+    const nextConfig = require('../next.config.js') as {
+      poweredByHeader?: boolean;
+      headers: () => Promise<Array<{ source: string; headers: Array<{ key: string; value: string }> }>>;
+    };
+
+    expect(nextConfig.poweredByHeader).toBe(false);
+
+    const [globalHeaders] = await nextConfig.headers();
+    expect(globalHeaders.source).toBe('/(.*)');
+
+    const headers = Object.fromEntries(globalHeaders.headers.map((header) => [header.key, header.value]));
+    expect(headers['Content-Security-Policy']).toContain("default-src 'self'");
+    expect(headers['Content-Security-Policy']).toContain("frame-ancestors 'none'");
+    expect(headers['Content-Security-Policy']).toContain("object-src 'none'");
+    expect(headers['Content-Security-Policy']).toContain('upgrade-insecure-requests');
+    expect(headers['Strict-Transport-Security']).toBe('max-age=31536000; includeSubDomains; preload');
+    expect(headers['X-Frame-Options']).toBe('DENY');
+    expect(headers['X-Content-Type-Options']).toBe('nosniff');
+    expect(headers['Referrer-Policy']).toBe('strict-origin-when-cross-origin');
+    expect(headers['Permissions-Policy']).toContain('camera=()');
+    expect(headers['Cross-Origin-Opener-Policy']).toBe('same-origin');
   });
 });
 
