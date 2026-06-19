@@ -2,7 +2,6 @@ import type { PaymentMethod as DbPaymentMethod, User } from '@prisma/client';
 import { prisma } from '../prisma';
 import { calculateOrderPricing, createOrderId } from '../domain/orders';
 import { resolveFakePaymentResult } from '../domain/payments';
-import { nextWalletBalance } from '../domain/wallet';
 import { toDbPaymentMethod } from '../mappers';
 import { getWahoProvider } from '../providers/waho';
 import type { PaymentMethod } from '@/types';
@@ -107,40 +106,56 @@ export async function confirmFakePayment(user: User, input: ConfirmFakePaymentIn
     });
   }
 
-  const wahoProvider = getWahoProvider();
-  const providerResult = await wahoProvider.createWahoTopup({
-    orderId: existing.id,
-    wahoId: existing.gameUserId,
-    amount: existing.finalPrice,
-    currency: existing.currency,
-  });
-  const paymentResult = resolveFakePaymentResult(true, providerResult.status);
-
-  return prisma.$transaction(async (tx) => {
+  const claimed = await prisma.$transaction(async (tx) => {
     const order = await tx.order.findUnique({ where: { id: existing.id } });
     if (!order) throw new Error('NOT_FOUND');
     if (order.paymentStatus === 'COMPLETED') return order;
 
-    if (order.paymentMethod === 'WALLET') {
-      const orderUser = await tx.user.findUnique({ where: { id: order.userId } });
-      if (!orderUser) throw new Error('NOT_FOUND');
+    const claim = await tx.order.updateMany({
+      where: {
+        id: order.id,
+        status: 'PENDING',
+        paymentStatus: 'PENDING',
+      },
+      data: { status: 'PROCESSING' },
+    });
 
-      const balance = nextWalletBalance(orderUser.walletBalance, order.finalPrice);
-      await tx.user.update({
-        where: { id: orderUser.id },
+    if (claim.count !== 1) {
+      const current = await tx.order.findUnique({ where: { id: order.id } });
+      if (!current) throw new Error('NOT_FOUND');
+      return current;
+    }
+
+    if (order.paymentMethod === 'WALLET') {
+      const debitResult = await tx.user.updateMany({
+        where: {
+          id: order.userId,
+          walletBalance: { gte: order.finalPrice },
+        },
         data: {
-          walletBalance: balance,
+          walletBalance: { decrement: order.finalPrice },
           totalSpent: { increment: order.finalPrice },
         },
       });
+
+      if (debitResult.count !== 1) {
+        throw new Error('INSUFFICIENT_WALLET_BALANCE');
+      }
+
+      const orderUser = await tx.user.findUnique({
+        where: { id: order.userId },
+        select: { walletBalance: true },
+      });
+      if (!orderUser) throw new Error('NOT_FOUND');
+
       await tx.walletTransaction.create({
         data: {
-          userId: orderUser.id,
+          userId: order.userId,
           orderId: order.id,
           type: 'PURCHASE',
           amount: -order.finalPrice,
           currency: order.currency,
-          balance,
+          balance: orderUser.walletBalance,
           description: `Purchase: ${order.gameName} ${order.packageName}`,
           descriptionAr: `شراء: ${order.gameName} ${order.packageName}`,
           reference: order.id,
@@ -165,18 +180,38 @@ export async function confirmFakePayment(user: User, input: ConfirmFakePaymentIn
       },
     });
 
+    return tx.order.update({
+      where: { id: order.id },
+      data: { paymentStatus: 'COMPLETED' },
+    });
+  });
+
+  if (claimed.status !== 'PROCESSING' || claimed.paymentStatus !== 'COMPLETED') {
+    return claimed;
+  }
+
+  const wahoProvider = getWahoProvider();
+  const providerResult = await wahoProvider.createWahoTopup({
+    orderId: claimed.id,
+    wahoId: claimed.gameUserId,
+    amount: claimed.finalPrice,
+    currency: claimed.currency,
+  });
+  const paymentResult = resolveFakePaymentResult(true, providerResult.status);
+
+  return prisma.$transaction(async (tx) => {
     await tx.providerRequest.create({
       data: {
-        orderId: order.id,
+        orderId: claimed.id,
         provider: providerResult.providerId,
         action: 'createWahoTopup',
         status: providerResult.status === 'failed' ? 'FAILED' : 'SUCCESS',
         providerOrderId: providerResult.providerOrderId,
         requestPayload: {
-          orderId: order.id,
-          wahoId: order.gameUserId,
-          amount: order.finalPrice,
-          currency: order.currency,
+          orderId: claimed.id,
+          wahoId: claimed.gameUserId,
+          amount: claimed.finalPrice,
+          currency: claimed.currency,
         },
         responsePayload: {
           providerId: providerResult.providerId,
@@ -187,7 +222,7 @@ export async function confirmFakePayment(user: User, input: ConfirmFakePaymentIn
     });
 
     return tx.order.update({
-      where: { id: order.id },
+      where: { id: claimed.id },
       data: {
         status: paymentResult.orderStatus,
         paymentStatus: paymentResult.paymentStatus,

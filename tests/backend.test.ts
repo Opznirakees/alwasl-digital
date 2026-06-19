@@ -108,6 +108,20 @@ describe('wallet ledger rules', () => {
     expect(source).not.toContain('mapUser');
     expect(source).not.toContain('prisma');
   });
+
+  test('wallet order purchases use a database-level conditional debit', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const source = readFileSync(join(repoRoot, 'src/server/services/orders.ts'), 'utf8');
+
+    expect(source).toContain('tx.order.updateMany');
+    expect(source).toContain("status: 'PENDING'");
+    expect(source).toContain("paymentStatus: 'PENDING'");
+    expect(source).toContain('tx.user.updateMany');
+    expect(source).toContain('walletBalance: { gte: order.finalPrice }');
+    expect(source).toContain('walletBalance: { decrement: order.finalPrice }');
+    expect(source).toContain('debitResult.count !== 1');
+    expect(source).not.toContain('nextWalletBalance(orderUser.walletBalance');
+  });
 });
 
 describe('WAHO provider rules', () => {
