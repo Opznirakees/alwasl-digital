@@ -187,6 +187,20 @@ export interface DashboardStats {
   refundRate: number;
 }
 
+export interface AdminAuditLog {
+  id: string;
+  adminId?: string;
+  adminName?: string;
+  adminPhone?: string;
+  action: string;
+  entityType: string;
+  entityId?: string;
+  metadata?: unknown;
+  ipAddress?: string;
+  userAgent?: string;
+  createdAt: string;
+}
+
 export interface RevenueData {
   date: string;
   revenue: number;

@@ -9,6 +9,7 @@ import { mobileMenuSheetCopy } from '../src/components/layout/mobile-menu-copy';
 import { resolveOtpPhone } from '../src/contexts/auth-flow';
 import { banners, games } from '../src/data/mock-data';
 import { wahoRechargeInfo } from '../src/data/waho-recharge-info';
+import { getAuditRequestContext, shouldAuditAdminUser } from '../src/server/admin-audit';
 import { hashOtp, resolveOtpPepper, safeCompare } from '../src/server/crypto';
 import { isBlockedProductionDemoOtp, isDemoAuthEnabled, resolveDemoOtpForPhone } from '../src/server/demo-auth';
 import { calculateOrderPricing, createOrderId } from '../src/server/domain/orders';
@@ -256,6 +257,42 @@ describe('admin access rules', () => {
     expect(shouldLoadAdminSummary(admin)).toBe(true);
     expect(shouldLoadAdminSummary(user)).toBe(false);
     expect(shouldLoadAdminSummary(null)).toBe(false);
+  });
+
+  test('records request context for admin audit logs without trusting internal proxy chains', () => {
+    const request = new Request('https://alwasl.test/api/admin/summary', {
+      headers: {
+        'x-forwarded-for': '203.0.113.10, 10.0.0.4',
+        'cf-connecting-ip': '203.0.113.20',
+        'x-real-ip': '203.0.113.30',
+        'user-agent': 'audit-test-agent',
+      },
+    });
+
+    expect(getAuditRequestContext(request)).toEqual({
+      ipAddress: '203.0.113.10',
+      userAgent: 'audit-test-agent',
+    });
+  });
+
+  test('only database admins are eligible for admin audit writes', () => {
+    expect(shouldAuditAdminUser({ role: 'ADMIN' })).toBe(true);
+    expect(shouldAuditAdminUser({ role: 'USER' })).toBe(false);
+  });
+
+  test('admin-sensitive API routes write audit logs', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const adminSummaryRoute = readFileSync(join(repoRoot, 'src/app/api/admin/summary/route.ts'), 'utf8');
+    const ordersRoute = readFileSync(join(repoRoot, 'src/app/api/orders/route.ts'), 'utf8');
+    const orderDetailRoute = readFileSync(join(repoRoot, 'src/app/api/orders/[id]/route.ts'), 'utf8');
+    const fakePaymentRoute = readFileSync(join(repoRoot, 'src/app/api/payments/fake/confirm/route.ts'), 'utf8');
+
+    expect(adminSummaryRoute).toContain('recordAdminAuditLog');
+    expect(adminSummaryRoute).toContain("action: 'admin.summary.view'");
+    expect(adminSummaryRoute).toContain('auditLogs: auditLogs.map(mapAdminAuditLog)');
+    expect(ordersRoute).toContain("action: 'orders.list.view'");
+    expect(orderDetailRoute).toContain("action: 'orders.detail.view'");
+    expect(fakePaymentRoute).toContain("action: 'payments.fake.confirm'");
   });
 });
 

@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { recordAdminAuditLog } from '@/server/admin-audit';
 import { requireUser } from '@/server/auth';
 import { handleApiError, ok } from '@/server/http';
 import { mapOrder } from '@/server/mappers';
@@ -9,7 +10,7 @@ import { createOrderSchema } from '@/server/validation';
 
 export const runtime = 'nodejs';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await requireUser();
     const orders = await prisma.order.findMany({
@@ -17,6 +18,20 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
       take: 100,
     });
+
+    if (user.role === 'ADMIN') {
+      await recordAdminAuditLog({
+        admin: user,
+        request,
+        action: 'orders.list.view',
+        entityType: 'order',
+        metadata: {
+          scope: 'all_orders',
+          returnedCount: orders.length,
+          take: 100,
+        },
+      });
+    }
 
     return ok({ orders: orders.map(mapOrder) });
   } catch (error) {

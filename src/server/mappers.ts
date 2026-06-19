@@ -1,4 +1,5 @@
 import type {
+  AdminAuditLog as DbAdminAuditLog,
   Order as DbOrder,
   PaymentAttempt,
   PaymentMethod as DbPaymentMethod,
@@ -8,7 +9,16 @@ import type {
   User as DbUser,
   WalletTransaction as DbWalletTransaction,
 } from '@prisma/client';
-import type { Game, Order, PaymentMethod, PaymentStatus, User, UserLevel, WalletTransaction } from '@/types';
+import type {
+  AdminAuditLog as AdminAuditLogDto,
+  Game,
+  Order,
+  PaymentMethod,
+  PaymentStatus,
+  User,
+  UserLevel,
+  WalletTransaction,
+} from '@/types';
 
 export type ProductWithPackages = Product & { packages: TopupPackage[] };
 
@@ -160,5 +170,25 @@ export function mapPaymentAttempt(attempt: PaymentAttempt) {
     providerRef: attempt.providerRef,
     createdAt: attempt.createdAt.toISOString(),
     updatedAt: attempt.updatedAt.toISOString(),
+  };
+}
+
+type AdminAuditLogWithAdmin = DbAdminAuditLog & {
+  admin?: Pick<DbUser, 'id' | 'name' | 'phone' | 'role'> | null;
+};
+
+export function mapAdminAuditLog(log: AdminAuditLogWithAdmin): AdminAuditLogDto {
+  return {
+    id: log.id,
+    adminId: log.adminId ?? undefined,
+    adminName: log.admin?.name,
+    adminPhone: log.admin?.phone,
+    action: log.action,
+    entityType: log.entityType,
+    entityId: log.entityId ?? undefined,
+    metadata: log.metadata ?? undefined,
+    ipAddress: log.ipAddress ?? undefined,
+    userAgent: log.userAgent ?? undefined,
+    createdAt: log.createdAt.toISOString(),
   };
 }

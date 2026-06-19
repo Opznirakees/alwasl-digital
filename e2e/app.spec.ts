@@ -36,6 +36,30 @@ async function loadWahoProduct(request: APIRequestContext) {
   return { product, firstPackage: firstPackage as TopUpPackage };
 }
 
+async function loginWithOtp(request: APIRequestContext, phone: string) {
+  const login = await request.post('/api/auth/login', {
+    data: { phone },
+  });
+  expect(login.status()).toBe(200);
+
+  const loginPayload = (await login.json()) as { debugOtp?: string };
+  expect(loginPayload.debugOtp).toMatch(/^\d{6}$/);
+
+  const verify = await request.post('/api/auth/verify', {
+    data: { phone, otp: loginPayload.debugOtp },
+  });
+  expect(verify.status()).toBe(200);
+
+  const setCookie = verify.headers()['set-cookie'];
+  const sessionCookie = setCookie?.match(/alwasl_session=([^;]+)/)?.[1];
+  expect(sessionCookie).toBeTruthy();
+
+  return {
+    user: ((await verify.json()) as { user: { phone: string; role: string } }).user,
+    headers: { Cookie: `alwasl_session=${sessionCookie}` },
+  };
+}
+
 test.describe('WAHO production smoke', () => {
   test('renders the WAHO top-up journey from seeded product data', async ({ page, request }) => {
     const { product, firstPackage } = await loadWahoProduct(request);
@@ -67,26 +91,8 @@ test.describe('WAHO production smoke', () => {
     expect(unauthenticatedOrders.status()).toBe(401);
 
     const phone = uniquePhone(testInfo.project.name, testInfo.workerIndex);
-    const login = await request.post('/api/auth/login', {
-      data: { phone },
-    });
-    expect(login.status()).toBe(200);
-
-    const loginPayload = (await login.json()) as { debugOtp?: string };
-    expect(loginPayload.debugOtp).toMatch(/^\d{6}$/);
-
-    const verify = await request.post('/api/auth/verify', {
-      data: { phone, otp: loginPayload.debugOtp },
-    });
-    expect(verify.status()).toBe(200);
-
-    const verifyPayload = (await verify.json()) as { user: { phone: string; role: string } };
-    expect(verifyPayload.user).toMatchObject({ phone, role: 'user' });
-
-    const setCookie = verify.headers()['set-cookie'];
-    const sessionCookie = setCookie?.match(/alwasl_session=([^;]+)/)?.[1];
-    expect(sessionCookie).toBeTruthy();
-    const authenticatedHeaders = { Cookie: `alwasl_session=${sessionCookie}` };
+    const { user, headers: authenticatedHeaders } = await loginWithOtp(request, phone);
+    expect(user).toMatchObject({ phone, role: 'user' });
 
     const me = await request.get('/api/auth/me', { headers: authenticatedHeaders });
     expect(me.status()).toBe(200);
@@ -121,5 +127,33 @@ test.describe('WAHO production smoke', () => {
     });
     expect(order.status()).toBe(424);
     expect(await order.json()).toEqual({ error: 'WAHO verification is temporarily unavailable' });
+  });
+
+  test('writes admin audit logs when the admin summary is viewed', async ({ request }) => {
+    const adminPhone = '+9647812345678';
+    const { user, headers: authenticatedHeaders } = await loginWithOtp(request, adminPhone);
+    expect(user).toMatchObject({ phone: adminPhone, role: 'admin' });
+
+    const summary = await request.get('/api/admin/summary', {
+      headers: {
+        ...authenticatedHeaders,
+        'x-forwarded-for': '198.51.100.44, 10.0.0.1',
+        'user-agent': 'alwasl-e2e-admin-audit',
+      },
+    });
+    expect(summary.status()).toBe(200);
+
+    const payload = (await summary.json()) as {
+      auditLogs?: Array<{
+        action: string;
+        entityType: string;
+        adminPhone?: string;
+      }>;
+    };
+    expect(payload.auditLogs?.[0]).toMatchObject({
+      action: 'admin.summary.view',
+      entityType: 'admin_dashboard',
+      adminPhone,
+    });
   });
 });

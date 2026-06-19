@@ -1,14 +1,29 @@
+import { NextRequest } from 'next/server';
 import { requireAdmin } from '@/server/auth';
+import { recordAdminAuditLog } from '@/server/admin-audit';
 import { handleApiError, ok } from '@/server/http';
-import { mapOrder, mapProduct, mapUser, mapWalletTransaction } from '@/server/mappers';
+import { mapAdminAuditLog, mapOrder, mapProduct, mapUser, mapWalletTransaction } from '@/server/mappers';
 import { prisma } from '@/server/prisma';
 import { getWahoProviderInfo } from '@/server/providers/waho';
 
 export const runtime = 'nodejs';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    await requireAdmin();
+    const admin = await requireAdmin();
+    await recordAdminAuditLog({
+      admin,
+      request,
+      action: 'admin.summary.view',
+      entityType: 'admin_dashboard',
+      metadata: {
+        usersTake: 50,
+        ordersTake: 100,
+        walletTransactionsTake: 100,
+        providerRequestsTake: 100,
+        auditLogsTake: 50,
+      },
+    });
 
     const [
       users,
@@ -16,6 +31,7 @@ export async function GET() {
       orders,
       walletTransactions,
       providerRequests,
+      auditLogs,
       totalUsers,
       totalOrders,
       completedOrders,
@@ -30,6 +46,20 @@ export async function GET() {
       prisma.order.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
       prisma.walletTransaction.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
       prisma.providerRequest.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
+      prisma.adminAuditLog.findMany({
+        include: {
+          admin: {
+            select: {
+              id: true,
+              name: true,
+              phone: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }),
       prisma.user.count(),
       prisma.order.count(),
       prisma.order.count({ where: { status: 'COMPLETED' } }),
@@ -88,6 +118,7 @@ export async function GET() {
         },
       ],
       providerRequests,
+      auditLogs: auditLogs.map(mapAdminAuditLog),
     });
   } catch (error) {
     return handleApiError(error);
