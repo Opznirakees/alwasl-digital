@@ -92,23 +92,6 @@ export default function AuthPage() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    setIsLoading(true);
-    const demoPhone = '+9647812345678';
-    try {
-      await login(demoPhone);
-      const success = await verifyOtp('123456', demoPhone);
-      if (success) {
-        toast.success(t('Test account opened', 'تم فتح حساب الاختبار', '测试账号已打开'));
-        router.push('/');
-      } else {
-        toast.error(t('Test login failed', 'فشل تسجيل الدخول الاختباري', '测试登录失败'));
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div className={`flex min-h-screen items-center justify-center bg-[#f5f5f7] p-4 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <div className="w-full max-w-md">
@@ -201,15 +184,6 @@ export default function AuthPage() {
                   )}
                 </Button>
 
-                <Button
-                  type="button"
-                  onClick={handleDemoLogin}
-                  disabled={isLoading}
-                  variant="outline"
-                  className="w-full border-black/10 bg-white text-zinc-700 hover:bg-zinc-50"
-                >
-                  {t('Use test account', 'استخدام حساب الاختبار', '使用测试账号')}
-                </Button>
               </form>
             </>
           ) : (

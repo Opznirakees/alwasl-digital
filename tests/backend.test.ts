@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { shouldLoadAdminSummary } from '../src/app/admin/admin-access';
 import { getPromotionState } from '../src/app/promotions/promotion-state';
@@ -9,6 +9,7 @@ import { resolveOtpPhone } from '../src/contexts/auth-flow';
 import { banners, games } from '../src/data/mock-data';
 import { wahoRechargeInfo } from '../src/data/waho-recharge-info';
 import { hashOtp, safeCompare } from '../src/server/crypto';
+import { isBlockedProductionDemoOtp, isDemoAuthEnabled, resolveDemoOtpForPhone } from '../src/server/demo-auth';
 import { calculateOrderPricing, createOrderId } from '../src/server/domain/orders';
 import { resolveFakePaymentResult } from '../src/server/domain/payments';
 import { nextWalletBalance } from '../src/server/domain/wallet';
@@ -108,6 +109,37 @@ describe('auth flow rules', () => {
   });
 });
 
+describe('server demo auth rules', () => {
+  test('never enables demo OTP auth in production, even when env is misconfigured', () => {
+    const env = {
+      NODE_ENV: 'production',
+      ENABLE_DEMO_AUTH: 'true',
+      SEED_ADMIN_PHONE: '+9647812345678',
+      DEMO_OTP: '123456',
+    };
+
+    expect(isDemoAuthEnabled(env)).toBe(false);
+    expect(resolveDemoOtpForPhone('+9647812345678', env)).toBeNull();
+    expect(isBlockedProductionDemoOtp('+9647812345678', '123456', env)).toBe(true);
+    expect(isBlockedProductionDemoOtp('+9647812345678', '999999', { ...env, DEMO_OTP: '999999' })).toBe(true);
+    expect(isBlockedProductionDemoOtp('+9647812345678', '123456', { ...env, DEMO_OTP: '999999' })).toBe(true);
+    expect(isBlockedProductionDemoOtp('+9647812345678', '654321', env)).toBe(false);
+  });
+
+  test('allows demo OTP only when explicitly enabled outside production', () => {
+    const env = {
+      NODE_ENV: 'development',
+      ENABLE_DEMO_AUTH: 'true',
+      SEED_ADMIN_PHONE: '+9647812345678',
+      DEMO_OTP: '654321',
+    };
+
+    expect(isDemoAuthEnabled(env)).toBe(true);
+    expect(resolveDemoOtpForPhone('+9647812345678', env)).toBe('654321');
+    expect(resolveDemoOtpForPhone('+964700000001', env)).toBeNull();
+  });
+});
+
 describe('wallet accessibility copy', () => {
   test('provides a description for the wallet top-up dialog', () => {
     expect(walletTopUpDialogCopy.description.en).toContain('wallet balance');
@@ -194,6 +226,9 @@ describe('customer-facing copy quality', () => {
       /use these demo offers/i,
       /Demo Mode:/i,
       /Use Demo Account/i,
+      /Use test account/i,
+      /Test account opened/i,
+      /OTP 123456/i,
       /ready for a quick WAHO top-up/i,
       /customers who know LEO.*recognize/i,
       /LEO is highlighted/i,
@@ -205,6 +240,8 @@ describe('customer-facing copy quality', () => {
         expect(source, `${file} should not contain ${pattern}`).not.toMatch(pattern);
       }
     }
+
+    expect(existsSync(join(repoRoot, 'src/app/demo/page.tsx'))).toBe(false);
   });
 });
 

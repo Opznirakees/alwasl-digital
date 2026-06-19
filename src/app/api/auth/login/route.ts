@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { createOtpCode, hashOtp } from '@/server/crypto';
 import { handleApiError, ok } from '@/server/http';
 import { prisma } from '@/server/prisma';
+import { resolveDemoOtpForPhone } from '@/server/demo-auth';
 import { deliverOtp } from '@/server/providers/otp';
 import { assertRateLimit } from '@/server/rate-limit';
 import { loginSchema, normalizePhone } from '@/server/validation';
@@ -17,11 +18,8 @@ export async function POST(request: NextRequest) {
     assertRateLimit(`auth-login:${ip}`, { limit: 20, windowMs: 15 * 60 * 1000 });
     assertRateLimit(`auth-login:${phone}`, { limit: 5, windowMs: 10 * 60 * 1000 });
 
-    const demoPhone = process.env.SEED_ADMIN_PHONE ?? '+9647812345678';
-    const isDemoLogin = phone === demoPhone && process.env.ENABLE_DEMO_AUTH !== 'false';
-    const code = isDemoLogin
-      ? process.env.DEMO_OTP ?? '123456'
-      : createOtpCode();
+    const demoOtp = resolveDemoOtpForPhone(phone);
+    const code = demoOtp ?? createOtpCode();
 
     await prisma.otpCode.create({
       data: {
@@ -31,7 +29,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!isDemoLogin) {
+    if (!demoOtp) {
       await deliverOtp({ phone, code });
     }
 
