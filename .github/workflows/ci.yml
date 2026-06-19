@@ -32,6 +32,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/alwasl_digital_test?schema=public
+      OTP_PEPPER: ci-only-otp-pepper-for-alwasl-digital-tests
       EXPOSE_OTP_IN_RESPONSE: 'true'
       ALLOW_UNDELIVERED_OTP: 'true'
       ENABLE_FAKE_PAYMENTS: 'false'

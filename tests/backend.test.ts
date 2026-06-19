@@ -9,7 +9,7 @@ import { mobileMenuSheetCopy } from '../src/components/layout/mobile-menu-copy';
 import { resolveOtpPhone } from '../src/contexts/auth-flow';
 import { banners, games } from '../src/data/mock-data';
 import { wahoRechargeInfo } from '../src/data/waho-recharge-info';
-import { hashOtp, safeCompare } from '../src/server/crypto';
+import { hashOtp, resolveOtpPepper, safeCompare } from '../src/server/crypto';
 import { isBlockedProductionDemoOtp, isDemoAuthEnabled, resolveDemoOtpForPhone } from '../src/server/demo-auth';
 import { calculateOrderPricing, createOrderId } from '../src/server/domain/orders';
 import { resolveFakePaymentResult } from '../src/server/domain/payments';
@@ -28,11 +28,20 @@ const require = createRequire(import.meta.url);
 describe('auth helpers', () => {
   test('normalizes phone numbers and hashes OTP codes predictably', () => {
     const phone = normalizePhone('964 781 234 5678');
-    const hash = hashOtp(phone, '123456');
+    const otpEnv = { OTP_PEPPER: 'unit-test-otp-pepper' };
+    const hash = hashOtp(phone, '123456', otpEnv);
 
     expect(phone).toBe('+9647812345678');
-    expect(safeCompare(hash, hashOtp(phone, '123456'))).toBe(true);
-    expect(safeCompare(hash, hashOtp(phone, '654321'))).toBe(false);
+    expect(safeCompare(hash, hashOtp(phone, '123456', otpEnv))).toBe(true);
+    expect(safeCompare(hash, hashOtp(phone, '654321', otpEnv))).toBe(false);
+  });
+
+  test('requires an explicit OTP pepper for hashing', () => {
+    expect(() => resolveOtpPepper({})).toThrow('OTP_SECRET_NOT_CONFIGURED');
+    expect(() => resolveOtpPepper({ OTP_PEPPER: 'replace-with-a-long-random-otp-pepper' })).toThrow(
+      'OTP_SECRET_NOT_CONFIGURED'
+    );
+    expect(resolveOtpPepper({ OTP_PEPPER: 'unit-test-otp-pepper' })).toBe('unit-test-otp-pepper');
   });
 });
 
@@ -360,6 +369,30 @@ describe('WAHO storefront visual assets', () => {
     expect(storefrontImages.length).toBeGreaterThan(0);
     expect(storefrontImages.every((image) => image?.startsWith('/brand/'))).toBe(true);
     expect(storefrontImages.some((image) => image?.startsWith('/waho/'))).toBe(false);
+  });
+});
+
+describe('configuration safety rules', () => {
+  test('keeps example and documented configuration production-safe by default', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const envExample = readFileSync(join(repoRoot, '.env.example'), 'utf8');
+    const readme = readFileSync(join(repoRoot, 'README.md'), 'utf8');
+    const cryptoSource = readFileSync(join(repoRoot, 'src/server/crypto.ts'), 'utf8');
+
+    expect(envExample).toContain('OTP_PEPPER=""');
+    expect(envExample).toContain('ENABLE_DEMO_AUTH="false"');
+    expect(envExample).toContain('ENABLE_FAKE_PAYMENTS="false"');
+    expect(envExample).toContain('ENABLE_MOCK_WAHO="false"');
+    expect(envExample).not.toContain('ENABLE_DEMO_AUTH="true"');
+    expect(envExample).not.toContain('PAYMENT_MODE="fake"');
+    expect(envExample).not.toContain('replace-with-a-long-random');
+
+    expect(readme).not.toContain('PAYMENT_MODE=fake');
+    expect(readme).not.toMatch(/OTP:\s*`123456`/i);
+    expect(readme).toContain('Local demo OTP login is disabled by default and ignored in production.');
+
+    expect(cryptoSource).not.toContain('dev-otp-pepper');
+    expect(cryptoSource).toContain('OTP_SECRET_NOT_CONFIGURED');
   });
 });
 

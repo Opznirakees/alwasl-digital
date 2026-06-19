@@ -27,6 +27,7 @@ export default defineConfig({
         timeout: 120_000,
         env: {
           ...process.env,
+          OTP_PEPPER: process.env.OTP_PEPPER ?? 'playwright-only-otp-pepper-for-local-e2e',
           EXPOSE_OTP_IN_RESPONSE: process.env.EXPOSE_OTP_IN_RESPONSE ?? 'true',
           ALLOW_UNDELIVERED_OTP: process.env.ALLOW_UNDELIVERED_OTP ?? 'true',
           ENABLE_FAKE_PAYMENTS: 'false',

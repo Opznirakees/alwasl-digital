@@ -17,6 +17,7 @@ const publicErrors: Record<string, { message: string; status: number }> = {
   INSUFFICIENT_WALLET_BALANCE: { message: 'Insufficient wallet balance', status: 402 },
   PAYMENT_PROVIDER_NOT_CONFIGURED: { message: 'Payment is temporarily unavailable', status: 424 },
   WAHO_PROVIDER_NOT_CONFIGURED: { message: 'WAHO verification is temporarily unavailable', status: 424 },
+  OTP_SECRET_NOT_CONFIGURED: { message: 'Verification is temporarily unavailable', status: 424 },
   'Failed to deliver OTP': { message: 'Verification delivery is temporarily unavailable', status: 424 },
   'OTP provider is not configured': { message: 'Verification delivery is temporarily unavailable', status: 424 },
   'Top-up amount is unavailable': { message: 'Top-up amount is unavailable', status: 400 },

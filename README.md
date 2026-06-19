@@ -7,7 +7,7 @@ The app is now full-stack:
 - PostgreSQL + Prisma for users, sessions, products, packages, orders, payment attempts, wallet transactions, provider requests, and admin audit logs.
 - OTP auth with httpOnly session cookies.
 - Server-side WAHO product catalog and order creation.
-- Fake payments that are still stored and confirmed server-side.
+- Payment and WAHO fulfillment adapters are intentionally closed in production until real providers are configured.
 - Wallet ledger updates through database transactions.
 - WAHO provider abstraction with a mock adapter until the real WAHO API is available.
 
@@ -18,7 +18,11 @@ bun install
 cp .env.example .env
 ```
 
-Set `DATABASE_URL`, `SESSION_SECRET`, and `OTP_PEPPER` in `.env`.
+Set `DATABASE_URL` and `OTP_PEPPER` in `.env`. Generate `OTP_PEPPER` with a strong random value, for example:
+
+```bash
+openssl rand -hex 32
+```
 
 For local development with PostgreSQL:
 
@@ -28,10 +32,11 @@ bun run db:seed
 bun run dev
 ```
 
-The seeded admin/demo account uses:
+The seeded admin account uses this phone number:
 
 - Phone: `+9647812345678`
-- OTP: `123456`
+
+Local demo OTP login is disabled by default and ignored in production. Only enable it temporarily in local development with `ENABLE_DEMO_AUTH=true` and a custom `DEMO_OTP`.
 
 ## Commands
 
@@ -44,6 +49,7 @@ bun run db:migrate   # apply production migrations
 bun run db:push      # push schema in development
 bun run db:seed      # seed WAHO product/packages and admin user
 bun run test         # backend domain tests
+bun run test:e2e     # Playwright browser/API smoke tests
 ```
 
 ## Environment Variables
@@ -53,14 +59,12 @@ See `.env.example`.
 Important production variables:
 
 - `DATABASE_URL`
-- `SESSION_SECRET`
 - `OTP_PEPPER`
 - `OTP_WEBHOOK_URL`
 - `OTP_WEBHOOK_TOKEN`
 - `SEED_ADMIN_PHONE`
 - `WAHO_API_BASE_URL`
 - `WAHO_API_KEY`
-- `PAYMENT_MODE=fake`
 
 ## DigitalOcean Deployment Notes
 
@@ -91,4 +95,4 @@ bun run build
 bun run start
 ```
 
-Payments are intentionally fake for now. Do not connect live payment providers until the business flow and reconciliation process are approved.
+Payment and WAHO fulfillment remain unavailable in production until the real provider contracts are implemented and approved. Do not enable local-only demo or fake payment flags in production.
