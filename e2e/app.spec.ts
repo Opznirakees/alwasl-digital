@@ -1,0 +1,122 @@
+import { expect, test, type APIRequestContext } from '@playwright/test';
+
+interface TopUpPackage {
+  id: string;
+  amount: number;
+  inStock: boolean;
+}
+
+interface ProductPayload {
+  products: Array<{
+    slug: string;
+    name: string;
+    packages: TopUpPackage[];
+  }>;
+}
+
+function uniquePhone(projectName: string, workerIndex: number) {
+  const digits = `${Date.now()}${workerIndex}${projectName.length}`.replace(/\D/g, '').slice(-9);
+  return `+96478${digits.padStart(9, '0')}`;
+}
+
+async function loadWahoProduct(request: APIRequestContext) {
+  const response = await request.get('/api/products');
+  expect(response.status()).toBe(200);
+
+  const payload = (await response.json()) as ProductPayload;
+  expect(payload.products).toHaveLength(1);
+
+  const product = payload.products[0];
+  expect(product.slug).toBe('waho-top-up');
+  expect(product.packages.length).toBeGreaterThan(0);
+
+  const firstPackage = product.packages.find((item) => item.inStock);
+  expect(firstPackage).toBeTruthy();
+
+  return { product, firstPackage: firstPackage as TopUpPackage };
+}
+
+test.describe('WAHO production smoke', () => {
+  test('renders the WAHO top-up journey from seeded product data', async ({ page, request }) => {
+    const { product, firstPackage } = await loadWahoProduct(request);
+
+    await page.goto('/');
+    await expect(page.getByRole('link', { name: /WAHO Top-Up/i }).first()).toBeVisible();
+
+    await page.goto('/top-up');
+    await expect(page.getByRole('heading', { name: /WAHO Top-Up/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Start top-up/i })).toBeVisible();
+
+    await page.goto(`/top-up/${product.slug}`);
+    await expect(page.getByRole('heading', { name: /WAHO Account Top-Up/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Select top-up amount/i })).toBeVisible();
+
+    const amount = new Intl.NumberFormat('en-IQ').format(firstPackage.amount);
+    const amountButton = page.getByRole('button', { name: new RegExp(amount) }).first();
+    await expect(amountButton).toBeVisible();
+    await amountButton.click();
+
+    await expect(page.getByRole('button', { name: /Continue/i })).toBeEnabled();
+  });
+
+  test('uses real auth/session APIs and keeps production-only mutations locked down', async ({ request }, testInfo) => {
+    const unauthenticatedOrders = await request.get('/api/orders');
+    expect(unauthenticatedOrders.status()).toBe(401);
+
+    const phone = uniquePhone(testInfo.project.name, testInfo.workerIndex);
+    const login = await request.post('/api/auth/login', {
+      data: { phone },
+    });
+    expect(login.status()).toBe(200);
+
+    const loginPayload = (await login.json()) as { debugOtp?: string };
+    expect(loginPayload.debugOtp).toMatch(/^\d{6}$/);
+
+    const verify = await request.post('/api/auth/verify', {
+      data: { phone, otp: loginPayload.debugOtp },
+    });
+    expect(verify.status()).toBe(200);
+
+    const verifyPayload = (await verify.json()) as { user: { phone: string; role: string } };
+    expect(verifyPayload.user).toMatchObject({ phone, role: 'user' });
+
+    const setCookie = verify.headers()['set-cookie'];
+    const sessionCookie = setCookie?.match(/alwasl_session=([^;]+)/)?.[1];
+    expect(sessionCookie).toBeTruthy();
+    const authenticatedHeaders = { Cookie: `alwasl_session=${sessionCookie}` };
+
+    const me = await request.get('/api/auth/me', { headers: authenticatedHeaders });
+    expect(me.status()).toBe(200);
+    const mePayload = (await me.json()) as { user: { phone: string; role: string } };
+    expect(mePayload.user).toMatchObject({ phone, role: 'user' });
+
+    const adminSummary = await request.get('/api/admin/summary', { headers: authenticatedHeaders });
+    expect(adminSummary.status()).toBe(403);
+
+    const fakePayment = await request.post('/api/payments/fake/confirm', {
+      headers: authenticatedHeaders,
+      data: { orderId: 'ORD-E2E-BLOCKED', success: true },
+    });
+    expect(fakePayment.status()).toBe(404);
+
+    const walletTopUp = await request.post('/api/wallet/top-up', {
+      headers: authenticatedHeaders,
+      data: { amount: 5000, paymentMethod: 'zaincash' },
+    });
+    expect(walletTopUp.status()).toBe(424);
+    expect(await walletTopUp.json()).toEqual({ error: 'Payment is temporarily unavailable' });
+
+    const { product, firstPackage } = await loadWahoProduct(request);
+    const order = await request.post('/api/orders', {
+      headers: authenticatedHeaders,
+      data: {
+        productSlug: product.slug,
+        packageId: firstPackage.id,
+        wahoId: '123456789',
+        paymentMethod: 'wallet',
+      },
+    });
+    expect(order.status()).toBe(424);
+    expect(await order.json()).toEqual({ error: 'WAHO verification is temporarily unavailable' });
+  });
+});
