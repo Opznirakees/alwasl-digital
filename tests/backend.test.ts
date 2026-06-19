@@ -13,6 +13,7 @@ import { isBlockedProductionDemoOtp, isDemoAuthEnabled, resolveDemoOtpForPhone }
 import { calculateOrderPricing, createOrderId } from '../src/server/domain/orders';
 import { resolveFakePaymentResult } from '../src/server/domain/payments';
 import { nextWalletBalance } from '../src/server/domain/wallet';
+import { handleApiError } from '../src/server/http';
 import { mapUser } from '../src/server/mappers';
 import { isOtpAttemptLocked, nextOtpAttemptCount } from '../src/server/otp-policy';
 import { isFakePaymentEnabled } from '../src/server/payment-policy';
@@ -29,6 +30,39 @@ describe('auth helpers', () => {
     expect(phone).toBe('+9647812345678');
     expect(safeCompare(hash, hashOtp(phone, '123456'))).toBe(true);
     expect(safeCompare(hash, hashOtp(phone, '654321'))).toBe(false);
+  });
+});
+
+describe('API error boundaries', () => {
+  test('does not expose unexpected internal error messages to clients', async () => {
+    const originalConsoleError = console.error;
+    console.error = () => {};
+    try {
+      const response = handleApiError(new Error('database password leaked in stack trace'));
+      const payload = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(payload).toEqual({ error: 'Unexpected server error' });
+    } finally {
+      console.error = originalConsoleError;
+    }
+  });
+
+  test('maps provider configuration failures to safe public messages', async () => {
+    const wahoResponse = handleApiError(new Error('WAHO_PROVIDER_NOT_CONFIGURED'));
+    const paymentResponse = handleApiError(new Error('PAYMENT_PROVIDER_NOT_CONFIGURED'));
+
+    expect(wahoResponse.status).toBe(424);
+    expect(await wahoResponse.json()).toEqual({ error: 'WAHO verification is temporarily unavailable' });
+    expect(paymentResponse.status).toBe(424);
+    expect(await paymentResponse.json()).toEqual({ error: 'Payment is temporarily unavailable' });
+  });
+
+  test('does not return raw error.message in the shared API error handler', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const source = readFileSync(join(repoRoot, 'src/server/http.ts'), 'utf8');
+
+    expect(source).not.toContain('fail(error.message');
   });
 });
 
