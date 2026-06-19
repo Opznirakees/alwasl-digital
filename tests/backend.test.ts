@@ -16,6 +16,11 @@ import { calculateOrderPricing, createOrderId } from '../src/server/domain/order
 import { resolveFakePaymentResult } from '../src/server/domain/payments';
 import { nextWalletBalance } from '../src/server/domain/wallet';
 import { handleApiError } from '../src/server/http';
+import {
+  assertMatchingIdempotencyFingerprint,
+  createIdempotencyFingerprint,
+  requireIdempotencyKey,
+} from '../src/server/idempotency';
 import { mapUser } from '../src/server/mappers';
 import { isOtpAttemptLocked, nextOtpAttemptCount } from '../src/server/otp-policy';
 import { isFakePaymentEnabled } from '../src/server/payment-policy';
@@ -130,6 +135,79 @@ describe('order creation rules', () => {
 
   test('creates deterministic order ids when clock and random source are fixed', () => {
     expect(createOrderId(new Date('2026-06-18T10:00:00Z'), 0.1234)).toBe('ORD-20260618-2110');
+  });
+});
+
+describe('idempotency rules', () => {
+  test('requires safe idempotency keys for mutation requests', () => {
+    expect(requireIdempotencyKey(new Headers({ 'Idempotency-Key': 'order-123456' }))).toBe('order-123456');
+    expect(() => requireIdempotencyKey(new Headers())).toThrow('IDEMPOTENCY_KEY_REQUIRED');
+    expect(() => requireIdempotencyKey(new Headers({ 'Idempotency-Key': 'short' }))).toThrow(
+      'IDEMPOTENCY_KEY_INVALID'
+    );
+    expect(() => requireIdempotencyKey(new Headers({ 'Idempotency-Key': 'bad key with spaces' }))).toThrow(
+      'IDEMPOTENCY_KEY_INVALID'
+    );
+  });
+
+  test('creates stable fingerprints independent of object key order', () => {
+    const first = createIdempotencyFingerprint('orders.create', {
+      productSlug: 'waho-top-up',
+      packageId: 'pkg-1',
+      wahoId: 'waho_1234',
+      zoneId: '',
+      paymentMethod: 'wallet',
+    });
+    const second = createIdempotencyFingerprint('orders.create', {
+      paymentMethod: 'wallet',
+      zoneId: '',
+      wahoId: 'waho_1234',
+      packageId: 'pkg-1',
+      productSlug: 'waho-top-up',
+    });
+
+    expect(first).toBe(second);
+    expect(() => assertMatchingIdempotencyFingerprint(first, second)).not.toThrow();
+    expect(() => assertMatchingIdempotencyFingerprint(first, createIdempotencyFingerprint('orders.create', {
+      productSlug: 'waho-top-up',
+      packageId: 'pkg-2',
+      wahoId: 'waho_1234',
+      zoneId: '',
+      paymentMethod: 'wallet',
+    }))).toThrow('IDEMPOTENCY_KEY_REUSED');
+  });
+
+  test('stores idempotency keys and fingerprints with unique database constraints', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const schema = readFileSync(join(repoRoot, 'prisma/schema.prisma'), 'utf8');
+    const migration = readFileSync(
+      join(repoRoot, 'prisma/migrations/20260619114500_add_idempotency_keys/migration.sql'),
+      'utf8'
+    );
+
+    expect(schema).toContain('idempotencyKey');
+    expect(schema).toContain('idempotencyFingerprint');
+    expect(schema).toContain('@@unique([userId, idempotencyKey])');
+    expect(schema).toContain('@@unique([orderId, idempotencyKey])');
+    expect(migration).toContain('CREATE UNIQUE INDEX "orders_userId_idempotencyKey_key"');
+    expect(migration).toContain('CREATE UNIQUE INDEX "payment_attempts_orderId_idempotencyKey_key"');
+  });
+
+  test('order and payment mutation routes require idempotency keys', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const ordersRoute = readFileSync(join(repoRoot, 'src/app/api/orders/route.ts'), 'utf8');
+    const fakePaymentRoute = readFileSync(join(repoRoot, 'src/app/api/payments/fake/confirm/route.ts'), 'utf8');
+    const orderService = readFileSync(join(repoRoot, 'src/server/services/orders.ts'), 'utf8');
+    const topUpPage = readFileSync(join(repoRoot, 'src/app/top-up/[slug]/page.tsx'), 'utf8');
+
+    expect(ordersRoute).toContain('requireIdempotencyKey');
+    expect(ordersRoute).toContain("createIdempotencyFingerprint('orders.create'");
+    expect(fakePaymentRoute).toContain('requireIdempotencyKey');
+    expect(fakePaymentRoute).toContain("createIdempotencyFingerprint('payments.fake.confirm'");
+    expect(orderService).toContain('replayOrderFromIdempotency');
+    expect(orderService).toContain('replayPaymentFromIdempotency');
+    expect(orderService).toContain('P2002');
+    expect(topUpPage).toContain("'Idempotency-Key': orderIdempotencyKeyRef.current");
   });
 });
 

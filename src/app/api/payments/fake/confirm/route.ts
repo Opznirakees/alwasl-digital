@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { recordAdminAuditLog } from '@/server/admin-audit';
 import { requireUser } from '@/server/auth';
 import { handleApiError, ok } from '@/server/http';
+import { createIdempotencyFingerprint, requireIdempotencyKey } from '@/server/idempotency';
 import { mapOrder } from '@/server/mappers';
 import { assertFakePaymentEndpointEnabled } from '@/server/payment-policy';
 import { assertRateLimit } from '@/server/rate-limit';
@@ -15,9 +16,18 @@ export async function POST(request: NextRequest) {
     assertFakePaymentEndpointEnabled();
     const user = await requireUser();
     const body = fakePaymentConfirmSchema.parse(await request.json());
+    const idempotencyKey = requireIdempotencyKey(request.headers);
+    const idempotencyFingerprint = createIdempotencyFingerprint('payments.fake.confirm', {
+      orderId: body.orderId,
+      success: body.success,
+    });
     await assertRateLimit(`payments:fake:${user.id}`, { limit: 40, windowMs: 15 * 60 * 1000 });
 
-    const order = await confirmFakePayment(user, body);
+    const result = await confirmFakePayment(user, body, {
+      key: idempotencyKey,
+      fingerprint: idempotencyFingerprint,
+    });
+    const order = result.order;
     if (user.role === 'ADMIN') {
       await recordAdminAuditLog({
         admin: user,
@@ -34,7 +44,10 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return ok({ order: mapOrder(order) });
+    return ok(
+      { order: mapOrder(order), replayed: result.replayed },
+      { headers: { 'Idempotency-Replayed': result.replayed ? 'true' : 'false' } }
+    );
   } catch (error) {
     return handleApiError(error);
   }

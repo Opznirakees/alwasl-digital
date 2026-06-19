@@ -116,8 +116,23 @@ test.describe('WAHO production smoke', () => {
     expect(await walletTopUp.json()).toEqual({ error: 'Payment is temporarily unavailable' });
 
     const { product, firstPackage } = await loadWahoProduct(request);
-    const order = await request.post('/api/orders', {
+    const orderWithoutIdempotencyKey = await request.post('/api/orders', {
       headers: authenticatedHeaders,
+      data: {
+        productSlug: product.slug,
+        packageId: firstPackage.id,
+        wahoId: '123456789',
+        paymentMethod: 'wallet',
+      },
+    });
+    expect(orderWithoutIdempotencyKey.status()).toBe(400);
+    expect(await orderWithoutIdempotencyKey.json()).toEqual({ error: 'Idempotency-Key header is required' });
+
+    const order = await request.post('/api/orders', {
+      headers: {
+        ...authenticatedHeaders,
+        'Idempotency-Key': `e2e-order-${testInfo.project.name}-${testInfo.workerIndex}`,
+      },
       data: {
         productSlug: product.slug,
         packageId: firstPackage.id,

@@ -32,6 +32,10 @@ interface GamePageProps {
 
 type CheckoutStep = 'package' | 'details' | 'payment' | 'confirm';
 
+function createClientIdempotencyKey() {
+  return globalThis.crypto?.randomUUID?.() ?? `order-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export default function GamePage({ params }: GamePageProps) {
   const resolvedParams = use(params);
   const router = useRouter();
@@ -48,6 +52,7 @@ export default function GamePage({ params }: GamePageProps) {
   const [paymentMethod, setPaymentMethod] = useState<string>('wallet');
   const [isProcessing, setIsProcessing] = useState(false);
   const wizardRef = useRef<HTMLDivElement>(null);
+  const orderIdempotencyKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -72,6 +77,10 @@ export default function GamePage({ params }: GamePageProps) {
       active = false;
     };
   }, [resolvedParams.slug, router]);
+
+  useEffect(() => {
+    orderIdempotencyKeyRef.current = null;
+  }, [game?.slug, selectedPackage?.id, userId, zoneId, paymentMethod]);
 
   if (isLoadingProduct || !game) {
     return (
@@ -167,9 +176,13 @@ export default function GamePage({ params }: GamePageProps) {
 
     setIsProcessing(true);
     try {
+      orderIdempotencyKeyRef.current ??= createClientIdempotencyKey();
       const orderResponse = await fetch('/api/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Idempotency-Key': orderIdempotencyKeyRef.current,
+        },
         credentials: 'include',
         body: JSON.stringify({
           productSlug: game.slug,
@@ -186,6 +199,7 @@ export default function GamePage({ params }: GamePageProps) {
       }
 
       await refreshAccount();
+      orderIdempotencyKeyRef.current = null;
       toast.success(t(
         'Order submitted. We will confirm payment before processing.',
         'تم إرسال الطلب. سنؤكد الدفع قبل المعالجة.',
