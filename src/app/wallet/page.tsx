@@ -47,7 +47,7 @@ export default function WalletPage() {
 
   const currentUser = user;
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
-  const walletTopUpEnabled = process.env.NEXT_PUBLIC_ENABLE_WALLET_TOP_UP === 'true';
+  const walletTopUpEnabled = false;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale).format(Math.abs(amount));

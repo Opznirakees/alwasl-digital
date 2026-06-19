@@ -12,9 +12,3 @@ export function assertFakePaymentEndpointEnabled(env: PaymentEnv = process.env) 
     throw new Error('NOT_FOUND');
   }
 }
-
-export function assertWalletTopUpPaymentsEnabled(env: PaymentEnv = process.env) {
-  if (!isFakePaymentEnabled(env)) {
-    throw new Error('PAYMENT_PROVIDER_NOT_CONFIGURED');
-  }
-}

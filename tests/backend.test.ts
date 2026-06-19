@@ -93,6 +93,19 @@ describe('wallet ledger rules', () => {
     expect(nextWalletBalance(250000, 9500)).toBe(240500);
     expect(() => nextWalletBalance(1000, 5000)).toThrow('INSUFFICIENT_WALLET_BALANCE');
   });
+
+  test('wallet top-up API does not directly mutate app balance without a real payment provider', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const source = readFileSync(join(repoRoot, 'src/app/api/wallet/top-up/route.ts'), 'utf8');
+
+    expect(source).toContain('PAYMENT_PROVIDER_NOT_CONFIGURED');
+    expect(source).not.toContain('walletBalance +');
+    expect(source).not.toContain('walletTransaction.create');
+    expect(source).not.toContain('tx.user.update');
+    expect(source).not.toContain('mapWalletTransaction');
+    expect(source).not.toContain('mapUser');
+    expect(source).not.toContain('prisma');
+  });
 });
 
 describe('WAHO provider rules', () => {

@@ -274,9 +274,9 @@ export const walletTransactions: WalletTransaction[] = [
     amount: 100000,
     currency: 'IQD',
     balance: 250000,
-    description: 'Wallet top-up via ZainCash',
-    descriptionAr: 'شحن المحفظة عبر زين كاش',
-    reference: 'ZC-2026052601',
+    description: 'Opening wallet balance',
+    descriptionAr: 'رصيد افتتاحي للمحفظة',
+    reference: 'OPENING-BALANCE',
     createdAt: '2026-05-26T06:00:00Z',
   },
   {

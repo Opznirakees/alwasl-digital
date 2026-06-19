@@ -281,7 +281,7 @@ const zhTranslations: Record<string, string> = {
   'Days': '天',
   'Pack': '包',
   'Packs': '包',
-  'Wallet top-up via ZainCash': '通过 ZainCash 充值钱包',
+  'Opening wallet balance': '期初钱包余额',
   'Gold level cashback (5%)': '黄金等级返现（5%）',
   'Welcome bonus': '欢迎奖励',
   'Search...': '搜索...',
