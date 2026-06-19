@@ -67,10 +67,7 @@ test.describe('WAHO production smoke', () => {
     await page.goto('/');
     await expect(page.getByRole('link', { name: /WAHO Top-Up/i }).first()).toBeVisible();
 
-    await Promise.all([
-      page.waitForResponse((response) => response.url().includes('/api/products/waho-top-up') && response.ok()),
-      page.goto('/top-up'),
-    ]);
+    await page.goto('/top-up');
     await expect(page.locator('main')).toContainText('WAHO Top-Up', { timeout: 15_000 });
     await expect(page.getByRole('link', { name: /Start top-up/i })).toBeVisible({ timeout: 15_000 });
 

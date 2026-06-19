@@ -87,6 +87,7 @@ model User {
   walletTransactions WalletTransaction[]
   adminAuditLogs     AdminAuditLog[]     @relation("AdminAuditActor")
 
+  /// Financial CHECK constraints are enforced in migration 20260619122500_add_financial_check_constraints.
   @@map("users")
 }
 
@@ -172,6 +173,7 @@ model TopupPackage {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// Financial CHECK constraints are enforced in migration 20260619122500_add_financial_check_constraints.
   @@index([productId, inStock, sortOrder])
   @@map("topup_packages")
 }
@@ -211,6 +213,7 @@ model Order {
   refundedAt      DateTime?
   refundReason    String?
 
+  /// Financial CHECK constraints are enforced in migration 20260619122500_add_financial_check_constraints.
   @@index([userId, createdAt])
   @@index([status, paymentStatus])
   @@unique([userId, idempotencyKey])
@@ -232,6 +235,7 @@ model PaymentAttempt {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
+  /// Financial CHECK constraints are enforced in migration 20260619122500_add_financial_check_constraints.
   @@index([orderId, status])
   @@unique([orderId, idempotencyKey])
   @@map("payment_attempts")
@@ -252,6 +256,7 @@ model WalletTransaction {
   reference     String?
   createdAt     DateTime              @default(now())
 
+  /// The ledger amount can be negative for purchases; balance is constrained non-negative in migration 20260619122500_add_financial_check_constraints.
   @@index([userId, createdAt])
   @@map("wallet_transactions")
 }

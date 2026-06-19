@@ -254,6 +254,34 @@ describe('wallet ledger rules', () => {
     expect(() => nextWalletBalance(1000, 5000)).toThrow('INSUFFICIENT_WALLET_BALANCE');
   });
 
+  test('database constraints protect financial values from going negative', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const schema = readFileSync(join(repoRoot, 'prisma/schema.prisma'), 'utf8');
+    const migration = readFileSync(
+      join(repoRoot, 'prisma/migrations/20260619122500_add_financial_check_constraints/migration.sql'),
+      'utf8'
+    );
+
+    expect(schema).toContain('20260619122500_add_financial_check_constraints');
+    expect(migration).toContain('users_wallet_balance_non_negative');
+    expect(migration).toContain('users_total_spent_non_negative');
+    expect(migration).toContain('users_discount_percentage_range');
+    expect(migration).toContain('topup_packages_amount_positive');
+    expect(migration).toContain('topup_packages_base_price_non_negative');
+    expect(migration).toContain('topup_packages_sale_price_non_negative');
+    expect(migration).toContain('topup_packages_sale_price_not_above_base_price');
+    expect(migration).toContain('orders_quantity_positive');
+    expect(migration).toContain('orders_unit_price_non_negative');
+    expect(migration).toContain('orders_total_price_non_negative');
+    expect(migration).toContain('orders_discount_non_negative');
+    expect(migration).toContain('orders_final_price_non_negative');
+    expect(migration).toContain('orders_discount_not_above_total_price');
+    expect(migration).toContain('orders_final_price_matches_total_minus_discount');
+    expect(migration).toContain('payment_attempts_amount_non_negative');
+    expect(migration).toContain('wallet_transactions_balance_non_negative');
+    expect(migration).not.toContain('wallet_transactions_amount_non_negative');
+  });
+
   test('wallet top-up API does not directly mutate app balance without a real payment provider', () => {
     const repoRoot = join(import.meta.dir, '..');
     const source = readFileSync(join(repoRoot, 'src/app/api/wallet/top-up/route.ts'), 'utf8');
