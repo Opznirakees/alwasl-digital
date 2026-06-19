@@ -180,23 +180,12 @@ export default function GamePage({ params }: GamePageProps) {
         throw new Error(orderPayload.error || 'Order creation failed');
       }
 
-      const paymentResponse = await fetch('/api/payments/fake/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          orderId: orderPayload.order.id,
-          success: true,
-        }),
-      });
-      const paymentPayload = await paymentResponse.json();
-
-      if (!paymentResponse.ok) {
-        throw new Error(paymentPayload.error || 'Payment confirmation failed');
-      }
-
       await refreshAccount();
-      toast.success(t('Order placed successfully!', 'تم تأكيد الطلب بنجاح!'));
+      toast.success(t(
+        'Order submitted. We will confirm payment before processing.',
+        'تم إرسال الطلب. سنؤكد الدفع قبل المعالجة.',
+        '订单已提交。我们会在处理前确认付款。'
+      ));
       router.push('/orders');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Order failed';
@@ -566,7 +555,7 @@ export default function GamePage({ params }: GamePageProps) {
                     ) : (
                       <>
                         <Shield className="w-4 h-4 mr-2" />
-                        {t('Confirm & Pay', 'تأكيد والدفع')}
+                        {t('Submit order', 'إرسال الطلب', '提交订单')}
                       </>
                     )}
                   </Button>

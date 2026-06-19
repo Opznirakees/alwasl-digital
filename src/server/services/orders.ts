@@ -57,8 +57,8 @@ export async function createPendingOrder(user: User, input: CreateOrderInput) {
           amount: pricing.finalPrice,
           currency: pkg.currency,
           metadata: {
-            mode: 'fake',
-            reason: 'Payment provider intentionally simulated until live payments are connected.',
+            mode: 'pending_payment',
+            reason: 'Awaiting payment confirmation before provider fulfillment.',
           },
         },
       },

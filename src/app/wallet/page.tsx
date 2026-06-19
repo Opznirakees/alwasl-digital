@@ -47,6 +47,7 @@ export default function WalletPage() {
 
   const currentUser = user;
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
+  const walletTopUpEnabled = process.env.NEXT_PUBLIC_ENABLE_WALLET_TOP_UP === 'true';
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale).format(Math.abs(amount));
@@ -199,9 +200,17 @@ export default function WalletPage() {
               </div>
 
               <div className="flex min-w-0 gap-3">
-                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <Dialog
+                  open={walletTopUpEnabled ? dialogOpen : false}
+                  onOpenChange={(open) => {
+                    if (walletTopUpEnabled) setDialogOpen(open);
+                  }}
+                >
                   <DialogTrigger asChild>
-                    <Button className="min-w-0 flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-lg shadow-emerald-500/30">
+                    <Button
+                      disabled={!walletTopUpEnabled}
+                      className="min-w-0 flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:to-teal-700 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-700 disabled:text-white/50 disabled:shadow-none"
+                    >
                       <Plus className="w-4 h-4 mr-2" />
                       {t('Top Up', 'شحن الرصيد')}
                     </Button>
@@ -286,6 +295,15 @@ export default function WalletPage() {
                   </DialogContent>
                 </Dialog>
               </div>
+              {!walletTopUpEnabled && (
+                <p className="mt-3 text-xs text-white/50">
+                  {t(
+                    walletTopUpDialogCopy.unavailable.en,
+                    walletTopUpDialogCopy.unavailable.ar,
+                    walletTopUpDialogCopy.unavailable.zh
+                  )}
+                </p>
+              )}
             </Card>
 
             {/* Transaction History */}

@@ -14,6 +14,7 @@ import { calculateOrderPricing, createOrderId } from '../src/server/domain/order
 import { resolveFakePaymentResult } from '../src/server/domain/payments';
 import { nextWalletBalance } from '../src/server/domain/wallet';
 import { mapUser } from '../src/server/mappers';
+import { isFakePaymentEnabled } from '../src/server/payment-policy';
 import { normalizePhone } from '../src/server/validation';
 import type { User } from '../src/types';
 
@@ -50,6 +51,17 @@ describe('order creation rules', () => {
 });
 
 describe('fake payment rules', () => {
+  test('never enables fake payment mutation APIs in production', () => {
+    expect(isFakePaymentEnabled({ NODE_ENV: 'production', ENABLE_FAKE_PAYMENTS: 'true' })).toBe(false);
+    expect(isFakePaymentEnabled({ NODE_ENV: 'production', ENABLE_FAKE_PAYMENTS: 'false' })).toBe(false);
+  });
+
+  test('enables fake payment mutation APIs only when explicitly configured outside production', () => {
+    expect(isFakePaymentEnabled({ NODE_ENV: 'development', ENABLE_FAKE_PAYMENTS: 'true' })).toBe(true);
+    expect(isFakePaymentEnabled({ NODE_ENV: 'development', ENABLE_FAKE_PAYMENTS: 'false' })).toBe(false);
+    expect(isFakePaymentEnabled({ NODE_ENV: 'test' })).toBe(false);
+  });
+
   test('marks successful completed provider responses as completed', () => {
     expect(resolveFakePaymentResult(true, 'completed')).toEqual({
       paymentStatus: 'COMPLETED',
@@ -213,8 +225,12 @@ describe('customer-facing copy quality', () => {
       'src/app/page.tsx',
       'src/app/top-up/[slug]/page.tsx',
       'src/app/auth/page.tsx',
+      'src/app/wallet/page.tsx',
+      'src/app/wallet/wallet-dialog-copy.ts',
     ];
     const bannedPatterns = [
+      /\/api\/payments\/fake\/confirm/i,
+      /fake payment/i,
       /current release/i,
       /demo-ready/i,
       /placeholder policy/i,
