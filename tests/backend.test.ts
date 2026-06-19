@@ -60,6 +60,13 @@ describe('security headers', () => {
     expect(headers['Permissions-Policy']).toContain('camera=()');
     expect(headers['Cross-Origin-Opener-Policy']).toBe('same-origin');
   });
+
+  test('ships Next runtime config in the Docker runner image', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const dockerfile = readFileSync(join(repoRoot, 'Dockerfile'), 'utf8');
+
+    expect(dockerfile).toContain('COPY --from=builder /app/next.config.js ./next.config.js');
+  });
 });
 
 describe('API error boundaries', () => {
