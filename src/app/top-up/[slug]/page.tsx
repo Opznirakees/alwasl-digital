@@ -125,7 +125,12 @@ export default function GamePage({ params }: GamePageProps) {
       });
       const payload = await response.json();
 
-      if (!response.ok || !payload.account?.valid) {
+      if (!response.ok) {
+        toast.error(payload.error || t('Verification failed', 'فشل في التحقق', '验证失败'));
+        return;
+      }
+
+      if (!payload.account?.valid) {
         toast.error(t('Invalid WAHO account', 'حساب WAHO غير صحيح', 'WAHO 账号无效'));
         return;
       }

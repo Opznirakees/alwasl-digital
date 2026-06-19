@@ -2,6 +2,7 @@ import { requireAdmin } from '@/server/auth';
 import { handleApiError, ok } from '@/server/http';
 import { mapOrder, mapProduct, mapUser, mapWalletTransaction } from '@/server/mappers';
 import { prisma } from '@/server/prisma';
+import { getWahoProviderInfo } from '@/server/providers/waho';
 
 export const runtime = 'nodejs';
 
@@ -54,6 +55,7 @@ export async function GET() {
     const providerSuccessRate = providerRequests.length
       ? Math.round(((providerRequests.length - failedProviderRequests) / providerRequests.length) * 1000) / 10
       : 100;
+    const wahoProvider = getWahoProviderInfo();
 
     return ok({
       stats: {
@@ -76,16 +78,13 @@ export async function GET() {
       walletTransactions: walletTransactions.map(mapWalletTransaction),
       providers: [
         {
-          id: 'waho-mock-provider',
-          name: 'WAHO Mock Provider',
-          apiEndpoint: process.env.WAHO_API_BASE_URL ?? 'mock://waho',
-          isActive: true,
+          ...wahoProvider,
           priority: 1,
           supportedGames: ['waho-top-up'],
-          successRate: providerSuccessRate,
+          successRate: wahoProvider.isActive ? providerSuccessRate : 0,
           avgResponseTime: 0.2,
           lastHealthCheck: new Date().toISOString(),
-          status: failedProviderRequests ? 'degraded' : 'online',
+          status: wahoProvider.isActive && failedProviderRequests ? 'degraded' : wahoProvider.status,
         },
       ],
       providerRequests,

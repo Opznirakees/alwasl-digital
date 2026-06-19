@@ -21,6 +21,7 @@ export function handleApiError(error: unknown) {
     if (error.message === 'RATE_LIMITED') return fail('Too many requests', 429);
     if (error.message === 'INSUFFICIENT_WALLET_BALANCE') return fail('Insufficient wallet balance', 402);
     if (error.message === 'PAYMENT_PROVIDER_NOT_CONFIGURED') return fail('Payment provider is not configured', 503);
+    if (error.message === 'WAHO_PROVIDER_NOT_CONFIGURED') return fail('WAHO provider is not configured', 503);
 
     return fail(error.message, 400);
   }

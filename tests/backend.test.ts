@@ -15,6 +15,7 @@ import { resolveFakePaymentResult } from '../src/server/domain/payments';
 import { nextWalletBalance } from '../src/server/domain/wallet';
 import { mapUser } from '../src/server/mappers';
 import { isFakePaymentEnabled } from '../src/server/payment-policy';
+import { getWahoProvider, getWahoProviderInfo, isMockWahoEnabled } from '../src/server/providers/waho';
 import { normalizePhone } from '../src/server/validation';
 import type { User } from '../src/types';
 
@@ -91,6 +92,43 @@ describe('wallet ledger rules', () => {
   test('debits wallet balances only when funds are available', () => {
     expect(nextWalletBalance(250000, 9500)).toBe(240500);
     expect(() => nextWalletBalance(1000, 5000)).toThrow('INSUFFICIENT_WALLET_BALANCE');
+  });
+});
+
+describe('WAHO provider rules', () => {
+  test('never enables mock WAHO in production, even when env is misconfigured', async () => {
+    const env = {
+      NODE_ENV: 'production',
+      ENABLE_MOCK_WAHO: 'true',
+      WAHO_API_BASE_URL: 'https://example.test/waho',
+    };
+
+    expect(isMockWahoEnabled(env)).toBe(false);
+    expect(getWahoProviderInfo(env)).toMatchObject({
+      id: 'waho-api',
+      isActive: false,
+      status: 'offline',
+    });
+    await expect(getWahoProvider(env).verifyWahoAccount('123456')).rejects.toThrow('WAHO_PROVIDER_NOT_CONFIGURED');
+  });
+
+  test('keeps local mock WAHO explicit and never reports fulfillment as completed', async () => {
+    const env = {
+      NODE_ENV: 'development',
+      ENABLE_MOCK_WAHO: 'true',
+    };
+    const provider = getWahoProvider(env);
+
+    expect(isMockWahoEnabled(env)).toBe(true);
+    await expect(provider.verifyWahoAccount('abc')).resolves.toMatchObject({ valid: false });
+    await expect(provider.verifyWahoAccount('waho_1234')).resolves.toMatchObject({ valid: true });
+    await expect(provider.createWahoTopup({
+      orderId: 'ORD-TEST',
+      wahoId: 'waho_1234',
+      amount: 10000,
+      currency: 'IQD',
+    })).resolves.toMatchObject({ status: 'processing' });
+    await expect(provider.getWahoTopupStatus('WAHO-MOCK-TEST')).resolves.toBe('processing');
   });
 });
 
