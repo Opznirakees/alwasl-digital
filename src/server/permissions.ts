@@ -18,6 +18,7 @@ export const staffPermissions = [
   'PRICING_MANAGE',
   'EXPORT_DATA',
   'WHATSAPP_MARKETING',
+  'MONITORING_MANAGE',
   'JOB_RUN',
 ] as const;
 
@@ -45,6 +46,7 @@ export const staffRolePermissionMap: Record<StaffRole, StaffPermission[]> = {
     'MANUAL_DEPOSIT_REVIEW',
     'PRODUCT_MANAGE',
     'PROVIDER_MANAGE',
+    'MONITORING_MANAGE',
     'JOB_RUN',
   ],
   SUPPORT: [

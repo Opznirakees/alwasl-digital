@@ -145,11 +145,13 @@ bun run build
 bun run start
 ```
 
-6. Configure a scheduled request for provider retries. Call this endpoint at least once per minute; due jobs only run when their `nextRunAt` has passed:
+6. Configure scheduled requests for provider retries, provider balance alerts, uptime checks, and log retention. Call retry/monitoring endpoints at least once per minute; due jobs only run when their configured interval has passed. Run log retention daily:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR_APP_URL/api/jobs/provider-retries
 curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR_APP_URL/api/jobs/provider-alerts
+curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR_APP_URL/api/jobs/monitoring
+curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR_APP_URL/api/jobs/log-retention
 ```
 
-Payment remains unavailable in production until the real payment provider contract is implemented and approved. Configure `WAHA_BASE_URL`, `WAHA_API_KEY`, and `WAHA_SESSION` for direct WhatsApp OTP delivery. Native WAHO API fulfillment can still be added later; until then, add `WAHO_FULFILLMENT_PHONE` to route paid WAHO top-up requests to the operator WhatsApp queue. Provider accounts are seeded with priority/fallback metadata, an initial routing balance from `WAHO_PROVIDER_INITIAL_BALANCE`, and a low-balance threshold from `WAHO_PROVIDER_LOW_BALANCE_THRESHOLD`; set `PROVIDER_ALERT_WHATSAPP_PHONE` to receive WhatsApp alerts. Manage real operational balances carefully after seed. Do not enable local-only demo or fake payment flags in production.
+The app exposes `GET /api/health` for external uptime providers. Admins can manage additional uptime targets and log retention in the admin Monitoring tab. Set `MONITORING_ERROR_WEBHOOK_URL` and/or `MONITORING_STATUS_WEBHOOK_URL` to forward events to an external error tracking or incident system. Payment remains unavailable in production until the real payment provider contract is implemented and approved. Configure `WAHA_BASE_URL`, `WAHA_API_KEY`, and `WAHA_SESSION` for direct WhatsApp OTP delivery. Native WAHO API fulfillment can still be added later; until then, add `WAHO_FULFILLMENT_PHONE` to route paid WAHO top-up requests to the operator WhatsApp queue. Provider accounts are seeded with priority/fallback metadata, an initial routing balance from `WAHO_PROVIDER_INITIAL_BALANCE`, and a low-balance threshold from `WAHO_PROVIDER_LOW_BALANCE_THRESHOLD`; set `PROVIDER_ALERT_WHATSAPP_PHONE` to receive WhatsApp alerts. Manage real operational balances carefully after seed. Do not enable local-only demo or fake payment flags in production.

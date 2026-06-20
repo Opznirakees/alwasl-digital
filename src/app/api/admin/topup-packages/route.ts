@@ -21,13 +21,13 @@ export async function POST(request: NextRequest) {
     });
     if (existingAmount) throw new Error('TOPUP_PACKAGE_EXISTS');
 
-    const id = `waho-topup-${body.amount}`;
+    const id = `${body.productId}-topup-${body.amount}`;
     const topupPackage = await prisma.topupPackage.create({
       data: {
         id,
         productId: body.productId,
-        name: body.name ?? `${body.amount.toLocaleString('en-IQ')} ${body.currency} WAHO Top-Up`,
-        nameAr: body.nameAr ?? `شحن WAHO بقيمة ${body.amount.toLocaleString('en-IQ')} د.ع`,
+        name: body.name ?? `${body.amount.toLocaleString('en-IQ')} ${body.currency} ${product.name}`,
+        nameAr: body.nameAr ?? `${product.nameAr} بقيمة ${body.amount.toLocaleString('en-IQ')} د.ع`,
         amount: body.amount,
         unit: body.unit,
         unitAr: body.unitAr,

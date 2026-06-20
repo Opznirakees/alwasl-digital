@@ -97,7 +97,7 @@ export const games: Game[] = [
     descriptionAr: 'اشحن رصيد حساب WAHO عبر إدخال معرف WAHO واختيار المبلغ والدفع بأمان.',
     image: wahoTopUpMark,
     banner: wahoTopUpBanner,
-    category: 'social_media',
+    category: 'top_up',
     publisher: 'Al-Wasl Digital',
     isPopular: true,
     isFeatured: true,

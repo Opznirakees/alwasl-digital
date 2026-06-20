@@ -77,11 +77,31 @@ import {
   getReportRange,
   summarizeReportBuckets,
 } from '../src/server/services/reports';
+import {
+  buildMonitoringWebhookPayload,
+  checkMonitoringTarget,
+  DEFAULT_LOG_RETENTION_DAYS,
+  getMonitoringExternalConfig,
+  resolveLogRetentionDays,
+  resolveMonitoringWebhookUrl,
+} from '../src/server/services/monitoring';
 import { createExcelWorkbookBuffer } from '../src/server/excel-export';
-import { createOrderSchema, fakePaymentConfirmSchema, normalizePhone, sensitiveOtpRequestSchema, walletTopUpSchema } from '../src/server/validation';
+import {
+  createAdminProductSchema,
+  createMonitoringTargetSchema,
+  createOrderSchema,
+  fakePaymentConfirmSchema,
+  normalizePhone,
+  runMonitoringChecksSchema,
+  sensitiveOtpRequestSchema,
+  updateMonitoringSettingsSchema,
+  updateMonitoringTargetSchema,
+  walletTopUpSchema,
+} from '../src/server/validation';
 import type { User } from '../src/types';
 
 const require = createRequire(import.meta.url);
+process.env.SKIP_MONITORING_DB = 'true';
 
 describe('auth helpers', () => {
   test('normalizes phone numbers and hashes OTP codes predictably', () => {
@@ -225,6 +245,147 @@ describe('API error boundaries', () => {
     const source = readFileSync(join(repoRoot, 'src/server/http.ts'), 'utf8');
 
     expect(source).not.toContain('fail(error.message');
+  });
+});
+
+describe('monitoring and logging rules', () => {
+  const repoRoot = join(import.meta.dir, '..');
+
+  test('validates monitoring targets, settings, and run payloads', () => {
+    expect(createMonitoringTargetSchema.parse({
+      name: 'Production health',
+      url: 'https://example.test/api/health',
+    })).toMatchObject({
+      name: 'Production health',
+      method: 'GET',
+      expectedStatus: 200,
+      timeoutMs: 5000,
+      intervalMinutes: 5,
+      isActive: true,
+    });
+
+    expect(() => createMonitoringTargetSchema.parse({
+      name: 'bad',
+      url: 'not-a-url',
+    })).toThrow();
+    expect(() => updateMonitoringTargetSchema.parse({ timeoutMs: 500 })).toThrow();
+    expect(updateMonitoringSettingsSchema.parse({ logRetentionDays: 45 })).toEqual({ logRetentionDays: 45 });
+    expect(() => updateMonitoringSettingsSchema.parse({ logRetentionDays: 0 })).toThrow();
+    expect(runMonitoringChecksSchema.parse({ targetId: 'monitor-1' })).toEqual({ targetId: 'monitor-1' });
+  });
+
+  test('builds external webhook payloads without leaking stack traces', () => {
+    expect(resolveLogRetentionDays({})).toBe(DEFAULT_LOG_RETENTION_DAYS);
+    expect(resolveLogRetentionDays({ LOG_RETENTION_DAYS: '999' })).toBe(365);
+    expect(getMonitoringExternalConfig({
+      MONITORING_ERROR_WEBHOOK_URL: 'https://hooks.example.test/error',
+      MONITORING_STATUS_WEBHOOK_URL: '',
+    })).toEqual({
+      errorWebhookConfigured: true,
+      statusWebhookConfigured: false,
+    });
+    expect(resolveMonitoringWebhookUrl('ERROR', {
+      MONITORING_ERROR_WEBHOOK_URL: 'https://hooks.example.test/error',
+      MONITORING_STATUS_WEBHOOK_URL: 'https://hooks.example.test/status',
+    })).toBe('https://hooks.example.test/error');
+    expect(resolveMonitoringWebhookUrl('INFO', {
+      MONITORING_ERROR_WEBHOOK_URL: 'https://hooks.example.test/error',
+      MONITORING_STATUS_WEBHOOK_URL: 'https://hooks.example.test/status',
+    })).toBe('https://hooks.example.test/status');
+
+    const payload = buildMonitoringWebhookPayload({
+      severity: 'ERROR',
+      source: 'api',
+      message: 'Unexpected API error',
+      metadata: { stack: 'secret stack details' },
+    });
+
+    expect(payload).toMatchObject({
+      severity: 'ERROR',
+      source: 'api',
+      message: 'Unexpected API error',
+    });
+    expect(JSON.stringify(payload)).not.toContain('secret stack details');
+  });
+
+  test('checks uptime targets with status and latency results', async () => {
+    const target = {
+      id: 'target-1',
+      name: 'Health',
+      url: 'https://example.test/api/health',
+      method: 'GET',
+      expectedStatus: 200,
+      timeoutMs: 5000,
+      intervalMinutes: 5,
+      isActive: true,
+      lastStatus: 'UNKNOWN',
+      lastCheckedAt: null,
+    };
+
+    await expect(checkMonitoringTarget(target as never, {
+      fetcher: async () => new Response(JSON.stringify({ status: 'ok' }), { status: 200 }),
+    })).resolves.toMatchObject({
+      targetId: 'target-1',
+      status: 'UP',
+      statusCode: 200,
+    });
+
+    await expect(checkMonitoringTarget(target as never, {
+      fetcher: async () => new Response(JSON.stringify({ error: 'down' }), { status: 503 }),
+    })).resolves.toMatchObject({
+      targetId: 'target-1',
+      status: 'DOWN',
+      statusCode: 503,
+    });
+  });
+
+  test('persists monitoring schema, routes, admin controls, and cron hooks', () => {
+    const schema = readFileSync(join(repoRoot, 'prisma/schema.prisma'), 'utf8');
+    const migration = readFileSync(
+      join(repoRoot, 'prisma/migrations/20260620190000_add_monitoring_logging/migration.sql'),
+      'utf8'
+    );
+    const service = readFileSync(join(repoRoot, 'src/server/services/monitoring.ts'), 'utf8');
+    const healthRoute = readFileSync(join(repoRoot, 'src/app/api/health/route.ts'), 'utf8');
+    const adminRoute = readFileSync(join(repoRoot, 'src/app/api/admin/monitoring/route.ts'), 'utf8');
+    const adminRunRoute = readFileSync(join(repoRoot, 'src/app/api/admin/monitoring/run/route.ts'), 'utf8');
+    const cronRoute = readFileSync(join(repoRoot, 'src/app/api/jobs/monitoring/route.ts'), 'utf8');
+    const retentionRoute = readFileSync(join(repoRoot, 'src/app/api/jobs/log-retention/route.ts'), 'utf8');
+    const adminPage = readFileSync(join(repoRoot, 'src/app/admin/page.tsx'), 'utf8');
+    const envExample = readFileSync(join(repoRoot, '.env.example'), 'utf8');
+    const readme = readFileSync(join(repoRoot, 'README.md'), 'utf8');
+
+    expect(schema).toContain('enum MonitoringEventSeverity');
+    expect(schema).toContain('enum MonitoringCheckStatus');
+    expect(schema).toContain('model MonitoringTarget');
+    expect(schema).toContain('model MonitoringEvent');
+    expect(schema).toContain('model MonitoringSetting');
+    expect(schema).toContain('MONITORING_MANAGE');
+    expect(migration).toContain('CREATE TABLE "monitoring_targets"');
+    expect(migration).toContain('CREATE TABLE "monitoring_events"');
+    expect(migration).toContain('CREATE TABLE "monitoring_settings"');
+    expect(migration).toContain('monitoring_settings_retention_range');
+    expect(service).toContain('recordUnexpectedApiError');
+    expect(service).toContain('MONITORING_ERROR_WEBHOOK_URL');
+    expect(service).toContain('pruneMonitoringEvents');
+    expect(healthRoute).toContain('getSystemHealth');
+    expect(adminRoute).toContain("action: 'admin.monitoring.view'");
+    expect(adminRoute).toContain('createMonitoringTargetSchema');
+    expect(adminRoute).toContain('updateMonitoringSettingsSchema');
+    expect(adminRunRoute).toContain('runMonitoringChecks');
+    expect(cronRoute).toContain('assertCronRequest');
+    expect(cronRoute).toContain('runMonitoringChecks');
+    expect(retentionRoute).toContain('pruneMonitoringEvents');
+    expect(adminPage).toContain("id: 'monitoring'");
+    expect(adminPage).toContain('createMonitoringTarget');
+    expect(adminPage).toContain('/api/admin/monitoring/run');
+    expect(adminPage).toContain('/api/admin/monitoring/retention');
+    expect(envExample).toContain('LOG_RETENTION_DAYS="30"');
+    expect(envExample).toContain('MONITORING_ERROR_WEBHOOK_URL=""');
+    expect(envExample).toContain('MONITORING_STATUS_WEBHOOK_URL=""');
+    expect(readme).toContain('/api/health');
+    expect(readme).toContain('/api/jobs/monitoring');
+    expect(readme).toContain('/api/jobs/log-retention');
   });
 });
 
@@ -1384,7 +1545,9 @@ describe('admin access rules', () => {
     expect(staffPermissions).toContain('ADMIN_DASHBOARD_VIEW');
     expect(staffPermissions).toContain('MANUAL_DEPOSIT_REVIEW');
     expect(staffPermissions).toContain('WHATSAPP_MARKETING');
+    expect(staffPermissions).toContain('MONITORING_MANAGE');
     expect(staffRolePermissionMap.FINANCE).toContain('ORDER_REFUND');
+    expect(staffRolePermissionMap.OPERATIONS).toContain('MONITORING_MANAGE');
     expect(staffRolePermissionMap.MARKETING).toContain('WHATSAPP_MARKETING');
     expect(hasPermission({ role: 'ADMIN', staffRole: null, staffPermissions: [] }, 'EXPORT_DATA')).toBe(true);
     expect(hasPermission({ role: 'STAFF', staffRole: 'FINANCE', staffPermissions: [] }, 'ORDER_REFUND')).toBe(true);
@@ -1728,6 +1891,7 @@ describe('admin CRUD rules', () => {
     const routeContracts = [
       ['src/app/api/admin/topup-packages/route.ts', ['export async function POST', 'createAdminTopupPackageSchema', 'prisma.topupPackage.create', "action: 'admin.topup_package.create'"]],
       ['src/app/api/admin/topup-packages/[id]/route.ts', ['export async function PATCH', 'updateAdminTopupPackageSchema', 'prisma.topupPackage.update', "action: 'admin.topup_package.update'"]],
+      ['src/app/api/admin/products/route.ts', ['export async function POST', 'createAdminProductSchema', 'prisma.product.create', "action: 'admin.product.create'"]],
       ['src/app/api/admin/products/[id]/route.ts', ['export async function PATCH', 'updateAdminProductSchema', 'prisma.product.update', "action: 'admin.product.update'"]],
       ['src/app/api/admin/providers/route.ts', ['export async function POST', 'createAdminProviderAccountSchema', 'prisma.providerAccount.create', "action: 'admin.provider_account.create'"]],
       ['src/app/api/admin/providers/[id]/route.ts', ['export async function PATCH', 'updateAdminProviderAccountSchema', 'prisma.providerAccount.update', "action: 'admin.provider_account.update'"]],
@@ -1763,6 +1927,7 @@ describe('admin CRUD rules', () => {
 
     for (const handler of [
       'createTopupPackage',
+      'createProduct',
       'updateTopupPackage',
       'toggleProductActive',
       'createProviderAccount',
@@ -1784,6 +1949,7 @@ describe('admin CRUD rules', () => {
     }
 
     expect(adminPage).toContain("adminJsonRequest('/api/admin/topup-packages'");
+    expect(adminPage).toContain("adminJsonRequest('/api/admin/products'");
     expect(adminPage).toContain("adminJsonRequest(`/api/admin/products/${productId}`");
     expect(adminPage).toContain("adminJsonRequest('/api/admin/providers'");
     expect(adminPage).toContain("adminJsonRequest('/api/admin/promotions'");
@@ -2194,39 +2360,77 @@ describe('technical ownership rules', () => {
   });
 });
 
-describe('accepted scope deviation rules', () => {
-  test('records the WAHO-only product scope as an accepted PDF baseline deviation', () => {
+describe('WAHO-first catalog scope rules', () => {
+  test('documents and implements WAHO-first catalog expansion without exposing unsupported products', () => {
     const repoRoot = join(import.meta.dir, '..');
     const scopeDeviationPath = join(repoRoot, 'docs/scope-deviations.md');
     const deliverables = readFileSync(join(repoRoot, 'docs/contract-deliverables.md'), 'utf8');
     const timeline = readFileSync(join(repoRoot, 'docs/project-timeline.md'), 'utf8');
     const handover = readFileSync(join(repoRoot, 'docs/handover.md'), 'utf8');
     const readme = readFileSync(join(repoRoot, 'README.md'), 'utf8');
+    const schema = readFileSync(join(repoRoot, 'prisma/schema.prisma'), 'utf8');
+    const enumMigration = readFileSync(
+      join(repoRoot, 'prisma/migrations/20260620200000_add_waho_first_catalog_scope/migration.sql'),
+      'utf8'
+    );
+    const categoryMigration = readFileSync(
+      join(repoRoot, 'prisma/migrations/20260620201000_set_waho_topup_category/migration.sql'),
+      'utf8'
+    );
+    const adminProductsRoute = readFileSync(join(repoRoot, 'src/app/api/admin/products/route.ts'), 'utf8');
+    const adminPage = readFileSync(join(repoRoot, 'src/app/admin/page.tsx'), 'utf8');
 
     expect(existsSync(scopeDeviationPath)).toBe(true);
 
     const scopeDeviation = readFileSync(scopeDeviationPath, 'utf8');
 
     for (const snippet of [
-      'Scope Deviations from PDF Baseline',
+      'WAHO-First Catalog Scope',
       'multiple games, apps, products, categories',
-      'accepted current product scope is WAHO-only account top-up',
-      'SD-001',
+      'The production launch remains focused on WAHO account top-ups',
+      'no longer hardcoded as a WAHO-only technical scope',
+      'Newly created products are inactive by default',
+      'SC-001',
       'Multiple games/apps/products/categories can be offered',
-      'WAHO-only account top-up is the active product scope',
-      'Accepted deviation',
-      'Adding additional games/apps/products/categories requires',
+      'Catalog infrastructure and admin product creation are implemented',
+      'Implemented as WAHO-first',
+      'Before making a non-WAHO product active',
       'Written approval before production exposure',
     ]) {
       expect(scopeDeviation).toContain(snippet);
     }
 
+    const parsedProduct = createAdminProductSchema.parse({
+      slug: 'future-wallet-top-up',
+      name: 'Future Wallet Top-Up',
+      nameAr: 'شحن محفظة مستقبلية',
+      description: 'Future inactive product for catalog expansion.',
+      descriptionAr: 'منتج مستقبلي غير نشط لتوسيع الكتالوج.',
+    });
+    expect(parsedProduct).toMatchObject({
+      category: 'TOP_UP',
+      isActive: false,
+      countries: ['iq'],
+    });
+
+    expect(schema).toContain('TOP_UP');
+    expect(schema).toContain('APP');
+    expect(schema).toContain('GAME');
+    expect(enumMigration).toContain("'TOP_UP'");
+    expect(categoryMigration).toContain("UPDATE \"products\"");
+    expect(categoryMigration).toContain("'TOP_UP'");
+    expect(adminProductsRoute).toContain('createAdminProductSchema');
+    expect(adminProductsRoute).toContain('isActive: body.isActive');
+    expect(adminPage).toContain('WAHO-first catalog');
+    expect(adminPage).toContain('setProductDialogOpen(true)');
+    expect(adminPage).toContain('New products are inactive by default');
     expect(games).toHaveLength(1);
     expect(games[0].slug).toBe('waho-top-up');
-    expect(deliverables).toContain('Accepted PDF scope deviations');
-    expect(deliverables).toContain('Multi-game, multi-app, voucher, or broad product-category catalog expansion beyond WAHO top-up');
+    expect(deliverables).toContain('WAHO-first catalog scope and expansion policy');
+    expect(deliverables).toContain('Public activation of non-WAHO products before provider routing');
     expect(timeline).toContain('docs/scope-deviations.md');
-    expect(handover).toContain('Scope deviation record confirms the app is intentionally WAHO-only');
+    expect(timeline).toContain('WAHO-first top-up launch scope');
+    expect(handover).toContain('Catalog scope record confirms WAHO is the launch focus');
     expect(readme).toContain('docs/scope-deviations.md');
   });
 });

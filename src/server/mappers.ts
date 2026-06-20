@@ -6,6 +6,8 @@ import type {
   CustomPricingRule as DbCustomPricingRule,
   ExchangeRate as DbExchangeRate,
   ManualDeposit as DbManualDeposit,
+  MonitoringEvent as DbMonitoringEvent,
+  MonitoringTarget as DbMonitoringTarget,
   Order as DbOrder,
   PaymentAttempt,
   PaymentMethod as DbPaymentMethod,
@@ -31,6 +33,8 @@ import type {
   ExchangeRate,
   Game,
   ManualDeposit,
+  MonitoringEvent,
+  MonitoringTarget,
   Order,
   PaymentMethod,
   PaymentStatus,
@@ -78,6 +82,20 @@ const paymentStatusMap: Record<DbPaymentStatus, PaymentStatus> = {
   FAILED: 'failed',
   REFUNDED: 'refunded',
 };
+
+const monitoringStatusMap = {
+  UNKNOWN: 'unknown',
+  UP: 'up',
+  DOWN: 'down',
+  DEGRADED: 'degraded',
+} as const;
+
+const monitoringSeverityMap = {
+  INFO: 'info',
+  WARNING: 'warning',
+  ERROR: 'error',
+  CRITICAL: 'critical',
+} as const;
 
 export function toDbPaymentMethod(method: PaymentMethod): DbPaymentMethod {
   const values: Record<PaymentMethod, DbPaymentMethod> = {
@@ -128,7 +146,7 @@ export function mapProduct(product: ProductWithPackages): Game {
     descriptionAr: product.descriptionAr,
     image: product.image,
     banner: product.banner ?? undefined,
-    category: 'social_media',
+    category: product.category.toLowerCase() as Game['category'],
     publisher: product.publisher,
     isPopular: product.isPopular,
     isFeatured: product.isFeatured,
@@ -459,5 +477,48 @@ export function mapAdminAuditLog(log: AdminAuditLogWithAdmin): AdminAuditLogDto 
     ipAddress: log.ipAddress ?? undefined,
     userAgent: log.userAgent ?? undefined,
     createdAt: log.createdAt.toISOString(),
+  };
+}
+
+export function mapMonitoringTarget(target: DbMonitoringTarget): MonitoringTarget {
+  return {
+    id: target.id,
+    name: target.name,
+    url: target.url,
+    method: target.method as MonitoringTarget['method'],
+    expectedStatus: target.expectedStatus,
+    timeoutMs: target.timeoutMs,
+    intervalMinutes: target.intervalMinutes,
+    isActive: target.isActive,
+    lastStatus: monitoringStatusMap[target.lastStatus],
+    lastCheckedAt: target.lastCheckedAt?.toISOString(),
+    lastLatencyMs: target.lastLatencyMs ?? undefined,
+    lastStatusCode: target.lastStatusCode ?? undefined,
+    lastError: target.lastError ?? undefined,
+    createdAt: target.createdAt.toISOString(),
+    updatedAt: target.updatedAt.toISOString(),
+  };
+}
+
+type MonitoringEventWithTarget = DbMonitoringEvent & {
+  target?: Pick<DbMonitoringTarget, 'id' | 'name'> | null;
+};
+
+export function mapMonitoringEvent(event: MonitoringEventWithTarget): MonitoringEvent {
+  return {
+    id: event.id,
+    severity: monitoringSeverityMap[event.severity],
+    source: event.source,
+    message: event.message,
+    status: event.status ? monitoringStatusMap[event.status] : undefined,
+    targetId: event.targetId ?? undefined,
+    targetName: event.target?.name,
+    path: event.path ?? undefined,
+    method: event.method ?? undefined,
+    statusCode: event.statusCode ?? undefined,
+    latencyMs: event.latencyMs ?? undefined,
+    requestId: event.requestId ?? undefined,
+    metadata: event.metadata ?? undefined,
+    createdAt: event.createdAt.toISOString(),
   };
 }

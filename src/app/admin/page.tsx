@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { Banner, Country, CustomPricingRule, DashboardStats, ExchangeRate, Game, ManualDeposit, Order, Promotion, Provider, ProviderBalanceAlert, User, WalletTransaction } from '@/types';
+import type { Banner, Country, CustomPricingRule, DashboardStats, ExchangeRate, Game, ManualDeposit, MonitoringDashboard, Order, Promotion, Provider, ProviderBalanceAlert, User, WalletTransaction } from '@/types';
 import { shouldLoadAdminSummary } from './admin-access';
 import {
   LayoutDashboard,
@@ -54,6 +54,8 @@ import {
   Bell,
   Menu,
   ChevronRight,
+  Plus,
+  Trash2,
   ArrowUpRight,
   ArrowDownRight,
   Activity,
@@ -180,6 +182,8 @@ export default function AdminDashboard() {
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod>('daily');
   const [adminReport, setAdminReport] = useState<AdminReportPayload | null>(null);
   const [isReportLoading, setIsReportLoading] = useState(false);
+  const [monitoringDashboard, setMonitoringDashboard] = useState<MonitoringDashboard | null>(null);
+  const [isMonitoringLoading, setIsMonitoringLoading] = useState(false);
   const [adminError, setAdminError] = useState<string | null>(null);
   const [isMutating, setIsMutating] = useState(false);
   const [topupDialogOpen, setTopupDialogOpen] = useState(false);
@@ -187,12 +191,32 @@ export default function AdminDashboard() {
   const [pricingDialogOpen, setPricingDialogOpen] = useState(false);
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
+  const [monitoringDialogOpen, setMonitoringDialogOpen] = useState(false);
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [topupForm, setTopupForm] = useState({
+    productId: 'waho-top-up',
     amount: '10000',
     basePrice: '10000',
     salePrice: '',
     inStock: true,
     isPopular: false,
+  });
+  const [productForm, setProductForm] = useState({
+    slug: '',
+    name: '',
+    nameAr: '',
+    description: '',
+    descriptionAr: '',
+    image: '/brand/alwasl-mark.jpg',
+    banner: '/brand/alwasl-banner.jpg',
+    category: 'TOP_UP',
+    publisher: 'Al-Wasl Digital',
+    userIdLabel: 'Account ID',
+    userIdLabelAr: 'معرف الحساب',
+    userIdPlaceholder: 'Enter the account ID',
+    userIdPlaceholderAr: 'أدخل معرف الحساب',
+    countries: 'iq,sa,ae,eg,jo,kw',
+    isActive: false,
   });
   const [providerForm, setProviderForm] = useState({
     name: 'WAHO provider route',
@@ -243,6 +267,19 @@ export default function AdminDashboard() {
     rate: '0.00275',
     note: '',
     isActive: true,
+  });
+  const [monitoringForm, setMonitoringForm] = useState({
+    name: 'Al-Wasl production health',
+    url: '',
+    method: 'GET',
+    expectedStatus: '200',
+    timeoutMs: '5000',
+    intervalMinutes: '5',
+    isActive: true,
+  });
+  const [monitoringSettingsForm, setMonitoringSettingsForm] = useState({
+    logRetentionDays: '30',
+    uptimeEnabled: true,
   });
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
 
@@ -340,6 +377,51 @@ export default function AdminDashboard() {
     };
   }, [activeTab, loadAdminReport, reportPeriod]);
 
+  const loadAdminMonitoring = useCallback(async (shouldApply: () => boolean = () => true) => {
+    if (!user || !shouldLoadAdminSummary(user)) return;
+
+    setIsMonitoringLoading(true);
+    try {
+      const response = await fetch('/api/admin/monitoring', { credentials: 'include' });
+      const payload = await response.json().catch(() => null) as { monitoring?: MonitoringDashboard; error?: string } | null;
+
+      if (!shouldApply()) return;
+
+      if (!response.ok || !payload?.monitoring) {
+        setAdminError(payload?.error ?? 'Monitoring data unavailable');
+        return;
+      }
+
+      setMonitoringDashboard(payload.monitoring);
+      setMonitoringSettingsForm({
+        logRetentionDays: String(payload.monitoring.settings.logRetentionDays),
+        uptimeEnabled: payload.monitoring.settings.uptimeEnabled,
+      });
+      setMonitoringForm((current) => ({
+        ...current,
+        url: current.url || payload.monitoring?.external.healthEndpoint || '',
+      }));
+      setAdminError(null);
+    } catch (error) {
+      if (!shouldApply()) return;
+      const message = error instanceof Error ? error.message : 'Monitoring data unavailable';
+      setAdminError(message);
+    } finally {
+      if (shouldApply()) setIsMonitoringLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (activeTab !== 'monitoring') return;
+
+    let active = true;
+    void loadAdminMonitoring(() => active);
+
+    return () => {
+      active = false;
+    };
+  }, [activeTab, loadAdminMonitoring]);
+
   const revenueData = useMemo(() => {
     const days = Array.from({ length: 7 }, (_, index) => {
       const date = new Date();
@@ -418,9 +500,63 @@ export default function AdminDashboard() {
     }
   }
 
+  async function runMonitoringMutation(action: () => Promise<void>) {
+    setIsMutating(true);
+    try {
+      await action();
+      await loadAdminMonitoring();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Monitoring action failed';
+      setAdminError(message);
+      toast.error(message);
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
+  async function createProduct(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    await runAdminMutation(async () => {
+      await adminJsonRequest('/api/admin/products', {
+        method: 'POST',
+        body: JSON.stringify({
+          slug: productForm.slug,
+          name: productForm.name,
+          nameAr: productForm.nameAr,
+          description: productForm.description,
+          descriptionAr: productForm.descriptionAr,
+          image: productForm.image,
+          banner: productForm.banner,
+          category: productForm.category,
+          publisher: productForm.publisher,
+          userIdLabel: productForm.userIdLabel,
+          userIdLabelAr: productForm.userIdLabelAr,
+          userIdPlaceholder: productForm.userIdPlaceholder,
+          userIdPlaceholderAr: productForm.userIdPlaceholderAr,
+          countries: productForm.countries.split(',').map((country) => country.trim().toLowerCase()).filter(Boolean),
+          isActive: productForm.isActive,
+          isFeatured: false,
+          isPopular: false,
+        }),
+      });
+      setProductDialogOpen(false);
+      setProductForm((current) => ({
+        ...current,
+        slug: '',
+        name: '',
+        nameAr: '',
+        description: '',
+        descriptionAr: '',
+        isActive: false,
+      }));
+      toast.success(t('Product saved', 'تم حفظ المنتج', '产品已保存'));
+    });
+  }
+
   async function createTopupPackage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const product = products[0];
+    const product = products.find((item) => item.id === topupForm.productId) ?? products.find((item) => item.id === 'waho-top-up') ?? products[0];
     if (!product) return;
 
     await runAdminMutation(async () => {
@@ -617,6 +753,80 @@ export default function AdminDashboard() {
     });
   }
 
+  async function createMonitoringTarget(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    await runMonitoringMutation(async () => {
+      await adminJsonRequest('/api/admin/monitoring', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: monitoringForm.name,
+          url: monitoringForm.url,
+          method: monitoringForm.method,
+          expectedStatus: Number(monitoringForm.expectedStatus),
+          timeoutMs: Number(monitoringForm.timeoutMs),
+          intervalMinutes: Number(monitoringForm.intervalMinutes),
+          isActive: monitoringForm.isActive,
+        }),
+      });
+      setMonitoringDialogOpen(false);
+      toast.success(t('Monitoring target saved', 'تم حفظ هدف المراقبة', '监控目标已保存'));
+    });
+  }
+
+  async function updateMonitoringTarget(targetId: string, payload: Record<string, unknown>) {
+    await runMonitoringMutation(async () => {
+      await adminJsonRequest(`/api/admin/monitoring/${targetId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(payload),
+      });
+      toast.success(t('Monitoring target updated', 'تم تحديث هدف المراقبة', '监控目标已更新'));
+    });
+  }
+
+  async function deleteMonitoringTarget(targetId: string) {
+    await runMonitoringMutation(async () => {
+      await adminJsonRequest(`/api/admin/monitoring/${targetId}`, {
+        method: 'DELETE',
+      });
+      toast.success(t('Monitoring target removed', 'تم حذف هدف المراقبة', '监控目标已删除'));
+    });
+  }
+
+  async function runMonitoringChecks(targetId?: string) {
+    await runMonitoringMutation(async () => {
+      await adminJsonRequest('/api/admin/monitoring/run', {
+        method: 'POST',
+        body: JSON.stringify(targetId ? { targetId } : {}),
+      });
+      toast.success(t('Monitoring checks completed', 'اكتملت فحوصات المراقبة', '监控检查已完成'));
+    });
+  }
+
+  async function updateMonitoringSettings(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    await runMonitoringMutation(async () => {
+      await adminJsonRequest('/api/admin/monitoring', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          logRetentionDays: Number(monitoringSettingsForm.logRetentionDays),
+          uptimeEnabled: monitoringSettingsForm.uptimeEnabled,
+        }),
+      });
+      toast.success(t('Monitoring settings updated', 'تم تحديث إعدادات المراقبة', '监控设置已更新'));
+    });
+  }
+
+  async function pruneMonitoringLogs() {
+    await runMonitoringMutation(async () => {
+      await adminJsonRequest('/api/admin/monitoring/retention', {
+        method: 'POST',
+      });
+      toast.success(t('Old monitoring logs pruned', 'تم حذف سجلات المراقبة القديمة', '旧监控日志已清理'));
+    });
+  }
+
   async function toggleCountryActive(countryId: string, isActive: boolean) {
     await runAdminMutation(async () => {
       await adminJsonRequest(`/api/admin/countries/${countryId}`, {
@@ -758,13 +968,18 @@ export default function AdminDashboard() {
     switch (status) {
       case 'completed':
       case 'online':
+      case 'up':
         return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
       case 'processing':
       case 'degraded':
+      case 'warning':
         return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
       case 'failed':
       case 'offline':
       case 'refunded':
+      case 'down':
+      case 'error':
+      case 'critical':
         return 'bg-rose-500/20 text-rose-400 border-rose-500/30';
       default:
         return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
@@ -772,19 +987,26 @@ export default function AdminDashboard() {
   };
 
   const getStatusLabel = (status: string) => {
-    const labels: Record<string, { en: string; ar: string }> = {
-      pending: { en: 'Pending', ar: 'قيد الانتظار' },
-      processing: { en: 'Processing', ar: 'قيد المعالجة' },
-      completed: { en: 'Completed', ar: 'مكتمل' },
-      failed: { en: 'Failed', ar: 'فشل' },
-      refunded: { en: 'Refunded', ar: 'مسترد' },
-      cancelled: { en: 'Cancelled', ar: 'ملغي' },
-      online: { en: 'online', ar: 'متصل' },
-      offline: { en: 'offline', ar: 'غير متصل' },
-      degraded: { en: 'degraded', ar: 'متذبذب' },
+    const labels: Record<string, { en: string; ar: string; zh?: string }> = {
+      pending: { en: 'Pending', ar: 'قيد الانتظار', zh: '待处理' },
+      processing: { en: 'Processing', ar: 'قيد المعالجة', zh: '处理中' },
+      completed: { en: 'Completed', ar: 'مكتمل', zh: '已完成' },
+      failed: { en: 'Failed', ar: 'فشل', zh: '失败' },
+      refunded: { en: 'Refunded', ar: 'مسترد', zh: '已退款' },
+      cancelled: { en: 'Cancelled', ar: 'ملغي', zh: '已取消' },
+      online: { en: 'online', ar: 'متصل', zh: '在线' },
+      offline: { en: 'offline', ar: 'غير متصل', zh: '离线' },
+      degraded: { en: 'degraded', ar: 'متذبذب', zh: '不稳定' },
+      up: { en: 'up', ar: 'يعمل', zh: '正常' },
+      down: { en: 'down', ar: 'متوقف', zh: '故障' },
+      unknown: { en: 'unknown', ar: 'غير معروف', zh: '未知' },
+      info: { en: 'info', ar: 'معلومة', zh: '信息' },
+      warning: { en: 'warning', ar: 'تحذير', zh: '警告' },
+      error: { en: 'error', ar: 'خطأ', zh: '错误' },
+      critical: { en: 'critical', ar: 'حرج', zh: '严重' },
     };
 
-    return t(labels[status]?.en ?? status, labels[status]?.ar ?? status);
+    return t(labels[status]?.en ?? status, labels[status]?.ar ?? status, labels[status]?.zh ?? status);
   };
 
   const getOrderGameName = (order: Order) => {
@@ -849,6 +1071,7 @@ export default function AdminDashboard() {
     { id: 'currencies', icon: DollarSign, label: t('Currencies', 'العملات', '货币') },
     { id: 'wallets', icon: Wallet, label: t('Wallets', 'المحافظ') },
     { id: 'reports', icon: TrendingUp, label: t('Reports', 'التقارير') },
+    { id: 'monitoring', icon: Activity, label: t('Monitoring', 'المراقبة', '监控') },
     { id: 'settings', icon: Settings, label: t('Settings', 'الإعدادات') },
   ];
 
@@ -1163,27 +1386,197 @@ export default function AdminDashboard() {
 
           {activeTab === 'products' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-white">{t('WAHO Top-Up Amounts', 'إدارة مبالغ شحن WAHO', 'WAHO 充值金额管理')}</h2>
-                <Button
-                  onClick={() => setTopupDialogOpen(true)}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-600"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  {t('Add top-up amount', 'إضافة مبلغ شحن', '添加充值金额')}
-                </Button>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">{t('WAHO-first catalog', 'كتالوج يبدأ بـ WAHO', 'WAHO 优先目录')}</h2>
+                  <p className="mt-1 text-sm text-white/50">
+                    {t(
+                      'WAHO stays the active launch product. Add other top-up products here only when their provider, pricing, and support flow are ready.',
+                      'يبقى WAHO منتج الإطلاق النشط. أضف منتجات شحن أخرى هنا فقط عندما يكون المورد والتسعير والدعم جاهزاً.',
+                      'WAHO 仍是当前上线主产品。只有在供应商、价格和支持流程准备好后，才在此添加其他充值产品。'
+                    )}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    variant="outline"
+                    onClick={() => setProductDialogOpen(true)}
+                    className="border-emerald-500/30 text-emerald-400"
+                  >
+                    <Package className="w-4 h-4 mr-2" />
+                    {t('Add product', 'إضافة منتج', '添加产品')}
+                  </Button>
+                  <Button
+                    onClick={() => setTopupDialogOpen(true)}
+                    className="bg-gradient-to-r from-emerald-500 to-teal-600"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    {t('Add top-up amount', 'إضافة مبلغ شحن', '添加充值金额')}
+                  </Button>
+                </div>
               </div>
+
+              <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
+                <DialogContent className="max-w-2xl border-emerald-800/30 bg-slate-950 text-white">
+                  <DialogHeader>
+                    <DialogTitle>{t('Add product', 'إضافة منتج', '添加产品')}</DialogTitle>
+                    <DialogDescription className="text-white/60">
+                      {t(
+                        'New products are inactive by default so WAHO remains the only live customer flow until you enable them.',
+                        'المنتجات الجديدة غير نشطة افتراضياً ليبقى WAHO مسار العملاء المباشر الوحيد حتى تفعّلها.',
+                        '新产品默认未启用，因此在你启用前，WAHO 仍是唯一上线客户流程。'
+                      )}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={createProduct} className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="product-slug">{t('Slug', 'المعرف', 'Slug')}</Label>
+                        <Input
+                          id="product-slug"
+                          value={productForm.slug}
+                          onChange={(event) => setProductForm((current) => ({ ...current, slug: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))}
+                          placeholder="new-top-up-product"
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="product-category">{t('Category', 'الفئة', '分类')}</Label>
+                        <select
+                          id="product-category"
+                          value={productForm.category}
+                          onChange={(event) => setProductForm((current) => ({ ...current, category: event.target.value }))}
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                        >
+                          <option value="TOP_UP">{t('Top-up', 'شحن', '充值')}</option>
+                          <option value="APP">{t('App', 'تطبيق', '应用')}</option>
+                          <option value="GAME">{t('Game', 'لعبة', '游戏')}</option>
+                          <option value="SOCIAL_MEDIA">{t('Social media', 'تواصل اجتماعي', '社交媒体')}</option>
+                          <option value="VOUCHER">{t('Voucher', 'قسيمة', '券码')}</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="product-name">{t('English name', 'الاسم بالإنجليزية', '英文名称')}</Label>
+                        <Input
+                          id="product-name"
+                          value={productForm.name}
+                          onChange={(event) => setProductForm((current) => ({ ...current, name: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="product-name-ar">{t('Arabic name', 'الاسم بالعربية', '阿拉伯语名称')}</Label>
+                        <Input
+                          id="product-name-ar"
+                          value={productForm.nameAr}
+                          onChange={(event) => setProductForm((current) => ({ ...current, nameAr: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="product-description">{t('English description', 'الوصف بالإنجليزية', '英文描述')}</Label>
+                        <Input
+                          id="product-description"
+                          value={productForm.description}
+                          onChange={(event) => setProductForm((current) => ({ ...current, description: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="product-description-ar">{t('Arabic description', 'الوصف بالعربية', '阿拉伯语描述')}</Label>
+                        <Input
+                          id="product-description-ar"
+                          value={productForm.descriptionAr}
+                          onChange={(event) => setProductForm((current) => ({ ...current, descriptionAr: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="product-image">{t('Image path', 'مسار الصورة', '图片路径')}</Label>
+                        <Input
+                          id="product-image"
+                          value={productForm.image}
+                          onChange={(event) => setProductForm((current) => ({ ...current, image: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="product-countries">{t('Countries', 'الدول', '国家')}</Label>
+                        <Input
+                          id="product-countries"
+                          value={productForm.countries}
+                          onChange={(event) => setProductForm((current) => ({ ...current, countries: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="product-user-label">{t('Account label', 'تسمية الحساب', '账号标签')}</Label>
+                        <Input
+                          id="product-user-label"
+                          value={productForm.userIdLabel}
+                          onChange={(event) => setProductForm((current) => ({ ...current, userIdLabel: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="product-user-label-ar">{t('Arabic account label', 'تسمية الحساب بالعربية', '阿拉伯语账号标签')}</Label>
+                        <Input
+                          id="product-user-label-ar"
+                          value={productForm.userIdLabelAr}
+                          onChange={(event) => setProductForm((current) => ({ ...current, userIdLabelAr: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-slate-900 px-3 py-2">
+                      <div>
+                        <Label htmlFor="product-active">{t('Activate publicly', 'تفعيل للعامة', '公开启用')}</Label>
+                        <p className="mt-1 text-xs text-white/40">{t('Leave off until provider and pricing are approved.', 'اتركه مغلقاً حتى يتم اعتماد المورد والتسعير.', '供应商和价格批准前请保持关闭。')}</p>
+                      </div>
+                      <Switch
+                        id="product-active"
+                        checked={productForm.isActive}
+                        onCheckedChange={(checked) => setProductForm((current) => ({ ...current, isActive: checked }))}
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button type="submit" disabled={isMutating} className="bg-emerald-600 hover:bg-emerald-500">
+                        {t('Save product', 'حفظ المنتج', '保存产品')}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
 
               <Dialog open={topupDialogOpen} onOpenChange={setTopupDialogOpen}>
                 <DialogContent className="border-emerald-800/30 bg-slate-950 text-white">
                   <DialogHeader>
                     <DialogTitle>{t('Add top-up amount', 'إضافة مبلغ شحن', '添加充值金额')}</DialogTitle>
                     <DialogDescription className="text-white/60">
-                      {t('Create a new WAHO recharge amount that customers can select.', 'أنشئ مبلغ شحن WAHO جديداً يمكن للعملاء اختياره.', '创建客户可选择的新 WAHO 充值金额。')}
+                      {t('Create a recharge amount. WAHO remains selected by default.', 'أنشئ مبلغ شحن. يبقى WAHO محدداً افتراضياً.', '创建充值金额。WAHO 默认选中。')}
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={createTopupPackage} className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2 sm:col-span-2">
+                        <Label htmlFor="topup-product">{t('Product', 'المنتج', '产品')}</Label>
+                        <select
+                          id="topup-product"
+                          value={topupForm.productId}
+                          onChange={(event) => setTopupForm((current) => ({ ...current, productId: event.target.value }))}
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                        >
+                          {[...products].sort((a, b) => Number(b.id === 'waho-top-up') - Number(a.id === 'waho-top-up')).map((product) => (
+                            <option key={product.id} value={product.id}>{product.name}</option>
+                          ))}
+                        </select>
+                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="topup-amount">{t('Amount', 'المبلغ')}</Label>
                         <Input
@@ -2633,7 +3026,386 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab !== 'overview' && activeTab !== 'orders' && activeTab !== 'products' && activeTab !== 'pricing' && activeTab !== 'providers' && activeTab !== 'promotions' && activeTab !== 'banners' && activeTab !== 'currencies' && activeTab !== 'reports' && activeTab !== 'users' && activeTab !== 'wallets' && (
+          {activeTab === 'monitoring' && (
+            <div className="space-y-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-white">{t('Monitoring', 'المراقبة', '监控')}</h2>
+                  <p className="mt-1 text-sm text-white/50">
+                    {t(
+                      'Uptime checks, error events, and log retention for the production environment.',
+                      'فحوصات التوفر وأحداث الأخطاء واحتفاظ السجلات لبيئة الإنتاج.',
+                      '生产环境的可用性检查、错误事件和日志保留。'
+                    )}
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    variant="outline"
+                    onClick={() => void loadAdminMonitoring()}
+                    disabled={isMonitoringLoading}
+                    className="border-emerald-500/30 text-emerald-400"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    {t('Refresh', 'تحديث', '刷新')}
+                  </Button>
+                  <Button
+                    onClick={() => void runMonitoringChecks()}
+                    disabled={isMutating}
+                    className="bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+                  >
+                    <Activity className="w-4 h-4 mr-2" />
+                    {t('Run checks', 'تشغيل الفحوصات', '运行检查')}
+                  </Button>
+                  <Button
+                    onClick={() => setMonitoringDialogOpen(true)}
+                    className="bg-amber-400 text-slate-950 hover:bg-amber-300"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    {t('Add target', 'إضافة هدف', '添加目标')}
+                  </Button>
+                </div>
+              </div>
+
+              {isMonitoringLoading && (
+                <Card className="border-emerald-800/20 bg-slate-900/50 p-6">
+                  <p className="text-sm text-white/60">{t('Loading monitoring data...', 'جاري تحميل بيانات المراقبة...', '正在加载监控数据...')}</p>
+                </Card>
+              )}
+
+              {!isMonitoringLoading && monitoringDashboard && (
+                <>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {[
+                      {
+                        label: t('Active targets', 'الأهداف النشطة', '启用目标'),
+                        value: monitoringDashboard.summary.activeTargets,
+                        detail: monitoringDashboard.settings.uptimeEnabled
+                          ? t('Uptime enabled', 'مراقبة التوفر مفعلة', '可用性监控已启用')
+                          : t('Uptime paused', 'مراقبة التوفر متوقفة', '可用性监控已暂停'),
+                        icon: Server,
+                      },
+                      {
+                        label: t('Down targets', 'أهداف متوقفة', '故障目标'),
+                        value: monitoringDashboard.summary.downTargets,
+                        detail: t('Current status', 'الحالة الحالية', '当前状态'),
+                        icon: AlertCircle,
+                      },
+                      {
+                        label: t('Errors 24h', 'أخطاء 24 ساعة', '24小时错误'),
+                        value: monitoringDashboard.summary.errorEvents24h,
+                        detail: t('Error and critical events', 'أخطاء وأحداث حرجة', '错误和严重事件'),
+                        icon: XCircle,
+                      },
+                      {
+                        label: t('Critical 24h', 'حرج 24 ساعة', '24小时严重'),
+                        value: monitoringDashboard.summary.criticalEvents24h,
+                        detail: monitoringDashboard.summary.lastEventAt
+                          ? formatDate(monitoringDashboard.summary.lastEventAt)
+                          : t('No events yet', 'لا توجد أحداث بعد', '暂无事件'),
+                        icon: Zap,
+                      },
+                    ].map((metric) => (
+                      <Card key={metric.label} className="border-emerald-800/20 bg-slate-900/50 p-5">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-xs text-white/50">{metric.label}</p>
+                            <p className="mt-1 text-2xl font-bold text-white">{formatCurrency(metric.value)}</p>
+                            <p className="mt-2 text-xs text-white/40">{metric.detail}</p>
+                          </div>
+                          <div className="rounded-lg bg-emerald-500/10 p-2">
+                            <metric.icon className="h-5 w-5 text-emerald-400" />
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
+                    <Card className="border-emerald-800/20 bg-slate-900/50 p-5">
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div>
+                          <h3 className="text-lg font-bold text-white">{t('External hooks', 'الربط الخارجي', '外部接口')}</h3>
+                          <p className="mt-2 break-all rounded-lg border border-emerald-800/20 bg-slate-950/50 px-3 py-2 text-xs text-emerald-300">
+                            {monitoringDashboard.external.healthEndpoint}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:w-72">
+                          <Badge className={monitoringDashboard.external.errorWebhookConfigured ? getStatusColor('up') : getStatusColor('unknown')}>
+                            {t('Error webhook', 'Webhook للأخطاء', '错误Webhook')}: {monitoringDashboard.external.errorWebhookConfigured ? t('set', 'مفعل', '已设置') : t('not set', 'غير مفعل', '未设置')}
+                          </Badge>
+                          <Badge className={monitoringDashboard.external.statusWebhookConfigured ? getStatusColor('up') : getStatusColor('unknown')}>
+                            {t('Status webhook', 'Webhook للحالة', '状态Webhook')}: {monitoringDashboard.external.statusWebhookConfigured ? t('set', 'مفعل', '已设置') : t('not set', 'غير مفعل', '未设置')}
+                          </Badge>
+                        </div>
+                      </div>
+                    </Card>
+
+                    <Card className="border-emerald-800/20 bg-slate-900/50 p-5">
+                      <form onSubmit={updateMonitoringSettings} className="space-y-4">
+                        <div>
+                          <h3 className="text-lg font-bold text-white">{t('Log retention', 'احتفاظ السجلات', '日志保留')}</h3>
+                          <p className="mt-1 text-xs text-white/40">
+                            {t('Current events are retained by the configured period.', 'يتم الاحتفاظ بالأحداث حسب المدة المحددة.', '事件按配置周期保留。')}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
+                          <div>
+                            <Label className="text-white/70">{t('Retention days', 'أيام الاحتفاظ', '保留天数')}</Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              max="365"
+                              value={monitoringSettingsForm.logRetentionDays}
+                              onChange={(event) => setMonitoringSettingsForm({ ...monitoringSettingsForm, logRetentionDays: event.target.value })}
+                              className="mt-2 bg-slate-950/60 border-emerald-800/30 text-white"
+                            />
+                          </div>
+                          <div className="flex items-end gap-2">
+                            <Switch
+                              checked={monitoringSettingsForm.uptimeEnabled}
+                              onCheckedChange={(checked) => setMonitoringSettingsForm({ ...monitoringSettingsForm, uptimeEnabled: checked })}
+                            />
+                            <span className="pb-2 text-sm text-white/60">{t('Uptime', 'التوفر', '可用性')}</span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Button type="submit" disabled={isMutating} className="bg-emerald-500 text-slate-950 hover:bg-emerald-400">
+                            {t('Save settings', 'حفظ الإعدادات', '保存设置')}
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => void pruneMonitoringLogs()}
+                            disabled={isMutating}
+                            className="border-amber-500/30 text-amber-300"
+                          >
+                            {t('Prune logs', 'تنظيف السجلات', '清理日志')}
+                          </Button>
+                        </div>
+                      </form>
+                    </Card>
+                  </div>
+
+                  <Card className="overflow-hidden border-emerald-800/20 bg-slate-900/50 p-0">
+                    <div className="flex items-center justify-between gap-4 border-b border-emerald-800/20 p-5">
+                      <div>
+                        <h3 className="text-lg font-bold text-white">{t('Uptime targets', 'أهداف التوفر', '可用性目标')}</h3>
+                        <p className="mt-1 text-xs text-white/40">
+                          {t('Configured checks for the app and external dependencies.', 'فحوصات مكونة للتطبيق والاعتمادات الخارجية.', '应用和外部依赖的检查目标。')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-emerald-800/20">
+                            <TableHead className="text-white/50">{t('Target', 'الهدف', '目标')}</TableHead>
+                            <TableHead className="text-white/50">{t('Status', 'الحالة', '状态')}</TableHead>
+                            <TableHead className="text-white/50">{t('Last check', 'آخر فحص', '上次检查')}</TableHead>
+                            <TableHead className="text-white/50">{t('Latency', 'الزمن', '延迟')}</TableHead>
+                            <TableHead className="text-white/50">{t('Actions', 'الإجراءات', '操作')}</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {monitoringDashboard.targets.map((target) => (
+                            <TableRow key={target.id} className="border-emerald-800/20">
+                              <TableCell className="min-w-72">
+                                <div className="font-medium text-white">{target.name}</div>
+                                <div className="mt-1 max-w-md truncate text-xs text-white/40">{target.method} {target.url}</div>
+                                {target.lastError && <div className="mt-1 text-xs text-rose-300">{target.lastError}</div>}
+                              </TableCell>
+                              <TableCell>
+                                <Badge className={getStatusColor(target.lastStatus)}>{getStatusLabel(target.lastStatus)}</Badge>
+                              </TableCell>
+                              <TableCell className="text-white/60">
+                                {target.lastCheckedAt ? formatDate(target.lastCheckedAt) : t('Not checked', 'لم يتم الفحص', '未检查')}
+                              </TableCell>
+                              <TableCell className="text-white/60">
+                                {target.lastLatencyMs !== undefined ? `${target.lastLatencyMs} ms` : '-'}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => void runMonitoringChecks(target.id)}
+                                    disabled={isMutating}
+                                    className="border-emerald-500/30 text-emerald-400"
+                                  >
+                                    <RefreshCw className="w-3.5 h-3.5 mr-1" />
+                                    {t('Check', 'فحص', '检查')}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => void updateMonitoringTarget(target.id, { isActive: !target.isActive })}
+                                    disabled={isMutating}
+                                    className="border-white/20 text-white/70"
+                                  >
+                                    {target.isActive ? t('Pause', 'إيقاف', '暂停') : t('Enable', 'تفعيل', '启用')}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => void deleteMonitoringTarget(target.id)}
+                                    disabled={isMutating}
+                                    className="border-rose-500/30 text-rose-300"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {!monitoringDashboard.targets.length && (
+                            <TableRow className="border-emerald-800/20">
+                              <TableCell colSpan={5} className="py-8 text-center text-white/50">
+                                {t('No monitoring targets configured.', 'لا توجد أهداف مراقبة مكونة.', '尚未配置监控目标。')}
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </Card>
+
+                  <Card className="overflow-hidden border-emerald-800/20 bg-slate-900/50 p-0">
+                    <div className="border-b border-emerald-800/20 p-5">
+                      <h3 className="text-lg font-bold text-white">{t('Recent events', 'الأحداث الأخيرة', '最近事件')}</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-emerald-800/20">
+                            <TableHead className="text-white/50">{t('Time', 'الوقت', '时间')}</TableHead>
+                            <TableHead className="text-white/50">{t('Severity', 'الخطورة', '级别')}</TableHead>
+                            <TableHead className="text-white/50">{t('Source', 'المصدر', '来源')}</TableHead>
+                            <TableHead className="text-white/50">{t('Message', 'الرسالة', '消息')}</TableHead>
+                            <TableHead className="text-white/50">{t('Target', 'الهدف', '目标')}</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {monitoringDashboard.events.map((event) => (
+                            <TableRow key={event.id} className="border-emerald-800/20">
+                              <TableCell className="min-w-40 text-white/60">{formatDate(event.createdAt)}</TableCell>
+                              <TableCell>
+                                <Badge className={getStatusColor(event.severity)}>{getStatusLabel(event.severity)}</Badge>
+                              </TableCell>
+                              <TableCell className="text-white/70">{event.source}</TableCell>
+                              <TableCell className="min-w-80 text-white">{event.message}</TableCell>
+                              <TableCell className="text-white/60">{event.targetName ?? event.path ?? '-'}</TableCell>
+                            </TableRow>
+                          ))}
+                          {!monitoringDashboard.events.length && (
+                            <TableRow className="border-emerald-800/20">
+                              <TableCell colSpan={5} className="py-8 text-center text-white/50">
+                                {t('No monitoring events yet.', 'لا توجد أحداث مراقبة بعد.', '暂无监控事件。')}
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </Card>
+
+                  <Dialog open={monitoringDialogOpen} onOpenChange={setMonitoringDialogOpen}>
+                    <DialogContent className="border-emerald-800/30 bg-slate-950 text-white">
+                      <DialogHeader>
+                        <DialogTitle>{t('Add monitoring target', 'إضافة هدف مراقبة', '添加监控目标')}</DialogTitle>
+                        <DialogDescription className="text-white/60">
+                          {t('Create a production uptime check for this app or an external dependency.', 'أنشئ فحص توفر للإنتاج لهذا التطبيق أو اعتماد خارجي.', '为此应用或外部依赖创建生产可用性检查。')}
+                        </DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={createMonitoringTarget} className="space-y-4">
+                        <div>
+                          <Label className="text-white/70">{t('Name', 'الاسم', '名称')}</Label>
+                          <Input
+                            value={monitoringForm.name}
+                            onChange={(event) => setMonitoringForm({ ...monitoringForm, name: event.target.value })}
+                            className="mt-2 bg-slate-900 border-emerald-800/30 text-white"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-white/70">{t('URL', 'الرابط', 'URL')}</Label>
+                          <Input
+                            value={monitoringForm.url}
+                            onChange={(event) => setMonitoringForm({ ...monitoringForm, url: event.target.value })}
+                            className="mt-2 bg-slate-900 border-emerald-800/30 text-white"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-white/70">{t('Expected status', 'الحالة المتوقعة', '预期状态')}</Label>
+                            <Input
+                              type="number"
+                              min="100"
+                              max="599"
+                              value={monitoringForm.expectedStatus}
+                              onChange={(event) => setMonitoringForm({ ...monitoringForm, expectedStatus: event.target.value })}
+                              className="mt-2 bg-slate-900 border-emerald-800/30 text-white"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-white/70">{t('Interval minutes', 'الدقائق بين الفحوصات', '间隔分钟')}</Label>
+                            <Input
+                              type="number"
+                              min="1"
+                              max="1440"
+                              value={monitoringForm.intervalMinutes}
+                              onChange={(event) => setMonitoringForm({ ...monitoringForm, intervalMinutes: event.target.value })}
+                              className="mt-2 bg-slate-900 border-emerald-800/30 text-white"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-white/70">{t('Method', 'الطريقة', '方法')}</Label>
+                            <select
+                              value={monitoringForm.method}
+                              onChange={(event) => setMonitoringForm({ ...monitoringForm, method: event.target.value })}
+                              className="mt-2 h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                            >
+                              <option value="GET">GET</option>
+                              <option value="HEAD">HEAD</option>
+                            </select>
+                          </div>
+                          <div>
+                            <Label className="text-white/70">{t('Timeout ms', 'مهلة ms', '超时毫秒')}</Label>
+                            <Input
+                              type="number"
+                              min="1000"
+                              max="30000"
+                              value={monitoringForm.timeoutMs}
+                              onChange={(event) => setMonitoringForm({ ...monitoringForm, timeoutMs: event.target.value })}
+                              className="mt-2 bg-slate-900 border-emerald-800/30 text-white"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={monitoringForm.isActive}
+                            onCheckedChange={(checked) => setMonitoringForm({ ...monitoringForm, isActive: checked })}
+                          />
+                          <span className="text-sm text-white/70">{t('Active', 'نشط', '启用')}</span>
+                        </div>
+                        <DialogFooter>
+                          <Button type="button" variant="outline" onClick={() => setMonitoringDialogOpen(false)}>
+                            {t('Cancel', 'إلغاء', '取消')}
+                          </Button>
+                          <Button type="submit" disabled={isMutating} className="bg-emerald-500 text-slate-950 hover:bg-emerald-400">
+                            {t('Save target', 'حفظ الهدف', '保存目标')}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                </>
+              )}
+            </div>
+          )}
+
+          {activeTab !== 'overview' && activeTab !== 'orders' && activeTab !== 'products' && activeTab !== 'pricing' && activeTab !== 'providers' && activeTab !== 'promotions' && activeTab !== 'banners' && activeTab !== 'currencies' && activeTab !== 'reports' && activeTab !== 'monitoring' && activeTab !== 'users' && activeTab !== 'wallets' && (
             <div className="flex flex-col items-center justify-center h-96">
               <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
                 <Activity className="w-10 h-10 text-white/20" />

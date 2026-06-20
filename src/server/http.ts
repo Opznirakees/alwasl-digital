@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
+import { recordUnexpectedApiError } from './services/monitoring';
 
 export function ok<T>(data: T, init?: ResponseInit) {
   return NextResponse.json(data, init);
@@ -39,6 +40,7 @@ const publicErrors: Record<string, { message: string; status: number }> = {
   MANUAL_DEPOSIT_ALREADY_REVIEWED: { message: 'Manual deposit has already been reviewed', status: 409 },
   TOPUP_PACKAGE_EXISTS: { message: 'Top-up amount already exists', status: 409 },
   PROMOTION_CODE_EXISTS: { message: 'Promotion code already exists', status: 409 },
+  PRODUCT_EXISTS: { message: 'Product already exists', status: 409 },
   INVALID_PROMOTION_DATE_RANGE: { message: 'Promotion end date must be after start date', status: 422 },
   INVALID_BANNER_DATE_RANGE: { message: 'Banner end date must be after start date', status: 422 },
   'Failed to deliver OTP': { message: 'Verification delivery is temporarily unavailable', status: 424 },
@@ -50,6 +52,7 @@ const publicErrors: Record<string, { message: string; status: number }> = {
 
 function logUnexpectedApiError(error: unknown) {
   console.error('Unexpected API error', error);
+  recordUnexpectedApiError(error);
 }
 
 export function handleApiError(error: unknown) {

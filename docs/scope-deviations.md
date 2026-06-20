@@ -1,52 +1,47 @@
-# Scope Deviations from PDF Baseline
+# WAHO-First Catalog Scope
 
-This document records accepted scope decisions that intentionally differ from the original PDF baseline.
+This document records the accepted product strategy for the Al-Wasl Digital application.
 
 ## Scope Baseline
 
 The PDF baseline describes a broader digital-services platform with multiple games, apps, products, categories, promotions, provider routing, wallet operations, reporting, and admin management.
 
-## Accepted Current Scope
+## Implemented Product Strategy
 
-The accepted current product scope is WAHO-only account top-up.
+The production launch remains focused on WAHO account top-ups, because that is the only customer journey currently intended for public use.
 
-In the current application:
+The application is no longer hardcoded as a WAHO-only technical scope:
 
-- The public customer journey is focused on WAHO account top-ups.
-- Seeded and customer-facing catalog behavior should expose WAHO top-up as the active production product.
-- Copy, visual hierarchy, mobile flow, and admin operations should stay WAHO top-up focused.
-- Other games, apps, products, and categories from the PDF baseline are not part of the accepted public production scope unless approved through change control.
+- WAHO is the active launch product and remains the first public signal.
+- The database supports multiple product records, categories, countries, packages, pricing rules, banners, promotions, and provider routing.
+- Admin users can create additional top-up products from the catalog section.
+- Newly created products are inactive by default, so WAHO remains the only public flow until an operator explicitly enables another product.
+- Extra products must have provider routing, pricing, support process, translations, and QA completed before production activation.
 
-## Deviation Register
+## Scope Register
 
-| ID | PDF baseline expectation | Accepted implementation | Reason | Status |
-| --- | --- | --- | --- | --- |
-| SD-001 | Multiple games/apps/products/categories can be offered. | WAHO-only account top-up is the active product scope. | Later product direction explicitly narrowed the app to WAHO top-ups only. | Accepted deviation |
-| SD-002 | Product discovery may include broad game/app browsing. | Navigation and catalog should guide users directly to WAHO top-up. | A broad catalog would distract from the only supported production action. | Accepted deviation |
-| SD-003 | Provider/product expansion may support multiple product types. | Provider abstraction remains extensible, but active production fulfillment is WAHO top-up. | Extensibility is retained without exposing unsupported products. | Accepted deviation |
+| ID | PDF baseline expectation | Implemented approach | Status |
+| --- | --- | --- | --- |
+| SC-001 | Multiple games/apps/products/categories can be offered. | Catalog infrastructure and admin product creation are implemented; WAHO is the active launch product. | Implemented as WAHO-first |
+| SC-002 | Product discovery may include broad game/app browsing. | Public navigation remains WAHO-focused to avoid distracting from the only approved live flow. | Implemented as WAHO-first |
+| SC-003 | Provider/product expansion may support multiple product types. | Provider abstraction and admin catalog controls are extensible; non-WAHO products stay inactive until approved. | Implemented as controlled expansion |
 
 ## Acceptance Impact
 
-This deviation is not a defect when:
+This is production-ready when:
 
 - WAHO top-up works as the primary customer journey.
-- Unsupported games/apps/products are not presented as purchasable production options.
-- Admin and operational docs clearly state that broader product categories require change control.
+- Admin can add future products without a code change.
+- Unsupported products are not active or purchasable until their provider, pricing, support and translations are ready.
+- Product expansion is recorded as an operational activation decision, not a defect in the launch scope.
 
-This deviation becomes a new feature request when:
+## Activation Checklist for Additional Products
 
-- The customer wants to sell additional games, apps, vouchers, or categories.
-- A real provider API becomes available for non-WAHO products.
-- Public navigation must support multi-product discovery.
+Before making a non-WAHO product active:
 
-## Change Control
-
-Adding additional games/apps/products/categories requires:
-
-- Product/category data model review.
-- Provider API or manual fulfillment process for each new product type.
-- Pricing and currency rules.
-- Admin management and reporting changes.
-- Customer-facing translations.
-- E2E coverage for the new purchase flow.
+- Confirm provider API or manual fulfillment process.
+- Configure provider routing and fallback behavior.
+- Add top-up packages, pricing rules, currency/country availability, and banners if needed.
+- Complete customer-facing copy and translations.
+- Run admin/product/order E2E coverage for the new product.
 - Written approval before production exposure.

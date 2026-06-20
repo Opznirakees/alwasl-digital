@@ -79,6 +79,37 @@ export const reviewManualDepositSchema = z.object({
   path: ['reason'],
 });
 
+const productSlugSchema = z
+  .string()
+  .trim()
+  .min(3)
+  .max(80)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+
+export const createAdminProductSchema = z.object({
+  slug: productSlugSchema,
+  name: z.string().trim().min(2).max(120),
+  nameAr: z.string().trim().min(2).max(120),
+  description: z.string().trim().min(10).max(500),
+  descriptionAr: z.string().trim().min(10).max(500),
+  image: z.string().trim().min(1).max(240).default('/brand/alwasl-mark.jpg'),
+  banner: z.string().trim().max(240).optional().or(z.literal('')),
+  category: z.enum(['TOP_UP', 'APP', 'GAME', 'SOCIAL_MEDIA', 'VOUCHER']).default('TOP_UP'),
+  publisher: z.string().trim().min(2).max(120).default('Al-Wasl Digital'),
+  isActive: z.boolean().default(false),
+  isPopular: z.boolean().default(false),
+  isFeatured: z.boolean().default(false),
+  requiresUserId: z.boolean().default(true),
+  userIdLabel: z.string().trim().min(2).max(80).default('Account ID'),
+  userIdLabelAr: z.string().trim().min(2).max(80).default('معرف الحساب'),
+  userIdPlaceholder: z.string().trim().min(2).max(120).default('Enter the account ID'),
+  userIdPlaceholderAr: z.string().trim().min(2).max(120).default('أدخل معرف الحساب'),
+  zoneIdRequired: z.boolean().default(false),
+  zoneIdLabel: z.string().trim().max(80).optional().or(z.literal('')),
+  zoneIdLabelAr: z.string().trim().max(80).optional().or(z.literal('')),
+  countries: z.array(z.string().trim().min(2).max(8)).min(1).default(['iq']),
+});
+
 export const updateAdminProductSchema = z.object({
   isActive: z.boolean().optional(),
   isPopular: z.boolean().optional(),
@@ -350,6 +381,35 @@ export const reportQuerySchema = z.object({
 });
 
 export const adminReportExportSchema = reportQuerySchema;
+
+const monitoringMethodSchema = z.enum(['GET', 'HEAD']);
+
+const monitoringTargetBaseSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  url: z.string().trim().url().max(500),
+  method: monitoringMethodSchema.default('GET'),
+  expectedStatus: z.coerce.number().int().min(100).max(599).default(200),
+  timeoutMs: z.coerce.number().int().min(1000).max(30000).default(5000),
+  intervalMinutes: z.coerce.number().int().min(1).max(1440).default(5),
+  isActive: z.boolean().default(true),
+});
+
+export const createMonitoringTargetSchema = monitoringTargetBaseSchema;
+
+export const updateMonitoringTargetSchema = monitoringTargetBaseSchema.partial().refine((payload) => Object.keys(payload).length > 0, {
+  message: 'At least one monitoring target field is required',
+});
+
+export const updateMonitoringSettingsSchema = z.object({
+  logRetentionDays: z.coerce.number().int().min(1).max(365).optional(),
+  uptimeEnabled: z.boolean().optional(),
+}).refine((payload) => Object.keys(payload).length > 0, {
+  message: 'At least one monitoring setting is required',
+});
+
+export const runMonitoringChecksSchema = z.object({
+  targetId: z.string().trim().min(1).max(120).optional(),
+}).optional();
 
 export const adminUserBlockSchema = z.object({
   isBlocked: z.boolean(),

@@ -6,7 +6,7 @@ This timeline documents the intended delivery sequence for the Al-Wasl Digital W
 
 | Milestone | Target window | Scope | Acceptance criteria |
 | --- | --- | --- | --- |
-| M1 Discovery and scope lock | Week 1 | WAHO-only top-up scope, supported languages, production constraints, DigitalOcean target, visual direction. | Scope list approved and unrelated WAHO games/products excluded. |
+| M1 Discovery and scope lock | Week 1 | WAHO-first top-up launch scope, supported languages, production constraints, DigitalOcean target, visual direction. | WAHO launch journey approved and broader catalog activation controlled through admin/change approval. |
 | M2 Frontend experience | Weeks 1-2 | WAHO-focused landing, top-up journey, mobile responsive UI, dark theme, translations. | Mobile and desktop UI smoke tests pass; visible copy is WAHO top-up focused. |
 | M3 Full-stack foundation | Weeks 2-3 | PostgreSQL, Prisma schema, auth, sessions, orders, wallet ledger, seed data. | `bun run db:migrate`, `bun run db:seed`, `bun run build`, and backend tests pass. |
 | M4 Production hardening | Weeks 3-4 | Security headers, safe error handling, production-safe defaults, rate limits, idempotency, role checks. | Security and configuration tests pass; production demo/fake flows are locked down. |
@@ -26,7 +26,7 @@ Formal acceptance requires:
 - Backup verification procedure documented and ready to run with the production cluster ID.
 - Admin credentials and operational notes handed over through a secure channel.
 - Known deferred items listed in `docs/contract-deliverables.md`.
-- Accepted PDF scope deviations listed in `docs/scope-deviations.md`.
+- WAHO-first catalog scope and activation policy listed in `docs/scope-deviations.md`.
 
 ## Post-Acceptance Support Timeline
 

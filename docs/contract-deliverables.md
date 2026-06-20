@@ -18,7 +18,7 @@ This register makes the project deliverables explicit and auditable in the repos
 | D10 | Backup and restore runbook | `docs/database-backups.md`, `scripts/verify-digitalocean-backups.ts` | Backup operations test passes and `ops:check-backups` can verify live cluster backups. |
 | D11 | Timeline, milestones, support/warranty, and handover documentation | `docs/project-timeline.md`, `docs/support-warranty.md`, `docs/handover.md` | Contract deliverables test passes. |
 | D12 | Technical ownership and account custody evidence | `docs/technical-ownership.md`, `scripts/verify-operational-ownership.ts` | Ownership documentation test passes and `ops:check-ownership` can verify configured technical signals. |
-| D13 | Accepted PDF scope deviations | `docs/scope-deviations.md` | Scope deviation test passes and WAHO-only scope is recorded as accepted. |
+| D13 | WAHO-first catalog scope and expansion policy | `docs/scope-deviations.md` | Scope test passes and WAHO-first catalog controls are documented. |
 
 ## Formal Acceptance Package
 
@@ -33,7 +33,7 @@ At handover, the acceptance package should include:
 - `bun test tests` result.
 - `bun run test:e2e` result.
 - Known limitations and deferred items.
-- Accepted PDF scope deviations, including the WAHO-only product scope.
+- WAHO-first catalog scope, including inactive-by-default expansion controls.
 - Signed acceptance date.
 
 The signed acceptance date starts the six-month support and warranty period defined in `docs/support-warranty.md`.
@@ -45,7 +45,7 @@ The following are intentionally not acceptance blockers unless added to the comm
 - Real payment provider integration.
 - Native WAHO API integration if the external WAHO API contract is not provided.
 - Native iOS/Android application builds.
-- Multi-game, multi-app, voucher, or broad product-category catalog expansion beyond WAHO top-up.
+- Public activation of non-WAHO products before provider routing, pricing, support process, translations, and QA are approved.
 - Third-party provider outages or policy changes.
 - Content, translations, or marketing assets not supplied before acceptance.
 

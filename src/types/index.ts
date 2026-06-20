@@ -42,6 +42,7 @@ export type StaffPermission =
   | 'PRICING_MANAGE'
   | 'EXPORT_DATA'
   | 'WHATSAPP_MARKETING'
+  | 'MONITORING_MANAGE'
   | 'JOB_RUN';
 export type UserAccountType = 'customer' | 'distributor';
 export type UserLevel = 'bronze' | 'silver' | 'gold' | 'diamond';
@@ -117,7 +118,7 @@ export interface Game {
   packages: GamePackage[];
 }
 
-export type GameCategory = 'mobile_game' | 'pc_game' | 'console' | 'gift_card' | 'streaming' | 'social_media' | 'voucher';
+export type GameCategory = 'top_up' | 'app' | 'game' | 'mobile_game' | 'pc_game' | 'console' | 'gift_card' | 'streaming' | 'social_media' | 'voucher';
 
 export interface GamePackage {
   id: string;
@@ -355,6 +356,70 @@ export interface AdminAuditLog {
   ipAddress?: string;
   userAgent?: string;
   createdAt: string;
+}
+
+export type MonitoringEventSeverity = 'info' | 'warning' | 'error' | 'critical';
+export type MonitoringCheckStatus = 'unknown' | 'up' | 'down' | 'degraded';
+
+export interface MonitoringTarget {
+  id: string;
+  name: string;
+  url: string;
+  method: 'GET' | 'HEAD';
+  expectedStatus: number;
+  timeoutMs: number;
+  intervalMinutes: number;
+  isActive: boolean;
+  lastStatus: MonitoringCheckStatus;
+  lastCheckedAt?: string;
+  lastLatencyMs?: number;
+  lastStatusCode?: number;
+  lastError?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MonitoringEvent {
+  id: string;
+  severity: MonitoringEventSeverity;
+  source: string;
+  message: string;
+  status?: MonitoringCheckStatus;
+  targetId?: string;
+  targetName?: string;
+  path?: string;
+  method?: string;
+  statusCode?: number;
+  latencyMs?: number;
+  requestId?: string;
+  metadata?: unknown;
+  createdAt: string;
+}
+
+export interface MonitoringSettings {
+  id: string;
+  logRetentionDays: number;
+  uptimeEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MonitoringDashboard {
+  settings: MonitoringSettings;
+  targets: MonitoringTarget[];
+  events: MonitoringEvent[];
+  summary: {
+    activeTargets: number;
+    downTargets: number;
+    errorEvents24h: number;
+    criticalEvents24h: number;
+    lastEventAt?: string;
+  };
+  external: {
+    healthEndpoint: string;
+    errorWebhookConfigured: boolean;
+    statusWebhookConfigured: boolean;
+  };
 }
 
 export interface RevenueData {
