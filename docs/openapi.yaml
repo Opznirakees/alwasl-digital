@@ -1,0 +1,837 @@
+openapi: 3.1.0
+info:
+  title: Al-Wasl Digital WAHO Mobile API
+  version: 1.0.0
+  summary: Contract for native and web clients that perform WAHO account top-ups.
+  description: >
+    Production mobile API contract for the customer-facing WAHO top-up flow.
+    Admin routes, scheduled jobs, fake payment endpoints, and internal provider
+    callbacks are intentionally excluded from this contract.
+servers:
+  - url: https://alwasl-digital-b8ngg.ondigitalocean.app
+    description: Production
+  - url: http://localhost:3000
+    description: Local development
+tags:
+  - name: Auth
+  - name: Catalog
+  - name: WAHO
+  - name: Orders
+  - name: Wallet
+  - name: Content
+security:
+  - SessionCookie: []
+paths:
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Request a login OTP by phone number.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OTP challenge created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /api/auth/verify:
+    post:
+      tags: [Auth]
+      summary: Verify login OTP and create the httpOnly session cookie.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyOtpRequest"
+      responses:
+        "200":
+          description: Session created. Native clients must persist the Set-Cookie value.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: Contains the alwasl_session cookie.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Return the current session user or null.
+      responses:
+        "200":
+          description: Current session state.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                properties:
+                  user:
+                    anyOf:
+                      - $ref: "#/components/schemas/User"
+                      - type: "null"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke the current session.
+      responses:
+        "200":
+          $ref: "#/components/responses/Ok"
+  /api/auth/otp/request:
+    post:
+      tags: [Auth]
+      summary: Request an action-scoped OTP for sensitive financial actions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SensitiveOtpRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/OtpCreated"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+  /api/products:
+    get:
+      tags: [Catalog]
+      summary: List active products available for a country.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Country"
+      responses:
+        "200":
+          description: Product list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [products]
+                properties:
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+  /api/products/{slug}:
+    get:
+      tags: [Catalog]
+      summary: Get one product and its available top-up packages.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/ProductSlug"
+        - $ref: "#/components/parameters/Country"
+      responses:
+        "200":
+          description: Product detail.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [product]
+                properties:
+                  product:
+                    $ref: "#/components/schemas/Product"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/waho/verify:
+    post:
+      tags: [WAHO]
+      summary: Verify whether a WAHO account can receive a top-up.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WahoVerifyRequest"
+      responses:
+        "200":
+          description: WAHO account verification result.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [account]
+                properties:
+                  account:
+                    $ref: "#/components/schemas/WahoAccount"
+        "424":
+          $ref: "#/components/responses/DependencyUnavailable"
+  /api/orders:
+    get:
+      tags: [Orders]
+      summary: List orders for the current customer.
+      responses:
+        "200":
+          description: Customer order history.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [orders]
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Order"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+    post:
+      tags: [Orders]
+      summary: Create a WAHO top-up order.
+      description: Requires Idempotency-Key and an ORDER_CONFIRMATION OTP.
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderRequest"
+      responses:
+        "201":
+          description: Order created.
+          headers:
+            Idempotency-Replayed:
+              schema:
+                type: string
+                enum: ["false"]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderMutationResponse"
+        "200":
+          description: Idempotent replay of a previous order creation.
+          headers:
+            Idempotency-Replayed:
+              schema:
+                type: string
+                enum: ["true"]
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderMutationResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "424":
+          $ref: "#/components/responses/DependencyUnavailable"
+        "428":
+          $ref: "#/components/responses/OtpRequired"
+  /api/orders/{id}:
+    get:
+      tags: [Orders]
+      summary: Get one order owned by the current customer.
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: Order detail.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [order]
+                properties:
+                  order:
+                    $ref: "#/components/schemas/Order"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/wallet:
+    get:
+      tags: [Wallet]
+      summary: Get wallet balance, wallet ledger, and manual deposit requests.
+      responses:
+        "200":
+          description: Wallet state.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, transactions, manualDeposits]
+                properties:
+                  user:
+                    $ref: "#/components/schemas/User"
+                  transactions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WalletTransaction"
+                  manualDeposits:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ManualDeposit"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+  /api/wallet/manual-deposits:
+    get:
+      tags: [Wallet]
+      summary: List manual deposit requests for the current customer.
+      responses:
+        "200":
+          description: Manual deposit requests.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [manualDeposits]
+                properties:
+                  manualDeposits:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ManualDeposit"
+    post:
+      tags: [Wallet]
+      summary: Submit a manual wallet deposit for admin review.
+      description: Requires a WALLET_TOP_UP OTP. Balance is credited only after admin approval.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateManualDepositRequest"
+      responses:
+        "201":
+          description: Manual deposit request created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [manualDeposit]
+                properties:
+                  manualDeposit:
+                    $ref: "#/components/schemas/ManualDeposit"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "428":
+          $ref: "#/components/responses/OtpRequired"
+  /api/countries:
+    get:
+      tags: [Content]
+      summary: List supported countries and local currency metadata.
+      security: []
+      responses:
+        "200":
+          description: Countries.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [countries]
+                properties:
+                  countries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Country"
+  /api/banners:
+    get:
+      tags: [Content]
+      summary: List active banners for customer surfaces.
+      security: []
+      responses:
+        "200":
+          description: Active banners.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [banners]
+                properties:
+                  banners:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Banner"
+  /api/promotions:
+    get:
+      tags: [Content]
+      summary: List active customer promotions.
+      security: []
+      responses:
+        "200":
+          description: Active promotions.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [promotions]
+                properties:
+                  promotions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Promotion"
+components:
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: alwasl_session
+      description: >
+        Current v1 authentication uses the httpOnly session cookie set by
+        POST /api/auth/verify. Native clients must preserve and resend it.
+  parameters:
+    Country:
+      name: country
+      in: query
+      required: false
+      schema:
+        type: string
+        example: iq
+    ProductSlug:
+      name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+        example: waho-top-up
+    OrderId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        example: ORD-20260620-ABC123
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 120
+      description: Stable unique key generated by the client for order creation retries.
+  responses:
+    Ok:
+      description: Success.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ok]
+            properties:
+              ok:
+                type: boolean
+                const: true
+    OtpCreated:
+      description: OTP challenge created.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ok, expiresInSeconds]
+            properties:
+              ok:
+                type: boolean
+              expiresInSeconds:
+                type: integer
+                example: 600
+    BadRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthenticated:
+      description: Authentication required.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Invalid or expired credentials.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Forbidden.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Conflict with existing state.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RateLimited:
+      description: Too many requests.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    OtpRequired:
+      description: Action-scoped OTP is required.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    DependencyUnavailable:
+      description: External provider is not configured or temporarily unavailable.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+        details:
+          description: Present only outside production for validation errors.
+    LoginRequest:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          pattern: "^\\+?[1-9]\\d{7,18}$"
+          example: "+9647812345678"
+    LoginResponse:
+      type: object
+      required: [ok, expiresInSeconds]
+      properties:
+        ok:
+          type: boolean
+        expiresInSeconds:
+          type: integer
+          example: 600
+        debugOtp:
+          type: string
+          description: Only exposed outside production or when explicitly configured.
+    VerifyOtpRequest:
+      type: object
+      required: [phone, otp]
+      properties:
+        phone:
+          type: string
+          example: "+9647812345678"
+        otp:
+          type: string
+          pattern: "^\\d{6}$"
+          example: "123456"
+    SensitiveOtpPurpose:
+      type: string
+      enum:
+        - ORDER_CONFIRMATION
+        - PAYMENT_CONFIRMATION
+        - WALLET_TOP_UP
+        - WALLET_CHANGE
+    SensitiveOtpRequest:
+      type: object
+      required: [purpose]
+      properties:
+        purpose:
+          $ref: "#/components/schemas/SensitiveOtpPurpose"
+    PaymentMethod:
+      type: string
+      enum: [wallet, zaincash, asiahawala, card, usdt]
+    OrderStatus:
+      type: string
+      enum: [pending, processing, completed, failed, refunded, cancelled]
+    PaymentStatus:
+      type: string
+      enum: [pending, completed, failed, refunded]
+    User:
+      type: object
+      required: [id, phone, name, role, walletBalance, totalSpent]
+      properties:
+        id:
+          type: string
+        phone:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [user, admin, staff]
+        accountType:
+          type: string
+          enum: [customer, distributor]
+        level:
+          type: string
+        walletBalance:
+          type: integer
+        totalSpent:
+          type: integer
+    Product:
+      type: object
+      required: [id, slug, name, image, packages]
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        name:
+          type: string
+        nameAr:
+          type: string
+        description:
+          type: string
+        image:
+          type: string
+        countries:
+          type: array
+          items:
+            type: string
+        packages:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopupPackage"
+    TopupPackage:
+      type: object
+      required: [id, amount, basePrice, currency, inStock]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        amount:
+          type: integer
+        unit:
+          type: string
+        basePrice:
+          type: integer
+        salePrice:
+          type: integer
+        currency:
+          type: string
+          example: IQD
+        inStock:
+          type: boolean
+        isPopular:
+          type: boolean
+    WahoVerifyRequest:
+      type: object
+      required: [wahoId]
+      properties:
+        wahoId:
+          type: string
+          minLength: 3
+          maxLength: 80
+    WahoAccount:
+      type: object
+      required: [id, valid]
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        valid:
+          type: boolean
+    CreateOrderRequest:
+      type: object
+      required: [productSlug, packageId, wahoId, paymentMethod, otp]
+      properties:
+        productSlug:
+          type: string
+          example: waho-top-up
+        packageId:
+          type: string
+        wahoId:
+          type: string
+        zoneId:
+          type: string
+        paymentMethod:
+          $ref: "#/components/schemas/PaymentMethod"
+        otp:
+          type: string
+          pattern: "^\\d{6}$"
+    OrderMutationResponse:
+      type: object
+      required: [order, replayed]
+      properties:
+        order:
+          $ref: "#/components/schemas/Order"
+        replayed:
+          type: boolean
+    Order:
+      type: object
+      required: [id, productId, packageId, gameUserId, finalPrice, currency, status, paymentMethod, paymentStatus, createdAt]
+      properties:
+        id:
+          type: string
+        productId:
+          type: string
+        packageId:
+          type: string
+        gameName:
+          type: string
+        packageName:
+          type: string
+        gameUserId:
+          type: string
+        finalPrice:
+          type: integer
+        currency:
+          type: string
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+        paymentMethod:
+          $ref: "#/components/schemas/PaymentMethod"
+        paymentStatus:
+          $ref: "#/components/schemas/PaymentStatus"
+        providerOrderId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+    WalletTransaction:
+      type: object
+      required: [id, type, amount, currency, balance, description, createdAt]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [deposit, withdrawal, purchase, refund, bonus, cashback]
+        amount:
+          type: integer
+        currency:
+          type: string
+        balance:
+          type: integer
+        description:
+          type: string
+        reference:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    CreateManualDepositRequest:
+      type: object
+      required: [amount, paymentMethod, transactionId, otp]
+      properties:
+        amount:
+          type: integer
+          minimum: 5000
+        paymentMethod:
+          type: string
+          enum: [zaincash, asiahawala, card, usdt]
+        transactionId:
+          type: string
+          minLength: 4
+          maxLength: 80
+        note:
+          type: string
+          maxLength: 240
+        otp:
+          type: string
+          pattern: "^\\d{6}$"
+    ManualDeposit:
+      type: object
+      required: [id, amount, currency, paymentMethod, transactionId, status, createdAt]
+      properties:
+        id:
+          type: string
+        amount:
+          type: integer
+        currency:
+          type: string
+        paymentMethod:
+          type: string
+        transactionId:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        reviewedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    Country:
+      type: object
+      required: [id, code, name, currency, isActive]
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        name:
+          type: string
+        nameAr:
+          type: string
+        phoneCode:
+          type: string
+        currency:
+          type: string
+        currencySymbol:
+          type: string
+        isActive:
+          type: boolean
+    Banner:
+      type: object
+      required: [id, title, image, isActive]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        subtitle:
+          type: string
+        image:
+          type: string
+        link:
+          type: string
+        isActive:
+          type: boolean
+    Promotion:
+      type: object
+      required: [id, code, type, value, isActive]
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        type:
+          type: string
+          enum: [percentage, fixed]
+        value:
+          type: integer
+        minPurchase:
+          type: integer
+        isActive:
+          type: boolean

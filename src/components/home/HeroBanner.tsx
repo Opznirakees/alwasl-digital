@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useApp } from '@/contexts/AppContext';
 import { Button } from '@/components/ui/button';
+import type { Banner } from '@/types';
 import {
   BadgeCheck,
   CheckCircle2,
@@ -13,8 +14,21 @@ import {
   Wallet,
 } from 'lucide-react';
 
-export function HeroBanner() {
+interface HeroBannerProps {
+  banner?: Banner;
+}
+
+export function HeroBanner({ banner }: HeroBannerProps) {
   const { t, dir } = useApp();
+  const title = banner ? t(banner.title, banner.titleAr, banner.title) : t('Top up WAHO in a few clear steps', 'اشحن WAHO بخطوات واضحة وسريعة', '几步即可快速充值 WAHO');
+  const subtitle = banner?.subtitle
+    ? t(banner.subtitle, banner.subtitleAr ?? banner.subtitle, banner.subtitle)
+    : t(
+        'Enter the WAHO ID, choose the top-up amount, confirm the account, and pay securely.',
+        'أدخل معرف WAHO واختر مبلغ الشحن وتأكد من الحساب وادفع بأمان.',
+        '输入 WAHO ID，选择充值金额，确认账号并安全支付。'
+      );
+  const ctaHref = banner?.link ?? '/top-up';
   const previewAmounts = ['5,000', '10,000', '25,000'];
   const previewSteps = [
     {
@@ -43,19 +57,15 @@ export function HeroBanner() {
         </div>
 
         <h2 className="mt-5 max-w-3xl break-words text-4xl font-semibold leading-tight text-zinc-950 dark:text-white sm:text-5xl lg:text-6xl">
-          {t('Top up WAHO in a few clear steps', 'اشحن WAHO بخطوات واضحة وسريعة', '几步即可快速充值 WAHO')}
+          {title}
         </h2>
 
         <p className="mt-5 max-w-2xl break-words text-base leading-7 text-zinc-600 dark:text-zinc-300 md:text-lg">
-          {t(
-            'Enter the WAHO ID, choose the top-up amount, confirm the account, and pay securely.',
-            'أدخل معرف WAHO واختر مبلغ الشحن وتأكد من الحساب وادفع بأمان.',
-            '输入 WAHO ID，选择充值金额，确认账号并安全支付。'
-          )}
+          {subtitle}
         </p>
 
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <Link href="/top-up">
+          <Link href={ctaHref}>
             <Button
               size="lg"
               className="w-full rounded-md bg-blue-600 px-5 text-sm font-semibold text-white shadow-none hover:bg-blue-700 sm:w-auto"
@@ -88,6 +98,16 @@ export function HeroBanner() {
 
       <div className="min-w-0">
         <div className="rounded-lg border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-5">
+          {banner?.image && (
+            <div className="mb-4 aspect-[16/7] overflow-hidden rounded-md bg-zinc-100 ring-1 ring-black/10 dark:bg-zinc-950 dark:ring-white/10">
+              <img
+                src={banner.image}
+                alt={title}
+                className="h-full w-full object-cover"
+                loading="eager"
+              />
+            </div>
+          )}
           <div className="flex items-center justify-between gap-4">
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-sm font-bold text-white">

@@ -6,6 +6,7 @@ import { createIdempotencyFingerprint, requireIdempotencyKey } from '@/server/id
 import { mapOrder } from '@/server/mappers';
 import { assertFakePaymentEndpointEnabled } from '@/server/payment-policy';
 import { assertRateLimit } from '@/server/rate-limit';
+import { verifySensitiveOtpChallenge } from '@/server/sensitive-otp';
 import { confirmFakePayment } from '@/server/services/orders';
 import { fakePaymentConfirmSchema } from '@/server/validation';
 
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
       success: body.success,
     });
     await assertRateLimit(`payments:fake:${user.id}`, { limit: 40, windowMs: 15 * 60 * 1000 });
+    await verifySensitiveOtpChallenge(user, 'PAYMENT_CONFIRMATION', body.otp);
 
     const result = await confirmFakePayment(user, body, {
       key: idempotencyKey,

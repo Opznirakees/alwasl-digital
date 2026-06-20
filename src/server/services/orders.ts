@@ -1,10 +1,24 @@
-import { Prisma, type Order, type PaymentMethod as DbPaymentMethod, type User } from '@prisma/client';
+import { Prisma, type Order, type PaymentMethod as DbPaymentMethod, type User, type UserLevel as DbUserLevel } from '@prisma/client';
 import { prisma } from '../prisma';
 import { calculateOrderPricing, createOrderId } from '../domain/orders';
-import { resolveFakePaymentResult } from '../domain/payments';
+import { selectCustomPricingRule } from '../domain/custom-pricing';
+import { createRefundReference, resolveProviderFulfillmentResult } from '../domain/payments';
 import { assertMatchingIdempotencyFingerprint } from '../idempotency';
 import { toDbPaymentMethod } from '../mappers';
-import { getWahoProvider } from '../providers/waho';
+import { resolveMembershipForSpend } from '@/lib/membership';
+import { type WahoTopupInput } from '../providers/waho';
+import {
+  createWahoTopupWithFailover,
+  getWahoVerificationProvider,
+  isWahoProviderFailoverError,
+  type WahoProviderAttempt,
+} from '../providers/waho-router';
+import { scheduleProviderRetryJob } from './provider-retry-jobs';
+import {
+  notifyPaymentReceivedForOrder,
+  notifyTopupFailureForOrder,
+  notifyTopupSuccessForOrder,
+} from './whatsapp-notifications';
 import type { PaymentMethod } from '@/types';
 
 interface CreateOrderInput {
@@ -29,6 +43,14 @@ function isUniqueConstraintError(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002';
 }
 
+async function safeWhatsAppNotification(task: () => Promise<unknown>) {
+  try {
+    await task();
+  } catch (error) {
+    console.error('Failed to queue WhatsApp notification', error);
+  }
+}
+
 async function findOrderByIdempotencyKey(userId: string, idempotencyKey: string) {
   return prisma.order.findFirst({
     where: {
@@ -45,6 +67,29 @@ async function findPaymentAttemptByIdempotencyKey(orderId: string, idempotencyKe
       idempotencyKey,
     },
   });
+}
+
+function toDbMembershipLevel(level: ReturnType<typeof resolveMembershipForSpend>['level']): DbUserLevel {
+  return level.toUpperCase() as DbUserLevel;
+}
+
+async function syncMembershipForUser(tx: Prisma.TransactionClient, userId: string) {
+  const account = await tx.user.findUnique({
+    where: { id: userId },
+    select: { walletBalance: true, totalSpent: true },
+  });
+  if (!account) throw new Error('NOT_FOUND');
+
+  const membership = resolveMembershipForSpend(account.totalSpent);
+  await tx.user.update({
+    where: { id: userId },
+    data: {
+      level: toDbMembershipLevel(membership.level),
+      discountPercentage: membership.discountPercentage,
+    },
+  });
+
+  return account;
 }
 
 async function replayOrderFromIdempotency(userId: string, idempotency: IdempotencyInput): Promise<OrderMutationResult | null> {
@@ -88,13 +133,55 @@ export async function createPendingOrder(
   const pkg = product.packages.find((item) => item.id === input.packageId && item.inStock);
   if (!pkg) throw new Error('Top-up amount is unavailable');
 
-  const wahoProvider = getWahoProvider();
-  const account = await wahoProvider.verifyWahoAccount(input.wahoId);
+  const providerSelection = await getWahoVerificationProvider(input.productSlug);
+  const account = await providerSelection.provider.verifyWahoAccount(input.wahoId);
   if (!account.valid) throw new Error('Invalid WAHO account');
 
-  const pricing = calculateOrderPricing(pkg, user);
+  const membership = resolveMembershipForSpend(user.totalSpent);
+  const now = new Date();
+  const pricingRules = await prisma.customPricingRule.findMany({
+    where: {
+      isActive: true,
+      AND: [
+        { OR: [{ productId: null }, { productId: product.id }] },
+        { OR: [{ packageId: null }, { packageId: pkg.id }] },
+        { OR: [{ startDate: null }, { startDate: { lte: now } }] },
+        { OR: [{ endDate: null }, { endDate: { gt: now } }] },
+        {
+          OR: [
+            { targetType: 'ALL' },
+            { targetType: user.accountType },
+            { targetType: 'USER', userId: user.id },
+          ],
+        },
+      ],
+    },
+    orderBy: [{ priority: 'asc' }, { updatedAt: 'desc' }],
+  });
+  const customPricingRule = selectCustomPricingRule(pricingRules, {
+    userId: user.id,
+    accountType: user.accountType,
+    productId: product.id,
+    packageId: pkg.id,
+  }, now);
+  const pricing = calculateOrderPricing(pkg, {
+    discountPercentage: membership.discountPercentage,
+    customPricingRule,
+  });
   const paymentMethod = toDbPaymentMethod(input.paymentMethod);
   const orderId = createOrderId();
+  const pricingSnapshot = {
+    basePrice: pkg.basePrice,
+    salePrice: pkg.salePrice,
+    membershipDiscountPercentage: membership.discountPercentage,
+    customPricingRule: customPricingRule ? {
+      id: customPricingRule.id,
+      targetType: customPricingRule.targetType,
+      priceType: customPricingRule.priceType,
+      value: customPricingRule.value,
+      applyMembershipDiscount: customPricingRule.applyMembershipDiscount,
+    } : null,
+  };
 
   try {
     const order = await prisma.order.create({
@@ -109,6 +196,8 @@ export async function createPendingOrder(
         gameUsername: account.username,
         zoneId: input.zoneId || undefined,
         ...pricing,
+        customPricingRuleId: pricing.customPricingRuleId,
+        pricingSnapshot,
         currency: pkg.currency,
         status: 'PENDING',
         paymentMethod,
@@ -148,6 +237,235 @@ interface ConfirmFakePaymentInput {
 
 function canAccessOrder(user: User, orderUserId: string) {
   return user.role === 'ADMIN' || user.id === orderUserId;
+}
+
+interface RefundProviderRequestInput {
+  provider: string;
+  providerAccountId?: string;
+  action: string;
+  providerOrderId?: string;
+  requestPayload?: Prisma.InputJsonValue;
+  responsePayload?: Prisma.InputJsonValue;
+  error?: string;
+}
+
+interface RefundOrderInput {
+  reason: string;
+  providerRequests?: RefundProviderRequestInput[];
+}
+
+function createWahoTopupInput(order: Order): WahoTopupInput {
+  return {
+    orderId: order.id,
+    wahoId: order.gameUserId,
+    amount: order.unitPrice,
+    paidAmount: order.finalPrice,
+    currency: order.currency,
+    packageName: order.packageName,
+  };
+}
+
+function createWahoTopupJson(input: WahoTopupInput): Prisma.InputJsonValue {
+  return {
+    orderId: input.orderId,
+    wahoId: input.wahoId,
+    amount: input.amount,
+    paidAmount: input.paidAmount ?? null,
+    currency: input.currency,
+    packageName: input.packageName ?? null,
+  };
+}
+
+function fallbackProviderAttempt(error: unknown): WahoProviderAttempt {
+  return {
+    provider: 'waho-provider',
+    action: 'createWahoTopup',
+    status: 'FAILED',
+    error: error instanceof Error ? error.message : 'WAHO_PROVIDER_ERROR',
+  };
+}
+
+function createProviderRetryPayload(
+  order: Order,
+  providerInput: WahoTopupInput,
+  extra?: Prisma.InputJsonObject
+): Prisma.InputJsonValue {
+  return {
+    productSlug: order.productId,
+    providerInput: createWahoTopupJson(providerInput),
+    ...extra,
+  };
+}
+
+async function createProviderRequestLogs(
+  tx: Prisma.TransactionClient,
+  orderId: string,
+  attempts: WahoProviderAttempt[],
+  requestPayload: Prisma.InputJsonValue
+) {
+  for (const attempt of attempts) {
+    await tx.providerRequest.create({
+      data: {
+        orderId,
+        providerAccountId: attempt.providerAccountId,
+        provider: attempt.provider,
+        action: attempt.action,
+        status: attempt.status,
+        providerOrderId: attempt.providerOrderId,
+        requestPayload,
+        responsePayload: attempt.responsePayload,
+        error: attempt.error,
+      },
+    });
+  }
+}
+
+async function scheduleProviderCreateRetry(
+  order: Order,
+  providerInput: WahoTopupInput,
+  attempts: WahoProviderAttempt[],
+  requestPayload: Prisma.InputJsonValue
+) {
+  return prisma.$transaction(async (tx) => {
+    await createProviderRequestLogs(tx, order.id, attempts, requestPayload);
+
+    await scheduleProviderRetryJob(tx, {
+      orderId: order.id,
+      providerAccountId: attempts.find((attempt) => attempt.providerAccountId)?.providerAccountId,
+      type: 'CREATE_TOPUP',
+      payload: createProviderRetryPayload(order, providerInput),
+      lastError: attempts.at(-1)?.error ?? 'WAHO_PROVIDER_RETRY_SCHEDULED',
+    });
+
+    return tx.order.update({
+      where: { id: order.id },
+      data: {
+        status: 'PROCESSING',
+        paymentStatus: 'COMPLETED',
+      },
+    });
+  });
+}
+
+export async function refundPaidOrder(orderId: string, input: RefundOrderInput): Promise<Order> {
+  let refundedOrder: Order;
+
+  try {
+    refundedOrder = await prisma.$transaction(async (tx) => {
+      const current = await tx.order.findUnique({ where: { id: orderId } });
+      if (!current) throw new Error('NOT_FOUND');
+
+      if (current.status === 'REFUNDED' || current.paymentStatus === 'REFUNDED') {
+        return current;
+      }
+
+      if (current.paymentStatus !== 'COMPLETED') {
+        throw new Error('ORDER_NOT_REFUNDABLE');
+      }
+
+      if (input.providerRequests?.length) {
+        for (const providerRequest of input.providerRequests) {
+          await tx.providerRequest.create({
+            data: {
+              orderId: current.id,
+              providerAccountId: providerRequest.providerAccountId,
+              provider: providerRequest.provider,
+              action: providerRequest.action,
+              status: 'FAILED',
+              providerOrderId: providerRequest.providerOrderId,
+              requestPayload: providerRequest.requestPayload,
+              responsePayload: providerRequest.responsePayload,
+              error: providerRequest.error,
+            },
+          });
+        }
+      }
+
+      const refundReference = createRefundReference(current.id);
+      const existingRefund = await tx.walletTransaction.findFirst({
+        where: {
+          userId: current.userId,
+          reference: refundReference,
+          type: 'REFUND',
+        },
+      });
+
+      if (!existingRefund) {
+        const creditResult = await tx.user.updateMany({
+          where: {
+            id: current.userId,
+            totalSpent: { gte: current.finalPrice },
+          },
+          data: {
+            walletBalance: { increment: current.finalPrice },
+            totalSpent: { decrement: current.finalPrice },
+          },
+        });
+
+        if (creditResult.count !== 1) {
+          throw new Error('REFUND_LEDGER_CONFLICT');
+        }
+
+        const orderUser = await syncMembershipForUser(tx, current.userId);
+
+        await tx.walletTransaction.create({
+          data: {
+            userId: current.userId,
+            orderId: current.id,
+            type: 'REFUND',
+            amount: current.finalPrice,
+            currency: current.currency,
+            balance: orderUser.walletBalance,
+            description: `Refund: ${current.gameName} ${current.packageName}`,
+            descriptionAr: `استرداد: ${current.gameName} ${current.packageName}`,
+            reference: refundReference,
+          },
+        });
+      }
+
+      await tx.paymentAttempt.updateMany({
+        where: {
+          orderId: current.id,
+          status: 'COMPLETED',
+        },
+        data: {
+          status: 'REFUNDED',
+          metadata: {
+            mode: 'refund',
+            reason: input.reason,
+          },
+        },
+      });
+
+      return tx.order.update({
+        where: { id: current.id },
+        data: {
+          status: 'REFUNDED',
+          paymentStatus: 'REFUNDED',
+          refundedAt: new Date(),
+          refundReason: input.reason,
+        },
+      });
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      const current = await prisma.order.findUnique({ where: { id: orderId } });
+      if (current?.status === 'REFUNDED' || current?.paymentStatus === 'REFUNDED') {
+        refundedOrder = current;
+      } else {
+        throw error;
+      }
+    } else {
+      throw error;
+    }
+  }
+
+  await safeWhatsAppNotification(() => notifyTopupFailureForOrder(refundedOrder.id, input.reason));
+  return refundedOrder;
+}
+
+export async function refundOrderById(orderId: string, reason = 'Manual refund'): Promise<Order> {
+  return refundPaidOrder(orderId, { reason });
 }
 
 export async function confirmFakePayment(
@@ -191,6 +509,7 @@ export async function confirmFakePayment(
         });
       });
 
+      await safeWhatsAppNotification(() => notifyTopupFailureForOrder(order.id, 'Payment failed'));
       return { order, replayed: false };
     } catch (error) {
       if (isUniqueConstraintError(error)) {
@@ -274,11 +593,7 @@ export async function confirmFakePayment(
           throw new Error('INSUFFICIENT_WALLET_BALANCE');
         }
 
-        const orderUser = await tx.user.findUnique({
-          where: { id: order.userId },
-          select: { walletBalance: true },
-        });
-        if (!orderUser) throw new Error('NOT_FOUND');
+        const orderUser = await syncMembershipForUser(tx, order.userId);
 
         await tx.walletTransaction.create({
           data: {
@@ -298,6 +613,7 @@ export async function confirmFakePayment(
           where: { id: order.userId },
           data: { totalSpent: { increment: order.finalPrice } },
         });
+        await syncMembershipForUser(tx, order.userId);
       }
 
       await tx.paymentAttempt.update({
@@ -324,40 +640,70 @@ export async function confirmFakePayment(
     throw error;
   }
 
+  await safeWhatsAppNotification(() => notifyPaymentReceivedForOrder(claimed.id));
+
   if (claimed.status !== 'PROCESSING' || claimed.paymentStatus !== 'COMPLETED') {
     return { order: claimed, replayed: false };
   }
 
-  const wahoProvider = getWahoProvider();
-  const providerResult = await wahoProvider.createWahoTopup({
-    orderId: claimed.id,
-    wahoId: claimed.gameUserId,
-    amount: claimed.finalPrice,
-    currency: claimed.currency,
-  });
-  const paymentResult = resolveFakePaymentResult(true, providerResult.status);
+  const providerInput = createWahoTopupInput(claimed);
+  const providerRequestPayload = createWahoTopupJson(providerInput);
+  let fulfillment;
+
+  try {
+    fulfillment = await createWahoTopupWithFailover(providerInput, {
+      productSlug: claimed.productId,
+    });
+  } catch (error) {
+    const attempts = isWahoProviderFailoverError(error) && error.attempts.length
+      ? error.attempts
+      : [fallbackProviderAttempt(error)];
+    const order = await scheduleProviderCreateRetry(claimed, providerInput, attempts, providerRequestPayload);
+
+    return { order, replayed: false };
+  }
+
+  const providerResult = fulfillment.result;
+  const paymentResult = resolveProviderFulfillmentResult(providerResult.status);
+
+  if (paymentResult.shouldRefund) {
+    const attempts = fulfillment.attempts.length
+      ? fulfillment.attempts
+      : [
+          {
+            provider: providerResult.providerId,
+            providerAccountId: fulfillment.account?.id,
+            action: 'createWahoTopup' as const,
+            status: 'FAILED' as const,
+            providerOrderId: providerResult.providerOrderId,
+            responsePayload: {
+              providerId: providerResult.providerId,
+              providerOrderId: providerResult.providerOrderId,
+              status: providerResult.status,
+            },
+            error: 'WAHO_PROVIDER_FAILED',
+          },
+        ];
+    const order = await scheduleProviderCreateRetry(claimed, providerInput, attempts, providerRequestPayload);
+
+    return { order, replayed: false };
+  }
 
   const order = await prisma.$transaction(async (tx) => {
-    await tx.providerRequest.create({
-      data: {
+    await createProviderRequestLogs(tx, claimed.id, fulfillment.attempts, providerRequestPayload);
+
+    if (providerResult.status === 'processing') {
+      await scheduleProviderRetryJob(tx, {
         orderId: claimed.id,
-        provider: providerResult.providerId,
-        action: 'createWahoTopup',
-        status: providerResult.status === 'failed' ? 'FAILED' : 'SUCCESS',
-        providerOrderId: providerResult.providerOrderId,
-        requestPayload: {
-          orderId: claimed.id,
-          wahoId: claimed.gameUserId,
-          amount: claimed.finalPrice,
-          currency: claimed.currency,
-        },
-        responsePayload: {
+        providerAccountId: fulfillment.account?.id,
+        type: 'STATUS_POLL',
+        payload: createProviderRetryPayload(claimed, providerInput, {
           providerId: providerResult.providerId,
           providerOrderId: providerResult.providerOrderId,
-          status: providerResult.status,
-        },
-      },
-    });
+        }),
+        lastError: 'Provider status is still processing',
+      });
+    }
 
     return tx.order.update({
       where: { id: claimed.id },
@@ -370,6 +716,10 @@ export async function confirmFakePayment(
       },
     });
   });
+
+  if (order.status === 'COMPLETED') {
+    await safeWhatsAppNotification(() => notifyTopupSuccessForOrder(order.id));
+  }
 
   return { order, replayed: false };
 }

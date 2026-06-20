@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { levelLabels, levelDiscounts } from '@/data/mock-data';
+import { getNextMembershipLevel, resolveMembershipForSpend } from '@/lib/membership';
 import type { WalletTransactionType } from '@/types';
 import { walletTopUpDialogCopy } from './wallet-dialog-copy';
 import {
@@ -39,15 +39,18 @@ import {
 import { toast } from 'sonner';
 
 export default function WalletPage() {
-  const { t, language, dir, user, selectedCountry, walletTransactions, refreshAccount } = useApp();
+  const { t, language, dir, user, walletTransactions, refreshAccount, formatLocalAmount } = useApp();
   const [topUpAmount, setTopUpAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('zaincash');
+  const [transactionId, setTransactionId] = useState('');
+  const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const currentUser = user;
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
-  const walletTopUpEnabled = false;
+  const walletTopUpEnabled = true;
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat(locale).format(Math.abs(amount));
@@ -94,21 +97,55 @@ export default function WalletPage() {
     return 'bg-rose-500/10';
   };
 
+  const requestWalletOtp = async () => {
+    setIsRequestingOtp(true);
+    try {
+      const response = await fetch('/api/auth/otp/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ purpose: 'WALLET_TOP_UP' }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error || 'OTP request failed');
+      }
+
+      if (payload.debugOtp) setOtp(payload.debugOtp);
+      toast.success(t('Verification code sent', 'تم إرسال رمز التحقق', '验证码已发送'));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('Could not request verification code', 'تعذر طلب رمز التحقق', '无法请求验证码'));
+    } finally {
+      setIsRequestingOtp(false);
+    }
+  };
+
   const handleTopUp = async () => {
     if (!topUpAmount || Number(topUpAmount) < 5000) {
       toast.error(t('Minimum top-up amount is 5,000 IQD', 'الحد الأدنى للشحن 5,000 د.ع'));
       return;
     }
+    if (!transactionId.trim()) {
+      toast.error(t('Enter the Transaction ID', 'أدخل رقم المعاملة', '请输入交易 ID'));
+      return;
+    }
+    if (!otp.trim()) {
+      toast.error(t('Enter the verification code', 'أدخل رمز التحقق', '请输入验证码'));
+      return;
+    }
 
     setIsLoading(true);
     try {
-      const response = await fetch('/api/wallet/top-up', {
+      const response = await fetch('/api/wallet/manual-deposits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
           amount: Number(topUpAmount),
           paymentMethod,
+          transactionId,
+          otp,
         }),
       });
       const payload = await response.json();
@@ -119,10 +156,12 @@ export default function WalletPage() {
 
       await refreshAccount();
       setTopUpAmount('');
+      setTransactionId('');
+      setOtp('');
       setDialogOpen(false);
-      toast.success(t('Top-up request submitted!', 'تم إرسال طلب الشحن!'));
+      toast.success(t('Manual deposit submitted for review', 'تم إرسال الإيداع اليدوي للمراجعة', '手动充值已提交审核'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Top-up request failed', 'فشل طلب الشحن'));
+      toast.error(error instanceof Error ? error.message : t('Manual deposit failed', 'فشل إرسال الإيداع اليدوي', '手动充值提交失败'));
     } finally {
       setIsLoading(false);
     }
@@ -133,18 +172,17 @@ export default function WalletPage() {
   const levelProgress = () => {
     if (!currentUser) return { progress: 0, remaining: 0, nextLevel: null };
 
-    const levels = ['bronze', 'silver', 'gold', 'platinum', 'diamond'] as const;
-    const currentLevelIndex = levels.indexOf(currentUser.level);
-    const nextLevel = levels[currentLevelIndex + 1];
+    const currentLevel = resolveMembershipForSpend(currentUser.totalSpent);
+    const nextLevel = getNextMembershipLevel(currentLevel.level);
 
     if (!nextLevel) return { progress: 100, remaining: 0, nextLevel: null };
 
-    const currentMin = levelLabels[currentUser.level].minSpent;
-    const nextMin = levelLabels[nextLevel].minSpent;
+    const currentMin = currentLevel.minSpent;
+    const nextMin = nextLevel.minSpent;
     const progress = ((currentUser.totalSpent - currentMin) / (nextMin - currentMin)) * 100;
     const remaining = nextMin - currentUser.totalSpent;
 
-    return { progress: Math.min(100, progress), remaining, nextLevel };
+    return { progress: Math.max(0, Math.min(100, progress)), remaining: Math.max(0, remaining), nextLevel };
   };
 
   if (!currentUser) {
@@ -165,6 +203,7 @@ export default function WalletPage() {
     );
   }
 
+  const currentLevel = resolveMembershipForSpend(currentUser.totalSpent);
   const { progress, remaining, nextLevel } = levelProgress();
 
   return (
@@ -190,8 +229,7 @@ export default function WalletPage() {
                 <div className="min-w-0">
                   <p className="text-sm text-emerald-400/70">{t('Available Balance', 'الرصيد المتاح')}</p>
                   <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mt-1 break-words">
-                    {formatCurrency(currentUser.walletBalance)}
-                    <span className="text-lg text-white/50 ml-2">{selectedCountry.currencySymbol}</span>
+                    {formatLocalAmount(currentUser.walletBalance)}
                   </p>
                 </div>
                 <div className="flex-shrink-0 p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
@@ -277,16 +315,47 @@ export default function WalletPage() {
                         </RadioGroup>
                       </div>
 
+                      <div className="space-y-2">
+                        <Label className="text-white/70">{t('Transaction ID', 'رقم المعاملة', '交易 ID')}</Label>
+                        <Input
+                          value={transactionId}
+                          onChange={(e) => setTransactionId(e.target.value)}
+                          placeholder="ZC-123456789"
+                          className="bg-slate-800/50 border-emerald-800/30 text-white h-12"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-white/70">{t('WhatsApp verification code', 'رمز التحقق عبر واتساب', 'WhatsApp 验证码')}</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            placeholder="123456"
+                            className="bg-slate-800/50 border-emerald-800/30 text-white h-12"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={isRequestingOtp}
+                            onClick={() => void requestWalletOtp()}
+                            className="border-emerald-500/30 text-emerald-300"
+                          >
+                            {isRequestingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : t('Send code', 'إرسال الرمز', '发送验证码')}
+                          </Button>
+                        </div>
+                      </div>
+
                       <Button
                         onClick={handleTopUp}
-                        disabled={isLoading || !topUpAmount}
+                        disabled={isLoading || !topUpAmount || !transactionId || !otp}
                         className="w-full bg-gradient-to-r from-emerald-500 to-teal-600"
                       >
                         {isLoading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <>
-                            {t('Proceed to Payment', 'المتابعة للدفع')}
+                            {t('Submit for review', 'إرسال للمراجعة', '提交审核')}
                             <ChevronRight className="w-4 h-4 ml-2" />
                           </>
                         )}
@@ -333,10 +402,10 @@ export default function WalletPage() {
                     </div>
                     <div className="text-right">
                       <p className={`font-bold ${getTransactionColor(tx.type, tx.amount)}`}>
-                        {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)} {selectedCountry.currencySymbol}
+                        {tx.amount > 0 ? '+' : ''}{formatLocalAmount(tx.amount, { absolute: true })}
                       </p>
                       <p className="text-xs text-white/50 mt-0.5">
-                        {t('Balance:', 'الرصيد:')} {formatCurrency(tx.balance)}
+                        {t('Balance:', 'الرصيد:')} {formatLocalAmount(tx.balance)}
                       </p>
                     </div>
                   </div>
@@ -352,14 +421,14 @@ export default function WalletPage() {
               <div className="flex items-center gap-3 mb-4">
                 <div
                   className="p-2 rounded-lg"
-                  style={{ backgroundColor: `${levelLabels[currentUser.level].color}20` }}
+                  style={{ backgroundColor: `${currentLevel.color}20` }}
                 >
-                  <Star className="w-5 h-5" style={{ color: levelLabels[currentUser.level].color }} />
+                  <Star className="w-5 h-5" style={{ color: currentLevel.color }} />
                 </div>
                 <div>
                   <p className="text-xs text-white/50">{t('Membership Level', 'مستوى العضوية')}</p>
-                  <p className="font-bold" style={{ color: levelLabels[currentUser.level].color }}>
-                    {t(levelLabels[currentUser.level].en, levelLabels[currentUser.level].ar)}
+                  <p className="font-bold" style={{ color: currentLevel.color }}>
+                    {t(currentLevel.en, currentLevel.ar, currentLevel.zh)}
                   </p>
                 </div>
               </div>
@@ -367,11 +436,11 @@ export default function WalletPage() {
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-white/50">{t('Your Discount', 'خصمك')}</span>
-                  <span className="font-bold text-emerald-400">{levelDiscounts[currentUser.level]}%</span>
+                  <span className="font-bold text-emerald-400">{currentLevel.discountPercentage}%</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-white/50">{t('Total Spent', 'إجمالي الإنفاق')}</span>
-                  <span className="text-white">{formatCurrency(currentUser.totalSpent)} {selectedCountry.currencySymbol}</span>
+                  <span className="text-white">{formatLocalAmount(currentUser.totalSpent)}</span>
                 </div>
               </div>
 
@@ -379,8 +448,8 @@ export default function WalletPage() {
                 <div className="space-y-2 pt-4 border-t border-emerald-800/20">
                   <div className="flex justify-between text-xs">
                     <span className="text-white/50">{t('Progress to', 'التقدم إلى')}</span>
-                    <span style={{ color: levelLabels[nextLevel].color }}>
-                      {t(levelLabels[nextLevel].en, levelLabels[nextLevel].ar)}
+                    <span style={{ color: nextLevel.color }}>
+                      {t(nextLevel.en, nextLevel.ar, nextLevel.zh)}
                     </span>
                   </div>
                   <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
@@ -388,12 +457,12 @@ export default function WalletPage() {
                       className="h-full rounded-full transition-all"
                       style={{
                         width: `${progress}%`,
-                        backgroundColor: levelLabels[nextLevel].color,
+                        backgroundColor: nextLevel.color,
                       }}
                     />
                   </div>
                   <p className="text-xs text-white/50">
-                    {t('Spend', 'أنفق')} {formatCurrency(remaining)} {selectedCountry.currencySymbol} {t('more', 'إضافية')}
+                    {t('Spend', 'أنفق')} {formatLocalAmount(remaining)} {t('more', 'إضافية')}
                   </p>
                 </div>
               )}

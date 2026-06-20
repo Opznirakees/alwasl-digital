@@ -1,16 +1,31 @@
 import { NextRequest } from 'next/server';
-import { requireAdmin } from '@/server/auth';
+import { requirePermission } from '@/server/auth';
 import { recordAdminAuditLog } from '@/server/admin-audit';
 import { handleApiError, ok } from '@/server/http';
-import { mapAdminAuditLog, mapOrder, mapProduct, mapUser, mapWalletTransaction } from '@/server/mappers';
+import {
+  mapAdminAuditLog,
+  mapBanner,
+  mapCountry,
+  mapCustomPricingRule,
+  mapExchangeRate,
+  mapManualDeposit,
+  mapOrder,
+  mapProduct,
+  mapPromotion,
+  mapProviderAccount,
+  mapProviderBalanceAlert,
+  mapUser,
+  mapWalletTransaction,
+  mapWhatsAppNotification,
+} from '@/server/mappers';
 import { prisma } from '@/server/prisma';
-import { getWahoProviderInfo } from '@/server/providers/waho';
 
 export const runtime = 'nodejs';
+const BASE_CURRENCY = 'IQD';
 
 export async function GET(request: NextRequest) {
   try {
-    const admin = await requireAdmin();
+    const admin = await requirePermission('ADMIN_DASHBOARD_VIEW');
     await recordAdminAuditLog({
       admin,
       request,
@@ -20,7 +35,13 @@ export async function GET(request: NextRequest) {
         usersTake: 50,
         ordersTake: 100,
         walletTransactionsTake: 100,
+        manualDepositsTake: 100,
+        bannersTake: 100,
+        countriesTake: 100,
+        exchangeRatesTake: 100,
+        customPricingRulesTake: 200,
         providerRequestsTake: 100,
+        whatsappNotificationsTake: 100,
         auditLogsTake: 50,
       },
     });
@@ -30,7 +51,16 @@ export async function GET(request: NextRequest) {
       products,
       orders,
       walletTransactions,
+      manualDeposits,
+      providerAccounts,
+      providerBalanceAlerts,
+      promotions,
+      banners,
+      countries,
+      exchangeRates,
+      customPricingRules,
       providerRequests,
+      whatsappNotifications,
       auditLogs,
       totalUsers,
       totalOrders,
@@ -45,7 +75,64 @@ export async function GET(request: NextRequest) {
       }),
       prisma.order.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
       prisma.walletTransaction.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
+      prisma.manualDeposit.findMany({
+        include: {
+          user: { select: { id: true, phone: true } },
+          reviewedByAdmin: { select: { id: true, name: true } },
+        },
+        orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
+        take: 100,
+      }),
+      prisma.providerAccount.findMany({
+        include: { provider: true },
+        orderBy: [{ provider: { priority: 'asc' } }, { priority: 'asc' }],
+      }),
+      prisma.providerBalanceAlert.findMany({
+        where: { status: { in: ['OPEN', 'NOTIFIED'] } },
+        include: {
+          providerAccount: {
+            select: {
+              id: true,
+              name: true,
+              provider: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      }),
+      prisma.promotion.findMany({
+        orderBy: [{ isActive: 'desc' }, { startDate: 'desc' }],
+      }),
+      prisma.banner.findMany({
+        orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+        take: 100,
+      }),
+      prisma.country.findMany({
+        include: { currency: true },
+        orderBy: { name: 'asc' },
+        take: 100,
+      }),
+      prisma.exchangeRate.findMany({
+        orderBy: [{ baseCurrencyCode: 'asc' }, { quoteCurrencyCode: 'asc' }],
+        take: 100,
+      }),
+      prisma.customPricingRule.findMany({
+        include: {
+          product: { select: { id: true, name: true } },
+          package: { select: { id: true, name: true } },
+          user: { select: { id: true, phone: true } },
+        },
+        orderBy: [{ isActive: 'desc' }, { priority: 'asc' }, { updatedAt: 'desc' }],
+        take: 200,
+      }),
       prisma.providerRequest.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
+      prisma.whatsAppNotification.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
       prisma.adminAuditLog.findMany({
         include: {
           admin: {
@@ -81,12 +168,6 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const failedProviderRequests = providerRequests.filter((request) => request.status === 'FAILED').length;
-    const providerSuccessRate = providerRequests.length
-      ? Math.round(((providerRequests.length - failedProviderRequests) / providerRequests.length) * 1000) / 10
-      : 100;
-    const wahoProvider = getWahoProviderInfo();
-
     return ok({
       stats: {
         totalUsers,
@@ -106,18 +187,22 @@ export async function GET(request: NextRequest) {
       products: products.map(mapProduct),
       orders: orders.map(mapOrder),
       walletTransactions: walletTransactions.map(mapWalletTransaction),
-      providers: [
-        {
-          ...wahoProvider,
-          priority: 1,
-          supportedGames: ['waho-top-up'],
-          successRate: wahoProvider.isActive ? providerSuccessRate : 0,
-          avgResponseTime: 0.2,
-          lastHealthCheck: new Date().toISOString(),
-          status: wahoProvider.isActive && failedProviderRequests ? 'degraded' : wahoProvider.status,
-        },
-      ],
+      manualDeposits: manualDeposits.map(mapManualDeposit),
+      providers: providerAccounts.map(mapProviderAccount),
+      providerBalanceAlerts: providerBalanceAlerts.map(mapProviderBalanceAlert),
+      promotions: promotions.map(mapPromotion),
+      banners: banners.map(mapBanner),
+      countries: countries.map((country) => {
+        const exchangeRate = exchangeRates.find((rate) => (
+          rate.baseCurrencyCode === BASE_CURRENCY &&
+          rate.quoteCurrencyCode === country.currencyCode
+        ));
+        return mapCountry(country, exchangeRate, BASE_CURRENCY);
+      }),
+      exchangeRates: exchangeRates.map(mapExchangeRate),
+      customPricingRules: customPricingRules.map(mapCustomPricingRule),
       providerRequests,
+      whatsappNotifications: whatsappNotifications.map(mapWhatsAppNotification),
       auditLogs: auditLogs.map(mapAdminAuditLog),
     });
   } catch (error) {

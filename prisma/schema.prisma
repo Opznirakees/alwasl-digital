@@ -9,6 +9,42 @@ datasource db {
 enum UserRole {
   USER
   ADMIN
+  STAFF
+}
+
+enum StaffRole {
+  OWNER
+  OPERATIONS
+  SUPPORT
+  FINANCE
+  MARKETING
+  VIEWER
+}
+
+enum StaffPermission {
+  ADMIN_DASHBOARD_VIEW
+  ORDER_READ
+  ORDER_MANAGE
+  ORDER_REFUND
+  USER_READ
+  USER_MANAGE
+  WALLET_READ
+  WALLET_MANAGE
+  MANUAL_DEPOSIT_REVIEW
+  PRODUCT_MANAGE
+  PROVIDER_MANAGE
+  PROMOTION_MANAGE
+  BANNER_MANAGE
+  CURRENCY_MANAGE
+  PRICING_MANAGE
+  EXPORT_DATA
+  WHATSAPP_MARKETING
+  JOB_RUN
+}
+
+enum UserAccountType {
+  CUSTOMER
+  DISTRIBUTOR
 }
 
 enum UserLevel {
@@ -57,14 +93,91 @@ enum WalletTransactionType {
   CASHBACK
 }
 
+enum ManualDepositStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum OtpPurpose {
   LOGIN
+  ORDER_CONFIRMATION
+  PAYMENT_CONFIRMATION
+  WALLET_TOP_UP
+  WALLET_CHANGE
 }
 
 enum ProviderRequestStatus {
   PENDING
   SUCCESS
   FAILED
+}
+
+enum ProviderService {
+  WAHO_TOP_UP
+  PAYMENT
+}
+
+enum ProviderAccountType {
+  WAHO_API
+  WAHA_WHATSAPP
+  MOCK
+}
+
+enum ProviderAccountStatus {
+  ONLINE
+  DEGRADED
+  OFFLINE
+}
+
+enum ProviderRetryJobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ProviderRetryJobType {
+  CREATE_TOPUP
+  STATUS_POLL
+}
+
+enum ProviderBalanceAlertStatus {
+  OPEN
+  NOTIFIED
+  RESOLVED
+}
+
+enum WhatsAppNotificationType {
+  PAYMENT_RECEIVED
+  TOPUP_SUCCESS
+  TOPUP_FAILURE
+  MARKETING
+}
+
+enum WhatsAppNotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED
+}
+
+enum PricingRuleTargetType {
+  ALL
+  CUSTOMER
+  DISTRIBUTOR
+  USER
+}
+
+enum PricingRulePriceType {
+  FIXED_PRICE
+  PERCENTAGE_DISCOUNT
+  FIXED_DISCOUNT
 }
 
 model User {
@@ -74,20 +187,39 @@ model User {
   email              String?             @unique
   avatar             String?
   role               UserRole            @default(USER)
+  staffRole          StaffRole?
+  staffPermissions   StaffPermission[]    @default([])
+  accountType        UserAccountType     @default(CUSTOMER)
   level              UserLevel           @default(BRONZE)
   walletBalance      Int                 @default(0)
   totalSpent         Int                 @default(0)
   isVerified         Boolean             @default(false)
   discountPercentage Int                 @default(0)
+  isBlocked         Boolean             @default(false)
+  blockedReason     String?
+  blockedAt         DateTime?
+  blockedByAdminId  String?
+  blockedByAdmin    User?               @relation("UserBlockedByAdmin", fields: [blockedByAdminId], references: [id], onDelete: SetNull)
+  blockedUsers      User[]              @relation("UserBlockedByAdmin")
   registeredAt       DateTime            @default(now())
   lastLogin          DateTime?
   orders             Order[]
   sessions           Session[]
   otpCodes           OtpCode[]
   walletTransactions WalletTransaction[]
+  manualDeposits     ManualDeposit[]     @relation("ManualDepositUser")
+  reviewedManualDeposits ManualDeposit[] @relation("ManualDepositReviewedByAdmin")
   adminAuditLogs     AdminAuditLog[]     @relation("AdminAuditActor")
+  exchangeRateUpdates ExchangeRate[]      @relation("ExchangeRateUpdatedBy")
+  customPricingRules CustomPricingRule[] @relation("CustomPricingRuleUser")
+  createdPricingRules CustomPricingRule[] @relation("CustomPricingRuleAdmin")
+  whatsappNotifications WhatsAppNotification[] @relation("WhatsAppNotificationUser")
+  createdWhatsAppNotifications WhatsAppNotification[] @relation("WhatsAppNotificationCreatedByAdmin")
 
   /// Financial CHECK constraints are enforced in migration 20260619122500_add_financial_check_constraints.
+  /// Staff role constraints are enforced in migration 20260620180000_add_staff_roles_permissions.
+  @@index([role, staffRole])
+  @@index([isBlocked, phone])
   @@map("users")
 }
 
@@ -148,6 +280,8 @@ model Product {
   countries         String[]
   packages          TopupPackage[]
   orders            Order[]
+  banners           Banner[]
+  customPricingRules CustomPricingRule[]
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
@@ -170,6 +304,7 @@ model TopupPackage {
   isPopular Boolean  @default(false)
   sortOrder Int      @default(0)
   orders    Order[]
+  customPricingRules CustomPricingRule[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -202,11 +337,16 @@ model Order {
   paymentStatus   PaymentStatus    @default(PENDING)
   providerId      String?
   providerOrderId String?
+  customPricingRuleId String?
+  customPricingRule CustomPricingRule? @relation(fields: [customPricingRuleId], references: [id], onDelete: SetNull)
+  pricingSnapshot Json?
   idempotencyKey  String?
   idempotencyFingerprint String?
   paymentAttempts PaymentAttempt[]
   providerRequests ProviderRequest[]
+  providerRetryJobs ProviderRetryJob[]
   walletTransactions WalletTransaction[]
+  whatsappNotifications WhatsAppNotification[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   completedAt     DateTime?
@@ -216,8 +356,40 @@ model Order {
   /// Financial CHECK constraints are enforced in migration 20260619122500_add_financial_check_constraints.
   @@index([userId, createdAt])
   @@index([status, paymentStatus])
+  @@index([customPricingRuleId])
   @@unique([userId, idempotencyKey])
   @@map("orders")
+}
+
+model CustomPricingRule {
+  id                      String                 @id @default(cuid())
+  name                    String
+  targetType              PricingRuleTargetType
+  priceType               PricingRulePriceType
+  value                   Int
+  productId               String?
+  product                 Product?               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  packageId               String?
+  package                 TopupPackage?          @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  userId                  String?
+  user                    User?                  @relation("CustomPricingRuleUser", fields: [userId], references: [id], onDelete: Cascade)
+  priority                Int                    @default(100)
+  isActive                Boolean                @default(true)
+  applyMembershipDiscount Boolean                @default(false)
+  startDate               DateTime?
+  endDate                 DateTime?
+  createdByAdminId        String?
+  createdByAdmin          User?                  @relation("CustomPricingRuleAdmin", fields: [createdByAdminId], references: [id], onDelete: SetNull)
+  orders                  Order[]
+  createdAt               DateTime               @default(now())
+  updatedAt               DateTime               @updatedAt
+
+  /// Custom pricing CHECK constraints are enforced in migration 20260620150000_add_custom_pricing_rules.
+  @@index([isActive, targetType, priority])
+  @@index([productId, packageId])
+  @@index([userId, isActive])
+  @@index([createdByAdminId, createdAt])
+  @@map("custom_pricing_rules")
 }
 
 model PaymentAttempt {
@@ -228,7 +400,7 @@ model PaymentAttempt {
   status      PaymentStatus @default(PENDING)
   amount      Int
   currency    String        @default("IQD")
-  providerRef String?
+  providerRef String?       @unique
   idempotencyKey String?
   idempotencyFingerprint String?
   metadata    Json?
@@ -247,6 +419,7 @@ model WalletTransaction {
   user          User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderId       String?
   order         Order?                @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  manualDeposit ManualDeposit?
   type          WalletTransactionType
   amount        Int
   currency      String                @default("IQD")
@@ -258,13 +431,123 @@ model WalletTransaction {
 
   /// The ledger amount can be negative for purchases; balance is constrained non-negative in migration 20260619122500_add_financial_check_constraints.
   @@index([userId, createdAt])
+  @@unique([userId, reference])
   @@map("wallet_transactions")
+}
+
+model ManualDeposit {
+  id                  String              @id @default(cuid())
+  userId              String
+  user                User                @relation("ManualDepositUser", fields: [userId], references: [id], onDelete: Cascade)
+  amount              Int
+  currency            String              @default("IQD")
+  paymentMethod       PaymentMethod
+  transactionId       String              @unique
+  status              ManualDepositStatus @default(PENDING)
+  note                String?
+  reviewedByAdminId   String?
+  reviewedByAdmin     User?               @relation("ManualDepositReviewedByAdmin", fields: [reviewedByAdminId], references: [id], onDelete: SetNull)
+  reviewedAt          DateTime?
+  rejectionReason     String?
+  walletTransactionId String?             @unique
+  walletTransaction   WalletTransaction?  @relation(fields: [walletTransactionId], references: [id], onDelete: SetNull)
+  whatsappNotifications WhatsAppNotification[]
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+
+  /// Manual deposit CHECK constraints are enforced in migration 20260620160000_add_manual_deposits.
+  @@index([userId, status, createdAt])
+  @@index([status, createdAt])
+  @@index([reviewedByAdminId, reviewedAt])
+  @@map("manual_deposits")
+}
+
+model Provider {
+  id                String            @id
+  code              String            @unique
+  name              String
+  service           ProviderService   @default(WAHO_TOP_UP)
+  apiEndpoint       String?
+  isActive          Boolean           @default(false)
+  priority          Int               @default(100)
+  supportedProducts String[]
+  accounts          ProviderAccount[]
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([service, isActive, priority])
+  @@map("providers")
+}
+
+model ProviderAccount {
+  id                String                @id
+  providerId        String
+  provider          Provider              @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  name              String
+  type              ProviderAccountType
+  apiEndpoint       String?
+  isActive          Boolean               @default(false)
+  priority          Int                   @default(100)
+  fallbackEnabled   Boolean               @default(true)
+  balance           Int                   @default(0)
+  reservedBalance   Int                   @default(0)
+  minBalance        Int                   @default(0)
+  lowBalanceThreshold Int                 @default(0)
+  currency          String                @default("IQD")
+  dailyLimit        Int?
+  dailyUsed         Int                   @default(0)
+  successRate       Int                   @default(100)
+  avgResponseTimeMs Int                   @default(0)
+  status            ProviderAccountStatus @default(OFFLINE)
+  failureCount      Int                   @default(0)
+  lastHealthCheck   DateTime?
+  lastFailureAt     DateTime?
+  supportedProducts String[]
+  config            Json?
+  providerRequests  ProviderRequest[]
+  providerRetryJobs ProviderRetryJob[]
+  balanceAlerts     ProviderBalanceAlert[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  /// Balance CHECK constraints are enforced in migration 20260619150000_add_multi_provider_accounts.
+  @@index([providerId, isActive, status, priority])
+  @@index([isActive, status, priority])
+  @@map("provider_accounts")
+}
+
+model ProviderBalanceAlert {
+  id                String                     @id @default(cuid())
+  providerAccountId String
+  providerAccount   ProviderAccount            @relation(fields: [providerAccountId], references: [id], onDelete: Cascade)
+  status            ProviderBalanceAlertStatus @default(OPEN)
+  balance           Int
+  reservedBalance   Int
+  availableBalance  Int
+  threshold         Int
+  currency          String                     @default("IQD")
+  message           String
+  channels          String[]
+  whatsappPhone     String?
+  whatsappMessageId String?
+  notifiedAt        DateTime?
+  resolvedAt        DateTime?
+  lastError         String?
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+
+  /// Balance alert CHECK constraints are enforced in migration 20260620100000_add_provider_low_balance_alerts.
+  @@index([status, createdAt])
+  @@index([providerAccountId, status])
+  @@map("provider_balance_alerts")
 }
 
 model ProviderRequest {
   id              String                @id @default(cuid())
   orderId         String?
   order           Order?                @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  providerAccountId String?
+  providerAccount ProviderAccount?      @relation(fields: [providerAccountId], references: [id], onDelete: SetNull)
   provider        String
   action          String
   status          ProviderRequestStatus @default(PENDING)
@@ -275,7 +558,169 @@ model ProviderRequest {
   createdAt       DateTime              @default(now())
 
   @@index([orderId, provider, action])
+  @@index([providerAccountId, createdAt])
   @@map("provider_requests")
+}
+
+model ProviderRetryJob {
+  id                String                 @id @default(cuid())
+  orderId           String
+  order             Order                  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  providerAccountId String?
+  providerAccount   ProviderAccount?       @relation(fields: [providerAccountId], references: [id], onDelete: SetNull)
+  type              ProviderRetryJobType
+  status            ProviderRetryJobStatus @default(PENDING)
+  attemptCount      Int                    @default(0)
+  maxAttempts       Int                    @default(3)
+  nextRunAt         DateTime
+  lastRunAt         DateTime?
+  completedAt       DateTime?
+  failedAt          DateTime?
+  lastError         String?
+  payload           Json?
+  resultPayload     Json?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  /// Retry CHECK constraints are enforced in migration 20260620090000_add_provider_retry_jobs.
+  @@index([status, nextRunAt])
+  @@index([orderId, status])
+  @@index([providerAccountId, status])
+  @@map("provider_retry_jobs")
+}
+
+model WhatsAppNotification {
+  id                String                     @id @default(cuid())
+  type              WhatsAppNotificationType
+  status            WhatsAppNotificationStatus @default(PENDING)
+  dedupeKey         String                     @unique
+  userId            String?
+  user              User?                      @relation("WhatsAppNotificationUser", fields: [userId], references: [id], onDelete: SetNull)
+  orderId           String?
+  order             Order?                     @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  manualDepositId   String?
+  manualDeposit     ManualDeposit?             @relation(fields: [manualDepositId], references: [id], onDelete: SetNull)
+  createdByAdminId  String?
+  createdByAdmin    User?                      @relation("WhatsAppNotificationCreatedByAdmin", fields: [createdByAdminId], references: [id], onDelete: SetNull)
+  batchId           String?
+  phone             String
+  message           String
+  providerMessageId String?
+  error             String?
+  metadata          Json?
+  sentAt            DateTime?
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+
+  /// WhatsApp notification CHECK constraints are enforced in migration 20260620170000_add_whatsapp_notifications.
+  @@index([type, status, createdAt])
+  @@index([userId, createdAt])
+  @@index([orderId, createdAt])
+  @@index([manualDepositId, createdAt])
+  @@index([batchId, createdAt])
+  @@map("whatsapp_notifications")
+}
+
+model Promotion {
+  id                 String        @id @default(cuid())
+  code               String        @unique
+  type               PromotionType
+  value              Int
+  minPurchase        Int           @default(0)
+  maxDiscount        Int?
+  usageLimit         Int
+  usedCount          Int           @default(0)
+  startDate          DateTime
+  endDate            DateTime
+  isActive           Boolean       @default(true)
+  applicableProducts String[]
+  applicableLevels   UserLevel[]
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  /// Promotion CHECK constraints are enforced in migration 20260620110000_add_admin_crud_promotions.
+  @@index([isActive, startDate, endDate])
+  @@map("promotions")
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  titleAr   String
+  subtitle  String?
+  subtitleAr String?
+  image     String
+  link      String?
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  startDate DateTime
+  endDate   DateTime
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Banner CHECK constraints are enforced in migration 20260620130000_add_banner_management.
+  @@index([isActive, startDate, endDate, sortOrder])
+  @@index([productId])
+  @@map("banners")
+}
+
+model Currency {
+  code          String         @id
+  name          String
+  symbol        String
+  decimalPlaces Int            @default(2)
+  isActive      Boolean        @default(true)
+  countries     Country[]
+  baseRates     ExchangeRate[] @relation("ExchangeRateBaseCurrency")
+  quoteRates    ExchangeRate[] @relation("ExchangeRateQuoteCurrency")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  /// Currency CHECK constraints are enforced in migration 20260620140000_add_currency_exchange_management.
+  @@index([isActive])
+  @@map("currencies")
+}
+
+model Country {
+  id           String   @id
+  code         String   @unique
+  name         String
+  nameAr       String
+  flag         String
+  phoneCode    String
+  currencyCode String
+  currency     Currency @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([isActive, code])
+  @@index([currencyCode])
+  @@map("countries")
+}
+
+model ExchangeRate {
+  id                String   @id @default(cuid())
+  baseCurrencyCode  String
+  baseCurrency      Currency @relation("ExchangeRateBaseCurrency", fields: [baseCurrencyCode], references: [code], onDelete: Restrict)
+  quoteCurrencyCode String
+  quoteCurrency     Currency @relation("ExchangeRateQuoteCurrency", fields: [quoteCurrencyCode], references: [code], onDelete: Restrict)
+  rate              Decimal  @db.Decimal(18, 8)
+  isActive          Boolean  @default(true)
+  source            String   @default("manual")
+  note              String?
+  updatedByAdminId  String?
+  updatedByAdmin    User?    @relation("ExchangeRateUpdatedBy", fields: [updatedByAdminId], references: [id], onDelete: SetNull)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  /// Exchange rate CHECK constraints are enforced in migration 20260620140000_add_currency_exchange_management.
+  @@unique([baseCurrencyCode, quoteCurrencyCode])
+  @@index([isActive, baseCurrencyCode, quoteCurrencyCode])
+  @@index([updatedByAdminId, updatedAt])
+  @@map("exchange_rates")
 }
 
 model AdminAuditLog {

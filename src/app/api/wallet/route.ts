@@ -1,6 +1,6 @@
 import { requireUser } from '@/server/auth';
 import { handleApiError, ok } from '@/server/http';
-import { mapUser, mapWalletTransaction } from '@/server/mappers';
+import { mapManualDeposit, mapUser, mapWalletTransaction } from '@/server/mappers';
 import { prisma } from '@/server/prisma';
 
 export const runtime = 'nodejs';
@@ -13,10 +13,20 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
       take: 100,
     });
+    const manualDeposits = await prisma.manualDeposit.findMany({
+      where: { userId: user.id },
+      include: {
+        user: { select: { id: true, phone: true } },
+        reviewedByAdmin: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
 
     return ok({
       user: mapUser(user),
       transactions: transactions.map(mapWalletTransaction),
+      manualDeposits: manualDeposits.map(mapManualDeposit),
     });
   } catch (error) {
     return handleApiError(error);

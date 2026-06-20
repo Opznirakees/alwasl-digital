@@ -44,7 +44,7 @@ export function Header() {
     user,
     isAuthenticated,
     logout,
-    selectedCountry,
+    formatLocalAmount,
     theme,
     toggleTheme,
   } = useApp();
@@ -52,12 +52,6 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isLight = theme === 'light';
   const activeLanguage = languageOptions.find(option => option.id === language) || languageOptions[0];
-  const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale).format(amount);
-  };
-
   return (
     <header className={`sticky top-0 z-50 w-full glass border-b ${isLight ? 'border-black/10' : 'border-white/10'}`}>
       <div className="container mx-auto px-4">
@@ -289,10 +283,7 @@ export function Header() {
                   >
                     <Wallet className={`h-4 w-4 ${isLight ? 'text-blue-600' : 'text-blue-300'}`} />
                     <span className={`text-xs font-semibold ${isLight ? 'text-blue-700' : 'text-blue-300'}`}>
-                      {formatCurrency(user?.walletBalance || 0)}
-                    </span>
-                    <span className={`text-[10px] ${isLight ? 'text-blue-500' : 'text-blue-300/70'}`}>
-                      {selectedCountry.currencySymbol}
+                      {formatLocalAmount(user?.walletBalance || 0)}
                     </span>
                   </Button>
                 </Link>
@@ -334,7 +325,7 @@ export function Header() {
                       <div className="flex items-center gap-2 mt-2 px-2 py-1.5 rounded-md bg-blue-50">
                         <Wallet className="h-3.5 w-3.5 text-blue-600" />
                         <span className="text-sm font-semibold text-blue-700">
-                          {formatCurrency(user?.walletBalance || 0)} {selectedCountry.currencySymbol}
+                          {formatLocalAmount(user?.walletBalance || 0)}
                         </span>
                       </div>
                     </div>

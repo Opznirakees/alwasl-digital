@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
 import type { Language, User, Country, CartItem, Order, WalletTransaction } from '@/types';
-import { countries } from '@/data/mock-data';
 import { resolveOtpPhone } from './auth-flow';
 
 type Theme = 'dark' | 'light';
@@ -27,8 +26,10 @@ interface AppContextType {
   refreshAccount: () => Promise<void>;
 
   // Country
+  countries: Country[];
   selectedCountry: Country;
   setSelectedCountry: (country: Country) => void;
+  formatLocalAmount: (amountIqd: number, options?: { includeCurrency?: boolean; absolute?: boolean }) => string;
 
   // Cart
   cart: CartItem[];
@@ -50,6 +51,22 @@ const storageKeys = {
   theme: 'theme',
   country: 'alwasl-country',
   cart: 'alwasl-demo-cart',
+};
+
+const defaultCountry: Country = {
+  id: 'iq',
+  code: 'IQ',
+  name: 'Iraq',
+  nameAr: 'العراق',
+  flag: '🇮🇶',
+  phoneCode: '+964',
+  currency: 'IQD',
+  currencySymbol: 'د.ع',
+  currencyName: 'Iraqi Dinar',
+  decimalPlaces: 0,
+  exchangeRate: 1,
+  exchangeRateBase: 'IQD',
+  isActive: true,
 };
 
 function readJson<T>(key: string, fallback: T): T {
@@ -537,7 +554,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
   const [theme, setTheme] = useState<Theme>('light');
   const [user, setUser] = useState<User | null>(null);
-  const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
+  const [countries, setCountries] = useState<Country[]>([defaultCountry]);
+  const [selectedCountry, setSelectedCountryState] = useState<Country>(defaultCountry);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
@@ -594,11 +612,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (savedLanguage && savedLanguage in languageLabels) {
       setLanguage(savedLanguage);
     }
-    localStorage.removeItem(storageKeys.country);
-
     setCart(readJson<CartItem[]>(storageKeys.cart, []));
     setIsHydrated(true);
   }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    let active = true;
+
+    async function loadCountries() {
+      const response = await fetch('/api/countries');
+      if (!response.ok) return;
+      const payload = await response.json().catch(() => null);
+      const loadedCountries = Array.isArray(payload?.countries) && payload.countries.length
+        ? payload.countries as Country[]
+        : [defaultCountry];
+      if (!active) return;
+
+      setCountries(loadedCountries);
+      setSelectedCountryState((current) => {
+        const savedCountryId = localStorage.getItem(storageKeys.country);
+        return loadedCountries.find((country) => country.id === savedCountryId)
+          ?? loadedCountries.find((country) => country.id === current.id)
+          ?? loadedCountries[0];
+      });
+    }
+
+    void loadCountries();
+
+    return () => {
+      active = false;
+    };
+  }, [isHydrated]);
 
   // Apply theme class to document
   useEffect(() => {
@@ -628,6 +673,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   }, []);
 
+  const setSelectedCountry = useCallback((country: Country) => {
+    setSelectedCountryState(country);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(storageKeys.country, country.id);
+    }
+  }, []);
+
   const t = useCallback((en: string, ar: string, zh?: string) => {
     if (language === 'ar') return ar;
     if (language === 'zh') return zh || zhTranslations[en] || en;
@@ -635,6 +687,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [language]);
 
   const dir = language === 'ar' ? 'rtl' : 'ltr';
+  const locale = languageLabels[language].locale;
+
+  const formatLocalAmount = useCallback((amountIqd: number, options?: { includeCurrency?: boolean; absolute?: boolean }) => {
+    const rate = selectedCountry.exchangeRate && selectedCountry.exchangeRate > 0 ? selectedCountry.exchangeRate : 1;
+    const decimalPlaces = selectedCountry.decimalPlaces ?? 0;
+    const amount = (options?.absolute ? Math.abs(amountIqd) : amountIqd) * rate;
+    const formatted = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: decimalPlaces,
+      maximumFractionDigits: decimalPlaces,
+    }).format(amount);
+
+    return options?.includeCurrency === false
+      ? formatted
+      : `${formatted} ${selectedCountry.currencySymbol}`;
+  }, [locale, selectedCountry]);
 
   useEffect(() => {
     document.documentElement.lang = languageLabels[language].htmlLang;
@@ -741,8 +808,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       logout,
       verifyOtp,
       refreshAccount,
+      countries,
       selectedCountry,
       setSelectedCountry,
+      formatLocalAmount,
       cart,
       addToCart,
       removeFromCart,

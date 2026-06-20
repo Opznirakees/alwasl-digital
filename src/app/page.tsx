@@ -7,7 +7,7 @@ import { useApp } from '@/contexts/AppContext';
 import { Header } from '@/components/layout/Header';
 import { HeroBanner } from '@/components/home/HeroBanner';
 import { wahoRechargeInfo } from '@/data/waho-recharge-info';
-import type { Game } from '@/types';
+import type { Banner, Game } from '@/types';
 import {
   ArrowRight,
   Zap,
@@ -20,8 +20,9 @@ import {
 } from 'lucide-react';
 
 export default function HomePage() {
-  const { t, dir, language } = useApp();
+  const { t, dir, language, selectedCountry } = useApp();
   const [wahoTopUp, setWahoTopUp] = useState<Game | null>(null);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const topUpPackages = wahoTopUp?.packages.filter((pkg) => pkg.inStock) ?? [];
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
   const formatAmount = (amount: number) => new Intl.NumberFormat(locale).format(amount);
@@ -29,20 +30,28 @@ export default function HomePage() {
   useEffect(() => {
     let active = true;
 
-    async function loadProduct() {
-      const response = await fetch('/api/products/waho-top-up');
-      if (response.ok) {
-        const payload = await response.json();
-        if (active) setWahoTopUp(payload.product);
-      }
+    async function loadHomeData() {
+      const [productResponse, bannersResponse] = await Promise.all([
+        fetch(`/api/products/waho-top-up?country=${selectedCountry.id}`),
+        fetch('/api/banners'),
+      ]);
+
+      const [productPayload, bannersPayload] = await Promise.all([
+        productResponse.ok ? productResponse.json() : Promise.resolve(null),
+        bannersResponse.ok ? bannersResponse.json() : Promise.resolve(null),
+      ]);
+
+      if (!active) return;
+      setWahoTopUp(productPayload?.product ?? null);
+      setBanners(bannersPayload?.banners ?? []);
     }
 
-    void loadProduct();
+    void loadHomeData();
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [selectedCountry.id]);
 
   return (
     <div className={`min-h-screen ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
@@ -50,7 +59,7 @@ export default function HomePage() {
 
       <main className="container mx-auto px-4 py-5 md:py-8 space-y-9 md:space-y-12">
         {/* Hero Banner */}
-        <HeroBanner />
+        <HeroBanner banner={banners[0]} />
 
         <section className="grid items-center gap-6 md:grid-cols-[0.9fr_1.1fr]">
           <div className="max-w-2xl">

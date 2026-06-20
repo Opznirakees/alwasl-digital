@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { assertPhoneNotBlocked } from '@/server/auth';
 import { createOtpCode, hashOtp } from '@/server/crypto';
 import { handleApiError, ok } from '@/server/http';
 import { prisma } from '@/server/prisma';
@@ -17,6 +18,7 @@ export async function POST(request: NextRequest) {
 
     await assertRateLimit(`auth-login:${ip}`, { limit: 20, windowMs: 15 * 60 * 1000 });
     await assertRateLimit(`auth-login:${phone}`, { limit: 5, windowMs: 10 * 60 * 1000 });
+    await assertPhoneNotBlocked(phone);
 
     const demoOtp = resolveDemoOtpForPhone(phone);
     const code = demoOtp ?? createOtpCode();
@@ -25,6 +27,7 @@ export async function POST(request: NextRequest) {
     await prisma.otpCode.updateMany({
       where: {
         phone,
+        purpose: 'LOGIN',
         consumedAt: null,
       },
       data: { consumedAt: now },
@@ -33,6 +36,7 @@ export async function POST(request: NextRequest) {
     await prisma.otpCode.create({
       data: {
         phone,
+        purpose: 'LOGIN',
         codeHash: hashOtp(phone, code),
         expiresAt: new Date(now.getTime() + 10 * 60 * 1000),
       },

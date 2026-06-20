@@ -9,14 +9,14 @@ import { Header } from '@/components/layout/Header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { promotions } from '@/data/mock-data';
 import { useApp } from '@/contexts/AppContext';
-import type { Game } from '@/types';
+import type { Game, Promotion } from '@/types';
 import { formatPromotionDate, getPromotionState } from './promotion-state';
 
 export default function PromotionsPage() {
-  const { t, language, dir, selectedCountry } = useApp();
+  const { t, language, dir, selectedCountry, formatLocalAmount } = useApp();
   const [products, setProducts] = useState<Game[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [now, setNow] = useState<Date | null>(null);
   const topUpIconSrc = '/brand/alwasl-mark.jpg';
 
@@ -25,10 +25,16 @@ export default function PromotionsPage() {
     setNow(new Date());
 
     async function loadProducts() {
-      const response = await fetch('/api/products');
-      if (response.ok) {
-        const payload = await response.json();
-        if (active) setProducts(payload.products ?? []);
+      const [productsResponse, promotionsResponse] = await Promise.all([
+        fetch(`/api/products?country=${selectedCountry.id}`),
+        fetch('/api/promotions'),
+      ]);
+      const productsPayload = productsResponse.ok ? await productsResponse.json() : null;
+      const promotionsPayload = promotionsResponse.ok ? await promotionsResponse.json() : null;
+
+      if (active) {
+        setProducts(productsPayload?.products ?? []);
+        setPromotions(promotionsPayload?.promotions ?? []);
       }
     }
 
@@ -37,11 +43,7 @@ export default function PromotionsPage() {
     return () => {
       active = false;
     };
-  }, []);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ').format(amount);
-  };
+  }, [selectedCountry.id]);
 
   const formatDate = (dateString: string) => {
     return formatPromotionDate(dateString, language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ');
@@ -95,7 +97,7 @@ export default function PromotionsPage() {
               .filter(Boolean);
             const discountText = promotion.type === 'percentage'
               ? `${promotion.value}% ${t('off', 'خصم')}`
-              : `${formatCurrency(promotion.value)} ${selectedCountry.currencySymbol} ${t('off', 'خصم')}`;
+              : `${formatLocalAmount(promotion.value)} ${t('off', 'خصم')}`;
 
             return (
               <Card key={promotion.id} className="relative overflow-hidden border-black/10 bg-white p-6 shadow-none">
@@ -140,9 +142,9 @@ export default function PromotionsPage() {
                   </div>
 
                   <div className="mt-5 space-y-2 text-sm text-zinc-600">
-                    <p>{t('Minimum purchase', 'الحد الأدنى')}: {formatCurrency(promotion.minPurchase)} {selectedCountry.currencySymbol}</p>
+                    <p>{t('Minimum purchase', 'الحد الأدنى')}: {formatLocalAmount(promotion.minPurchase)}</p>
                     {promotion.maxDiscount && (
-                      <p>{t('Maximum discount', 'الحد الأقصى للخصم')}: {formatCurrency(promotion.maxDiscount)} {selectedCountry.currencySymbol}</p>
+                      <p>{t('Maximum discount', 'الحد الأقصى للخصم')}: {formatLocalAmount(promotion.maxDiscount)}</p>
                     )}
                     <p className="flex items-center gap-2">
                       <CalendarDays className="w-4 h-4" />

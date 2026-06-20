@@ -15,13 +15,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { countries } from '@/data/mock-data';
 import { ArrowLeft, Phone, Shield, Loader2, MessageCircle, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AuthPage() {
   const router = useRouter();
-  const { t, dir, login, verifyOtp } = useApp();
+  const { t, dir, login, verifyOtp, countries } = useApp();
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [countryCode, setCountryCode] = useState('+964');
   const [phone, setPhone] = useState('');
@@ -140,10 +139,10 @@ export default function AuthPage() {
                       </SelectTrigger>
                       <SelectContent className="border-black/10 bg-white">
                         {countries.map((country) => (
-                          <SelectItem key={country.id} value={`+${country.id === 'iq' ? '964' : country.id === 'sa' ? '966' : country.id === 'ae' ? '971' : country.id === 'eg' ? '20' : country.id === 'jo' ? '962' : '965'}`}>
+                          <SelectItem key={country.id} value={country.phoneCode}>
                             <span className="flex items-center gap-2">
                               <span>{country.flag}</span>
-                              <span className="text-xs">+{country.id === 'iq' ? '964' : country.id === 'sa' ? '966' : country.id === 'ae' ? '971' : country.id === 'eg' ? '20' : country.id === 'jo' ? '962' : '965'}</span>
+                              <span className="text-xs">{country.phoneCode}</span>
                             </span>
                           </SelectItem>
                         ))}

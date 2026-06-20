@@ -1,17 +1,20 @@
 import type { TopupPackage, User } from '@prisma/client';
+import { applyCustomPricingRule, type CustomPricingRuleForPricing } from './custom-pricing';
 
-export function calculateOrderPricing(pkg: Pick<TopupPackage, 'basePrice' | 'salePrice'>, user: Pick<User, 'discountPercentage'>) {
-  const unitPrice = pkg.salePrice ?? pkg.basePrice;
-  const totalPrice = unitPrice;
-  const discount = Math.round((totalPrice * user.discountPercentage) / 100);
-  const finalPrice = Math.max(0, totalPrice - discount);
+export function calculateOrderPricing(
+  pkg: Pick<TopupPackage, 'basePrice' | 'salePrice'>,
+  user: Pick<User, 'discountPercentage'> & { customPricingRule?: CustomPricingRuleForPricing | null }
+) {
+  const baseUnitPrice = pkg.salePrice ?? pkg.basePrice;
+  const appliedPricing = applyCustomPricingRule(baseUnitPrice, user.customPricingRule, user.discountPercentage);
 
   return {
     quantity: 1,
-    unitPrice,
-    totalPrice,
-    discount,
-    finalPrice,
+    unitPrice: appliedPricing.unitPrice,
+    totalPrice: appliedPricing.unitPrice,
+    discount: appliedPricing.discount,
+    finalPrice: appliedPricing.finalPrice,
+    ...(appliedPricing.customPricingRuleId ? { customPricingRuleId: appliedPricing.customPricingRuleId } : {}),
   };
 }
 

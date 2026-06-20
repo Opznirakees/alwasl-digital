@@ -7,16 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
-import { levelLabels } from '@/data/mock-data';
+import { resolveMembershipForSpend } from '@/lib/membership';
 
 export default function ProfilePage() {
-  const { t, language, dir, theme, user, selectedCountry } = useApp();
+  const { t, dir, theme, user, formatLocalAmount } = useApp();
   const currentUser = user;
   const isLight = theme === 'light';
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ').format(amount);
-  };
 
   if (!currentUser) {
     return (
@@ -40,7 +36,7 @@ export default function ProfilePage() {
     );
   }
 
-  const level = levelLabels[currentUser.level];
+  const level = resolveMembershipForSpend(currentUser.totalSpent);
   const displayName = t(currentUser.name, currentUser.name);
 
   return (
@@ -72,7 +68,7 @@ export default function ProfilePage() {
 
           <div className="lg:col-span-2 grid sm:grid-cols-2 gap-4">
             {[
-              { icon: Wallet, label: t('Wallet Balance', 'رصيد المحفظة'), value: `${formatCurrency(currentUser.walletBalance)} ${selectedCountry.currencySymbol}` },
+              { icon: Wallet, label: t('Wallet Balance', 'رصيد المحفظة'), value: formatLocalAmount(currentUser.walletBalance) },
               { icon: Shield, label: t('Verified Account', 'حساب موثق'), value: currentUser.isVerified ? t('Verified', 'موثق') : t('Pending', 'قيد الانتظار') },
               { icon: Phone, label: t('Phone', 'الهاتف'), value: currentUser.phone },
               { icon: Mail, label: t('Email', 'البريد الإلكتروني'), value: currentUser.email || t('Not set', 'غير محدد') },

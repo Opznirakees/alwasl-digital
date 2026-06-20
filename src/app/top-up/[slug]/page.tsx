@@ -39,7 +39,7 @@ function createClientIdempotencyKey() {
 export default function GamePage({ params }: GamePageProps) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const { t, language, dir, user, isAuthenticated, selectedCountry, refreshAccount } = useApp();
+  const { t, language, dir, user, isAuthenticated, selectedCountry, refreshAccount, formatLocalAmount } = useApp();
 
   const [game, setGame] = useState<Game | null>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
@@ -51,6 +51,9 @@ export default function GamePage({ params }: GamePageProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('wallet');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [financialOtp, setFinancialOtp] = useState('');
+  const [otpRequested, setOtpRequested] = useState(false);
+  const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const wizardRef = useRef<HTMLDivElement>(null);
   const orderIdempotencyKeyRef = useRef<string | null>(null);
 
@@ -59,9 +62,9 @@ export default function GamePage({ params }: GamePageProps) {
 
     async function loadProduct() {
       setIsLoadingProduct(true);
-      const response = await fetch(`/api/products/${resolvedParams.slug}`);
+      const response = await fetch(`/api/products/${resolvedParams.slug}?country=${selectedCountry.id}`);
       if (!response.ok) {
-        router.push('/');
+        router.push('/top-up');
         return;
       }
       const payload = await response.json();
@@ -76,10 +79,12 @@ export default function GamePage({ params }: GamePageProps) {
     return () => {
       active = false;
     };
-  }, [resolvedParams.slug, router]);
+  }, [resolvedParams.slug, router, selectedCountry.id]);
 
   useEffect(() => {
     orderIdempotencyKeyRef.current = null;
+    setFinancialOtp('');
+    setOtpRequested(false);
   }, [game?.slug, selectedPackage?.id, userId, zoneId, paymentMethod]);
 
   if (isLoadingProduct || !game) {
@@ -106,10 +111,6 @@ export default function GamePage({ params }: GamePageProps) {
     const basePrice = pkg.salePrice || pkg.basePrice;
     const discountAmount = (basePrice * discount) / 100;
     return basePrice - discountAmount;
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat(locale).format(Math.round(price));
   };
 
   const goToStep = (nextStep: CheckoutStep) => {
@@ -165,6 +166,45 @@ export default function GamePage({ params }: GamePageProps) {
     goToStep('payment');
   };
 
+  const handleRequestOrderOtp = async () => {
+    if (!isAuthenticated) {
+      toast.error(t('Please login to continue', 'الرجاء تسجيل الدخول للمتابعة', '请登录后继续'));
+      router.push('/auth');
+      return;
+    }
+
+    setIsRequestingOtp(true);
+    try {
+      const response = await fetch('/api/auth/otp/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ purpose: 'ORDER_CONFIRMATION' }),
+      });
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(payload?.error || t('Verification failed', 'فشل في التحقق', '验证失败'));
+      }
+
+      if (payload?.debugOtp) {
+        console.info(`Al-Wasl order OTP: ${payload.debugOtp}`);
+      }
+
+      setOtpRequested(true);
+      toast.success(t(
+        'Verification code sent via WhatsApp',
+        'تم إرسال رمز التحقق عبر واتساب',
+        '验证码已通过 WhatsApp 发送'
+      ));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('Verification failed', 'فشل في التحقق', '验证失败');
+      toast.error(message);
+    } finally {
+      setIsRequestingOtp(false);
+    }
+  };
+
   const handleConfirmOrder = async () => {
     if (!isAuthenticated) {
       toast.error(t('Please login to continue', 'الرجاء تسجيل الدخول للمتابعة'));
@@ -173,6 +213,15 @@ export default function GamePage({ params }: GamePageProps) {
     }
 
     if (!selectedPackage) return;
+
+    if (!/^\d{6}$/.test(financialOtp)) {
+      toast.error(t(
+        'Enter the 6-digit WhatsApp verification code',
+        'أدخل رمز التحقق من واتساب المكون من 6 أرقام',
+        '请输入 6 位 WhatsApp 验证码'
+      ));
+      return;
+    }
 
     setIsProcessing(true);
     try {
@@ -190,6 +239,7 @@ export default function GamePage({ params }: GamePageProps) {
           wahoId: userId,
           zoneId,
           paymentMethod,
+          otp: financialOtp,
         }),
       });
       const orderPayload = await orderResponse.json();
@@ -200,6 +250,8 @@ export default function GamePage({ params }: GamePageProps) {
 
       await refreshAccount();
       orderIdempotencyKeyRef.current = null;
+      setFinancialOtp('');
+      setOtpRequested(false);
       toast.success(t(
         'Order submitted. We will confirm payment before processing.',
         'تم إرسال الطلب. سنؤكد الدفع قبل المعالجة.',
@@ -345,20 +397,17 @@ export default function GamePage({ params }: GamePageProps) {
                         {pkg.salePrice ? (
                           <div className="flex items-center gap-2">
                             <span className="text-lg font-semibold text-zinc-950">
-                              {formatPrice(pkg.salePrice)}
+                              {formatLocalAmount(pkg.salePrice)}
                             </span>
                             <span className="text-sm text-zinc-400 line-through">
-                              {formatPrice(pkg.basePrice)}
+                              {formatLocalAmount(pkg.basePrice)}
                             </span>
                           </div>
                         ) : (
                           <span className="text-lg font-semibold text-zinc-950">
-                            {formatPrice(pkg.basePrice)}
+                            {formatLocalAmount(pkg.basePrice)}
                           </span>
                         )}
-                        <span className="ml-1 text-xs text-zinc-500">
-                          {selectedCountry.currencySymbol}
-                        </span>
                       </div>
                     </button>
                   ))}
@@ -489,7 +538,7 @@ export default function GamePage({ params }: GamePageProps) {
                         <p className="font-medium text-zinc-950">{method.name}</p>
                         {'balance' in method && method.balance !== undefined && (
                           <p className="text-xs text-zinc-500">
-                            {t('Balance:', 'الرصيد:')} {formatPrice(method.balance)} {selectedCountry.currencySymbol}
+                            {t('Balance:', 'الرصيد:')} {formatLocalAmount(method.balance)}
                           </p>
                         )}
                       </div>
@@ -554,6 +603,46 @@ export default function GamePage({ params }: GamePageProps) {
                       {t('After payment is confirmed, this amount will be sent to the WAHO ID shown above.', 'بعد تأكيد الدفع سيتم إرسال هذا المبلغ إلى معرف WAHO الظاهر أعلاه.', '付款确认后，此金额将充值到上方显示的 WAHO ID。')}
                     </p>
                   </div>
+
+                  <div className="rounded-lg border border-black/10 bg-white p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                      <div className="flex-1">
+                        <Label className="text-zinc-700">
+                          {t('WhatsApp verification code', 'رمز تحقق واتساب', 'WhatsApp 验证码')}
+                        </Label>
+                        <Input
+                          value={financialOtp}
+                          onChange={(event) => setFinancialOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          placeholder="123456"
+                          className="mt-2 border-black/10 bg-white text-zinc-950"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={handleRequestOrderOtp}
+                        disabled={isRequestingOtp}
+                        variant="outline"
+                        className="border-black/10 bg-white text-blue-600 hover:bg-blue-50"
+                      >
+                        {isRequestingOtp ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : otpRequested ? (
+                          t('Resend code', 'إعادة إرسال الرمز', '重新发送验证码')
+                        ) : (
+                          t('Send code', 'إرسال الرمز', '发送验证码')
+                        )}
+                      </Button>
+                    </div>
+                    <p className="mt-2 text-xs leading-5 text-zinc-500">
+                      {t(
+                        'For your wallet and payment safety, confirm this order with the code sent to your WhatsApp.',
+                        'لحماية محفظتك وعمليات الدفع، أكد هذا الطلب بالرمز المرسل إلى واتساب.',
+                        '为了保护钱包和支付安全，请使用发送到 WhatsApp 的验证码确认此订单。'
+                      )}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 mt-6">
@@ -610,14 +699,14 @@ export default function GamePage({ params }: GamePageProps) {
                     <div className="flex justify-between text-sm">
                       <span className="text-zinc-500">{t('Subtotal', 'المجموع الفرعي')}</span>
                       <span className="text-zinc-950">
-                        {formatPrice(selectedPackage.salePrice || selectedPackage.basePrice)} {selectedCountry.currencySymbol}
+                        {formatLocalAmount(selectedPackage.salePrice || selectedPackage.basePrice)}
                       </span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-sm">
                         <span className="text-[#1f8f3a]">{t('Member Discount', 'خصم العضوية')} ({discount}%)</span>
                         <span className="text-[#1f8f3a]">
-                          -{formatPrice(((selectedPackage.salePrice || selectedPackage.basePrice) * discount) / 100)} {selectedCountry.currencySymbol}
+                          -{formatLocalAmount(((selectedPackage.salePrice || selectedPackage.basePrice) * discount) / 100, { absolute: true })}
                         </span>
                       </div>
                     )}
@@ -627,7 +716,7 @@ export default function GamePage({ params }: GamePageProps) {
                     <div className="flex justify-between">
                       <span className="text-lg font-semibold text-zinc-950">{t('Total', 'الإجمالي')}</span>
                       <span className="text-lg font-semibold text-zinc-950">
-                        {formatPrice(calculateFinalPrice(selectedPackage))} {selectedCountry.currencySymbol}
+                        {formatLocalAmount(calculateFinalPrice(selectedPackage))}
                       </span>
                     </div>
                   </div>

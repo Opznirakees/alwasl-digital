@@ -6,6 +6,9 @@ export interface User {
   email?: string;
   avatar?: string;
   role?: UserRole;
+  staffRole?: StaffRole;
+  staffPermissions: StaffPermission[];
+  accountType?: UserAccountType;
   level: UserLevel;
   walletBalance: number;
   totalSpent: number;
@@ -13,10 +16,35 @@ export interface User {
   lastLogin: string;
   isVerified: boolean;
   discountPercentage: number;
+  isBlocked: boolean;
+  blockedReason?: string;
+  blockedAt?: string;
+  blockedByAdminId?: string;
 }
 
-export type UserRole = 'user' | 'admin';
-export type UserLevel = 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond';
+export type UserRole = 'user' | 'admin' | 'staff';
+export type StaffRole = 'owner' | 'operations' | 'support' | 'finance' | 'marketing' | 'viewer';
+export type StaffPermission =
+  | 'ADMIN_DASHBOARD_VIEW'
+  | 'ORDER_READ'
+  | 'ORDER_MANAGE'
+  | 'ORDER_REFUND'
+  | 'USER_READ'
+  | 'USER_MANAGE'
+  | 'WALLET_READ'
+  | 'WALLET_MANAGE'
+  | 'MANUAL_DEPOSIT_REVIEW'
+  | 'PRODUCT_MANAGE'
+  | 'PROVIDER_MANAGE'
+  | 'PROMOTION_MANAGE'
+  | 'BANNER_MANAGE'
+  | 'CURRENCY_MANAGE'
+  | 'PRICING_MANAGE'
+  | 'EXPORT_DATA'
+  | 'WHATSAPP_MARKETING'
+  | 'JOB_RUN';
+export type UserAccountType = 'customer' | 'distributor';
+export type UserLevel = 'bronze' | 'silver' | 'gold' | 'diamond';
 
 export interface AuthState {
   user: User | null;
@@ -31,9 +59,35 @@ export interface Country {
   name: string;
   nameAr: string;
   flag: string;
+  phoneCode: string;
   currency: string;
   currencySymbol: string;
+  currencyName?: string;
+  decimalPlaces?: number;
+  exchangeRate?: number;
+  exchangeRateBase?: string;
+  exchangeRateUpdatedAt?: string;
   isActive: boolean;
+}
+
+export interface Currency {
+  code: string;
+  name: string;
+  symbol: string;
+  decimalPlaces: number;
+  isActive: boolean;
+}
+
+export interface ExchangeRate {
+  id: string;
+  baseCurrencyCode: string;
+  quoteCurrencyCode: string;
+  rate: number;
+  isActive: boolean;
+  source: string;
+  note?: string;
+  updatedByAdminId?: string;
+  updatedAt: string;
 }
 
 // Product Types
@@ -50,6 +104,7 @@ export interface Game {
   publisher: string;
   isPopular: boolean;
   isFeatured: boolean;
+  isActive: boolean;
   requiresUserId: boolean;
   userIdLabel: string;
   userIdLabelAr: string;
@@ -78,6 +133,31 @@ export interface GamePackage {
   isPopular?: boolean;
 }
 
+export type CustomPricingRuleTargetType = 'all' | 'customer' | 'distributor' | 'user';
+export type CustomPricingRulePriceType = 'fixed_price' | 'percentage_discount' | 'fixed_discount';
+
+export interface CustomPricingRule {
+  id: string;
+  name: string;
+  targetType: CustomPricingRuleTargetType;
+  priceType: CustomPricingRulePriceType;
+  value: number;
+  productId?: string;
+  productName?: string;
+  packageId?: string;
+  packageName?: string;
+  userId?: string;
+  userPhone?: string;
+  priority: number;
+  isActive: boolean;
+  applyMembershipDiscount: boolean;
+  startDate?: string;
+  endDate?: string;
+  createdByAdminId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Order Types
 export interface Order {
   id: string;
@@ -100,6 +180,8 @@ export interface Order {
   paymentStatus: PaymentStatus;
   providerId?: string;
   providerOrderId?: string;
+  customPricingRuleId?: string;
+  pricingSnapshot?: unknown;
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
@@ -123,6 +205,36 @@ export interface Provider {
   avgResponseTime: number;
   lastHealthCheck: string;
   status: 'online' | 'offline' | 'degraded';
+  providerCode?: string;
+  accountType?: 'waho_api' | 'waha_whatsapp' | 'mock';
+  fallbackEnabled?: boolean;
+  balance?: number;
+  reservedBalance?: number;
+  availableBalance?: number;
+  lowBalanceThreshold?: number;
+  currency?: string;
+}
+
+export interface ProviderBalanceAlert {
+  id: string;
+  providerAccountId: string;
+  providerAccountName?: string;
+  providerName?: string;
+  status: 'open' | 'notified' | 'resolved';
+  balance: number;
+  reservedBalance: number;
+  availableBalance: number;
+  threshold: number;
+  currency: string;
+  message: string;
+  channels: string[];
+  whatsappPhone?: string;
+  whatsappMessageId?: string;
+  notifiedAt?: string;
+  resolvedAt?: string;
+  lastError?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Wallet Types
@@ -140,6 +252,50 @@ export interface WalletTransaction {
 }
 
 export type WalletTransactionType = 'deposit' | 'withdrawal' | 'purchase' | 'refund' | 'bonus' | 'cashback';
+
+export type ManualDepositStatus = 'pending' | 'approved' | 'rejected';
+
+export interface ManualDeposit {
+  id: string;
+  userId: string;
+  userPhone?: string;
+  amount: number;
+  currency: string;
+  paymentMethod: PaymentMethod;
+  transactionId: string;
+  status: ManualDepositStatus;
+  note?: string;
+  reviewedByAdminId?: string;
+  reviewedByAdminName?: string;
+  reviewedAt?: string;
+  rejectionReason?: string;
+  walletTransactionId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type WhatsAppNotificationType = 'payment_received' | 'topup_success' | 'topup_failure' | 'marketing';
+export type WhatsAppNotificationStatus = 'pending' | 'sent' | 'failed';
+
+export interface WhatsAppNotification {
+  id: string;
+  type: WhatsAppNotificationType;
+  status: WhatsAppNotificationStatus;
+  dedupeKey: string;
+  userId?: string;
+  orderId?: string;
+  manualDepositId?: string;
+  createdByAdminId?: string;
+  batchId?: string;
+  phone: string;
+  message: string;
+  providerMessageId?: string;
+  error?: string;
+  metadata?: unknown;
+  sentAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // Promotion Types
 export interface Banner {

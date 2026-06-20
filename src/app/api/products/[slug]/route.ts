@@ -1,3 +1,4 @@
+import { NextRequest } from 'next/server';
 import { handleApiError, ok } from '@/server/http';
 import { mapProduct } from '@/server/mappers';
 import { prisma } from '@/server/prisma';
@@ -8,11 +9,21 @@ interface RouteContext {
   params: Promise<{ slug: string }>;
 }
 
-export async function GET(_request: Request, context: RouteContext) {
+function normalizeCountryId(country: string | null) {
+  const value = country?.trim().toLowerCase();
+  return value || undefined;
+}
+
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { slug } = await context.params;
+    const countryId = normalizeCountryId(request.nextUrl.searchParams.get('country'));
     const product = await prisma.product.findFirst({
-      where: { slug, isActive: true },
+      where: {
+        slug,
+        isActive: true,
+        ...(countryId ? { countries: { has: countryId } } : {}),
+      },
       include: { packages: { orderBy: { sortOrder: 'asc' } } },
     });
 

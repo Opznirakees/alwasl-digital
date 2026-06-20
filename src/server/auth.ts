@@ -2,6 +2,7 @@ import { cookies, headers } from 'next/headers';
 import type { User } from '@prisma/client';
 import { prisma } from './prisma';
 import { createOpaqueToken, sha256 } from './crypto';
+import { hasPermission, type StaffPermission } from './permissions';
 
 export const SESSION_COOKIE = 'alwasl_session';
 const SESSION_DAYS = 30;
@@ -67,14 +68,41 @@ export async function getCurrentUser(): Promise<User | null> {
   return session?.user ?? null;
 }
 
+export async function assertPhoneNotBlocked(phone: string) {
+  const user = await prisma.user.findUnique({
+    where: { phone },
+    select: { isBlocked: true },
+  });
+
+  if (user?.isBlocked) throw new Error('USER_BLOCKED');
+}
+
+export async function assertUserNotBlocked(user: Pick<User, 'id' | 'isBlocked'> | null) {
+  if (!user?.isBlocked) return;
+
+  await prisma.session.updateMany({
+    where: { userId: user.id, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+
+  throw new Error('USER_BLOCKED');
+}
+
 export async function requireUser() {
   const user = await getCurrentUser();
   if (!user) throw new Error('UNAUTHENTICATED');
+  await assertUserNotBlocked(user);
   return user;
 }
 
 export async function requireAdmin() {
   const user = await requireUser();
   if (user.role !== 'ADMIN') throw new Error('FORBIDDEN');
+  return user;
+}
+
+export async function requirePermission(permission: StaffPermission) {
+  const user = await requireUser();
+  if (!hasPermission(user, permission)) throw new Error('FORBIDDEN');
   return user;
 }

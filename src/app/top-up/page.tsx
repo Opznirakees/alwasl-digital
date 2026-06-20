@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 export default function TopUpPage() {
-  const { t, dir, language } = useApp();
+  const { t, dir, language, selectedCountry } = useApp();
   const [wahoTopUp, setWahoTopUp] = useState<Game | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
@@ -28,10 +28,12 @@ export default function TopUpPage() {
     let active = true;
 
     async function loadProduct() {
-      const response = await fetch('/api/products/waho-top-up');
+      const response = await fetch(`/api/products/waho-top-up?country=${selectedCountry.id}`);
       if (response.ok) {
         const payload = await response.json();
         if (active) setWahoTopUp(payload.product);
+      } else if (active) {
+        setWahoTopUp(null);
       }
       if (active) setIsLoading(false);
     }
@@ -41,7 +43,7 @@ export default function TopUpPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [selectedCountry.id]);
 
   const topUpPackages = wahoTopUp?.packages.filter((pkg) => pkg.inStock) ?? [];
 

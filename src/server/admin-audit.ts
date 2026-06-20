@@ -30,7 +30,7 @@ export function getAuditRequestContext(request?: Pick<Request, 'headers'>) {
 }
 
 export function shouldAuditAdminUser(user: Pick<User, 'role'>) {
-  return user.role === 'ADMIN';
+  return user.role === 'ADMIN' || user.role === 'STAFF';
 }
 
 export async function recordAdminAuditLog(input: AdminAuditInput) {

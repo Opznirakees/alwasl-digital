@@ -11,6 +11,7 @@ import type {
   RevenueData,
   Notification,
 } from '@/types';
+export { activeMembershipLevelIds, levelDiscounts, levelLabels, membershipLevels } from '@/lib/membership';
 
 const wahoTopUpMark = '/brand/alwasl-mark.jpg';
 const wahoTopUpBanner = '/brand/alwasl-banner.jpg';
@@ -23,6 +24,7 @@ export const countries: Country[] = [
     name: 'Iraq',
     nameAr: 'العراق',
     flag: '🇮🇶',
+    phoneCode: '+964',
     currency: 'IQD',
     currencySymbol: 'د.ع',
     isActive: true,
@@ -33,6 +35,7 @@ export const countries: Country[] = [
     name: 'Saudi Arabia',
     nameAr: 'السعودية',
     flag: '🇸🇦',
+    phoneCode: '+966',
     currency: 'SAR',
     currencySymbol: 'ر.س',
     isActive: true,
@@ -43,6 +46,7 @@ export const countries: Country[] = [
     name: 'UAE',
     nameAr: 'الإمارات',
     flag: '🇦🇪',
+    phoneCode: '+971',
     currency: 'AED',
     currencySymbol: 'د.إ',
     isActive: true,
@@ -53,6 +57,7 @@ export const countries: Country[] = [
     name: 'Egypt',
     nameAr: 'مصر',
     flag: '🇪🇬',
+    phoneCode: '+20',
     currency: 'EGP',
     currencySymbol: 'ج.م',
     isActive: true,
@@ -63,6 +68,7 @@ export const countries: Country[] = [
     name: 'Jordan',
     nameAr: 'الأردن',
     flag: '🇯🇴',
+    phoneCode: '+962',
     currency: 'JOD',
     currencySymbol: 'د.أ',
     isActive: true,
@@ -73,6 +79,7 @@ export const countries: Country[] = [
     name: 'Kuwait',
     nameAr: 'الكويت',
     flag: '🇰🇼',
+    phoneCode: '+965',
     currency: 'KWD',
     currencySymbol: 'د.ك',
     isActive: true,
@@ -94,6 +101,7 @@ export const games: Game[] = [
     publisher: 'Al-Wasl Digital',
     isPopular: true,
     isFeatured: true,
+    isActive: true,
     requiresUserId: true,
     userIdLabel: 'WAHO ID',
     userIdLabelAr: 'معرف WAHO',
@@ -118,13 +126,16 @@ export const demoUser: User = {
   name: 'Ahmed Al-Hassan',
   email: 'ahmed@example.com',
   avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
+  role: 'user',
+  staffPermissions: [],
   level: 'gold',
   walletBalance: 250000,
-  totalSpent: 1500000,
+  totalSpent: 8000000,
   registeredAt: '2024-01-15T10:30:00Z',
   lastLogin: '2026-05-26T08:00:00Z',
   isVerified: true,
-  discountPercentage: 5,
+  discountPercentage: 4,
+  isBlocked: false,
 };
 
 // Sample Orders
@@ -141,8 +152,8 @@ export const sampleOrders: Order[] = [
     quantity: 1,
     unitPrice: 25000,
     totalPrice: 25000,
-    discount: 1250,
-    finalPrice: 23750,
+    discount: 1000,
+    finalPrice: 24000,
     currency: 'IQD',
     status: 'completed',
     paymentMethod: 'wallet',
@@ -339,7 +350,7 @@ export const banners: Banner[] = [
     image: wahoTopUpBanner,
     gameId: 'waho-top-up',
     startDate: '2026-05-20T00:00:00Z',
-    endDate: '2026-06-01T23:59:59Z',
+    endDate: '2026-12-31T23:59:59Z',
     isActive: true,
     order: 1,
   },
@@ -401,7 +412,7 @@ export const promotions: Promotion[] = [
     endDate: '2026-05-31T23:59:59Z',
     isActive: true,
     applicableGames: ['waho-top-up'],
-    applicableLevels: ['bronze', 'silver', 'gold', 'platinum', 'diamond'],
+    applicableLevels: ['bronze', 'silver', 'gold', 'diamond'],
   },
   {
     id: 'promo-3',
@@ -415,7 +426,7 @@ export const promotions: Promotion[] = [
     endDate: '2026-08-31T23:59:59Z',
     isActive: true,
     applicableGames: ['waho-top-up'],
-    applicableLevels: ['bronze', 'silver', 'gold', 'platinum', 'diamond'],
+    applicableLevels: ['bronze', 'silver', 'gold', 'diamond'],
   },
 ];
 
@@ -490,22 +501,4 @@ export const categoryLabels = {
   streaming: { en: 'Top-Up', ar: 'الشحن' },
   social_media: { en: 'WAHO Top-Up', ar: 'شحن WAHO' },
   voucher: { en: 'Top-Up', ar: 'الشحن' },
-};
-
-// Level labels
-export const levelLabels = {
-  bronze: { en: 'Bronze', ar: 'برونزي', color: '#CD7F32', minSpent: 0 },
-  silver: { en: 'Silver', ar: 'فضي', color: '#C0C0C0', minSpent: 500000 },
-  gold: { en: 'Gold', ar: 'ذهبي', color: '#FFD700', minSpent: 1500000 },
-  platinum: { en: 'Platinum', ar: 'بلاتيني', color: '#E5E4E2', minSpent: 5000000 },
-  diamond: { en: 'Diamond', ar: 'ماسي', color: '#B9F2FF', minSpent: 15000000 },
-};
-
-// Level discounts
-export const levelDiscounts = {
-  bronze: 0,
-  silver: 2,
-  gold: 5,
-  platinum: 8,
-  diamond: 12,
 };

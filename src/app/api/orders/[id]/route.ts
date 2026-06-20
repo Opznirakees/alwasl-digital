@@ -2,6 +2,7 @@ import { recordAdminAuditLog } from '@/server/admin-audit';
 import { requireUser } from '@/server/auth';
 import { handleApiError, ok } from '@/server/http';
 import { mapOrder } from '@/server/mappers';
+import { hasPermission } from '@/server/permissions';
 import { prisma } from '@/server/prisma';
 
 export const runtime = 'nodejs';
@@ -15,11 +16,12 @@ export async function GET(request: Request, context: RouteContext) {
     const user = await requireUser();
     const { id } = await context.params;
     const order = await prisma.order.findUnique({ where: { id } });
+    const canViewAllOrders = hasPermission(user, 'ORDER_READ');
 
     if (!order) throw new Error('NOT_FOUND');
-    if (user.role !== 'ADMIN' && order.userId !== user.id) throw new Error('FORBIDDEN');
+    if (!canViewAllOrders && order.userId !== user.id) throw new Error('FORBIDDEN');
 
-    if (user.role === 'ADMIN') {
+    if (canViewAllOrders) {
       await recordAdminAuditLog({
         admin: user,
         request,

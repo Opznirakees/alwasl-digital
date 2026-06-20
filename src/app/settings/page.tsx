@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Globe, Moon, Sun } from 'lucide-react';
+import { ArrowLeft, Globe, MapPin, Moon, Sun } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,6 +16,9 @@ export default function SettingsPage() {
     dir,
     theme,
     toggleTheme,
+    countries,
+    selectedCountry,
+    setSelectedCountry,
   } = useApp();
   const isLight = theme === 'light';
 
@@ -69,6 +72,38 @@ export default function SettingsPage() {
                     className={language === item.id ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : isLight ? 'border-purple-200 text-purple-700' : 'border-purple-500/30 text-purple-300'}
                   >
                     {item.label}
+                  </Button>
+                ))}
+              </div>
+            </Card>
+
+            <Card className={`p-6 ${isLight ? 'bg-white border-purple-100' : 'bg-slate-900/50 border-purple-500/15'}`}>
+              <div className="flex items-center gap-3 mb-4">
+                <MapPin className={isLight ? 'w-5 h-5 text-purple-600' : 'w-5 h-5 text-purple-300'} />
+                <h2 className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{t('Country', 'البلد', '国家')}</h2>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {countries.map((country) => (
+                  <Button
+                    key={country.id}
+                    type="button"
+                    onClick={() => setSelectedCountry(country)}
+                    variant={selectedCountry.id === country.id ? 'default' : 'outline'}
+                    className={`h-auto justify-start gap-3 py-3 ${
+                      selectedCountry.id === country.id
+                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                        : isLight
+                          ? 'border-purple-200 text-purple-700'
+                          : 'border-purple-500/30 text-purple-300'
+                    }`}
+                  >
+                    <span>{country.flag}</span>
+                    <span className="text-left">
+                      <span className="block text-sm font-semibold">{t(country.name, country.nameAr, country.name)}</span>
+                      <span className="block text-xs opacity-70">
+                        {country.currency} · {country.phoneCode}
+                      </span>
+                    </span>
                   </Button>
                 ))}
               </div>

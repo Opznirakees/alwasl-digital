@@ -23,7 +23,7 @@ import {
 import { toast } from 'sonner';
 
 export default function OrdersPage() {
-  const { t, language, dir, selectedCountry, orders } = useApp();
+  const { t, language, dir, selectedCountry, orders, formatLocalAmount } = useApp();
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
   const [products, setProducts] = useState<Game[]>([]);
 
@@ -36,7 +36,7 @@ export default function OrdersPage() {
     let active = true;
 
     async function loadProducts() {
-      const response = await fetch('/api/products');
+      const response = await fetch(`/api/products?country=${selectedCountry.id}`);
       if (response.ok) {
         const payload = await response.json();
         if (active) setProducts(payload.products ?? []);
@@ -48,11 +48,7 @@ export default function OrdersPage() {
     return () => {
       active = false;
     };
-  }, []);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale).format(amount);
-  };
+  }, [selectedCountry.id]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString(locale, {
@@ -219,11 +215,11 @@ export default function OrdersPage() {
                         <div className="text-right">
                           {order.discount > 0 && (
                             <p className="text-xs text-emerald-400">
-                              -{formatCurrency(order.discount)} {selectedCountry.currencySymbol} {t('discount', 'خصم')}
+                              -{formatLocalAmount(order.discount, { absolute: true })} {t('discount', 'خصم')}
                             </p>
                           )}
                           <p className="text-lg font-bold text-emerald-400">
-                            {formatCurrency(order.finalPrice)} {selectedCountry.currencySymbol}
+                            {formatLocalAmount(order.finalPrice)}
                           </p>
                         </div>
                       </div>

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createSession } from '@/server/auth';
+import { assertPhoneNotBlocked, createSession } from '@/server/auth';
 import { hashOtp, safeCompare } from '@/server/crypto';
 import { isBlockedProductionDemoOtp } from '@/server/demo-auth';
 import { handleApiError, fail, ok } from '@/server/http';
@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
 
     await assertRateLimit(`auth-verify:${ip}`, { limit: 30, windowMs: 15 * 60 * 1000 });
     await assertRateLimit(`auth-verify:${phone}`, { limit: 8, windowMs: 10 * 60 * 1000 });
+    await assertPhoneNotBlocked(phone);
 
     if (isBlockedProductionDemoOtp(phone, body.otp)) {
       return fail('Invalid OTP', 401);
@@ -27,6 +28,7 @@ export async function POST(request: NextRequest) {
     const otp = await prisma.otpCode.findFirst({
       where: {
         phone,
+        purpose: 'LOGIN',
         consumedAt: null,
         expiresAt: { gt: new Date() },
       },
