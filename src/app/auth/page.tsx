@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
+import { getDefaultPhoneCountry, getPhoneCountryById, phoneCountries } from '@/data/phone-countries';
+import { normalizePhoneForDialCode } from '@/lib/phone';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,12 +22,27 @@ import { toast } from 'sonner';
 
 export default function AuthPage() {
   const router = useRouter();
-  const { t, dir, login, verifyOtp, countries } = useApp();
+  const { t, dir, login, verifyOtp } = useApp();
+  const defaultPhoneCountry = getDefaultPhoneCountry();
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
-  const [countryCode, setCountryCode] = useState('+964');
+  const [phoneCountryId, setPhoneCountryId] = useState(defaultPhoneCountry.id);
   const [phone, setPhone] = useState('');
+  const [submittedPhone, setSubmittedPhone] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
+  const selectedPhoneCountry = getPhoneCountryById(phoneCountryId) ?? defaultPhoneCountry;
+
+  const requestOtp = async (phoneNumber: string) => {
+    const success = await login(phoneNumber);
+    if (success) {
+      setSubmittedPhone(phoneNumber);
+      setStep('otp');
+      toast.success(t('OTP sent via WhatsApp!', 'تم إرسال رمز التحقق عبر واتساب!'));
+    } else {
+      toast.error(t('Failed to send OTP', 'فشل في إرسال رمز التحقق'));
+    }
+    return success;
+  };
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,12 +53,22 @@ export default function AuthPage() {
 
     setIsLoading(true);
     try {
-      const success = await login(`${countryCode}${phone}`);
-      if (success) {
-        setStep('otp');
-        toast.success(t('OTP sent via WhatsApp!', 'تم إرسال رمز التحقق عبر واتساب!'));
-      }
+      const normalizedPhone = normalizePhoneForDialCode(selectedPhoneCountry.phoneCode, phone);
+      await requestOtp(normalizedPhone);
     } catch (error) {
+      toast.error(t('Failed to send OTP', 'فشل في إرسال رمز التحقق'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (!submittedPhone) return;
+
+    setIsLoading(true);
+    try {
+      await requestOtp(submittedPhone);
+    } catch {
       toast.error(t('Failed to send OTP', 'فشل في إرسال رمز التحقق'));
     } finally {
       setIsLoading(false);
@@ -50,6 +77,7 @@ export default function AuthPage() {
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) return;
+    if (value && !/^\d$/.test(value)) return;
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
@@ -77,7 +105,7 @@ export default function AuthPage() {
 
     setIsLoading(true);
     try {
-      const success = await verifyOtp(otpCode);
+      const success = await verifyOtp(otpCode, submittedPhone);
       if (success) {
         toast.success(t('Welcome back!', 'مرحباً بعودتك!'));
         router.push('/');
@@ -133,15 +161,16 @@ export default function AuthPage() {
                 <div className="space-y-2">
                   <Label className="text-zinc-700">{t('Phone Number', 'رقم الهاتف')}</Label>
                   <div className="flex gap-2">
-                    <Select value={countryCode} onValueChange={setCountryCode}>
-                      <SelectTrigger className="w-28 border-black/10 bg-white text-zinc-950">
+                    <Select value={phoneCountryId} onValueChange={setPhoneCountryId}>
+                      <SelectTrigger className="w-36 border-black/10 bg-white text-zinc-950">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="border-black/10 bg-white">
-                        {countries.map((country) => (
-                          <SelectItem key={country.id} value={country.phoneCode}>
-                            <span className="flex items-center gap-2">
+                      <SelectContent position="item-aligned" className="max-h-80 border-black/10 bg-white">
+                        {phoneCountries.map((country) => (
+                          <SelectItem key={country.id} value={country.id}>
+                            <span className="flex min-w-0 items-center gap-2">
                               <span>{country.flag}</span>
+                              <span className="truncate text-xs">{t(country.name, country.nameAr, country.nameZh)}</span>
                               <span className="text-xs">{country.phoneCode}</span>
                             </span>
                           </SelectItem>
@@ -197,7 +226,7 @@ export default function AuthPage() {
                 </button>
                 <h2 className="text-2xl font-semibold text-zinc-950">{t('Enter OTP', 'أدخل رمز التحقق')}</h2>
                 <p className="mt-1 text-sm text-zinc-500">
-                  {t('Enter the 6-digit code sent to', 'أدخل الرمز المكون من 6 أرقام المرسل إلى')} {countryCode}{phone}
+                  {t('Enter the 6-digit code sent to', 'أدخل الرمز المكون من 6 أرقام المرسل إلى')} {submittedPhone}
                 </p>
               </div>
 
@@ -222,7 +251,12 @@ export default function AuthPage() {
                 </div>
 
                 <div className="flex items-center justify-center">
-                  <button type="button" className="text-sm text-blue-600 hover:text-blue-700">
+                  <button
+                    type="button"
+                    onClick={handleResendOtp}
+                    disabled={isLoading || !submittedPhone}
+                    className="text-sm text-blue-600 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
                     {t("Didn't receive code?", 'لم تستلم الرمز؟')} {t('Resend', 'إعادة الإرسال')}
                   </button>
                 </div>

@@ -7,8 +7,10 @@ import { getPromotionState } from '../src/app/promotions/promotion-state';
 import { walletTopUpDialogCopy } from '../src/app/wallet/wallet-dialog-copy';
 import { mobileMenuSheetCopy } from '../src/components/layout/mobile-menu-copy';
 import { resolveOtpPhone } from '../src/contexts/auth-flow';
+import { getDefaultPhoneCountry, phoneCountries } from '../src/data/phone-countries';
 import { banners, games } from '../src/data/mock-data';
 import { wahoRechargeInfo } from '../src/data/waho-recharge-info';
+import { normalizePhoneForDialCode } from '../src/lib/phone';
 import { getAuditRequestContext, shouldAuditAdminUser } from '../src/server/admin-audit';
 import { hashOtp, resolveOtpPepper, safeCompare } from '../src/server/crypto';
 import { isBlockedProductionDemoOtp, isDemoAuthEnabled, resolveDemoOtpForPhone } from '../src/server/demo-auth';
@@ -1221,6 +1223,8 @@ describe('WAHA direct WhatsApp provider', () => {
     expect(normalizeWhatsAppPhone('+31612345678')).toBe('31612345678');
     expect(normalizeWhatsAppPhone('0031621393391')).toBe('31621393391');
     expect(normalizeWhatsAppPhone('07868426969')).toBe('9647868426969');
+    expect(normalizeWhatsAppPhone('+96407868426969')).toBe('9647868426969');
+    expect(normalizeWhatsAppPhone('+310612345678')).toBe('31612345678');
   });
 
   test('parses healthy WAHA sessions from WORKING and CONNECTED states', async () => {
@@ -1315,6 +1319,42 @@ describe('WAHA direct WhatsApp provider', () => {
     await expect(sendWhatsAppText('0612345678', 'Hallo via WAHA', { env: wahaEnv, fetcher })).rejects.toThrow(
       'WAHA_SEND_FAILED'
     );
+  });
+});
+
+describe('international OTP login country rules', () => {
+  test('offers a full phone-country list independent of storefront country filtering', () => {
+    const countryCodes = new Set(phoneCountries.map((country) => country.code));
+    const countryIds = new Set(phoneCountries.map((country) => country.id));
+
+    expect(phoneCountries.length).toBeGreaterThan(220);
+    expect(countryIds.size).toBe(phoneCountries.length);
+    expect(getDefaultPhoneCountry()).toMatchObject({ code: 'IQ', phoneCode: '+964' });
+    expect(countryCodes.has('NL')).toBe(true);
+    expect(countryCodes.has('CN')).toBe(true);
+    expect(countryCodes.has('US')).toBe(true);
+    expect(countryCodes.has('IN')).toBe(true);
+  });
+
+  test('builds WAHA-ready login phone numbers from any selected country', () => {
+    expect(normalizePhoneForDialCode('+964', '07868426969')).toBe('+9647868426969');
+    expect(normalizePhoneForDialCode('+31', '0612345678')).toBe('+31612345678');
+    expect(normalizePhoneForDialCode('+86', '13800138000')).toBe('+8613800138000');
+    expect(normalizePhoneForDialCode('+1', '2025550188')).toBe('+12025550188');
+    expect(normalizePhoneForDialCode('+964', '+96407868426969')).toBe('+9647868426969');
+  });
+
+  test('auth page uses the international phone-country list and verifies the submitted phone', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const authPage = readFileSync(join(repoRoot, 'src/app/auth/page.tsx'), 'utf8');
+
+    expect(authPage).toContain("from '@/data/phone-countries'");
+    expect(authPage).toContain('phoneCountries.map');
+    expect(authPage).toContain('normalizePhoneForDialCode(selectedPhoneCountry.phoneCode, phone)');
+    expect(authPage).toContain('verifyOtp(otpCode, submittedPhone)');
+    expect(authPage).toContain('const handleResendOtp');
+    expect(authPage).toContain('onClick={handleResendOtp}');
+    expect(authPage).not.toContain('countries.map((country)');
   });
 });
 

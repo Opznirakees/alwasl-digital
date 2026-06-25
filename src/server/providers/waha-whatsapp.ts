@@ -1,3 +1,5 @@
+import { normalizeInternationalPhoneForWhatsApp } from '@/lib/phone';
+
 interface WahaEnv {
   WAHA_BASE_URL?: string;
   WAHA_API_KEY?: string;
@@ -31,23 +33,7 @@ export interface WahaHealth {
 }
 
 export function normalizeWhatsAppPhone(phone: string) {
-  let normalized = phone.replace(/\D/g, '');
-
-  if (normalized.startsWith('00')) {
-    normalized = normalized.slice(2);
-  }
-
-  if (normalized.startsWith('31')) return normalized;
-
-  if (normalized.startsWith('0')) {
-    if (normalized.startsWith('07') && normalized.length >= 10) {
-      return `964${normalized.slice(1)}`;
-    }
-
-    return `31${normalized.slice(1)}`;
-  }
-
-  return normalized;
+  return normalizeInternationalPhoneForWhatsApp(phone);
 }
 
 function assertValidPhone(normalized: string) {
