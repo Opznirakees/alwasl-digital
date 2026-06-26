@@ -31,19 +31,25 @@ export default function HomePage() {
     let active = true;
 
     async function loadHomeData() {
-      const [productResponse, bannersResponse] = await Promise.all([
-        fetch(`/api/products/waho-top-up?country=${selectedCountry.id}`),
-        fetch('/api/banners'),
-      ]);
+      try {
+        const [productResponse, bannersResponse] = await Promise.all([
+          fetch(`/api/products/waho-top-up?country=${selectedCountry.id}`),
+          fetch('/api/banners'),
+        ]);
 
-      const [productPayload, bannersPayload] = await Promise.all([
-        productResponse.ok ? productResponse.json() : Promise.resolve(null),
-        bannersResponse.ok ? bannersResponse.json() : Promise.resolve(null),
-      ]);
+        const [productPayload, bannersPayload] = await Promise.all([
+          productResponse.ok ? productResponse.json() : Promise.resolve(null),
+          bannersResponse.ok ? bannersResponse.json() : Promise.resolve(null),
+        ]);
 
-      if (!active) return;
-      setWahoTopUp(productPayload?.product ?? null);
-      setBanners(bannersPayload?.banners ?? []);
+        if (!active) return;
+        setWahoTopUp(productPayload?.product ?? null);
+        setBanners(bannersPayload?.banners ?? []);
+      } catch {
+        if (!active) return;
+        setWahoTopUp(null);
+        setBanners([]);
+      }
     }
 
     void loadHomeData();

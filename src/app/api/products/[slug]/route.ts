@@ -14,18 +14,32 @@ function normalizeCountryId(country: string | null) {
   return value || undefined;
 }
 
+const publicProductInclude = {
+  packages: {
+    where: { inStock: true },
+    orderBy: { sortOrder: 'asc' as const },
+  },
+};
+
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const { slug } = await context.params;
     const countryId = normalizeCountryId(request.nextUrl.searchParams.get('country'));
-    const product = await prisma.product.findFirst({
+    let product = await prisma.product.findFirst({
       where: {
         slug,
         isActive: true,
         ...(countryId ? { countries: { has: countryId } } : {}),
       },
-      include: { packages: { orderBy: { sortOrder: 'asc' } } },
+      include: publicProductInclude,
     });
+
+    if (!product && countryId) {
+      product = await prisma.product.findFirst({
+        where: { slug, isActive: true },
+        include: publicProductInclude,
+      });
+    }
 
     if (!product) throw new Error('NOT_FOUND');
     return ok({ product: mapProduct(product) });

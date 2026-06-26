@@ -34,7 +34,6 @@ import {
   Users,
   ShoppingCart,
   Wallet,
-  Settings,
   TrendingUp,
   TrendingDown,
   DollarSign,
@@ -1072,8 +1071,9 @@ export default function AdminDashboard() {
     { id: 'wallets', icon: Wallet, label: t('Wallets', 'المحافظ') },
     { id: 'reports', icon: TrendingUp, label: t('Reports', 'التقارير') },
     { id: 'monitoring', icon: Activity, label: t('Monitoring', 'المراقبة', '监控') },
-    { id: 'settings', icon: Settings, label: t('Settings', 'الإعدادات') },
   ];
+
+  const canViewAdminDashboard = shouldLoadAdminSummary(user);
 
   return (
     <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
@@ -1161,6 +1161,8 @@ export default function AdminDashboard() {
             </Card>
           )}
 
+          {canViewAdminDashboard && !adminError && (
+            <>
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Stats Grid */}
@@ -3415,6 +3417,8 @@ export default function AdminDashboard() {
                 {t('This section is under development', 'هذا القسم قيد التطوير')}
               </p>
             </div>
+          )}
+            </>
           )}
         </main>
       </div>

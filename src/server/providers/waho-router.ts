@@ -88,6 +88,13 @@ export async function getWahoVerificationProvider(productSlug: string): Promise<
     };
   }
 
+  const directProviderInfo = getWahoProviderInfo();
+  if (directProviderInfo.isActive) {
+    return {
+      provider: getWahoProvider(),
+    };
+  }
+
   if (await hasProviderAccounts('WAHO_TOP_UP')) {
     throw new Error('WAHO_PROVIDER_NOT_CONFIGURED');
   }
@@ -111,11 +118,11 @@ export async function createWahoTopupWithFailover(
   const attempts: WahoProviderAttempt[] = [];
 
   if (candidates.length === 0) {
-    if (await hasProviderAccounts('WAHO_TOP_UP')) {
+    const providerInfo = getWahoProviderInfo();
+    if (!providerInfo.isActive && await hasProviderAccounts('WAHO_TOP_UP')) {
       throw new WahoProviderFailoverError('WAHO_PROVIDER_NOT_CONFIGURED', attempts);
     }
 
-    const providerInfo = getWahoProviderInfo();
     const provider = getWahoProvider();
     const result = await provider.createWahoTopup(input);
 

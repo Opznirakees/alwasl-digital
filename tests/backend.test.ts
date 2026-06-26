@@ -937,6 +937,8 @@ describe('multi-provider routing rules', () => {
     expect(router).toContain('reserveProviderAccountBalance');
     expect(router).toContain('releaseProviderAccountReservation');
     expect(router).toContain('settleProviderAccountSuccess');
+    expect(router).toContain('directProviderInfo.isActive');
+    expect(router).toContain('!providerInfo.isActive && await hasProviderAccounts');
     expect(registry).toContain('selectProviderAccounts');
     expect(registry).toContain('dailyLimit');
     expect(adminSummaryRoute).toContain('prisma.providerAccount.findMany');
@@ -1916,8 +1918,12 @@ describe('admin CRUD rules', () => {
 
     expect(productsRoute).toContain('request.nextUrl.searchParams.get');
     expect(productsRoute).toContain('countries: { has: countryId }');
+    expect(productsRoute).toContain('where: { inStock: true }');
+    expect(productsRoute).toContain('if (countryId && products.length === 0)');
     expect(productRoute).toContain('request.nextUrl.searchParams.get');
     expect(productRoute).toContain('countries: { has: countryId }');
+    expect(productRoute).toContain('where: { inStock: true }');
+    expect(productRoute).toContain('if (!product && countryId)');
     expect(appContext).not.toContain('localStorage.removeItem(storageKeys.country)');
     expect(appContext).toContain('localStorage.setItem(storageKeys.country, country.id)');
     expect(appContext).toContain('const savedCountryId = localStorage.getItem(storageKeys.country)');
@@ -1925,8 +1931,12 @@ describe('admin CRUD rules', () => {
     expect(homePage).toContain('country=${selectedCountry.id}');
     expect(topUpPage).toContain('selectedCountry.id');
     expect(topUpPage).toContain('country=${selectedCountry.id}');
+    expect(topUpPage).toContain(') : !wahoTopUp ? (');
+    expect(topUpPage).toContain('WAHO top-up is temporarily unavailable');
     expect(topUpDetailPage).toContain('selectedCountry.id');
     expect(topUpDetailPage).toContain('country=${selectedCountry.id}');
+    expect(topUpDetailPage).toContain('productError');
+    expect(topUpDetailPage).toContain('availablePackages.length > 0');
     expect(promotionsPage).toContain('selectedCountry.id');
     expect(promotionsPage).toContain('country=${selectedCountry.id}');
     expect(settingsPage).toContain('setSelectedCountry');
@@ -2017,6 +2027,9 @@ describe('admin CRUD rules', () => {
     expect(adminPage).toContain("downloadAdminExport('pricing')");
     expect(adminPage).toContain('onCheckedChange');
     expect(adminPage).not.toContain('<Switch defaultChecked />');
+    expect(adminPage).not.toContain("{ id: 'settings'");
+    expect(adminPage).toContain('const canViewAdminDashboard = shouldLoadAdminSummary(user);');
+    expect(adminPage).toContain('canViewAdminDashboard && !adminError');
   });
 });
 

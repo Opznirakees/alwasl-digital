@@ -71,17 +71,25 @@ test.describe('WAHO production smoke', () => {
     const { product, firstPackage } = await loadWahoProduct(request);
     const unsupportedProducts = await request.get('/api/products?country=zz');
     expect(unsupportedProducts.status()).toBe(200);
-    expect(await unsupportedProducts.json()).toMatchObject({ products: [] });
+    const unsupportedProductsPayload = (await unsupportedProducts.json()) as ProductPayload;
+    expect(unsupportedProductsPayload.products.map((item) => item.slug)).toContain(product.slug);
 
     const unsupportedProduct = await request.get(`/api/products/${product.slug}?country=zz`);
-    expect(unsupportedProduct.status()).toBe(404);
+    expect(unsupportedProduct.status()).toBe(200);
+    expect((await unsupportedProduct.json()) as { product: { slug: string } }).toMatchObject({
+      product: { slug: product.slug },
+    });
 
     await page.goto('/');
     await expect(page.getByRole('link', { name: /WAHO Top-Up/i }).first()).toBeVisible();
 
     await page.goto('/top-up');
     await expect(page.locator('main')).toContainText('WAHO Top-Up', { timeout: 15_000 });
-    await expect(page.getByRole('link', { name: /Start top-up/i })).toBeVisible({ timeout: 15_000 });
+    const startTopUpLink = page.getByRole('link', { name: /Start top-up/i }).first();
+    await expect(startTopUpLink).toBeVisible({ timeout: 15_000 });
+    await startTopUpLink.click();
+    await expect(page).toHaveURL(new RegExp(`/top-up/${product.slug}`));
+    await expect(page.getByRole('heading', { name: /Select top-up amount/i })).toBeVisible();
 
     await page.goto(`/top-up/${product.slug}`);
     await expect(page.getByRole('heading', { name: /WAHO Account Top-Up/i })).toBeVisible();

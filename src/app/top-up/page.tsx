@@ -8,6 +8,7 @@ import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import type { Game } from '@/types';
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
@@ -28,14 +29,19 @@ export default function TopUpPage() {
     let active = true;
 
     async function loadProduct() {
-      const response = await fetch(`/api/products/waho-top-up?country=${selectedCountry.id}`);
-      if (response.ok) {
-        const payload = await response.json();
-        if (active) setWahoTopUp(payload.product);
-      } else if (active) {
-        setWahoTopUp(null);
+      try {
+        const response = await fetch(`/api/products/waho-top-up?country=${selectedCountry.id}`);
+        const payload = response.ok ? await response.json() : null;
+        if (active) {
+          setWahoTopUp(payload?.product ?? null);
+        }
+      } catch {
+        if (active) {
+          setWahoTopUp(null);
+        }
+      } finally {
+        if (active) setIsLoading(false);
       }
-      if (active) setIsLoading(false);
     }
 
     void loadProduct();
@@ -52,10 +58,34 @@ export default function TopUpPage() {
       <Header />
 
       <main className="container mx-auto px-4 py-8">
-        {isLoading || !wahoTopUp ? (
+        {isLoading ? (
           <div className="flex min-h-[50vh] items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
           </div>
+        ) : !wahoTopUp ? (
+          <section className="mx-auto flex min-h-[50vh] max-w-xl flex-col items-center justify-center text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-200">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <h1 className="mt-4 text-2xl font-semibold text-zinc-950 dark:text-white">
+              {t('WAHO top-up is temporarily unavailable', 'شحن WAHO غير متاح مؤقتاً', 'WAHO 充值暂时不可用')}
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              {t(
+                'The available recharge amounts could not be loaded. Try again or return to the homepage.',
+                'تعذر تحميل مبالغ الشحن المتاحة. حاول مرة أخرى أو عد إلى الصفحة الرئيسية.',
+                '无法加载可用充值金额。请重试或返回首页。'
+              )}
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <Button onClick={() => window.location.reload()} className="bg-blue-600 text-white shadow-none hover:bg-blue-700">
+                {t('Try again', 'حاول مرة أخرى', '重试')}
+              </Button>
+              <Button asChild variant="outline" className="border-black/10 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">
+                <Link href="/">{t('Back to Home', 'العودة للرئيسية', '返回首页')}</Link>
+              </Button>
+            </div>
+          </section>
         ) : (
           <>
         <div className="mb-8">
@@ -132,27 +162,37 @@ export default function TopUpPage() {
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {topUpPackages.map((pkg) => (
-                <Link
-                  key={pkg.id}
-                  href={`/top-up/${wahoTopUp.slug}`}
-                  className="group rounded-lg border border-black/10 bg-zinc-50 p-4 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-white/10 dark:bg-zinc-950 dark:hover:border-blue-300/60 dark:hover:bg-blue-950/30"
-                >
-                  <p className="text-2xl font-semibold text-zinc-950 dark:text-white">
-                    {formatAmount(pkg.amount)}
-                  </p>
-                  <p className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-300">
-                    {t(pkg.unit, pkg.unitAr, 'IQD 充值')}
-                  </p>
-                  {pkg.isPopular && (
-                    <span className="mt-3 inline-flex rounded-md bg-[#ffcc00] px-2 py-1 text-[10px] font-semibold text-zinc-950">
-                      {t('Popular', 'الأكثر شراءً', '热门')}
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </div>
+            {topUpPackages.length > 0 ? (
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {topUpPackages.map((pkg) => (
+                  <Link
+                    key={pkg.id}
+                    href={`/top-up/${wahoTopUp.slug}`}
+                    className="group rounded-lg border border-black/10 bg-zinc-50 p-4 transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-white/10 dark:bg-zinc-950 dark:hover:border-blue-300/60 dark:hover:bg-blue-950/30"
+                  >
+                    <p className="text-2xl font-semibold text-zinc-950 dark:text-white">
+                      {formatAmount(pkg.amount)}
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-blue-600 dark:text-blue-300">
+                      {t(pkg.unit, pkg.unitAr, 'IQD 充值')}
+                    </p>
+                    {pkg.isPopular && (
+                      <span className="mt-3 inline-flex rounded-md bg-[#ffcc00] px-2 py-1 text-[10px] font-semibold text-zinc-950">
+                        {t('Popular', 'الأكثر شراءً', '热门')}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-5 rounded-lg border border-black/10 bg-zinc-50 p-4 text-sm leading-6 text-zinc-500 dark:border-white/10 dark:bg-zinc-950 dark:text-zinc-400">
+                {t(
+                  'No WAHO top-up amounts are available right now. Please try again later.',
+                  'لا توجد مبالغ شحن WAHO متاحة حالياً. يرجى المحاولة لاحقاً.',
+                  '目前没有可用的 WAHO 充值金额。请稍后再试。'
+                )}
+              </div>
+            )}
 
             <Button asChild className="mt-6 w-full bg-blue-600 text-white shadow-none hover:bg-blue-700">
               <Link href={`/top-up/${wahoTopUp.slug}`}>

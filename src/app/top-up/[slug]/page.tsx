@@ -43,6 +43,7 @@ export default function GamePage({ params }: GamePageProps) {
 
   const [game, setGame] = useState<Game | null>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
+  const [productError, setProductError] = useState(false);
   const [step, setStep] = useState<CheckoutStep>('package');
   const [selectedPackage, setSelectedPackage] = useState<GamePackage | null>(null);
   const [userId, setUserId] = useState('');
@@ -62,15 +63,24 @@ export default function GamePage({ params }: GamePageProps) {
 
     async function loadProduct() {
       setIsLoadingProduct(true);
-      const response = await fetch(`/api/products/${resolvedParams.slug}?country=${selectedCountry.id}`);
-      if (!response.ok) {
-        router.push('/top-up');
-        return;
-      }
-      const payload = await response.json();
-      if (active) {
-        setGame(payload.product);
-        setIsLoadingProduct(false);
+      setProductError(false);
+      try {
+        const response = await fetch(`/api/products/${resolvedParams.slug}?country=${selectedCountry.id}`);
+        if (!response.ok) throw new Error('PRODUCT_UNAVAILABLE');
+
+        const payload = await response.json();
+        if (!payload?.product) throw new Error('PRODUCT_UNAVAILABLE');
+
+        if (active) {
+          setGame(payload.product);
+        }
+      } catch {
+        if (active) {
+          setGame(null);
+          setProductError(true);
+        }
+      } finally {
+        if (active) setIsLoadingProduct(false);
       }
     }
 
@@ -87,12 +97,45 @@ export default function GamePage({ params }: GamePageProps) {
     setOtpRequested(false);
   }, [game?.slug, selectedPackage?.id, userId, zoneId, paymentMethod]);
 
-  if (isLoadingProduct || !game) {
+  if (isLoadingProduct) {
     return (
       <div className={`min-h-screen bg-[#f5f5f7] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
         <Header />
         <main className="container mx-auto flex min-h-[60vh] items-center justify-center px-4">
           <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+        </main>
+      </div>
+    );
+  }
+
+  if (productError || !game) {
+    return (
+      <div className={`min-h-screen bg-[#f5f5f7] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+        <Header />
+        <main className="container mx-auto flex min-h-[60vh] items-center justify-center px-4">
+          <section className="max-w-xl text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-200">
+              <AlertCircle className="h-6 w-6" />
+            </div>
+            <h1 className="mt-4 text-2xl font-semibold text-zinc-950 dark:text-white">
+              {t('WAHO top-up is temporarily unavailable', 'شحن WAHO غير متاح مؤقتاً', 'WAHO 充值暂时不可用')}
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+              {t(
+                'The recharge flow could not be loaded. Try again or return to the WAHO overview.',
+                'تعذر تحميل مسار الشحن. حاول مرة أخرى أو عد إلى صفحة WAHO.',
+                '无法加载充值流程。请重试或返回 WAHO 概览。'
+              )}
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <Button onClick={() => window.location.reload()} className="bg-blue-600 text-white shadow-none hover:bg-blue-700">
+                {t('Try again', 'حاول مرة أخرى', '重试')}
+              </Button>
+              <Button asChild variant="outline" className="border-black/10 bg-white text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800">
+                <Link href="/top-up">{t('Back to WAHO Top-Up', 'العودة إلى شحن WAHO', '返回 WAHO 充值')}</Link>
+              </Button>
+            </div>
+          </section>
         </main>
       </div>
     );
@@ -106,6 +149,7 @@ export default function GamePage({ params }: GamePageProps) {
     { label: t('Fast top-up', 'شحن سريع', '快速充值'), icon: Zap },
     { label: t('Simple steps', 'خطوات بسيطة', '简单步骤'), icon: Sparkles },
   ];
+  const availablePackages = game.packages.filter((pkg) => pkg.inStock);
 
   const calculateFinalPrice = (pkg: GamePackage) => {
     const basePrice = pkg.salePrice || pkg.basePrice;
@@ -365,8 +409,9 @@ export default function GamePage({ params }: GamePageProps) {
                 <h2 className="mb-4 text-xl font-semibold text-zinc-950">
                   {t('Select top-up amount', 'اختر مبلغ الشحن', '选择充值金额')}
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {game.packages.filter(pkg => pkg.inStock).map((pkg) => (
+                {availablePackages.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                    {availablePackages.map((pkg) => (
                     <button
                       key={pkg.id}
                       onClick={() => setSelectedPackage(pkg)}
@@ -410,8 +455,17 @@ export default function GamePage({ params }: GamePageProps) {
                         )}
                       </div>
                     </button>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-black/10 bg-zinc-50 p-4 text-sm leading-6 text-zinc-500">
+                    {t(
+                      'No WAHO top-up amounts are available right now. Please try again later.',
+                      'لا توجد مبالغ شحن WAHO متاحة حالياً. يرجى المحاولة لاحقاً.',
+                      '目前没有可用的 WAHO 充值金额。请稍后再试。'
+                    )}
+                  </div>
+                )}
 
                 <Button
                   onClick={() => goToStep('details')}
