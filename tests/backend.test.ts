@@ -1909,6 +1909,7 @@ describe('admin CRUD rules', () => {
     const repoRoot = join(import.meta.dir, '..');
     const productsRoute = readFileSync(join(repoRoot, 'src/app/api/products/route.ts'), 'utf8');
     const productRoute = readFileSync(join(repoRoot, 'src/app/api/products/[slug]/route.ts'), 'utf8');
+    const countriesRoute = readFileSync(join(repoRoot, 'src/app/api/countries/route.ts'), 'utf8');
     const appContext = readFileSync(join(repoRoot, 'src/contexts/AppContext.tsx'), 'utf8');
     const homePage = readFileSync(join(repoRoot, 'src/app/page.tsx'), 'utf8');
     const topUpPage = readFileSync(join(repoRoot, 'src/app/top-up/page.tsx'), 'utf8');
@@ -1920,10 +1921,16 @@ describe('admin CRUD rules', () => {
     expect(productsRoute).toContain('countries: { has: countryId }');
     expect(productsRoute).toContain('where: { inStock: true }');
     expect(productsRoute).toContain('if (countryId && products.length === 0)');
+    expect(productsRoute).toContain("export const dynamic = 'force-dynamic'");
+    expect(productsRoute).toContain("'Cache-Control': 'no-store'");
     expect(productRoute).toContain('request.nextUrl.searchParams.get');
     expect(productRoute).toContain('countries: { has: countryId }');
     expect(productRoute).toContain('where: { inStock: true }');
     expect(productRoute).toContain('if (!product && countryId)');
+    expect(productRoute).toContain("export const dynamic = 'force-dynamic'");
+    expect(productRoute).toContain("'Cache-Control': 'no-store'");
+    expect(countriesRoute).toContain("export const dynamic = 'force-dynamic'");
+    expect(countriesRoute).toContain("'Cache-Control': 'no-store'");
     expect(appContext).not.toContain('localStorage.removeItem(storageKeys.country)');
     expect(appContext).toContain('localStorage.setItem(storageKeys.country, country.id)');
     expect(appContext).toContain('const savedCountryId = localStorage.getItem(storageKeys.country)');

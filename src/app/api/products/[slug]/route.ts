@@ -4,6 +4,9 @@ import { mapProduct } from '@/server/mappers';
 import { prisma } from '@/server/prisma';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const noStoreHeaders = { 'Cache-Control': 'no-store' };
 
 interface RouteContext {
   params: Promise<{ slug: string }>;
@@ -42,7 +45,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     if (!product) throw new Error('NOT_FOUND');
-    return ok({ product: mapProduct(product) });
+    return ok({ product: mapProduct(product) }, { headers: noStoreHeaders });
   } catch (error) {
     return handleApiError(error);
   }

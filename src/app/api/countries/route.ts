@@ -3,8 +3,10 @@ import { mapCountry, mapCurrency } from '@/server/mappers';
 import { prisma } from '@/server/prisma';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const BASE_CURRENCY = 'IQD';
+const noStoreHeaders = { 'Cache-Control': 'no-store' };
 
 export async function GET() {
   try {
@@ -25,11 +27,14 @@ export async function GET() {
     });
     const ratesByQuote = new Map(exchangeRates.map((rate) => [rate.quoteCurrencyCode, rate]));
 
-    return ok({
-      baseCurrency: BASE_CURRENCY,
-      countries: countries.map((country) => mapCountry(country, ratesByQuote.get(country.currencyCode), BASE_CURRENCY)),
-      currencies: countries.map((country) => mapCurrency(country.currency)),
-    });
+    return ok(
+      {
+        baseCurrency: BASE_CURRENCY,
+        countries: countries.map((country) => mapCountry(country, ratesByQuote.get(country.currencyCode), BASE_CURRENCY)),
+        currencies: countries.map((country) => mapCurrency(country.currency)),
+      },
+      { headers: noStoreHeaders }
+    );
   } catch (error) {
     return handleApiError(error);
   }

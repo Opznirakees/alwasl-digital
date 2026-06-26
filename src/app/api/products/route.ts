@@ -4,6 +4,9 @@ import { mapProduct } from '@/server/mappers';
 import { prisma } from '@/server/prisma';
 
 export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const noStoreHeaders = { 'Cache-Control': 'no-store' };
 
 function normalizeCountryId(country: string | null) {
   const value = country?.trim().toLowerCase();
@@ -39,7 +42,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return ok({ products: products.map(mapProduct) });
+    return ok({ products: products.map(mapProduct) }, { headers: noStoreHeaders });
   } catch (error) {
     return handleApiError(error);
   }
