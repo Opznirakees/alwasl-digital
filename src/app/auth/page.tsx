@@ -8,16 +8,18 @@ import { useApp } from '@/contexts/AppContext';
 import { getDefaultPhoneCountry, getPhoneCountryById, phoneCountries } from '@/data/phone-countries';
 import { normalizePhoneForDialCode } from '@/lib/phone';
 import { Button } from '@/components/ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ArrowLeft, Phone, Shield, Loader2, MessageCircle, ChevronRight } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ArrowLeft, Check, ChevronsUpDown, Phone, Shield, Loader2, MessageCircle, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AuthPage() {
@@ -25,6 +27,7 @@ export default function AuthPage() {
   const { t, dir, login, verifyOtp } = useApp();
   const defaultPhoneCountry = getDefaultPhoneCountry();
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [phoneCountryOpen, setPhoneCountryOpen] = useState(false);
   const [phoneCountryId, setPhoneCountryId] = useState(defaultPhoneCountry.id);
   const [phone, setPhone] = useState('');
   const [submittedPhone, setSubmittedPhone] = useState('');
@@ -160,23 +163,58 @@ export default function AuthPage() {
               <form onSubmit={handlePhoneSubmit} className="space-y-5">
                 <div className="space-y-2">
                   <Label className="text-zinc-700">{t('Phone Number', 'رقم الهاتف')}</Label>
-                  <div className="flex gap-2">
-                    <Select value={phoneCountryId} onValueChange={setPhoneCountryId}>
-                      <SelectTrigger className="w-36 border-black/10 bg-white text-zinc-950">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent position="item-aligned" className="max-h-80 border-black/10 bg-white">
-                        {phoneCountries.map((country) => (
-                          <SelectItem key={country.id} value={country.id}>
-                            <span className="flex min-w-0 items-center gap-2">
-                              <span>{country.flag}</span>
-                              <span className="truncate text-xs">{t(country.name, country.nameAr, country.nameZh)}</span>
-                              <span className="text-xs">{country.phoneCode}</span>
-                            </span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid gap-2 sm:grid-cols-[minmax(0,12rem)_1fr]">
+                    <Popover open={phoneCountryOpen} onOpenChange={setPhoneCountryOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={phoneCountryOpen}
+                          aria-label={t('Country calling code', 'رمز اتصال الدولة', '国家/地区区号')}
+                          className="h-10 w-full justify-between border-black/10 bg-white px-3 text-left text-zinc-950 shadow-sm hover:bg-white hover:text-zinc-950"
+                        >
+                          <span className="flex min-w-0 items-center gap-2">
+                            <span>{selectedPhoneCountry.flag}</span>
+                            <span className="truncate text-xs">{selectedPhoneCountry.phoneCode}</span>
+                          </span>
+                          <ChevronsUpDown className="h-4 w-4 shrink-0 text-zinc-400" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent align="start" className="w-[min(22rem,calc(100vw-2rem))] p-0">
+                        <Command>
+                          <CommandInput
+                            placeholder={t('Search country or code', 'ابحث عن الدولة أو الرمز', '搜索国家或区号')}
+                          />
+                          <CommandList>
+                            <CommandEmpty>
+                              {t('No country code found', 'لم يتم العثور على رمز دولة', '未找到国家/地区区号')}
+                            </CommandEmpty>
+                            <CommandGroup>
+                              {phoneCountries.map((country) => (
+                                <CommandItem
+                                  key={country.id}
+                                  value={country.searchText}
+                                  onSelect={() => {
+                                    setPhoneCountryId(country.id);
+                                    setPhoneCountryOpen(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={`h-4 w-4 ${country.id === selectedPhoneCountry.id ? 'opacity-100' : 'opacity-0'}`}
+                                  />
+                                  <span className="text-base leading-none">{country.flag}</span>
+                                  <span className="min-w-0 flex-1 truncate">
+                                    {t(country.name, country.nameAr, country.nameZh)}
+                                  </span>
+                                  <span className="text-xs text-zinc-500">{country.phoneCode}</span>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                     <div className="relative flex-1">
                       <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
                       <Input

@@ -1334,6 +1334,8 @@ describe('international OTP login country rules', () => {
     expect(countryCodes.has('CN')).toBe(true);
     expect(countryCodes.has('US')).toBe(true);
     expect(countryCodes.has('IN')).toBe(true);
+    expect(phoneCountries.find((country) => country.code === 'NL')?.searchText).toContain('nederland');
+    expect(phoneCountries.find((country) => country.code === 'NL')?.searchText).toContain('31');
   });
 
   test('builds WAHA-ready login phone numbers from any selected country', () => {
@@ -1350,10 +1352,15 @@ describe('international OTP login country rules', () => {
 
     expect(authPage).toContain("from '@/data/phone-countries'");
     expect(authPage).toContain('phoneCountries.map');
+    expect(authPage).toContain('CommandInput');
+    expect(authPage).toContain("placeholder={t('Search country or code'");
+    expect(authPage).toContain('value={country.searchText}');
     expect(authPage).toContain('normalizePhoneForDialCode(selectedPhoneCountry.phoneCode, phone)');
     expect(authPage).toContain('verifyOtp(otpCode, submittedPhone)');
     expect(authPage).toContain('const handleResendOtp');
     expect(authPage).toContain('onClick={handleResendOtp}');
+    expect(authPage).not.toContain('SelectContent');
+    expect(authPage).not.toContain('<select');
     expect(authPage).not.toContain('countries.map((country)');
   });
 });

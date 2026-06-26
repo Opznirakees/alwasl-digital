@@ -20,6 +20,16 @@ interface WorldCountry {
   };
 }
 
+const countrySearchAliases: Record<string, string[]> = {
+  CN: ['china'],
+  GB: ['uk', 'united kingdom', 'great britain', 'england'],
+  IQ: ['iraq', 'irak'],
+  NL: ['nederland', 'nederlands', 'holland', 'the netherlands'],
+  SA: ['saudi', 'saudi arabia'],
+  AE: ['uae', 'united arab emirates', 'emirates'],
+  US: ['usa', 'united states', 'america'],
+};
+
 export interface PhoneCountry {
   id: string;
   code: string;
@@ -30,8 +40,6 @@ export interface PhoneCountry {
   phoneCode: string;
   searchText: string;
 }
-
-const preferredCountryCodes = ['IQ', 'NL', 'CN', 'US', 'GB', 'SA', 'AE', 'TR', 'DE', 'FR'];
 
 function normalizePhoneCode(root?: string, suffixes?: string[]) {
   const suffix = suffixes?.find((value) => value !== undefined) ?? '';
@@ -46,6 +54,7 @@ export const phoneCountries: PhoneCountry[] = (rawCountries as WorldCountry[])
 
     const nameAr = country.translations?.ara?.common ?? country.name.common;
     const nameZh = country.translations?.zho?.common ?? country.name.common;
+    const aliases = countrySearchAliases[country.cca2] ?? [];
 
     return {
       id: country.cca2.toLowerCase(),
@@ -55,20 +64,11 @@ export const phoneCountries: PhoneCountry[] = (rawCountries as WorldCountry[])
       nameZh,
       flag: country.flag ?? '',
       phoneCode,
-      searchText: `${country.name.common} ${nameAr} ${nameZh} ${country.cca2} ${phoneCode}`.toLowerCase(),
+      searchText: `${country.name.common} ${nameAr} ${nameZh} ${country.cca2} ${phoneCode} ${phoneCode.replace(/\D/g, '')} ${aliases.join(' ')}`.toLowerCase(),
     };
   })
   .filter((country): country is PhoneCountry => Boolean(country))
-  .sort((a, b) => {
-    const preferredA = preferredCountryCodes.indexOf(a.code);
-    const preferredB = preferredCountryCodes.indexOf(b.code);
-
-    if (preferredA !== -1 || preferredB !== -1) {
-      return (preferredA === -1 ? 1000 : preferredA) - (preferredB === -1 ? 1000 : preferredB);
-    }
-
-    return a.name.localeCompare(b.name);
-  });
+  .sort((a, b) => a.name.localeCompare(b.name));
 
 export const phoneDialCodesByLength = Array.from(
   new Set(phoneCountries.map((country) => country.phoneCode.replace(/\D/g, '')))
