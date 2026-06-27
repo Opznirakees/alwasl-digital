@@ -1,4 +1,5 @@
 import { InfoPage } from '@/components/info/InfoPage';
+import { supportWhatsAppHref } from '@/config/contact';
 
 export default function ContactPage() {
   return (
@@ -7,7 +8,7 @@ export default function ContactPage() {
       title={{ en: 'Support is one message away.', ar: 'الدعم على بعد رسالة واحدة.' }}
       subtitle={{ en: 'Use WhatsApp for urgent top-up help, payment questions, or account checks.', ar: 'استخدم واتساب للمساعدة العاجلة في الشحن أو أسئلة الدفع أو فحص الحساب.' }}
       actions={[
-        { label: { en: 'Open WhatsApp', ar: 'افتح واتساب' }, href: 'https://wa.me/9647812345678' },
+        { label: { en: 'Open WhatsApp', ar: 'افتح واتساب' }, href: supportWhatsAppHref },
         { label: { en: 'View FAQ', ar: 'عرض الأسئلة الشائعة' }, href: '/faq' },
       ]}
       sections={[

@@ -6,6 +6,7 @@ import { shouldLoadAdminSummary } from '../src/app/admin/admin-access';
 import { getPromotionState } from '../src/app/promotions/promotion-state';
 import { walletTopUpDialogCopy } from '../src/app/wallet/wallet-dialog-copy';
 import { mobileMenuSheetCopy } from '../src/components/layout/mobile-menu-copy';
+import { supportWhatsAppHref, supportWhatsAppNumber } from '../src/config/contact';
 import { resolveOtpPhone } from '../src/contexts/auth-flow';
 import { getDefaultPhoneCountry, phoneCountries } from '../src/data/phone-countries';
 import { banners, games } from '../src/data/mock-data';
@@ -1142,7 +1143,8 @@ describe('provider low-balance alert rules', () => {
     expect(route).toContain('assertCronRequest');
     expect(route).toContain('checkProviderLowBalanceAlerts');
     expect(envExample).toContain('WAHO_PROVIDER_LOW_BALANCE_THRESHOLD');
-    expect(envExample).toContain('PROVIDER_ALERT_WHATSAPP_PHONE');
+    expect(envExample).toContain(`PROVIDER_ALERT_WHATSAPP_PHONE="${supportWhatsAppNumber}"`);
+    expect(envExample).toContain(`WAHO_FULFILLMENT_PHONE="${supportWhatsAppNumber}"`);
     expect(readme).toContain('/api/jobs/provider-alerts');
   });
 });
@@ -1224,6 +1226,7 @@ describe('WAHA direct WhatsApp provider', () => {
     expect(normalizeWhatsAppPhone('0612345678')).toBe('31612345678');
     expect(normalizeWhatsAppPhone('+31612345678')).toBe('31612345678');
     expect(normalizeWhatsAppPhone('0031621393391')).toBe('31621393391');
+    expect(normalizeWhatsAppPhone(supportWhatsAppNumber)).toBe('9647822255851');
     expect(normalizeWhatsAppPhone('07868426969')).toBe('9647868426969');
     expect(normalizeWhatsAppPhone('+96407868426969')).toBe('9647868426969');
     expect(normalizeWhatsAppPhone('+310612345678')).toBe('31612345678');
@@ -2567,6 +2570,23 @@ describe('customer blocking rules', () => {
 });
 
 describe('customer-facing copy quality', () => {
+  test('uses the current WhatsApp support number for public links and operations config', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const contactConfig = readFileSync(join(repoRoot, 'src/config/contact.ts'), 'utf8');
+    const homePage = readFileSync(join(repoRoot, 'src/app/page.tsx'), 'utf8');
+    const contactPage = readFileSync(join(repoRoot, 'src/app/contact/page.tsx'), 'utf8');
+    const envExample = readFileSync(join(repoRoot, '.env.example'), 'utf8');
+
+    expect(contactConfig).toContain(`supportWhatsAppNumber = '${supportWhatsAppNumber}'`);
+    expect(supportWhatsAppHref).toBe('https://wa.me/9647822255851');
+    expect(homePage).toContain('supportWhatsAppHref');
+    expect(contactPage).toContain('supportWhatsAppHref');
+    expect(homePage).not.toContain('https://wa.me/9647812345678');
+    expect(contactPage).not.toContain('https://wa.me/9647812345678');
+    expect(envExample).toContain(`PROVIDER_ALERT_WHATSAPP_PHONE="${supportWhatsAppNumber}"`);
+    expect(envExample).toContain(`WAHO_FULFILLMENT_PHONE="${supportWhatsAppNumber}"`);
+  });
+
   test('keeps public pages free from internal demo and placeholder language', () => {
     const repoRoot = join(import.meta.dir, '..');
     const customerFacingFiles = [

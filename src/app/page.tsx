@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useApp } from '@/contexts/AppContext';
 import { Header } from '@/components/layout/Header';
+import { supportWhatsAppHref } from '@/config/contact';
 import { HeroBanner } from '@/components/home/HeroBanner';
 import { wahoRechargeInfo } from '@/data/waho-recharge-info';
 import type { Banner, Game } from '@/types';
@@ -262,7 +263,7 @@ export default function HomePage() {
               </div>
             </div>
             <a
-              href="https://wa.me/9647812345678"
+              href={supportWhatsAppHref}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-md border border-black/10 bg-white px-6 py-3 font-semibold text-zinc-800 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:hover:bg-white/10"
@@ -339,7 +340,7 @@ export default function HomePage() {
                 {t('Contact', 'اتصل بنا')}
               </Link>
               <a
-                href="https://wa.me/9647812345678"
+                href={supportWhatsAppHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="transition-colors text-xs text-zinc-400 hover:text-blue-600 dark:hover:text-blue-300"
@@ -353,7 +354,7 @@ export default function HomePage() {
 
       {/* Floating WhatsApp Button */}
       <a
-        href="https://wa.me/9647812345678"
+        href={supportWhatsAppHref}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 whatsapp-btn z-50"
