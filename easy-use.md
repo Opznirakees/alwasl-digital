@@ -198,7 +198,7 @@ De eenvoudsnorm van een zesjarige geldt voor de klantreis. Het beheerscherm blij
 - [x] Engels, Arabisch en Chinees tonen dezelfde vier stappen en primaire acties.
 - [x] Automatische overflowcontrole vindt geen element buiten de viewport.
 - [x] `bun test`, `bunx tsc --noEmit`, `bun run build` en relevante Playwright-tests slagen.
-- [ ] De live deployment toont dezelfde git-commit als `main` en de belangrijkste flows zijn live nagelopen.
+- [x] De live deployment toont dezelfde git-commit als `main` en de belangrijkste flows zijn live nagelopen.
 
 ## Buiten deze UX-revisie
 
