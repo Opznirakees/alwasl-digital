@@ -3,38 +3,41 @@ import { InfoPage } from '@/components/info/InfoPage';
 export default function HelpPage() {
   return (
     <InfoPage
-      eyebrow={{ en: 'Help Center', ar: 'مركز المساعدة' }}
-      title={{ en: 'Everything needed to top up WAHO smoothly.', ar: 'كل ما تحتاجه لشحن WAHO بسهولة.' }}
-      subtitle={{ en: 'Choose the amount, confirm the WAHO ID, pay securely, and track the order.', ar: 'اختر المبلغ وتأكد من معرف WAHO وادفع بأمان ثم تابع الطلب.' }}
+      eyebrow={{ en: 'Help', ar: 'المساعدة', zh: '帮助' }}
+      title={{ en: 'Top up WAHO in four simple steps.', ar: 'اشحن WAHO في أربع خطوات بسيطة.', zh: '四个简单步骤完成 WAHO 充值。' }}
+      subtitle={{ en: 'Follow these steps from top to bottom. The app saves your choices while you continue.', ar: 'اتبع هذه الخطوات من الأعلى إلى الأسفل. يحفظ التطبيق اختياراتك أثناء المتابعة.', zh: '从上到下按步骤操作，应用会在过程中保留您的选择。' }}
       actions={[
-        { label: { en: 'Contact support', ar: 'تواصل مع الدعم' }, href: '/contact' },
-        { label: { en: 'My orders', ar: 'طلباتي' }, href: '/orders' },
+        { label: { en: 'Choose an amount', ar: 'اختر المبلغ', zh: '选择金额' }, href: '/top-up/waho-top-up' },
+        { label: { en: 'Contact support', ar: 'تواصل مع الدعم', zh: '联系客服' }, href: '/contact' },
       ]}
       sections={[
         {
-          title: { en: 'Before ordering', ar: 'قبل الطلب' },
+          title: { en: '1. Choose an amount', ar: '1. اختر المبلغ', zh: '1. 选择金额' },
           items: [
-            { en: 'Choose the WAHO top-up amount that matches what the customer needs.', ar: 'اختر مبلغ شحن WAHO الذي يناسب احتياج العميل.' },
-            { en: 'Confirm the WAHO ID before payment.', ar: 'تأكد من معرف WAHO قبل الدفع.' },
+            { en: 'Tap the amount you want to add.', ar: 'اضغط على المبلغ الذي تريد إضافته.', zh: '点击想要充值的金额。' },
+            { en: 'The selected card shows a check mark.', ar: 'تظهر علامة صح على البطاقة المختارة.', zh: '选中的金额卡会显示勾号。' },
           ],
         },
         {
-          title: { en: 'During checkout', ar: 'أثناء الدفع' },
+          title: { en: '2. Check the WAHO ID', ar: '2. تحقق من معرف WAHO', zh: '2. 核对 WAHO ID' },
           items: [
-            { en: 'Select a top-up amount, check the account details, then choose a payment method.', ar: 'اختر مبلغ الشحن وتحقق من بيانات الحساب ثم اختر طريقة الدفع.' },
-            { en: 'Checkout asks users to log in before creating the order.', ar: 'يطلب الدفع تسجيل الدخول قبل إنشاء الطلب.' },
+            { en: 'Copy the ID from your WAHO profile.', ar: 'انسخ المعرف من ملفك في WAHO.', zh: '从 WAHO 个人资料中复制 ID。' },
+            { en: 'Check the account name before continuing.', ar: 'تحقق من اسم الحساب قبل المتابعة.', zh: '继续前请核对账号名称。' },
           ],
         },
         {
-          title: { en: 'After ordering', ar: 'بعد الطلب' },
+          title: { en: '3. Choose how to pay', ar: '3. اختر طريقة الدفع', zh: '3. 选择付款方式' },
           items: [
-            { en: 'Use the order page to track status and copy the order ID.', ar: 'استخدم صفحة الطلبات لتتبع الحالة ونسخ رقم الطلب.' },
-            { en: 'Send the order ID to WhatsApp support if something needs review.', ar: 'أرسل رقم الطلب لدعم واتساب إذا احتاج الأمر إلى مراجعة.' },
+            { en: 'Only available payment methods can be selected.', ar: 'يمكن اختيار طرق الدفع المتاحة فقط.', zh: '只能选择当前可用的付款方式。' },
+            { en: 'The total stays visible before confirmation.', ar: 'يبقى المبلغ الإجمالي ظاهراً قبل التأكيد.', zh: '确认前总金额会保持可见。' },
           ],
         },
         {
-          title: { en: 'Admin checks', ar: 'فحوصات الإدارة' },
-          body: { en: 'The admin dashboard keeps top-up orders, offers, wallets, providers, and reporting in one place.', ar: 'تجمع لوحة الإدارة طلبات الشحن والعروض والمحافظ والموردين والتقارير في مكان واحد.' },
+          title: { en: '4. Confirm and follow', ar: '4. أكد وتابع', zh: '4. 确认并查看进度' },
+          items: [
+            { en: 'Enter the WhatsApp code to place the order.', ar: 'أدخل رمز واتساب لتنفيذ الطلب.', zh: '输入 WhatsApp 验证码以提交订单。' },
+            { en: 'Open My Orders to follow what happens next.', ar: 'افتح طلباتي لمتابعة ما يحدث بعد ذلك.', zh: '打开“我的订单”查看后续进度。' },
+          ],
         },
       ]}
     />

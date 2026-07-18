@@ -28,9 +28,9 @@ export default function CartPage() {
           </h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-zinc-600 dark:text-zinc-300">
             {t(
-              'Choose the IQD amount, enter the WAHO ID, and continue to payment from one focused flow.',
-              'اختر مبلغ الدينار وأدخل معرف WAHO ثم تابع الدفع من مسار واحد واضح.',
-              '选择 IQD 金额，输入 WAHO ID，然后在一个清晰流程中继续付款。'
+              'Choose the IQD amount, enter the WAHO ID, and continue straight to payment.',
+              'اختر مبلغ الدينار وأدخل معرف WAHO ثم تابع مباشرة إلى الدفع.',
+              '选择 IQD 金额，输入 WAHO ID，然后直接继续付款。'
             )}
           </p>
 

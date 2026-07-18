@@ -1,8 +1,8 @@
 export const walletTopUpDialogCopy = {
   description: {
-    en: 'Submit the exact Transaction ID from your payment app. Your wallet balance is credited after admin approval.',
-    ar: 'أدخل رقم المعاملة الصحيح من تطبيق الدفع. يتم إضافة رصيد المحفظة بعد اعتماد الإدارة.',
-    zh: '提交支付应用中的准确交易 ID。管理员批准后钱包余额才会入账。',
+    en: 'Enter the exact transaction ID from your payment app. Your wallet balance is added after the payment is checked.',
+    ar: 'أدخل رقم المعاملة الصحيح من تطبيق الدفع. يضاف رصيد المحفظة بعد التحقق من الدفع.',
+    zh: '请输入付款应用中的准确交易 ID。付款核对后钱包余额才会到账。',
   },
   unavailable: {
     en: 'Manual wallet deposits are reviewed before crediting the balance.',

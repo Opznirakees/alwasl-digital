@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Globe, MapPin, Moon, Sun } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ArrowLeft, Check, Globe, MapPin, Moon, Search, Sun } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useApp } from '@/contexts/AppContext';
 
@@ -20,95 +21,152 @@ export default function SettingsPage() {
     selectedCountry,
     setSelectedCountry,
   } = useApp();
-  const isLight = theme === 'light';
+  const [countryQuery, setCountryQuery] = useState('');
+
+  const filteredCountries = useMemo(() => {
+    const query = countryQuery.trim().toLocaleLowerCase();
+    if (!query) return countries;
+
+    return countries.map((country) => country).filter((country) => [
+      country.name,
+      country.nameAr,
+      country.phoneCode,
+      country.currency,
+    ].some((value) => value.toLocaleLowerCase().includes(query)));
+  }, [countries, countryQuery]);
+
+  const languageOptions = [
+    { id: 'en' as const, label: 'English', description: 'English' },
+    { id: 'ar' as const, label: 'العربية', description: 'Arabic' },
+    { id: 'zh' as const, label: '中文', description: 'Chinese' },
+  ];
 
   return (
-    <div className={`min-h-screen ${isLight ? 'bg-slate-50' : 'bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950'} ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
-      <main className="container mx-auto px-4 py-8">
-        <Link href="/" className={`inline-flex items-center gap-2 text-sm mb-8 ${isLight ? 'text-slate-600 hover:text-purple-600' : 'text-white/70 hover:text-white'}`}>
-          <ArrowLeft className="w-4 h-4" />
-          {t('Back to Home', 'العودة للرئيسية')}
+      <main className="container mx-auto max-w-4xl px-4 py-6 sm:py-10">
+        <Link href="/" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-zinc-500 hover:text-blue-700 dark:text-zinc-400 dark:hover:text-blue-300">
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+          {t('Back home', 'العودة للرئيسية', '返回首页')}
         </Link>
 
-        <div className="max-w-3xl">
-          <h1 className={`text-3xl md:text-4xl font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-            {t('Settings', 'الإعدادات')}
-          </h1>
-          <p className={`mt-3 ${isLight ? 'text-slate-600' : 'text-white/60'}`}>
-            {t('Manage language and display preferences.', 'إدارة اللغة وتفضيلات العرض.')}
+        <header className="mt-4">
+          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t('Your preferences', 'تفضيلاتك', '您的偏好')}</p>
+          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white sm:text-4xl">{t('Settings', 'الإعدادات', '设置')}</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+            {t('Choose how the app looks and which local prices you see.', 'اختر مظهر التطبيق والأسعار المحلية التي تراها.', '选择应用外观以及您看到的当地价格。')}
           </p>
+        </header>
 
-          <div className="space-y-4 mt-8">
-            <Card className={`p-6 ${isLight ? 'bg-white border-purple-100' : 'bg-slate-900/50 border-purple-500/15'}`}>
-              <div className="flex items-center justify-between gap-4">
+        <div className="mt-6 space-y-5">
+          <section className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
+            <div className="flex min-h-14 items-center justify-between gap-4">
+              <div className="flex min-w-0 items-start gap-3">
+                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+                  {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                </span>
                 <div>
-                  <h2 className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{t('Theme', 'الثيم')}</h2>
-                  <p className={`text-sm mt-1 ${isLight ? 'text-slate-500' : 'text-white/50'}`}>{t('Switch between dark and light mode.', 'التبديل بين الوضع الداكن والفاتح.')}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  {theme === 'dark' ? <Moon className="w-5 h-5 text-purple-300" /> : <Sun className="w-5 h-5 text-amber-500" />}
-                  <Switch checked={theme === 'dark'} onCheckedChange={toggleTheme} />
+                  <h2 className="font-semibold text-zinc-950 dark:text-white">{t('Dark appearance', 'المظهر الداكن', '深色外观')}</h2>
+                  <p className="mt-1 text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+                    {theme === 'dark'
+                      ? t('Dark mode is on.', 'الوضع الداكن مفعّل.', '深色模式已开启。')
+                      : t('Turn this on for a darker screen.', 'فعّل هذا الخيار لشاشة داكنة.', '开启后屏幕会变暗。')}
+                  </p>
                 </div>
               </div>
-            </Card>
+              <Switch
+                aria-label={t('Use dark mode', 'استخدم الوضع الداكن', '使用深色模式')}
+                checked={theme === 'dark'}
+                onCheckedChange={toggleTheme}
+              />
+            </div>
+          </section>
 
-            <Card className={`p-6 ${isLight ? 'bg-white border-purple-100' : 'bg-slate-900/50 border-purple-500/15'}`}>
-              <div className="flex items-center gap-3 mb-4">
-                <Globe className={isLight ? 'w-5 h-5 text-purple-600' : 'w-5 h-5 text-purple-300'} />
-                <h2 className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{t('Language', 'اللغة')}</h2>
+          <section className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"><Globe className="h-5 w-5" /></span>
+              <div>
+                <h2 className="font-semibold text-zinc-950 dark:text-white">{t('Language', 'اللغة', '语言')}</h2>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{t('All screens change immediately.', 'تتغير كل الشاشات فوراً.', '所有页面会立即切换。')}</p>
               </div>
-              <div className="flex flex-wrap gap-3">
-                {[
-                  { id: 'en' as const, label: 'English' },
-                  { id: 'ar' as const, label: 'العربية' },
-                  { id: 'zh' as const, label: '中文' },
-                ].map((item) => (
-                  <Button
-                    key={item.id}
-                    onClick={() => setLanguage(item.id)}
-                    variant={language === item.id ? 'default' : 'outline'}
-                    className={language === item.id ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : isLight ? 'border-purple-200 text-purple-700' : 'border-purple-500/30 text-purple-300'}
+            </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3" role="radiogroup" aria-label={t('Choose language', 'اختر اللغة', '选择语言')}>
+              {languageOptions.map((option) => {
+                const selected = language === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setLanguage(option.id)}
+                    className={`flex min-h-14 items-center justify-between rounded-lg border px-4 text-start text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${selected ? 'border-blue-600 bg-blue-50 text-blue-800 dark:bg-blue-500/15 dark:text-blue-100' : 'border-black/10 text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5'}`}
                   >
-                    {item.label}
-                  </Button>
-                ))}
-              </div>
-            </Card>
+                    <span>{option.label}</span>
+                    {selected && <Check className="h-4 w-4 text-blue-700 dark:text-blue-300" aria-hidden="true" />}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
-            <Card className={`p-6 ${isLight ? 'bg-white border-purple-100' : 'bg-slate-900/50 border-purple-500/15'}`}>
-              <div className="flex items-center gap-3 mb-4">
-                <MapPin className={isLight ? 'w-5 h-5 text-purple-600' : 'w-5 h-5 text-purple-300'} />
-                <h2 className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{t('Country', 'البلد', '国家')}</h2>
+          <section className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
+            <div className="flex items-start gap-3">
+              <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"><MapPin className="h-5 w-5" /></span>
+              <div>
+                <h2 className="font-semibold text-zinc-950 dark:text-white">{t('Price country', 'بلد الأسعار', '价格国家')}</h2>
+                <p className="mt-1 text-sm leading-5 text-zinc-500 dark:text-zinc-400">
+                  {t('This chooses the local currency and top-up prices. It does not change your login number.', 'يحدد هذا العملة المحلية وأسعار الشحن، ولا يغير رقم تسجيل الدخول.', '这会选择当地货币和充值价格，不会更改您的登录号码。')}
+                </p>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                {countries.map((country) => (
-                  <Button
+            </div>
+
+            <label htmlFor="country-search" className="mt-5 block text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+              {t('Find a country', 'ابحث عن بلد', '查找国家')}
+            </label>
+            <div className="relative mt-2">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 rtl:left-auto rtl:right-3" />
+              <Input
+                id="country-search"
+                type="search"
+                value={countryQuery}
+                onChange={(event) => setCountryQuery(event.target.value)}
+                placeholder={t('Country, currency or code', 'البلد أو العملة أو الرمز', '国家、货币或区号')}
+                className="h-12 bg-zinc-50 ps-10 dark:bg-zinc-950"
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="mt-3 grid max-h-80 gap-2 overflow-y-auto pe-1 sm:grid-cols-2" role="radiogroup" aria-label={t('Choose price country', 'اختر بلد الأسعار', '选择价格国家')}>
+              {filteredCountries.map((country) => {
+                const selected = selectedCountry.id === country.id;
+                return (
+                  <button
                     key={country.id}
                     type="button"
+                    role="radio"
+                    aria-checked={selected}
                     onClick={() => setSelectedCountry(country)}
-                    variant={selectedCountry.id === country.id ? 'default' : 'outline'}
-                    className={`h-auto justify-start gap-3 py-3 ${
-                      selectedCountry.id === country.id
-                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
-                        : isLight
-                          ? 'border-purple-200 text-purple-700'
-                          : 'border-purple-500/30 text-purple-300'
-                    }`}
+                    className={`flex min-h-16 items-center gap-3 rounded-lg border p-3 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${selected ? 'border-blue-600 bg-blue-50 dark:bg-blue-500/15' : 'border-black/10 hover:bg-zinc-50 dark:border-white/10 dark:hover:bg-white/5'}`}
                   >
-                    <span>{country.flag}</span>
-                    <span className="text-left">
-                      <span className="block text-sm font-semibold">{t(country.name, country.nameAr, country.name)}</span>
-                      <span className="block text-xs opacity-70">
-                        {country.currency} · {country.phoneCode}
-                      </span>
+                    <span className="text-2xl" aria-hidden="true">{country.flag}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-semibold text-zinc-950 dark:text-white">{t(country.name, country.nameAr, country.name)}</span>
+                      <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400" dir="ltr">{country.currency} · {country.phoneCode}</span>
                     </span>
-                  </Button>
-                ))}
+                    {selected && <Check className="h-4 w-4 flex-shrink-0 text-blue-700 dark:text-blue-300" aria-hidden="true" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {filteredCountries.length === 0 && (
+              <div className="mt-3 rounded-lg bg-zinc-100 p-5 text-center text-sm text-zinc-600 dark:bg-zinc-950 dark:text-zinc-300">
+                {t('No country found. Try another name or code.', 'لم يتم العثور على بلد. جرّب اسماً أو رمزاً آخر.', '未找到国家，请尝试其他名称或区号。')}
               </div>
-            </Card>
-          </div>
+            )}
+          </section>
         </div>
       </main>
     </div>

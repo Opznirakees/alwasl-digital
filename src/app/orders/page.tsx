@@ -1,263 +1,224 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
-import { useApp } from '@/contexts/AppContext';
-import { Header } from '@/components/layout/Header';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { Game, OrderStatus } from '@/types';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import {
   ArrowLeft,
-  Package,
+  ArrowRight,
   CheckCircle2,
-  XCircle,
-  Clock,
-  RefreshCw,
+  Clock3,
   Copy,
-  ExternalLink,
+  Package,
+  RefreshCw,
+  RotateCcw,
+  XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Header } from '@/components/layout/Header';
+import { AccountPageLoading } from '@/components/account/AccountPageLoading';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useApp } from '@/contexts/AppContext';
+import { getOrderStatusGuidance } from '@/lib/easy-use';
+import type { Game, OrderStatus } from '@/types';
+
+const statusIcons = {
+  pending: Clock3,
+  processing: RefreshCw,
+  completed: CheckCircle2,
+  failed: XCircle,
+  refunded: RotateCcw,
+  cancelled: XCircle,
+} satisfies Record<OrderStatus, typeof Clock3>;
+
+const statusClasses: Record<OrderStatus, string> = {
+  pending: 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200',
+  processing: 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-400/25 dark:bg-blue-500/10 dark:text-blue-200',
+  completed: 'border-green-200 bg-green-50 text-green-800 dark:border-green-400/25 dark:bg-green-500/10 dark:text-green-200',
+  failed: 'border-red-200 bg-red-50 text-red-800 dark:border-red-400/25 dark:bg-red-500/10 dark:text-red-200',
+  refunded: 'border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-white/10 dark:bg-white/10 dark:text-zinc-200',
+  cancelled: 'border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-white/10 dark:bg-white/10 dark:text-zinc-200',
+};
 
 export default function OrdersPage() {
-  const { t, language, dir, selectedCountry, orders, formatLocalAmount } = useApp();
+  const { t, language, dir, user, isAccountLoading, selectedCountry, orders, formatLocalAmount } = useApp();
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
   const [products, setProducts] = useState<Game[]>([]);
-
-  const filteredOrders = filter === 'all'
-    ? orders
-    : orders.filter(order => order.status === filter);
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
+  const filteredOrders = filter === 'all' ? orders : orders.filter((order) => order.status === filter);
 
   useEffect(() => {
     let active = true;
-
     async function loadProducts() {
       const response = await fetch(`/api/products?country=${selectedCountry.id}`);
-      if (response.ok) {
-        const payload = await response.json();
-        if (active) setProducts(payload.products ?? []);
-      }
+      if (!response.ok) return;
+      const payload = await response.json();
+      if (active) setProducts(payload.products ?? []);
     }
-
     void loadProducts();
-
     return () => {
       active = false;
     };
   }, [selectedCountry.id]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(locale, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const formatDate = (value: string) => new Date(value).toLocaleDateString(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+  const statusLabel = (status: OrderStatus) => ({
+    pending: t('Waiting for payment', 'بانتظار الدفع', '等待付款'),
+    processing: t('Top-up in progress', 'الشحن قيد التنفيذ', '正在充值'),
+    completed: t('Top-up completed', 'اكتمل الشحن', '充值完成'),
+    failed: t('Needs attention', 'يحتاج إلى متابعة', '需要处理'),
+    refunded: t('Payment returned', 'تمت إعادة المبلغ', '款项已退回'),
+    cancelled: t('Order cancelled', 'تم إلغاء الطلب', '订单已取消'),
+  })[status];
+
+  const paymentLabel = (method: string) => ({
+    wallet: t('Wallet', 'المحفظة', '钱包'),
+    zaincash: 'ZainCash',
+    asiahawala: 'AsiaHawala',
+    card: t('Bank card', 'بطاقة مصرفية', '银行卡'),
+    usdt: 'USDT',
+  })[method] ?? method;
+
+  const copyOrderId = async (orderId: string) => {
+    await navigator.clipboard.writeText(orderId);
+    toast.success(t('Order ID copied', 'تم نسخ رقم الطلب', '订单号已复制'));
   };
 
-  const getStatusIcon = (status: OrderStatus) => {
-    switch (status) {
-      case 'completed':
-        return <CheckCircle2 className="w-4 h-4" />;
-      case 'processing':
-        return <Clock className="w-4 h-4" />;
-      case 'failed':
-      case 'cancelled':
-        return <XCircle className="w-4 h-4" />;
-      case 'refunded':
-        return <RefreshCw className="w-4 h-4" />;
-      default:
-        return <Package className="w-4 h-4" />;
-    }
-  };
+  if (isAccountLoading) return <AccountPageLoading />;
 
-  const getStatusColor = (status: OrderStatus) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
-      case 'processing':
-        return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-      case 'failed':
-      case 'cancelled':
-        return 'bg-rose-500/20 text-rose-400 border-rose-500/30';
-      case 'refunded':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      default:
-        return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
-    }
-  };
-
-  const getStatusLabel = (status: OrderStatus) => {
-    const labels: Record<OrderStatus, { en: string; ar: string }> = {
-      pending: { en: 'Pending', ar: 'قيد الانتظار' },
-      processing: { en: 'Processing', ar: 'قيد المعالجة' },
-      completed: { en: 'Completed', ar: 'مكتمل' },
-      failed: { en: 'Failed', ar: 'فشل' },
-      refunded: { en: 'Refunded', ar: 'مسترد' },
-      cancelled: { en: 'Cancelled', ar: 'ملغي' },
-    };
-    return t(labels[status].en, labels[status].ar);
-  };
-
-  const getPaymentMethodLabel = (method: string) => {
-    return t(method, method);
-  };
-
-  const copyOrderId = (orderId: string) => {
-    navigator.clipboard.writeText(orderId);
-    toast.success(t('Order ID copied!', 'تم نسخ رقم الطلب!'));
-  };
+  if (!user) {
+    return (
+      <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+        <Header />
+        <main className="container mx-auto flex min-h-[65vh] max-w-xl flex-col items-center justify-center px-4 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+            <Package className="h-7 w-7" />
+          </div>
+          <h1 className="mt-5 text-2xl font-semibold text-zinc-950 dark:text-white">{t('Log in to see your orders', 'سجل الدخول لرؤية طلباتك', '登录后查看订单')}</h1>
+          <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{t('Your WAHO order IDs and live statuses are kept here.', 'تجد هنا أرقام طلبات WAHO وحالاتها.', '您的 WAHO 订单号和实时状态会显示在这里。')}</p>
+          <Button asChild className="mt-5 bg-blue-600 text-white hover:bg-blue-700">
+            <Link href="/auth?next=%2Forders">{t('Log in', 'تسجيل الدخول', '登录')}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link>
+          </Button>
+        </main>
+      </div>
+    );
+  }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
+      <main className="container mx-auto max-w-5xl px-4 py-6 sm:py-10">
+        <Link href="/" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-zinc-500 hover:text-blue-700 dark:text-zinc-400 dark:hover:text-blue-300">
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+          {t('Back home', 'العودة للرئيسية', '返回首页')}
+        </Link>
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white mb-4">
-              <ArrowLeft className="w-4 h-4" />
-              {t('Back to Home', 'العودة للرئيسية')}
-            </Link>
-            <h1 className="text-3xl font-bold text-white">{t('My Orders', 'طلباتي')}</h1>
-            <p className="text-sm text-white/50 mt-1">
-              {t('View and track your order history', 'عرض وتتبع سجل طلباتك')}
-            </p>
-          </div>
-        </div>
+        <header className="mt-4">
+          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t('Your activity', 'نشاطك', '您的记录')}</p>
+          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white sm:text-4xl">{t('My orders', 'طلباتي', '我的订单')}</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">{t('See what is happening with every WAHO top-up.', 'تابع ما يحدث في كل عملية شحن WAHO.', '查看每笔 WAHO 充值的进度。')}</p>
+        </header>
 
-        {/* Filter Tabs */}
-        <Tabs value={filter} onValueChange={(v) => setFilter(v as OrderStatus | 'all')} className="mb-6">
-          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 bg-slate-800/50 border border-emerald-800/20 p-1 sm:inline-flex sm:h-9 sm:w-auto sm:grid-cols-none">
-            <TabsTrigger value="all" className="min-h-10 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
-              {t('All', 'الكل')}
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="min-h-10 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
-              {t('Completed', 'مكتمل')}
-            </TabsTrigger>
-            <TabsTrigger value="processing" className="min-h-10 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
-              {t('Processing', 'قيد المعالجة')}
-            </TabsTrigger>
-            <TabsTrigger value="failed" className="min-h-10 data-[state=active]:bg-emerald-500/20 data-[state=active]:text-emerald-400">
-              {t('Failed', 'فشل')}
-            </TabsTrigger>
+        <Tabs value={filter} onValueChange={(value) => setFilter(value as OrderStatus | 'all')} className="mt-6">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-lg border border-black/10 bg-white p-1 dark:border-white/10 dark:bg-zinc-900 sm:inline-flex sm:w-auto">
+            {[
+              { value: 'all', label: t('All', 'الكل', '全部') },
+              { value: 'pending', label: t('Waiting', 'انتظار', '等待中') },
+              { value: 'processing', label: t('In progress', 'قيد التنفيذ', '处理中') },
+              { value: 'completed', label: t('Completed', 'مكتمل', '已完成') },
+              { value: 'failed', label: t('Attention', 'متابعة', '需处理') },
+            ].map((item) => (
+              <TabsTrigger key={item.value} value={item.value} className="min-h-11 w-full px-3 last:col-span-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-500/15 dark:data-[state=active]:text-blue-200 sm:w-auto sm:last:col-span-1">
+                {item.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </Tabs>
 
-        {/* Orders List */}
         {filteredOrders.length > 0 ? (
-          <div className="space-y-4">
+          <div className="mt-5 space-y-4">
             {filteredOrders.map((order) => {
-              const game = products.find(g => g.id === order.gameId);
-              const gamePackage = game?.packages.find(pkg => pkg.id === order.packageId);
-              const orderGameName = game ? t(game.name, game.nameAr) : t(order.gameName, order.gameName);
-              const orderPackageName = gamePackage ? t(gamePackage.name, gamePackage.nameAr) : t(order.packageName, order.packageName);
-              return (
-                <Card key={order.id} className="bg-slate-900/50 border-emerald-800/20 p-6 hover:border-emerald-500/30 transition-colors">
-                  <div className="flex flex-col md:flex-row md:items-center gap-4">
-                    {/* WAHO top-up image */}
-                    <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0">
-                      <Image
-                        src={game?.image || '/brand/alwasl-mark.jpg'}
-                        alt={orderGameName}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
+              const product = products.find((item) => item.id === order.gameId);
+              const pkg = product?.packages.find((item) => item.id === order.packageId);
+              const StatusIcon = statusIcons[order.status];
+              const repeatHref = `/top-up/${product?.slug ?? 'waho-top-up'}${pkg?.amount ? `?amount=${pkg.amount}` : ''}`;
 
-                    {/* Order Details */}
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-start justify-between">
+              return (
+                <article key={order.id} className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
+                  <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+                    <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10">
+                      <Image src="/brand/alwasl-mark.jpg" alt="" fill className="object-contain p-1" sizes="56px" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
-                          <h3 className="font-bold text-white">{orderGameName}</h3>
-                          <p className="text-sm text-emerald-400">{orderPackageName}</p>
+                          <h2 className="font-semibold text-zinc-950 dark:text-white">{t('WAHO balance top-up', 'شحن رصيد WAHO', 'WAHO 余额充值')}</h2>
+                          <p className="mt-1 text-sm font-semibold tabular-nums text-blue-700 dark:text-blue-300">{pkg ? `${new Intl.NumberFormat(locale).format(pkg.amount)} IQD` : order.packageName}</p>
                         </div>
-                        <Badge variant="outline" className={`${getStatusColor(order.status)} flex items-center gap-1`}>
-                          {getStatusIcon(order.status)}
-                          {getStatusLabel(order.status)}
+                        <Badge variant="outline" className={`w-fit gap-1.5 ${statusClasses[order.status]}`}>
+                          <StatusIcon className={`h-3.5 w-3.5 ${order.status === 'processing' ? 'animate-spin' : ''}`} />
+                          {statusLabel(order.status)}
                         </Badge>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <span className="text-white/50">{t('Order ID:', 'رقم الطلب:')}</span>
-                          <span className="font-mono text-white">{order.id}</span>
-                          <button
-                            onClick={() => copyOrderId(order.id)}
-                            aria-label={t('Copy order ID', 'نسخ رقم الطلب')}
-                            className="flex h-11 w-11 items-center justify-center rounded-md hover:bg-white/10 transition-colors"
-                          >
-                            <Copy className="w-4 h-4 text-white/50" />
-                          </button>
-                        </div>
-                        {order.gameUserId && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-white/50">{t('WAHO ID:', 'معرف WAHO:')}</span>
-                            <span className="text-white">{order.gameUserId}</span>
-                            {order.gameUsername && (
-                              <span className="text-emerald-400">({order.gameUsername})</span>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      <p className="mt-4 rounded-lg bg-zinc-100 p-3 text-sm leading-6 text-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+                        {getOrderStatusGuidance(order.status, language)}
+                      </p>
 
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center gap-4 text-sm text-white/50">
-                          <span>{formatDate(order.createdAt)}</span>
-                          <span>{getPaymentMethodLabel(order.paymentMethod)}</span>
+                      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                        <div>
+                          <dt className="text-xs text-zinc-500 dark:text-zinc-400">{t('Order ID', 'رقم الطلب', '订单号')}</dt>
+                          <dd className="mt-1 flex min-w-0 items-center gap-1">
+                            <span className="min-w-0 break-all font-mono text-xs font-semibold text-zinc-950 dark:text-white">{order.id}</span>
+                            <button onClick={() => void copyOrderId(order.id)} aria-label={t('Copy order ID', 'نسخ رقم الطلب', '复制订单号')} className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-white/10 dark:hover:text-blue-300">
+                              <Copy className="h-4 w-4" />
+                            </button>
+                          </dd>
                         </div>
-                        <div className="text-right">
-                          {order.discount > 0 && (
-                            <p className="text-xs text-emerald-400">
-                              -{formatLocalAmount(order.discount, { absolute: true })} {t('discount', 'خصم')}
-                            </p>
-                          )}
-                          <p className="text-lg font-bold text-emerald-400">
-                            {formatLocalAmount(order.finalPrice)}
-                          </p>
+                        <div>
+                          <dt className="text-xs text-zinc-500 dark:text-zinc-400">{t('WAHO ID', 'معرف WAHO', 'WAHO ID')}</dt>
+                          <dd className="mt-1 break-all font-medium text-zinc-950 dark:text-white">{order.gameUserId || '-'}</dd>
                         </div>
+                        <div>
+                          <dt className="text-xs text-zinc-500 dark:text-zinc-400">{t('Placed on', 'تاريخ الطلب', '下单时间')}</dt>
+                          <dd className="mt-1 text-zinc-700 dark:text-zinc-300">{formatDate(order.createdAt)}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs text-zinc-500 dark:text-zinc-400">{t('Payment and total', 'الدفع والإجمالي', '付款及总计')}</dt>
+                          <dd className="mt-1 font-medium text-zinc-950 dark:text-white">{paymentLabel(order.paymentMethod)} · <span className="tabular-nums">{formatLocalAmount(order.finalPrice)}</span></dd>
+                        </div>
+                      </dl>
+
+                      <div className="mt-5 border-t border-black/10 pt-4 dark:border-white/10">
+                        <Button asChild variant="outline">
+                          <Link href={repeatHref}>
+                            <RefreshCw className="h-4 w-4" />
+                            {t('Top up this amount again', 'اشحن هذا المبلغ مرة أخرى', '再次充值此金额')}
+                          </Link>
+                        </Button>
                       </div>
                     </div>
                   </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-emerald-800/20">
-                    {order.status === 'completed' && (
-                      <Button variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
-                        <RefreshCw className="w-4 h-4 mr-2" />
-                        {t('Reorder', 'إعادة الطلب')}
-                      </Button>
-                    )}
-                    <Button variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      {t('View Details', 'عرض التفاصيل')}
-                    </Button>
-                  </div>
-                </Card>
+                </article>
               );
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-              <Package className="w-10 h-10 text-white/20" />
-            </div>
-            <h3 className="text-lg font-semibold text-white">{t('No orders found', 'لا توجد طلبات')}</h3>
-            <p className="text-sm text-white/50 mt-1">
-              {t('Recharge WAHO to see your orders here', 'اشحن WAHO لرؤية طلباتك هنا')}
-            </p>
-            <Link href="/">
-              <Button className="mt-4 bg-gradient-to-r from-emerald-500 to-teal-600">
-                {t('Browse WAHO top-ups', 'تصفح شحن WAHO', '浏览 WAHO 充值')}
-              </Button>
-            </Link>
-          </div>
+          <section className="mt-5 flex min-h-72 flex-col items-center justify-center rounded-lg border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-zinc-900">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400"><Package className="h-6 w-6" /></div>
+            <h2 className="mt-4 text-lg font-semibold text-zinc-950 dark:text-white">{orders.length ? t('No orders with this status', 'لا توجد طلبات بهذه الحالة', '没有此状态的订单') : t('No orders yet', 'لا توجد طلبات بعد', '暂无订单')}</h2>
+            <p className="mt-2 max-w-md text-sm leading-6 text-zinc-600 dark:text-zinc-300">{orders.length ? t('Choose another status above.', 'اختر حالة أخرى أعلاه.', '请在上方选择其他状态。') : t('Your first WAHO top-up will appear here.', 'ستظهر أول عملية شحن WAHO هنا.', '您的第一笔 WAHO 充值会显示在这里。')}</p>
+            {!orders.length && <Button asChild className="mt-5 bg-blue-600 text-white hover:bg-blue-700"><Link href="/top-up/waho-top-up">{t('Start a top-up', 'ابدأ الشحن', '开始充值')}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link></Button>}
+          </section>
         )}
       </main>
     </div>

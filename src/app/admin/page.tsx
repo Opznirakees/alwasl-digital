@@ -35,7 +35,6 @@ import {
   ShoppingCart,
   Wallet,
   TrendingUp,
-  TrendingDown,
   DollarSign,
   Package,
   AlertCircle,
@@ -52,11 +51,10 @@ import {
   Globe,
   Bell,
   Menu,
+  X,
   ChevronRight,
   Plus,
   Trash2,
-  ArrowUpRight,
-  ArrowDownRight,
   Activity,
   Server,
   Zap,
@@ -153,6 +151,7 @@ function getReportWindow(period: ReportPeriod) {
 export default function AdminDashboard() {
   const { t, language, dir, user } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
     totalUsers: 0,
@@ -1074,6 +1073,10 @@ export default function AdminDashboard() {
   ];
 
   const canViewAdminDashboard = shouldLoadAdminSummary(user);
+  const adminAlertCount = dashboardStats.failedOrders + providerBalanceAlerts.length;
+  const openAdminAlerts = () => {
+    setActiveTab(providerBalanceAlerts.length > 0 ? 'providers' : 'orders');
+  };
 
   return (
     <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
@@ -1084,10 +1087,27 @@ export default function AdminDashboard() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-white hover:bg-emerald-900/50"
+              onClick={() => setMobileNavOpen((open) => !open)}
+              aria-label={mobileNavOpen
+                ? t('Close admin navigation', 'أغلق قائمة الإدارة', '关闭管理导航')
+                : t('Open admin navigation', 'افتح قائمة الإدارة', '打开管理导航')}
+              aria-expanded={mobileNavOpen}
+              aria-controls="mobile-admin-navigation"
+              className="text-white hover:bg-white/10 md:hidden"
             >
-              <Menu className="w-5 h-5" />
+              {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen
+                ? t('Collapse admin sidebar', 'طي الشريط الجانبي', '收起管理侧栏')
+                : t('Expand admin sidebar', 'توسيع الشريط الجانبي', '展开管理侧栏')}
+              aria-expanded={sidebarOpen}
+              className="hidden text-white hover:bg-white/10 md:inline-flex"
+            >
+              <Menu className="h-5 w-5" />
             </Button>
             <div className="flex min-w-0 items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-white p-1 overflow-hidden ring-1 ring-blue-900/10">
@@ -1105,18 +1125,19 @@ export default function AdminDashboard() {
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-2 sm:gap-3">
-            <div className="relative hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-              <Input
-                placeholder={t('Search...', 'بحث...')}
-                className="w-64 pl-10 bg-slate-800/50 border-emerald-800/30 text-white text-sm"
-              />
-            </div>
-            <Button variant="ghost" size="icon" className="relative flex-shrink-0 text-white hover:bg-emerald-900/50">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={openAdminAlerts}
+              aria-label={t(`Admin alerts: ${adminAlertCount}`, `تنبيهات الإدارة: ${adminAlertCount}`, `管理提醒：${adminAlertCount}`)}
+              className="relative flex-shrink-0 text-white hover:bg-white/10"
+            >
               <Bell className="w-5 h-5" />
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-500 text-[10px] font-bold rounded-full flex items-center justify-center">
-                3
-              </span>
+              {adminAlertCount > 0 && (
+                <span className="absolute -end-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold">
+                  {adminAlertCount > 99 ? '99+' : adminAlertCount}
+                </span>
+              )}
             </Button>
             <Link href="/">
               <Button variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
@@ -1127,6 +1148,40 @@ export default function AdminDashboard() {
           </div>
         </div>
       </header>
+
+      {mobileNavOpen && (
+        <div id="mobile-admin-navigation" className="fixed inset-x-0 bottom-0 top-16 z-40 md:hidden">
+          <button
+            type="button"
+            aria-label={t('Close admin navigation', 'أغلق قائمة الإدارة', '关闭管理导航')}
+            onClick={() => setMobileNavOpen(false)}
+            className="absolute inset-0 bg-black/70"
+          />
+          <aside className={`absolute inset-y-0 w-[min(20rem,calc(100vw-2rem))] border-white/10 bg-slate-950 shadow-2xl ${dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'}`}>
+            <nav aria-label={t('Admin sections', 'أقسام الإدارة', '管理栏目')} className="h-full space-y-1 overflow-y-auto p-4">
+              {sidebarItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-current={activeTab === item.id ? 'page' : undefined}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setMobileNavOpen(false);
+                  }}
+                  className={`flex min-h-12 w-full items-center gap-3 rounded-md px-4 text-start text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
+                    activeTab === item.id
+                      ? 'bg-blue-500/20 text-blue-200'
+                      : 'text-white/75 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </nav>
+          </aside>
+        </div>
+      )}
 
       <div className="flex">
         {/* Sidebar */}
@@ -1172,29 +1227,25 @@ export default function AdminDashboard() {
                     label: t('Total Revenue', 'إجمالي الإيرادات'),
                     value: formatCurrency(dashboardStats.totalRevenue),
                     suffix: 'IQD',
-                    change: '+12.5%',
-                    trend: 'up',
+                    note: t('Confirmed payments', 'المدفوعات المؤكدة', '已确认付款'),
                     icon: DollarSign,
                   },
                   {
                     label: t('Total Orders', 'إجمالي الطلبات'),
                     value: formatCurrency(dashboardStats.totalOrders),
-                    change: '+8.2%',
-                    trend: 'up',
+                    note: t('All recorded top-ups', 'جميع عمليات الشحن المسجلة', '全部充值记录'),
                     icon: ShoppingCart,
                   },
                   {
                     label: t('Active Users', 'المستخدمين النشطين'),
                     value: formatCurrency(dashboardStats.activeUsers),
-                    change: '+15.3%',
-                    trend: 'up',
+                    note: t('Users with recent activity', 'مستخدمون لديهم نشاط حديث', '近期活跃用户'),
                     icon: Users,
                   },
                   {
                     label: t('Refund Rate', 'معدل الاسترداد'),
                     value: `${dashboardStats.refundRate}%`,
-                    change: '-0.5%',
-                    trend: 'down',
+                    note: t('Share of refunded orders', 'نسبة الطلبات المستردة', '退款订单占比'),
                     icon: RefreshCw,
                   },
                 ].map((stat, i) => (
@@ -1207,21 +1258,11 @@ export default function AdminDashboard() {
                           {stat.suffix && <span className="text-sm text-white/50 ml-1">{stat.suffix}</span>}
                         </p>
                       </div>
-                      <div className={`p-2 rounded-lg ${stat.trend === 'up' ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
-                        <stat.icon className={`w-5 h-5 ${stat.trend === 'up' ? 'text-emerald-400' : 'text-rose-400'}`} />
+                      <div className="rounded-lg bg-blue-500/10 p-2">
+                        <stat.icon className="h-5 w-5 text-blue-300" />
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 mt-3">
-                      {stat.trend === 'up' ? (
-                        <ArrowUpRight className="w-4 h-4 text-emerald-400" />
-                      ) : (
-                        <ArrowDownRight className="w-4 h-4 text-rose-400" />
-                      )}
-                      <span className={`text-xs font-medium ${stat.trend === 'up' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {stat.change}
-                      </span>
-                      <span className="text-xs text-white/30">{t('vs last month', 'مقارنة بالشهر الماضي')}</span>
-                    </div>
+                    <p className="mt-3 text-xs text-white/45">{stat.note}</p>
                   </Card>
                 ))}
               </div>
@@ -1293,7 +1334,7 @@ export default function AdminDashboard() {
                     <ChevronRight className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
-                <Table>
+                <Table className="min-w-[42rem]">
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
                       <TableHead className="text-white/50">{t('Order ID', 'رقم الطلب')}</TableHead>
@@ -1342,7 +1383,7 @@ export default function AdminDashboard() {
               </div>
 
               <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
-                <Table>
+                <Table className="min-w-[58rem]">
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
                       <TableHead className="text-white/50">{t('Order ID', 'رقم الطلب')}</TableHead>
@@ -1353,7 +1394,6 @@ export default function AdminDashboard() {
                       <TableHead className="text-white/50">{t('Payment', 'الدفع')}</TableHead>
                       <TableHead className="text-white/50">{t('Status', 'الحالة')}</TableHead>
                       <TableHead className="text-white/50">{t('Date', 'التاريخ')}</TableHead>
-                      <TableHead className="text-white/50">{t('Actions', 'الإجراءات')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -1373,11 +1413,6 @@ export default function AdminDashboard() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-white/50 text-sm">{formatDate(order.createdAt)}</TableCell>
-                        <TableCell>
-                          <Button variant="ghost" size="sm" className="text-emerald-400 hover:text-emerald-300">
-                            {t('View', 'عرض')}
-                          </Button>
-                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

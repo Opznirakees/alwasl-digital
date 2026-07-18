@@ -1,15 +1,26 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { useApp } from '@/contexts/AppContext';
+import { useState } from 'react';
+import {
+  ArrowDownLeft,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  CheckCircle2,
+  CreditCard,
+  Loader2,
+  MessageCircle,
+  Plus,
+  RefreshCw,
+  Sparkles,
+  Star,
+  Wallet,
+} from 'lucide-react';
+import { toast } from 'sonner';
 import { Header } from '@/components/layout/Header';
+import { AccountPageLoading } from '@/components/account/AccountPageLoading';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Dialog,
   DialogContent,
@@ -18,83 +29,39 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useApp } from '@/contexts/AppContext';
 import { getNextMembershipLevel, resolveMembershipForSpend } from '@/lib/membership';
 import type { WalletTransactionType } from '@/types';
 import { walletTopUpDialogCopy } from './wallet-dialog-copy';
-import {
-  ArrowLeft,
-  Wallet,
-  Plus,
-  ArrowUpRight,
-  ArrowDownLeft,
-  RefreshCw,
-  TrendingUp,
-  Shield,
-  Star,
-  Sparkles,
-  ChevronRight,
-  CreditCard,
-  Loader2,
-} from 'lucide-react';
-import { toast } from 'sonner';
 
 export default function WalletPage() {
-  const { t, language, dir, user, walletTransactions, refreshAccount, formatLocalAmount } = useApp();
+  const { t, language, dir, user, isAccountLoading, walletTransactions, refreshAccount, formatLocalAmount } = useApp();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('zaincash');
   const [transactionId, setTransactionId] = useState('');
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const currentUser = user;
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
-  const walletTopUpEnabled = true;
+  const quickAmounts = [10000, 25000, 50000, 100000];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat(locale).format(Math.abs(amount));
-  };
+  const formatDate = (value: string) => new Date(value).toLocaleDateString(locale, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(locale, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const getTransactionIcon = (type: WalletTransactionType) => {
-    switch (type) {
-      case 'deposit':
-        return <ArrowDownLeft className="w-4 h-4" />;
-      case 'withdrawal':
-      case 'purchase':
-        return <ArrowUpRight className="w-4 h-4" />;
-      case 'refund':
-        return <RefreshCw className="w-4 h-4" />;
-      case 'bonus':
-      case 'cashback':
-        return <Sparkles className="w-4 h-4" />;
-      default:
-        return <Wallet className="w-4 h-4" />;
-    }
-  };
-
-  const getTransactionColor = (type: WalletTransactionType, amount: number) => {
-    if (amount > 0) {
-      return 'text-emerald-400';
-    }
-    return 'text-rose-400';
-  };
-
-  const getTransactionBg = (type: WalletTransactionType, amount: number) => {
-    if (amount > 0) {
-      return 'bg-emerald-500/10';
-    }
-    return 'bg-rose-500/10';
+  const transactionIcon = (type: WalletTransactionType) => {
+    if (type === 'deposit') return ArrowDownLeft;
+    if (type === 'refund') return RefreshCw;
+    if (type === 'bonus' || type === 'cashback') return Sparkles;
+    return ArrowUpRight;
   };
 
   const requestWalletOtp = async () => {
@@ -107,15 +74,11 @@ export default function WalletPage() {
         body: JSON.stringify({ purpose: 'WALLET_TOP_UP' }),
       });
       const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || 'OTP request failed');
-      }
-
+      if (!response.ok) throw new Error('OTP_REQUEST_FAILED');
       if (payload.debugOtp) setOtp(payload.debugOtp);
-      toast.success(t('Verification code sent', 'تم إرسال رمز التحقق', '验证码已发送'));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Could not request verification code', 'تعذر طلب رمز التحقق', '无法请求验证码'));
+      toast.success(t('WhatsApp code sent', 'تم إرسال رمز واتساب', 'WhatsApp 验证码已发送'));
+    } catch {
+      toast.error(t('The code could not be sent. Try again.', 'تعذر إرسال الرمز. حاول مرة أخرى.', '验证码发送失败，请重试。'));
     } finally {
       setIsRequestingOtp(false);
     }
@@ -123,15 +86,15 @@ export default function WalletPage() {
 
   const handleTopUp = async () => {
     if (!topUpAmount || Number(topUpAmount) < 5000) {
-      toast.error(t('Minimum top-up amount is 5,000 IQD', 'الحد الأدنى للشحن 5,000 د.ع'));
+      toast.error(t('Enter at least 5,000 IQD', 'أدخل 5,000 د.ع على الأقل', '请输入至少 5,000 IQD'));
       return;
     }
     if (!transactionId.trim()) {
-      toast.error(t('Enter the Transaction ID', 'أدخل رقم المعاملة', '请输入交易 ID'));
+      toast.error(t('Enter the payment transaction ID', 'أدخل رقم معاملة الدفع', '请输入付款交易 ID'));
       return;
     }
-    if (!otp.trim()) {
-      toast.error(t('Enter the verification code', 'أدخل رمز التحقق', '请输入验证码'));
+    if (!/^\d{6}$/.test(otp)) {
+      toast.error(t('Enter the 6-digit WhatsApp code', 'أدخل رمز واتساب المكون من 6 أرقام', '请输入 6 位 WhatsApp 验证码'));
       return;
     }
 
@@ -149,344 +112,207 @@ export default function WalletPage() {
         }),
       });
       const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload.error || 'Wallet top-up failed');
-      }
+      if (!response.ok) throw new Error(payload.error || 'WALLET_TOP_UP_FAILED');
 
       await refreshAccount();
       setTopUpAmount('');
       setTransactionId('');
       setOtp('');
       setDialogOpen(false);
-      toast.success(t('Manual deposit submitted for review', 'تم إرسال الإيداع اليدوي للمراجعة', '手动充值已提交审核'));
+      toast.success(t('Deposit sent for review', 'تم إرسال الإيداع للمراجعة', '充值申请已提交审核'));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('Manual deposit failed', 'فشل إرسال الإيداع اليدوي', '手动充值提交失败'));
+      const message = error instanceof Error && !error.message.includes('_')
+        ? error.message
+        : t('The deposit could not be submitted. Try again.', 'تعذر إرسال الإيداع. حاول مرة أخرى.', '充值申请提交失败，请重试。');
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const quickAmounts = [10000, 25000, 50000, 100000];
+  if (isAccountLoading) return <AccountPageLoading />;
 
-  const levelProgress = () => {
-    if (!currentUser) return { progress: 0, remaining: 0, nextLevel: null };
-
-    const currentLevel = resolveMembershipForSpend(currentUser.totalSpent);
-    const nextLevel = getNextMembershipLevel(currentLevel.level);
-
-    if (!nextLevel) return { progress: 100, remaining: 0, nextLevel: null };
-
-    const currentMin = currentLevel.minSpent;
-    const nextMin = nextLevel.minSpent;
-    const progress = ((currentUser.totalSpent - currentMin) / (nextMin - currentMin)) * 100;
-    const remaining = nextMin - currentUser.totalSpent;
-
-    return { progress: Math.max(0, Math.min(100, progress)), remaining: Math.max(0, remaining), nextLevel };
-  };
-
-  if (!currentUser) {
+  if (!user) {
     return (
-      <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+      <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
         <Header />
-        <main className="container mx-auto flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
-          <Wallet className="mb-4 h-10 w-10 text-emerald-400" />
-          <h1 className="text-2xl font-bold text-white">{t('Login required', 'تسجيل الدخول مطلوب', '需要登录')}</h1>
-          <p className="mt-2 text-sm text-white/50">{t('Login to view your wallet balance and transactions.', 'سجل الدخول لعرض رصيد المحفظة والمعاملات.', '登录后查看钱包余额和交易记录。')}</p>
-          <Link href="/auth">
-            <Button className="mt-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white">
-              {t('Login', 'تسجيل الدخول', '登录')}
-            </Button>
-          </Link>
+        <main className="container mx-auto flex min-h-[65vh] max-w-xl flex-col items-center justify-center px-4 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"><Wallet className="h-7 w-7" /></div>
+          <h1 className="mt-5 text-2xl font-semibold text-zinc-950 dark:text-white">{t('Log in to see your wallet', 'سجل الدخول لرؤية محفظتك', '登录后查看钱包')}</h1>
+          <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{t('Your balance and wallet transactions are kept here.', 'تجد هنا رصيدك ومعاملات المحفظة.', '您的余额和钱包交易记录会显示在这里。')}</p>
+          <Button asChild className="mt-5 bg-blue-600 text-white hover:bg-blue-700"><Link href="/auth?next=%2Fwallet">{t('Log in', 'تسجيل الدخول', '登录')}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link></Button>
         </main>
       </div>
     );
   }
 
-  const currentLevel = resolveMembershipForSpend(currentUser.totalSpent);
-  const { progress, remaining, nextLevel } = levelProgress();
+  const currentLevel = resolveMembershipForSpend(user.totalSpent);
+  const nextLevel = getNextMembershipLevel(currentLevel.level);
+  const progress = nextLevel
+    ? Math.max(0, Math.min(100, ((user.totalSpent - currentLevel.minSpent) / (nextLevel.minSpent - currentLevel.minSpent)) * 100))
+    : 100;
+  const remaining = nextLevel ? Math.max(0, nextLevel.minSpent - user.totalSpent) : 0;
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
+      <main className="container mx-auto max-w-5xl px-4 py-6 sm:py-10">
+        <Link href="/" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-zinc-500 hover:text-blue-700 dark:text-zinc-400 dark:hover:text-blue-300">
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+          {t('Back home', 'العودة للرئيسية', '返回首页')}
+        </Link>
 
-      <main className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white mb-4">
-            <ArrowLeft className="w-4 h-4" />
-            {t('Back to Home', 'العودة للرئيسية')}
-          </Link>
-          <h1 className="text-3xl font-bold text-white">{t('My Wallet', 'محفظتي')}</h1>
-        </div>
+        <header className="mt-4">
+          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t('Your money', 'أموالك', '您的资金')}</p>
+          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white sm:text-4xl">{t('My wallet', 'محفظتي', '我的钱包')}</h1>
+        </header>
 
-        <div className="grid min-w-0 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="min-w-0 lg:col-span-2 space-y-6">
-            {/* Balance Card */}
-            <Card className="min-w-0 bg-gradient-to-br from-emerald-900/50 via-teal-900/30 to-slate-900/50 border-emerald-500/30 p-5 md:p-8">
-              <div className="flex items-start justify-between gap-4 mb-6">
+        <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="min-w-0 space-y-5">
+            <section className="rounded-lg bg-[#071b46] p-6 text-white sm:p-8">
+              <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-sm text-emerald-400/70">{t('Available Balance', 'الرصيد المتاح')}</p>
-                  <p className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mt-1 break-words">
-                    {formatLocalAmount(currentUser.walletBalance)}
-                  </p>
+                  <p className="text-sm font-medium text-blue-100/75">{t('Available balance', 'الرصيد المتاح', '可用余额')}</p>
+                  <p className="mt-2 break-words text-3xl font-semibold tabular-nums text-white sm:text-4xl">{formatLocalAmount(user.walletBalance)}</p>
                 </div>
-                <div className="flex-shrink-0 p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30">
-                  <Wallet className="w-6 h-6 text-emerald-400" />
-                </div>
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 text-[#ffd33d]"><Wallet className="h-6 w-6" /></span>
               </div>
 
-              <div className="flex min-w-0 gap-3">
-                <Dialog
-                  open={walletTopUpEnabled ? dialogOpen : false}
-                  onOpenChange={(open) => {
-                    if (walletTopUpEnabled) setDialogOpen(open);
-                  }}
-                >
-                  <DialogTrigger asChild>
-                    <Button
-                      disabled={!walletTopUpEnabled}
-                      className="min-w-0 flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:to-teal-700 disabled:cursor-not-allowed disabled:from-slate-700 disabled:to-slate-700 disabled:text-white/50 disabled:shadow-none"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      {t('Top Up', 'شحن الرصيد')}
+              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="mt-6 bg-white text-[#071b46] hover:bg-blue-50">
+                    <Plus className="h-4 w-4" />
+                    {t('Add wallet balance', 'أضف رصيداً للمحفظة', '充值钱包余额')}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="grid max-h-[calc(100dvh-1.5rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden border-black/10 bg-white p-0 dark:border-white/10 dark:bg-zinc-900 sm:max-h-[90vh] sm:max-w-lg">
+                  <DialogHeader className="px-5 pb-4 pe-14 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
+                    <DialogTitle className="text-zinc-950 dark:text-white">{t('Add wallet balance', 'أضف رصيداً للمحفظة', '充值钱包余额')}</DialogTitle>
+                    <DialogDescription className="text-zinc-600 dark:text-zinc-300">
+                      {t(walletTopUpDialogCopy.description.en, walletTopUpDialogCopy.description.ar, walletTopUpDialogCopy.description.zh)}
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="min-h-0 overflow-y-auto px-5 pb-5 sm:px-6">
+                    <div className="rounded-lg bg-blue-50 p-4 text-sm leading-6 text-blue-900 dark:bg-blue-500/10 dark:text-blue-100">
+                      <ol className="space-y-1">
+                        <li>{t('1. Make the payment with your chosen method.', '1. نفذ الدفع بالطريقة المختارة.', '1. 使用所选方式付款。')}</li>
+                        <li>{t('2. Copy its transaction ID below.', '2. انسخ رقم المعاملة أدناه.', '2. 在下方填写交易 ID。')}</li>
+                        <li>{t('3. We review it before adding the balance.', '3. نراجعه قبل إضافة الرصيد.', '3. 审核后余额才会到账。')}</li>
+                      </ol>
+                    </div>
+
+                    <div className="mt-5 space-y-5">
+                    <div>
+                      <Label htmlFor="wallet-amount" className="font-semibold text-zinc-800 dark:text-zinc-200">{t('Amount in IQD', 'المبلغ بالدينار', 'IQD 金额')}</Label>
+                      <Input id="wallet-amount" type="number" inputMode="numeric" min={5000} value={topUpAmount} onChange={(event) => setTopUpAmount(event.target.value)} placeholder="5000" className="mt-2 h-12 bg-zinc-50 text-lg font-semibold tabular-nums dark:bg-zinc-950" />
+                      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        {quickAmounts.map((amount) => (
+                          <button key={amount} type="button" aria-pressed={topUpAmount === String(amount)} onClick={() => setTopUpAmount(String(amount))} className={`min-h-11 rounded-md border px-2 text-xs font-semibold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${topUpAmount === String(amount) ? 'border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200' : 'border-black/10 text-zinc-700 hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5'}`}>
+                            {new Intl.NumberFormat(locale).format(amount)}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label className="font-semibold text-zinc-800 dark:text-zinc-200">{t('Payment method', 'طريقة الدفع', '付款方式')}</Label>
+                      <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-2 grid gap-2">
+                        {[
+                          { id: 'zaincash', name: 'ZainCash' },
+                          { id: 'asiahawala', name: 'AsiaHawala' },
+                          { id: 'card', name: t('Bank card', 'بطاقة مصرفية', '银行卡') },
+                        ].map((method) => (
+                          <label key={method.id} className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-lg border p-3 ${paymentMethod === method.id ? 'border-blue-600 bg-blue-50 dark:bg-blue-500/15' : 'border-black/10 dark:border-white/10'}`}>
+                            <RadioGroupItem value={method.id} className="border-blue-600 text-blue-600" />
+                            <CreditCard className="h-4 w-4 text-blue-700 dark:text-blue-300" />
+                            <span className="font-medium text-zinc-950 dark:text-white">{method.name}</span>
+                          </label>
+                        ))}
+                      </RadioGroup>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="wallet-transaction" className="font-semibold text-zinc-800 dark:text-zinc-200">{t('Payment transaction ID', 'رقم معاملة الدفع', '付款交易 ID')}</Label>
+                      <Input id="wallet-transaction" value={transactionId} onChange={(event) => setTransactionId(event.target.value)} placeholder="ZC-123456789" autoComplete="off" className="mt-2 h-12 bg-zinc-50 dark:bg-zinc-950" />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="wallet-otp" className="font-semibold text-zinc-800 dark:text-zinc-200">{t('WhatsApp verification code', 'رمز تحقق واتساب', 'WhatsApp 验证码')}</Label>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                        <Input id="wallet-otp" value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" className="h-12 bg-zinc-50 text-center font-semibold tracking-[0.2em] tabular-nums dark:bg-zinc-950" />
+                        <Button type="button" variant="outline" disabled={isRequestingOtp} onClick={() => void requestWalletOtp()} className="h-12">
+                          {isRequestingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
+                          {t('Send code', 'أرسل الرمز', '发送验证码')}
+                        </Button>
+                      </div>
+                    </div>
+
+                    </div>
+                  </div>
+
+                  <div className="border-t border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-900 sm:px-6">
+                    <Button type="button" onClick={() => void handleTopUp()} disabled={isLoading || !topUpAmount || !transactionId || otp.length !== 6} className="w-full bg-blue-600 text-white hover:bg-blue-700">
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                      {t('Send deposit for review', 'أرسل الإيداع للمراجعة', '提交充值审核')}
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-slate-900 border-emerald-800/30">
-                    <DialogHeader>
-                      <DialogTitle className="text-white">{t('Top Up Wallet', 'شحن المحفظة')}</DialogTitle>
-                      <DialogDescription className="text-white/60">
-                        {t(
-                          walletTopUpDialogCopy.description.en,
-                          walletTopUpDialogCopy.description.ar,
-                          walletTopUpDialogCopy.description.zh
-                        )}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-6 py-4">
-                      <div className="space-y-2">
-                        <Label className="text-white/70">{t('Amount', 'المبلغ')}</Label>
-                        <Input
-                          type="number"
-                          value={topUpAmount}
-                          onChange={(e) => setTopUpAmount(e.target.value)}
-                          placeholder="0"
-                          className="text-2xl font-bold bg-slate-800/50 border-emerald-800/30 text-white h-14"
-                        />
-                        <div className="flex flex-wrap gap-2">
-                          {quickAmounts.map((amount) => (
-                            <button
-                              key={amount}
-                              onClick={() => setTopUpAmount(amount.toString())}
-                              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                                topUpAmount === amount.toString()
-                                  ? 'bg-emerald-500 text-white'
-                                  : 'bg-slate-800/50 text-white/70 hover:bg-slate-700/50'
-                              }`}
-                            >
-                              {formatCurrency(amount)}
-                            </button>
-                          ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </section>
+
+            <section className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
+              <h2 className="text-xl font-semibold text-zinc-950 dark:text-white">{t('Recent wallet activity', 'آخر معاملات المحفظة', '最近的钱包记录')}</h2>
+              {walletTransactions.length > 0 ? (
+                <div className="mt-4 divide-y divide-black/10 dark:divide-white/10">
+                  {walletTransactions.map((transaction) => {
+                    const TransactionIcon = transactionIcon(transaction.type);
+                    const positive = transaction.amount >= 0;
+                    return (
+                      <div key={transaction.id} className="flex items-center gap-3 py-4 first:pt-0 last:pb-0">
+                        <span className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg ${positive ? 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300' : 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-300'}`}><TransactionIcon className="h-4 w-4" /></span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-zinc-950 dark:text-white">{t(transaction.description, transaction.descriptionAr, transaction.description)}</p>
+                          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{formatDate(transaction.createdAt)}</p>
+                        </div>
+                        <div className="text-end">
+                          <p className={`text-sm font-semibold tabular-nums ${positive ? 'text-green-700 dark:text-green-300' : 'text-red-700 dark:text-red-300'}`}>{positive ? '+' : '-'}{formatLocalAmount(transaction.amount, { absolute: true })}</p>
+                          <p className="mt-1 text-xs tabular-nums text-zinc-500 dark:text-zinc-400">{formatLocalAmount(transaction.balance)}</p>
                         </div>
                       </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-white/70">{t('Payment Method', 'طريقة الدفع')}</Label>
-                        <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-2">
-                          {[
-                            { id: 'zaincash', name: 'ZainCash' },
-                            { id: 'asiahawala', name: 'AsiaHawala' },
-                            { id: 'card', name: t('Credit Card', 'بطاقة ائتمان') },
-                          ].map((method) => (
-                            <label
-                              key={method.id}
-                              className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all ${
-                                paymentMethod === method.id
-                                  ? 'bg-emerald-500/20 border border-emerald-500'
-                                  : 'bg-slate-800/50 border border-emerald-800/20'
-                              }`}
-                            >
-                              <RadioGroupItem value={method.id} className="border-emerald-500 text-emerald-500" />
-                              <CreditCard className="w-4 h-4 text-emerald-400" />
-                              <span className="text-white">{method.name}</span>
-                            </label>
-                          ))}
-                        </RadioGroup>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-white/70">{t('Transaction ID', 'رقم المعاملة', '交易 ID')}</Label>
-                        <Input
-                          value={transactionId}
-                          onChange={(e) => setTransactionId(e.target.value)}
-                          placeholder="ZC-123456789"
-                          className="bg-slate-800/50 border-emerald-800/30 text-white h-12"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-white/70">{t('WhatsApp verification code', 'رمز التحقق عبر واتساب', 'WhatsApp 验证码')}</Label>
-                        <div className="flex gap-2">
-                          <Input
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                            placeholder="123456"
-                            className="bg-slate-800/50 border-emerald-800/30 text-white h-12"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            disabled={isRequestingOtp}
-                            onClick={() => void requestWalletOtp()}
-                            className="border-emerald-500/30 text-emerald-300"
-                          >
-                            {isRequestingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : t('Send code', 'إرسال الرمز', '发送验证码')}
-                          </Button>
-                        </div>
-                      </div>
-
-                      <Button
-                        onClick={handleTopUp}
-                        disabled={isLoading || !topUpAmount || !transactionId || !otp}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-teal-600"
-                      >
-                        {isLoading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <>
-                            {t('Submit for review', 'إرسال للمراجعة', '提交审核')}
-                            <ChevronRight className="w-4 h-4 ml-2" />
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-              {!walletTopUpEnabled && (
-                <p className="mt-3 text-xs text-white/50">
-                  {t(
-                    walletTopUpDialogCopy.unavailable.en,
-                    walletTopUpDialogCopy.unavailable.ar,
-                    walletTopUpDialogCopy.unavailable.zh
-                  )}
-                </p>
-              )}
-            </Card>
-
-            {/* Transaction History */}
-            <Card className="min-w-0 bg-slate-900/50 border-emerald-800/20 p-5 md:p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-white">{t('Transaction History', 'سجل المعاملات')}</h2>
-                <Button variant="ghost" size="sm" className="text-emerald-400 hover:text-emerald-300">
-                  {t('View All', 'عرض الكل')}
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </div>
-
-              <div className="space-y-3">
-                {walletTransactions.map((tx) => (
-                  <div
-                    key={tx.id}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-slate-800/30 hover:bg-slate-800/50 transition-colors"
-                  >
-                    <div className={`p-2.5 rounded-xl ${getTransactionBg(tx.type, tx.amount)}`}>
-                      {getTransactionIcon(tx.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-white truncate">
-                        {t(tx.description, tx.descriptionAr)}
-                      </p>
-                      <p className="text-xs text-white/50 mt-0.5">{formatDate(tx.createdAt)}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className={`font-bold ${getTransactionColor(tx.type, tx.amount)}`}>
-                        {tx.amount > 0 ? '+' : ''}{formatLocalAmount(tx.amount, { absolute: true })}
-                      </p>
-                      <p className="text-xs text-white/50 mt-0.5">
-                        {t('Balance:', 'الرصيد:')} {formatLocalAmount(tx.balance)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
-
-          {/* Sidebar */}
-          <div className="min-w-0 space-y-6">
-            {/* Membership Level */}
-            <Card className="min-w-0 bg-slate-900/50 border-emerald-800/20 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div
-                  className="p-2 rounded-lg"
-                  style={{ backgroundColor: `${currentLevel.color}20` }}
-                >
-                  <Star className="w-5 h-5" style={{ color: currentLevel.color }} />
+                    );
+                  })}
                 </div>
-                <div>
-                  <p className="text-xs text-white/50">{t('Membership Level', 'مستوى العضوية')}</p>
-                  <p className="font-bold" style={{ color: currentLevel.color }}>
-                    {t(currentLevel.en, currentLevel.ar, currentLevel.zh)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/50">{t('Your Discount', 'خصمك')}</span>
-                  <span className="font-bold text-emerald-400">{currentLevel.discountPercentage}%</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-white/50">{t('Total Spent', 'إجمالي الإنفاق')}</span>
-                  <span className="text-white">{formatLocalAmount(currentUser.totalSpent)}</span>
-                </div>
-              </div>
-
-              {nextLevel && (
-                <div className="space-y-2 pt-4 border-t border-emerald-800/20">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-white/50">{t('Progress to', 'التقدم إلى')}</span>
-                    <span style={{ color: nextLevel.color }}>
-                      {t(nextLevel.en, nextLevel.ar, nextLevel.zh)}
-                    </span>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-800 overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${progress}%`,
-                        backgroundColor: nextLevel.color,
-                      }}
-                    />
-                  </div>
-                  <p className="text-xs text-white/50">
-                    {t('Spend', 'أنفق')} {formatLocalAmount(remaining)} {t('more', 'إضافية')}
-                  </p>
+              ) : (
+                <div className="mt-4 flex min-h-40 flex-col items-center justify-center rounded-lg bg-zinc-100 p-5 text-center dark:bg-zinc-950">
+                  <Wallet className="h-6 w-6 text-zinc-400" />
+                  <p className="mt-3 text-sm font-semibold text-zinc-950 dark:text-white">{t('No wallet activity yet', 'لا توجد معاملات بعد', '暂无钱包记录')}</p>
+                  <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">{t('Deposits, purchases and refunds will appear here.', 'ستظهر هنا الإيداعات والمشتريات والمبالغ المستردة.', '充值、消费和退款记录会显示在这里。')}</p>
                 </div>
               )}
-            </Card>
-
-            {/* Benefits */}
-            <Card className="min-w-0 bg-slate-900/50 border-emerald-800/20 p-6">
-              <h3 className="font-bold text-white mb-4">{t('Wallet Benefits', 'مزايا المحفظة')}</h3>
-              <div className="space-y-3">
-                {[
-                  { icon: Shield, text: t('Secure transactions', 'معاملات آمنة') },
-                  { icon: TrendingUp, text: t('Earn cashback', 'احصل على استرداد نقدي') },
-                  { icon: Sparkles, text: t('Exclusive bonuses', 'مكافآت حصرية') },
-                ].map((benefit, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-emerald-500/10">
-                      <benefit.icon className="w-4 h-4 text-emerald-400" />
-                    </div>
-                    <span className="text-sm text-white/70">{benefit.text}</span>
-                  </div>
-                ))}
-              </div>
-            </Card>
+            </section>
           </div>
+
+          <aside className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900">
+            <div className="flex items-center gap-3">
+              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#fff8dd] text-[#8a5a00] dark:bg-[#ffd33d]/10 dark:text-[#ffd966]"><Star className="h-5 w-5" /></span>
+              <div>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('Membership level', 'مستوى العضوية', '会员等级')}</p>
+                <p className="font-semibold text-zinc-950 dark:text-white">{t(currentLevel.en, currentLevel.ar, currentLevel.zh)}</p>
+              </div>
+            </div>
+            <dl className="mt-5 space-y-3 text-sm">
+              <div className="flex justify-between gap-3"><dt className="text-zinc-500 dark:text-zinc-400">{t('Your discount', 'خصمك', '您的折扣')}</dt><dd className="font-semibold text-blue-700 dark:text-blue-300">{currentLevel.discountPercentage}%</dd></div>
+              <div className="flex justify-between gap-3"><dt className="text-zinc-500 dark:text-zinc-400">{t('Total spent', 'إجمالي الإنفاق', '累计消费')}</dt><dd className="font-medium tabular-nums text-zinc-950 dark:text-white">{formatLocalAmount(user.totalSpent)}</dd></div>
+            </dl>
+            {nextLevel && (
+              <div className="mt-5 border-t border-black/10 pt-4 dark:border-white/10">
+                <div className="flex justify-between gap-3 text-xs"><span className="text-zinc-500 dark:text-zinc-400">{t('Next level', 'المستوى التالي', '下一等级')}</span><span className="font-semibold text-zinc-950 dark:text-white">{t(nextLevel.en, nextLevel.ar, nextLevel.zh)}</span></div>
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800"><div className="h-full rounded-full bg-blue-600" style={{ width: `${progress}%` }} /></div>
+                <p className="mt-2 text-xs leading-5 text-zinc-500 dark:text-zinc-400">{t(`${formatLocalAmount(remaining)} until the next level`, `${formatLocalAmount(remaining)} حتى المستوى التالي`, `距离下一等级还差 ${formatLocalAmount(remaining)}`)}</p>
+              </div>
+            )}
+          </aside>
         </div>
       </main>
     </div>

@@ -20,6 +20,7 @@ interface AppContextType {
   // Auth
   user: User | null;
   isAuthenticated: boolean;
+  isAccountLoading: boolean;
   login: (phone: string) => Promise<boolean>;
   logout: () => void;
   verifyOtp: (otp: string, phoneOverride?: string) => Promise<boolean>;
@@ -45,6 +46,18 @@ interface AppContextType {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+const ACCOUNT_REQUEST_TIMEOUT = 10000;
+
+async function fetchAccountData(input: RequestInfo | URL, init?: RequestInit) {
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => controller.abort('ACCOUNT_REQUEST_TIMEOUT'), ACCOUNT_REQUEST_TIMEOUT);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+}
 
 const storageKeys = {
   language: 'alwasl-language',
@@ -561,42 +574,59 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [walletTransactions, setWalletTransactions] = useState<WalletTransaction[]>([]);
   const [pendingPhone, setPendingPhone] = useState<string>('');
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isAccountLoading, setIsAccountLoading] = useState(true);
 
   const refreshAccount = useCallback(async () => {
-    const meResponse = await fetch('/api/auth/me', { credentials: 'include' });
+    setIsAccountLoading(true);
+    try {
+      const meResponse = await fetchAccountData('/api/auth/me', { credentials: 'include' });
 
-    if (!meResponse.ok) {
+      if (!meResponse.ok) {
+        setUser(null);
+        setOrders([]);
+        setWalletTransactions([]);
+        return;
+      }
+
+      const mePayload = await meResponse.json();
+      setUser(mePayload.user ?? null);
+
+      if (!mePayload.user) {
+        setOrders([]);
+        setWalletTransactions([]);
+        return;
+      }
+
+      try {
+        const [ordersResponse, walletResponse] = await Promise.all([
+          fetchAccountData('/api/orders', { credentials: 'include' }),
+          fetchAccountData('/api/wallet', { credentials: 'include' }),
+        ]);
+
+        if (ordersResponse.ok) {
+          const payload = await ordersResponse.json();
+          setOrders(payload.orders ?? []);
+        } else {
+          setOrders([]);
+        }
+
+        if (walletResponse.ok) {
+          const payload = await walletResponse.json();
+          setWalletTransactions(payload.transactions ?? []);
+          if (payload.user) setUser(payload.user);
+        } else {
+          setWalletTransactions([]);
+        }
+      } catch {
+        setOrders([]);
+        setWalletTransactions([]);
+      }
+    } catch {
       setUser(null);
       setOrders([]);
       setWalletTransactions([]);
-      return;
-    }
-
-    const mePayload = await meResponse.json();
-    setUser(mePayload.user ?? null);
-
-    if (!mePayload.user) {
-      setOrders([]);
-      setWalletTransactions([]);
-      return;
-    }
-
-    const [ordersResponse, walletResponse] = await Promise.all([
-      fetch('/api/orders', { credentials: 'include' }),
-      fetch('/api/wallet', { credentials: 'include' }),
-    ]);
-
-    if (ordersResponse.ok) {
-      const payload = await ordersResponse.json();
-      setOrders(payload.orders ?? []);
-    }
-
-    if (walletResponse.ok) {
-      const payload = await walletResponse.json();
-      setWalletTransactions(payload.transactions ?? []);
-      if (payload.user) {
-        setUser(payload.user);
-      }
+    } finally {
+      setIsAccountLoading(false);
     }
   }, []);
 
@@ -804,6 +834,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleTheme,
       user,
       isAuthenticated: !!user,
+      isAccountLoading,
       login,
       logout,
       verifyOtp,

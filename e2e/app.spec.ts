@@ -81,7 +81,7 @@ test.describe('WAHO production smoke', () => {
     });
 
     await page.goto('/');
-    await expect(page.getByRole('link', { name: /WAHO Top-Up/i }).first()).toBeVisible();
+    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Choose amount');
 
     await page.goto('/top-up');
     await expect(page.locator('main')).toContainText('WAHO Top-Up', { timeout: 15_000 });
@@ -89,18 +89,18 @@ test.describe('WAHO production smoke', () => {
     await expect(startTopUpLink).toBeVisible({ timeout: 15_000 });
     await startTopUpLink.click();
     await expect(page).toHaveURL(new RegExp(`/top-up/${product.slug}`));
-    await expect(page.getByRole('heading', { name: /Select top-up amount/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Choose your amount/i })).toBeVisible();
 
     await page.goto(`/top-up/${product.slug}`);
-    await expect(page.getByRole('heading', { name: /WAHO Account Top-Up/i })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Select top-up amount/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Balance top-up/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Choose your amount/i })).toBeVisible();
 
     const amount = new Intl.NumberFormat('en-IQ').format(firstPackage.amount);
     const amountButton = page.getByRole('button', { name: new RegExp(amount) }).first();
     await expect(amountButton).toBeVisible();
     await amountButton.click();
 
-    await expect(page.getByRole('button', { name: /Continue/i })).toBeEnabled();
+    await expect(page.getByRole('button', { name: /Continue with/i })).toBeEnabled();
   });
 
   test('uses real auth/session APIs and keeps production-only mutations locked down', async ({ request }, testInfo) => {
