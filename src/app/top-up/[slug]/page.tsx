@@ -13,6 +13,7 @@ import {
   Check,
   CheckCircle2,
   CreditCard,
+  Gem,
   Loader2,
   LockKeyhole,
   MessageCircle,
@@ -415,15 +416,18 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
           {t('All amounts', 'كل المبالغ', '全部金额')}
         </Link>
 
-        <section className="v2-surface mt-3 flex items-center gap-3 p-3 sm:p-4">
+        <section data-v2-checkout-brand className="v2-surface mt-3 flex items-center gap-3 p-3 sm:p-4">
           <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10">
-            <Image src="/brand/alwasl-mark.jpg" alt="" fill className="object-contain p-1" sizes="48px" priority />
+            <Image src="/brand/waho-app-icon.webp" alt="" fill className="object-cover" sizes="48px" priority />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-[var(--v2-gold)]">WAHO</p>
             <h1 className="truncate text-lg font-semibold text-zinc-950 dark:text-white sm:text-xl">
               {t('Balance top-up', 'شحن الرصيد', '余额充值')}
             </h1>
+            <p className="mt-0.5 hidden text-xs text-zinc-500 dark:text-zinc-400 sm:block">
+              {t('Choose, check, confirm', 'اختر وتحقق ثم أكد', '选择、检查、确认')}
+            </p>
           </div>
           <div className="hidden items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400 sm:flex">
             <ShieldCheck className="h-4 w-4 text-[var(--v2-gold)]" />
@@ -466,7 +470,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
           </nav>
 
           <div className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <section className="v2-surface min-w-0 p-5 sm:p-7">
+            <section className="v2-surface min-w-0 p-4 sm:p-7">
               {step === 'package' && (
                 <>
                   <h2 ref={stepHeadingRef} tabIndex={-1} className="text-2xl font-semibold text-zinc-950 outline-none dark:text-white">
@@ -477,10 +481,9 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                   </p>
 
                   {availablePackages.length > 0 ? (
-                    <div className="mt-5 grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-3">
+                    <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
                       {availablePackages.map((pkg) => {
                         const isSelected = selectedPackage?.id === pkg.id;
-                        const showSeparatePrice = Boolean(pkg.salePrice || discount > 0 || selectedCountry.currency !== pkg.currency);
                         return (
                           <button
                             key={pkg.id}
@@ -488,32 +491,36 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                             aria-pressed={isSelected}
                             aria-label={`${formatAmount(pkg.amount)} IQD${pkg.isPopular ? `, ${t('Popular', 'الأكثر اختياراً', '热门')}` : ''}`}
                             onClick={() => setSelectedPackage(pkg)}
-                            className={`relative flex min-h-28 flex-col justify-between rounded-lg border p-4 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] sm:min-h-36 ${
+                            className={`v2-wizard-package relative flex min-h-36 flex-col justify-between rounded-lg border p-3 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] sm:min-h-40 sm:p-4 ${
                               isSelected
                                 ? 'border-[var(--v2-gold)] bg-[color-mix(in_srgb,var(--v2-gold)_10%,var(--v2-surface))] ring-1 ring-[var(--v2-gold)]'
                                 : 'border-[var(--v2-border)] bg-[var(--v2-surface-raised)] hover:border-[var(--v2-gold)]'
                             }`}
                           >
-                            <span className="flex w-full items-start justify-between gap-2">
-                              <span>
-                                <span className="block text-2xl font-semibold tabular-nums text-zinc-950 dark:text-white">{formatAmount(pkg.amount)}</span>
-                                <span className="mt-1 block text-xs font-bold text-[var(--v2-gold)]">IQD</span>
+                            <span className={isSelected ? 'pe-7' : undefined}>
+                              <span className="block text-xl font-semibold leading-none tabular-nums text-zinc-950 dark:text-white sm:text-2xl">{formatAmount(pkg.amount)}</span>
+                              <span className="mt-2 inline-flex whitespace-nowrap items-center gap-1 text-[10px] font-bold text-[var(--v2-gold)] sm:text-xs">
+                                <Gem className="h-3 w-3 text-[var(--v2-blue)] sm:h-3.5 sm:w-3.5" />
+                                {t('WAHO balance', 'رصيد WAHO', 'WAHO 余额')}
                               </span>
-                              {isSelected ? (
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--v2-gold)] text-[#07152e]">
-                                  <Check className="h-4 w-4" />
-                                </span>
-                              ) : pkg.isPopular ? (
-                                <span className="rounded-full bg-[#ffd33d] px-2 py-1 text-[10px] font-semibold text-[#071b46]">
+                              {pkg.isPopular && !isSelected && (
+                                <span className="mt-2 block w-fit rounded-full bg-[#ffd33d] px-2 py-1 text-[10px] font-semibold text-[#071b46]">
                                   {t('Popular', 'شائع', '热门')}
                                 </span>
-                              ) : null}
+                              )}
                             </span>
-                            {showSeparatePrice && (
-                              <span className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
-                                {t('You pay', 'ستدفع', '需支付')} <strong className="font-semibold text-zinc-950 dark:text-white">{formatLocalAmount(calculateFinalPrice(pkg))}</strong>
+                            {isSelected && (
+                              <span
+                                data-selected-package-check
+                                className="absolute end-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--v2-gold)] text-[#07152e]"
+                              >
+                                <Check className="h-4 w-4" />
                               </span>
                             )}
+                            <span className="mt-3 border-t border-black/10 pt-2 text-[11px] text-zinc-500 dark:border-white/10 dark:text-zinc-400">
+                              {t('You pay', 'ستدفع', '需支付')}
+                              <strong className="mt-1 block font-semibold tabular-nums text-zinc-950 dark:text-white">{formatLocalAmount(calculateFinalPrice(pkg))}</strong>
+                            </span>
                           </button>
                         );
                       })}
@@ -799,7 +806,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                 <div className="mt-5">
                   <div className="flex items-center gap-3">
                     <div className="relative h-11 w-11 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10">
-                      <Image src="/brand/alwasl-mark.jpg" alt="" fill className="object-contain p-1" sizes="44px" />
+                      <Image src="/brand/waho-app-icon.webp" alt="" fill className="object-cover" sizes="44px" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-zinc-950 dark:text-white">WAHO</p>

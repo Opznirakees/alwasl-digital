@@ -274,7 +274,7 @@ export function Header() {
                   className={cn(
                     'relative flex min-h-11 items-center rounded-md px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928]',
                     isRouteActive(item.href)
-                      ? 'bg-white/10 text-[#f7b928] after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:bg-[#f7b928]'
+                      ? 'text-[#f7b928] after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:bg-[#f7b928]'
                       : 'text-white/70 hover:bg-white/5 hover:text-white'
                   )}
                 >

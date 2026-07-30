@@ -156,7 +156,7 @@ export default function OrdersPage() {
                 <article key={order.id} className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
                   <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
                     <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10">
-                      <Image src="/brand/alwasl-mark.jpg" alt="" fill className="object-contain p-1" sizes="56px" />
+                      <Image data-visual-required-image src="/brand/waho-app-icon.webp" alt="" fill className="object-cover" sizes="56px" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">

@@ -6,10 +6,10 @@ import {
   ArrowRight,
   BadgeCheck,
   CircleHelp,
-  Headphones,
   ReceiptText,
   ShieldCheck,
   UserRoundCheck,
+  WalletCards,
 } from 'lucide-react';
 import type { Banner } from '@/types';
 import { useApp } from '@/contexts/AppContext';
@@ -24,22 +24,22 @@ export function HeroBanner({ banner }: HeroBannerProps) {
     {
       icon: UserRoundCheck,
       title: t('Account checked', 'فحص الحساب', '检查账号'),
-      body: t('Before payment', 'قبل الدفع', '付款前完成'),
+      body: t('Name shown before payment', 'يظهر الاسم قبل الدفع', '付款前显示名称'),
     },
     {
       icon: ShieldCheck,
-      title: t('Clear total', 'إجمالي واضح', '总价清晰'),
-      body: t('Before confirmation', 'قبل التأكيد', '确认前可见'),
+      title: t('Protected order', 'طلب محمي', '订单保护'),
+      body: t('WhatsApp code to confirm', 'رمز واتساب للتأكيد', '使用 WhatsApp 验证码确认'),
+    },
+    {
+      icon: WalletCards,
+      title: t('Clear price', 'سعر واضح', '价格清晰'),
+      body: t('Total before confirmation', 'الإجمالي قبل التأكيد', '确认前查看总价'),
     },
     {
       icon: ReceiptText,
       title: t('Order tracking', 'تتبع الطلب', '订单跟踪'),
       body: t('With your order ID', 'باستخدام رقم الطلب', '使用订单号'),
-    },
-    {
-      icon: Headphones,
-      title: t('WhatsApp help', 'مساعدة واتساب', 'WhatsApp 帮助'),
-      body: t('Ask LEO directly', 'اسأل LEO مباشرة', '直接联系 LEO'),
     },
   ];
 
@@ -78,11 +78,11 @@ export function HeroBanner({ banner }: HeroBannerProps) {
         <div className="v2-hero-brandmark-surface absolute right-0 top-0 h-[calc(100%-10px)] w-[calc(100%-10px)]">
           <div className="relative h-full w-full">
             <Image
-              src="/brand/alwasl-logo.jpg"
+              src="/brand/alwasl-lockup.webp"
               alt=""
               fill
               priority
-              className="object-contain px-4 pb-6 pt-2 lg:px-5 lg:pb-7 lg:pt-3"
+              className="object-contain px-5 pb-7 pt-3 lg:px-6 lg:pb-8 lg:pt-4"
               sizes="(max-width: 1023px) 170px, 214px"
             />
           </div>
@@ -93,7 +93,7 @@ export function HeroBanner({ banner }: HeroBannerProps) {
         <div className={`max-w-[610px] ${dir === 'rtl' ? 'text-right lg:ms-48' : 'text-left'}`}>
           <div className="inline-flex items-center gap-2 rounded-full border border-[#f7b928]/35 bg-[#071b46]/72 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md">
             <ShieldCheck className="h-4 w-4 text-[#f7b928]" />
-            {t('Simple WAHO balance top-up', 'شحن رصيد WAHO بسهولة', '轻松充值 WAHO 余额')}
+            {t('Fast and clear WAHO top-up', 'شحن WAHO بسرعة ووضوح', '快速清晰地充值 WAHO')}
           </div>
 
           <h1 className="mt-4 max-w-2xl text-[2rem] font-bold leading-[1.08] text-white sm:mt-5 sm:text-5xl lg:text-5xl xl:text-6xl">
@@ -103,9 +103,9 @@ export function HeroBanner({ banner }: HeroBannerProps) {
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-6 text-white/76 sm:mt-5 sm:text-lg sm:leading-7">
             {t(
-              'Choose the balance, check the WAHO account, and confirm. You always see what comes next.',
-              'اختر الرصيد وتحقق من حساب WAHO ثم أكد الطلب. تعرف دائماً ما هي الخطوة التالية.',
-              '选择余额，检查 WAHO 账号，然后确认。每一步都清楚可见。'
+              'Choose the balance, check the WAHO account name before payment, then follow the order with your order ID.',
+              'اختر الرصيد وتحقق من اسم حساب WAHO قبل الدفع، ثم تابع الطلب باستخدام رقمه.',
+              '选择余额，付款前核对 WAHO 账号名称，然后使用订单号跟踪订单。'
             )}
           </p>
 

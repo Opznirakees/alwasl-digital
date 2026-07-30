@@ -60,18 +60,43 @@ describe('V2 visual system', () => {
   it('finishes the reference-inspired brand corner and WAHO package identity', () => {
     const hero = read('src/components/home/HeroBanner.tsx');
     const home = read('src/app/page.tsx');
+    const wizard = read('src/app/top-up/[slug]/page.tsx');
     const styles = read('src/app/globals.css');
 
     expect(hero).toContain('data-v2-brand-corner');
     expect(hero).toContain('v2-hero-brandmark-surface');
     expect(hero).toContain('v2-hero-brandmark-accent');
+    expect(hero).toContain('/brand/alwasl-lockup.webp');
     expect(hero).toContain('object-contain');
     expect(styles).toContain('.v2-hero-brandmark-surface');
     expect(styles).toContain('clip-path');
+    expect(home).toContain('data-v2-amount-stage');
     expect(home).toContain('/brand/waho-app-icon.webp');
     expect(home).toContain('v2-package-card-app-icon');
+    expect(home).toContain('v2-package-card-balance');
     expect(styles).toContain('.v2-package-card::before');
+    expect(styles).toContain('.v2-amount-stage');
+    expect(wizard).toContain('data-v2-checkout-brand');
+    expect(wizard).toContain('/brand/waho-app-icon.webp');
+    expect(existsSync(join(repoRoot, 'public/brand/alwasl-lockup.webp'))).toBe(true);
     expect(existsSync(join(repoRoot, 'public/brand/waho-app-icon.webp'))).toBe(true);
+  });
+
+  it('adapts the useful reference promises without adding unsupported claims', () => {
+    const hero = read('src/components/home/HeroBanner.tsx');
+    const home = read('src/app/page.tsx');
+
+    expect(hero).toContain('Fast and clear WAHO top-up');
+    expect(hero).toContain('شحن WAHO بسرعة ووضوح');
+    expect(hero).toContain('快速清晰地充值 WAHO');
+    expect(hero).toContain('Protected order');
+    expect(hero).toContain('طلب محمي');
+    expect(hero).toContain('订单保护');
+    expect(home).toContain('Clear payment choices');
+    expect(home).toContain('خيارات دفع واضحة');
+    expect(home).toContain('付款选择清晰');
+    expect(home).toContain('supportWhatsAppNumber');
+    expect(`${hero}\n${home}`).not.toMatch(/24\/7|instant top-up|official WAHO|all games|all apps/i);
   });
 
   it('uses the compact reference rhythm without a redundant support band', () => {
@@ -111,12 +136,21 @@ describe('V2 visual system', () => {
   });
 
   it('keeps the checkout visually connected to the homepage', () => {
+    const overview = read('src/app/top-up/page.tsx');
     const wizard = read('src/app/top-up/[slug]/page.tsx');
+    const orders = read('src/app/orders/page.tsx');
 
+    expect(overview).toContain('data-v2-amount-overview');
+    expect(overview).toContain('/brand/waho-app-icon.webp');
+    expect(overview).toContain('v2-overview-package');
+    expect(overview).toContain('grid-cols-2');
+    expect(overview).not.toContain('/brand/alwasl-mark.jpg');
     expect(wizard).toContain('data-v2-wizard');
     expect(wizard).toContain('v2-wizard-progress');
     expect(wizard).toContain('v2-primary-button');
     expect(wizard).toContain('v2-surface');
+    expect(orders).toContain('/brand/waho-app-icon.webp');
+    expect(orders).not.toContain('/brand/alwasl-mark.jpg');
   });
 
   it('keeps the operational admin shell inside the same brand system', () => {

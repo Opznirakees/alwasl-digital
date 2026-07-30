@@ -190,6 +190,11 @@ async function captureVisual(page: Page, projectName: string, name: string) {
     undefined,
     { timeout: 5000 }
   );
+  await page.locator('[data-visual-required-image]').evaluateAll(async (images) => {
+    await Promise.all(images.map((image) => (
+      image instanceof HTMLImageElement ? image.decode().catch(() => undefined) : Promise.resolve()
+    )));
+  });
   await mkdir(outputDirectory, { recursive: true });
   await page.screenshot({
     path: join(outputDirectory, `${projectName}-${name}.png`),
@@ -257,6 +262,55 @@ test.describe('generation 2 customer experience', () => {
     await expect(mobileTabs.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'home-mobile');
+  });
+
+  test('keeps the smallest phone compact, tappable and clear to the final footer link', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 844 });
+    await mockCustomerApi(page);
+    await page.goto('/');
+
+    const primaryAction = page.getByTestId('home-primary-topup');
+    const primaryActionBox = await primaryAction.boundingBox();
+    expect(primaryActionBox?.height ?? 0).toBeGreaterThanOrEqual(44);
+
+    const mobileTabBoxes = await page.locator('[data-mobile-tab-bar] a').evaluateAll((links) => (
+      links.map((link) => {
+        const rect = link.getBoundingClientRect();
+        return { width: rect.width, height: rect.height };
+      })
+    ));
+    for (const box of mobileTabBoxes) {
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+    }
+
+    await page.goto('/top-up/waho-top-up?amount=10000');
+    const amountCards = page.locator('button[aria-pressed]');
+    await expect(amountCards).toHaveCount(5);
+    const firstCard = await amountCards.nth(0).boundingBox();
+    const secondCard = await amountCards.nth(1).boundingBox();
+    expect(firstCard?.width ?? 0).toBeGreaterThan(120);
+    expect(secondCard?.width ?? 0).toBeGreaterThan(120);
+    expect(Math.abs((firstCard?.y ?? 0) - (secondCard?.y ?? 100))).toBeLessThan(3);
+    const selectedCheck = page.locator('[data-selected-package-check]');
+    await expect(selectedCheck).toHaveCount(1);
+    const selectedCheckBox = await selectedCheck.boundingBox();
+    expect(selectedCheckBox?.x ?? 1000).toBeGreaterThanOrEqual(secondCard?.x ?? 0);
+    expect((selectedCheckBox?.x ?? 1000) + (selectedCheckBox?.width ?? 0))
+      .toBeLessThanOrEqual((secondCard?.x ?? 0) + (secondCard?.width ?? 0));
+
+    await page.goto('/');
+    await page.locator('footer').scrollIntoViewIfNeeded();
+    const footerAndNavigation = await page.evaluate(() => {
+      const footer = document.querySelector('footer')?.getBoundingClientRect();
+      const navigation = document.querySelector('[data-mobile-tab-bar]')?.getBoundingClientRect();
+      return {
+        footerBottom: footer?.bottom ?? 1000,
+        navigationTop: navigation?.top ?? 0,
+      };
+    });
+    expect(footerAndNavigation.footerBottom).toBeLessThanOrEqual(footerAndNavigation.navigationTop + 1);
+    await expectNoHorizontalOverflow(page);
   });
 
   test('keeps the selected amount and brings the active WAHO ID form into view', async ({ page }, testInfo) => {
@@ -446,11 +500,14 @@ test.describe('generation 2 customer experience', () => {
     test.skip(testInfo.project.name !== 'chromium', 'The responsive width matrix only needs one browser project.');
     await mockCustomerApi(page);
 
-    for (const width of [320, 390, 768, 1024, 1440]) {
+    for (const width of [320, 360, 390, 430, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: width < 768 ? 844 : 900 });
       await page.goto('/');
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       await expectNoHorizontalOverflow(page);
+      if (width === 320) {
+        await captureVisual(page, testInfo.project.name, 'home-320');
+      }
 
       await page.goto('/top-up/waho-top-up?amount=10000');
       await expect(page.getByRole('heading', { name: 'Choose your amount' })).toBeVisible();
@@ -459,7 +516,7 @@ test.describe('generation 2 customer experience', () => {
       if (width === 320) {
         const selectedCard = page.locator('button[aria-pressed="true"]').filter({ hasText: '10,000' });
         const selectedCardBox = await selectedCard.boundingBox();
-        expect(selectedCardBox?.width ?? 0).toBeGreaterThan(200);
+        expect(selectedCardBox?.width ?? 0).toBeGreaterThan(120);
         await captureVisual(page, testInfo.project.name, 'wizard-320');
       }
     }

@@ -7,6 +7,7 @@ import {
   ArrowRight,
   BadgeCheck,
   CreditCard,
+  Gem,
   Headphones,
   Loader2,
   MessageCircle,
@@ -19,7 +20,7 @@ import {
 import { HeroBanner } from '@/components/home/HeroBanner';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
-import { supportWhatsAppHref } from '@/config/contact';
+import { supportWhatsAppHref, supportWhatsAppNumber } from '@/config/contact';
 import { useApp } from '@/contexts/AppContext';
 import type { Banner, Game } from '@/types';
 
@@ -105,13 +106,13 @@ export default function HomePage() {
   const serviceItems = [
     {
       icon: CreditCard,
-      title: t('Clear payment choice', 'خيار دفع واضح', '付款选择清晰'),
-      body: t('See the total before confirming.', 'شاهد الإجمالي قبل التأكيد.', '确认前查看总价。'),
+      title: t('Clear payment choices', 'خيارات دفع واضحة', '付款选择清晰'),
+      body: t('Choose an available method and see the total.', 'اختر طريقة متاحة وشاهد الإجمالي.', '选择可用方式并查看总价。'),
     },
     {
       icon: ShieldCheck,
-      title: t('Account check', 'فحص الحساب', '账号检查'),
-      body: t('Check the WAHO name first.', 'تحقق من اسم WAHO أولاً.', '先核对 WAHO 名称。'),
+      title: t('Protected confirmation', 'تأكيد محمي', '安全确认'),
+      body: t('A WhatsApp code protects the order.', 'يحمي رمز واتساب الطلب.', '使用 WhatsApp 验证码保护订单。'),
     },
     {
       icon: ReceiptText,
@@ -148,7 +149,7 @@ export default function HomePage() {
 
             <ol className="mt-5 grid gap-3 md:grid-cols-3 lg:mt-0">
               {steps.map((step) => (
-                <li key={step.number} className="flex min-h-20 items-center gap-3 rounded-lg border border-[#d9e1ec] bg-[#f7f9fc] px-3 py-3">
+                <li key={step.number} className="v2-process-item flex min-h-20 items-center gap-3 rounded-lg border border-[#d9e1ec] bg-[#f7f9fc] px-3 py-3">
                   <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-[#071b46] text-[#f7b928]">
                     <step.icon className="h-5 w-5" />
                   </span>
@@ -165,16 +166,19 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="amounts" aria-labelledby="amount-heading" className="bg-[#020817] py-10 text-white sm:py-12">
+        <section
+          id="amounts"
+          data-v2-amount-stage
+          aria-labelledby="amount-heading"
+          className="v2-amount-stage scroll-mt-20 py-10 text-white sm:py-12"
+        >
           <div className="mx-auto max-w-[1280px] px-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="v2-kicker">{t('WAHO top-up packages', 'باقات شحن WAHO', 'WAHO 充值套餐')}</p>
-                <h2 id="amount-heading" className="mt-2 text-3xl font-bold text-white sm:text-4xl">
-                  {t('Choose your WAHO balance', 'اختر رصيد WAHO', '选择 WAHO 余额')}
-                </h2>
-              </div>
-              <p className="max-w-md text-sm leading-6 text-[#b8c5db]">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="v2-kicker">{t('WAHO balance packages', 'باقات رصيد WAHO', 'WAHO 余额套餐')}</p>
+              <h2 id="amount-heading" className="mt-2 text-3xl font-bold text-white sm:text-4xl">
+                {t('Choose your WAHO balance', 'اختر رصيد WAHO', '选择 WAHO 余额')}
+              </h2>
+              <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#b8c5db]">
                 {t('Tap one amount to continue. You can change it in the next step.', 'اضغط على مبلغ للمتابعة. يمكنك تغييره في الخطوة التالية.', '点击一个金额继续，下一步仍可更改。')}
               </p>
             </div>
@@ -200,35 +204,39 @@ export default function HomePage() {
                     return (
                       <Link
                         key={pkg.id}
+                        data-testid="home-package-card"
                         href={`/top-up/${wahoTopUp?.slug ?? 'waho-top-up'}?amount=${pkg.amount}`}
                         aria-label={t(`Choose ${amount} IQD`, `اختر ${amount} د.ع`, `选择 ${amount} IQD`)}
-                        className="v2-package-card group relative flex min-h-60 flex-col overflow-hidden rounded-lg border border-[#f7b928]/38 bg-[#06152f] p-3.5 text-white shadow-[0_18px_42px_rgba(0,0,0,0.22)] transition-colors hover:border-[#f7b928] hover:bg-[#0a2148] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928] focus-visible:ring-offset-2 focus-visible:ring-offset-[#020817]"
+                        className={`v2-package-card group relative flex min-h-64 flex-col overflow-hidden rounded-lg border bg-[#06152f] p-3.5 text-center text-white shadow-[0_18px_42px_rgba(0,0,0,0.22)] transition-colors hover:border-[#f7b928] hover:bg-[#0a2148] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928] focus-visible:ring-offset-2 focus-visible:ring-offset-[#020817] ${
+                          pkg.isPopular ? 'border-[#f7b928]/80 bg-[#08204a]' : 'border-[#f7b928]/38'
+                        }`}
                       >
                         {pkg.isPopular && (
                           <span className="absolute end-2 top-2 rounded-full bg-[#f7b928] px-2 py-1 text-[10px] font-bold text-[#07152e]">
                             {t('Popular', 'الأكثر اختياراً', '热门')}
                           </span>
                         )}
-                        <div className="relative z-10 flex min-h-14 items-center gap-2 pe-12">
-                          <span className="v2-package-card-app-icon relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg border border-white/12 bg-[#020817]">
+                        <div className="relative z-10 flex min-h-[76px] flex-col items-center justify-center gap-2">
+                          <span className="v2-package-card-app-icon relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-white/12 bg-[#020817]">
                             <Image
                               data-visual-required-image
                               src="/brand/waho-app-icon.webp"
                               alt=""
                               fill
                               className="object-cover"
-                              sizes="44px"
+                              sizes="48px"
                             />
                           </span>
-                          <span className="text-sm font-bold text-[#57e7cf]">WAHO</span>
+                          <span className="text-xs font-bold text-[#57e7cf]">WAHO</span>
                         </div>
-                        <div className="relative z-10 mt-3">
-                          <span className="block text-2xl font-bold tabular-nums text-white sm:text-3xl">{amount}</span>
-                          <span className="mt-1 block text-xs font-semibold text-[#b8c5db]">
-                            {t('IQD balance', 'رصيد د.ع', 'IQD 余额')}
+                        <div className="relative z-10 mt-2">
+                          <span className="block text-2xl font-bold leading-none tabular-nums text-white sm:text-[1.7rem]">{amount}</span>
+                          <span className="v2-package-card-balance mt-2 inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-[#b8c5db]">
+                            <Gem className="h-4 w-4 text-[#4e9cff]" />
+                            {t('WAHO balance', 'رصيد WAHO', 'WAHO 余额')}
                           </span>
                         </div>
-                        <div className="relative z-10 mt-auto border-t border-white/10 pt-3">
+                        <div className="relative z-10 mt-auto pt-3">
                           <span className="block text-[11px] text-[#b8c5db]">{t('You pay', 'تدفع', '您支付')}</span>
                           <span className="mt-1 block text-sm font-bold tabular-nums text-[#f7b928]">{price}</span>
                           <span className="mt-2.5 flex min-h-9 items-center justify-center gap-1.5 rounded-md bg-[#f7b928] px-2 text-xs font-bold text-[#07152e] group-hover:bg-[#ffd05a]">
@@ -241,7 +249,7 @@ export default function HomePage() {
                   })}
                 </div>
 
-                <aside className={`v2-leo-panel flex min-h-60 flex-col items-center justify-center rounded-lg border border-[#f7b928]/35 bg-[#06152f] p-5 text-center shadow-[0_18px_42px_rgba(0,0,0,0.22)] ${dir === 'rtl' ? 'lg:-order-1' : ''}`}>
+                <aside className={`v2-leo-panel relative flex min-h-64 flex-col items-center justify-center overflow-hidden rounded-lg border border-[#f7b928]/45 bg-[#06152f] p-5 text-center shadow-[0_18px_42px_rgba(0,0,0,0.22)] ${dir === 'rtl' ? 'lg:-order-1' : ''}`}>
                   <div className="relative h-24 w-24 overflow-hidden rounded-full border-4 border-[#f7b928] bg-[#020817]">
                     <Image data-visual-required-image src="/brand/leo-waho-agent.jpeg" alt="" fill priority unoptimized className="object-cover object-[52%_27%]" sizes="96px" />
                   </div>
@@ -277,7 +285,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section data-v2-service-strip aria-label={t('Service promises', 'وعود الخدمة', '服务承诺')} className="border-y border-[#d9e1ec] bg-white text-[#07152e]">
+        <section data-v2-service-strip aria-label={t('Service promises', 'وعود الخدمة', '服务承诺')} className="v2-service-strip relative border-y border-[#d9e1ec] bg-white text-[#07152e]">
           <div className="mx-auto grid max-w-[1280px] gap-0 px-4 py-4 sm:grid-cols-2 lg:grid-cols-4">
             {serviceItems.map((item) => (
               <div key={item.title} className="flex min-h-20 items-center gap-3 border-[#d9e1ec] px-3 py-3 lg:border-e last:lg:border-e-0">
@@ -310,6 +318,11 @@ export default function HomePage() {
             <p className="mt-3 text-sm leading-6 text-[#b8c5db]">
               {t('Choose the balance, check the account, and follow the order clearly.', 'اختر الرصيد وتحقق من الحساب وتابع الطلب بوضوح.', '选择余额，检查账号，并清楚跟踪订单。')}
             </p>
+            <a href={supportWhatsAppHref} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[#f7b928] hover:text-[#ffd05a]">
+              <MessageCircle className="h-4 w-4" />
+              <span>WhatsApp</span>
+              <span dir="ltr">{supportWhatsAppNumber}</span>
+            </a>
           </div>
           <nav aria-label={t('Footer links', 'روابط التذييل', '页脚链接')} className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm text-[#b8c5db] sm:grid-cols-3">
             <Link href="/top-up/waho-top-up" className="hover:text-[#f7b928]">{t('Top up', 'اشحن', '充值')}</Link>
