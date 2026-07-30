@@ -299,6 +299,18 @@ test.describe('generation 2 customer experience', () => {
     expect((selectedCheckBox?.x ?? 1000) + (selectedCheckBox?.width ?? 0))
       .toBeLessThanOrEqual((secondCard?.x ?? 0) + (secondCard?.width ?? 0));
 
+    await page.getByRole('button', { name: 'Change language' }).click();
+    await page.getByRole('menuitem', { name: 'العربية' }).click();
+    const checkoutStepLabels = page.locator('[data-checkout-step-label]');
+    await expect(checkoutStepLabels).toHaveCount(4);
+    const clippedStepLabels = await checkoutStepLabels.evaluateAll((labels) => labels
+      .filter((label) => (
+        label.scrollWidth > label.clientWidth + 1 ||
+        label.scrollHeight > label.clientHeight + 1
+      ))
+      .map((label) => label.textContent?.trim()));
+    expect(clippedStepLabels).toEqual([]);
+
     await page.goto('/');
     await page.locator('footer').scrollIntoViewIfNeeded();
     const footerAndNavigation = await page.evaluate(() => {

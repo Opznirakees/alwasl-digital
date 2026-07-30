@@ -461,7 +461,12 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                       <span className="flex h-5 w-5 items-center justify-center text-xs font-semibold tabular-nums">
                         {state === 'complete' ? <Check className="h-4 w-4" /> : index + 1}
                       </span>
-                      <span className="max-w-full truncate text-[10px] font-semibold sm:text-xs">{label}</span>
+                      <span
+                        data-checkout-step-label
+                        className="min-h-6 max-w-full whitespace-normal break-words text-[9px] font-semibold leading-3 sm:min-h-0 sm:text-xs sm:leading-4"
+                      >
+                        {label}
+                      </span>
                     </button>
                   </li>
                 );
