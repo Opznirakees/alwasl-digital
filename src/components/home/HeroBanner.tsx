@@ -69,9 +69,23 @@ export function HeroBanner({ banner }: HeroBannerProps) {
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,8,23,0.04)_20%,rgba(2,8,23,0.28)_64%,#020817_100%)] sm:bg-[linear-gradient(180deg,rgba(2,8,23,0.02)_28%,rgba(2,8,23,0.18)_62%,#020817_100%)]" />
 
-      <div className="v2-hero-brandmark absolute right-5 top-0 z-20 hidden h-32 w-32 overflow-hidden rounded-b-lg border-x border-b border-white/15 bg-white shadow-[0_16px_40px_rgba(0,0,0,0.28)] md:block lg:right-10 lg:h-44 lg:w-44">
-        <div className="absolute inset-3 overflow-hidden rounded-lg">
-          <Image src="/brand/alwasl-logo.jpg" alt="" fill className="object-cover" sizes="152px" />
+      <div
+        data-v2-brand-corner
+        aria-hidden="true"
+        className="v2-hero-brandmark pointer-events-none absolute right-0 top-0 z-20 hidden h-[158px] w-[180px] md:block lg:h-[198px] lg:w-[224px]"
+      >
+        <span className="v2-hero-brandmark-accent absolute inset-0" />
+        <div className="v2-hero-brandmark-surface absolute right-0 top-0 h-[calc(100%-10px)] w-[calc(100%-10px)]">
+          <div className="relative h-full w-full">
+            <Image
+              src="/brand/alwasl-logo.jpg"
+              alt=""
+              fill
+              priority
+              className="object-contain px-4 pb-6 pt-2 lg:px-5 lg:pb-7 lg:pt-3"
+              sizes="(max-width: 1023px) 170px, 214px"
+            />
+          </div>
         </div>
       </div>
 

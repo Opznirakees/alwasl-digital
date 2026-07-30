@@ -7,7 +7,6 @@ import {
   ArrowRight,
   BadgeCheck,
   CreditCard,
-  Gem,
   Headphones,
   Loader2,
   MessageCircle,
@@ -210,19 +209,26 @@ export default function HomePage() {
                             {t('Popular', 'الأكثر اختياراً', '热门')}
                           </span>
                         )}
-                        <div className="flex min-h-14 items-center gap-2 pe-12">
-                          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#020817]">
-                            <Gem className="h-5 w-5 text-[#4e9cff]" />
+                        <div className="relative z-10 flex min-h-14 items-center gap-2 pe-12">
+                          <span className="v2-package-card-app-icon relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg border border-white/12 bg-[#020817]">
+                            <Image
+                              data-visual-required-image
+                              src="/brand/waho-app-icon.webp"
+                              alt=""
+                              fill
+                              className="object-cover"
+                              sizes="44px"
+                            />
                           </span>
                           <span className="text-sm font-bold text-[#57e7cf]">WAHO</span>
                         </div>
-                        <div className="mt-3">
+                        <div className="relative z-10 mt-3">
                           <span className="block text-2xl font-bold tabular-nums text-white sm:text-3xl">{amount}</span>
                           <span className="mt-1 block text-xs font-semibold text-[#b8c5db]">
                             {t('IQD balance', 'رصيد د.ع', 'IQD 余额')}
                           </span>
                         </div>
-                        <div className="mt-auto border-t border-white/10 pt-3">
+                        <div className="relative z-10 mt-auto border-t border-white/10 pt-3">
                           <span className="block text-[11px] text-[#b8c5db]">{t('You pay', 'تدفع', '您支付')}</span>
                           <span className="mt-1 block text-sm font-bold tabular-nums text-[#f7b928]">{price}</span>
                           <span className="mt-2.5 flex min-h-9 items-center justify-center gap-1.5 rounded-md bg-[#f7b928] px-2 text-xs font-bold text-[#07152e] group-hover:bg-[#ffd05a]">

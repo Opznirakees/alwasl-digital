@@ -249,6 +249,53 @@
     box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.22);
   }
 
+  .v2-hero-brandmark {
+    isolation: isolate;
+    filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.32));
+  }
+
+  .v2-hero-brandmark-accent {
+    z-index: -1;
+    background: #f7b928;
+    clip-path: polygon(0 0, 100% 0, 100% 78%, 88% 86%, 17% 100%, 0 90%);
+  }
+
+  .v2-hero-brandmark-surface {
+    overflow: hidden;
+    background: #ffffff;
+    clip-path: polygon(0 0, 100% 0, 100% 79%, 88% 87%, 18% 100%, 0 90%);
+  }
+
+  .v2-package-card::before {
+    position: absolute;
+    inset-inline: 0.875rem;
+    top: 0;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: #f7b928;
+    content: "";
+    opacity: 0.42;
+    transform: scaleX(0.26);
+    transform-origin: center;
+    transition: opacity 160ms ease, transform 160ms ease;
+  }
+
+  .v2-package-card:hover::before,
+  .v2-package-card:focus-visible::before {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+
+  .v2-package-card-app-icon {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+    transition: border-color 160ms ease, transform 160ms ease;
+  }
+
+  .v2-package-card:hover .v2-package-card-app-icon {
+    border-color: rgba(247, 185, 40, 0.55);
+    transform: translateY(-1px);
+  }
+
   .v2-admin-page {
     min-height: 100vh;
     overflow-x: clip;

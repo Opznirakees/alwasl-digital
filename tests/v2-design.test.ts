@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const repoRoot = join(import.meta.dir, '..');
@@ -57,13 +57,30 @@ describe('V2 visual system', () => {
     expect(`${hero}\n${home}`).not.toMatch(/PUBG|Free Fire|TikTok|Google Play/);
   });
 
+  it('finishes the reference-inspired brand corner and WAHO package identity', () => {
+    const hero = read('src/components/home/HeroBanner.tsx');
+    const home = read('src/app/page.tsx');
+    const styles = read('src/app/globals.css');
+
+    expect(hero).toContain('data-v2-brand-corner');
+    expect(hero).toContain('v2-hero-brandmark-surface');
+    expect(hero).toContain('v2-hero-brandmark-accent');
+    expect(hero).toContain('object-contain');
+    expect(styles).toContain('.v2-hero-brandmark-surface');
+    expect(styles).toContain('clip-path');
+    expect(home).toContain('/brand/waho-app-icon.webp');
+    expect(home).toContain('v2-package-card-app-icon');
+    expect(styles).toContain('.v2-package-card::before');
+    expect(existsSync(join(repoRoot, 'public/brand/waho-app-icon.webp'))).toBe(true);
+  });
+
   it('uses the compact reference rhythm without a redundant support band', () => {
     const hero = read('src/components/home/HeroBanner.tsx');
     const home = read('src/app/page.tsx');
 
     expect(hero).toContain('lg:min-h-[500px]');
     expect(hero).toContain('lg:w-[60%]');
-    expect(hero).toContain('right-5');
+    expect(hero).toContain('right-0');
     expect(home).toContain('data-v2-steps-strip');
     expect(home).toContain('data-v2-service-strip');
     expect(home).toContain('data-visual-required-image');
