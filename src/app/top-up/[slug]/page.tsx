@@ -169,7 +169,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
 
   if (isLoadingProduct) {
     return (
-      <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+      <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
         <Header />
         <main className="container mx-auto max-w-5xl px-4 py-8">
           <div role="status" aria-live="polite" className="mx-auto max-w-3xl">
@@ -189,7 +189,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
 
   if (productError || !game) {
     return (
-      <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+      <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
         <Header />
         <main className="container mx-auto flex min-h-[60vh] items-center justify-center px-4">
           <section className="max-w-xl text-center">
@@ -406,33 +406,33 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
   const selectedAmountText = selectedPackage ? formatAmount(selectedPackage.amount) : '';
 
   return (
-    <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div data-v2-wizard className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
-      <main className="container mx-auto max-w-6xl px-4 py-5 sm:py-8">
-        <Link href="/top-up" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-zinc-500 hover:text-blue-700 dark:text-zinc-400 dark:hover:text-blue-300">
+      <main className="container mx-auto max-w-6xl px-4 pb-40 pt-5 sm:pt-8 lg:pb-8">
+        <Link href="/top-up" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--v2-muted)] hover:text-[var(--v2-gold)]">
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           {t('All amounts', 'كل المبالغ', '全部金额')}
         </Link>
 
-        <section className="mt-3 flex items-center gap-3 rounded-lg border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-zinc-900 sm:p-4">
+        <section className="v2-surface mt-3 flex items-center gap-3 p-3 sm:p-4">
           <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10">
             <Image src="/brand/alwasl-mark.jpg" alt="" fill className="object-contain p-1" sizes="48px" priority />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">WAHO</p>
+            <p className="text-xs font-bold text-[var(--v2-gold)]">WAHO</p>
             <h1 className="truncate text-lg font-semibold text-zinc-950 dark:text-white sm:text-xl">
               {t('Balance top-up', 'شحن الرصيد', '余额充值')}
             </h1>
           </div>
           <div className="hidden items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400 sm:flex">
-            <ShieldCheck className="h-4 w-4 text-blue-700 dark:text-blue-300" />
+            <ShieldCheck className="h-4 w-4 text-[var(--v2-gold)]" />
             {t('Account checked before payment', 'فحص الحساب قبل الدفع', '付款前检查账号')}
           </div>
         </section>
 
         <div ref={wizardRef} className="scroll-mt-20">
-          <nav aria-label={t('Top-up progress', 'تقدم عملية الشحن', '充值进度')} className="mt-5 rounded-lg border border-black/10 bg-white p-2 dark:border-white/10 dark:bg-zinc-900 sm:p-3">
+          <nav aria-label={t('Top-up progress', 'تقدم عملية الشحن', '充值进度')} className="v2-surface v2-wizard-progress mt-5 p-2 sm:p-3">
             <ol className="grid grid-cols-4 gap-1 sm:gap-2">
               {checkoutSteps.map((item, index) => {
                 const state = getCheckoutStepState(step, item.id);
@@ -446,12 +446,12 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                       onClick={() => canReturn && goToStep(item.id)}
                       aria-current={state === 'current' ? 'step' : undefined}
                       aria-label={t(`Step ${index + 1}: ${label}`, `الخطوة ${index + 1}: ${label}`, `第 ${index + 1} 步：${label}`)}
-                      className={`flex min-h-14 w-full flex-col items-center justify-center gap-1 rounded-md px-1 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                      className={`flex min-h-14 w-full flex-col items-center justify-center gap-1 rounded-md px-1 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] ${
                         state === 'current'
-                          ? 'bg-blue-600 text-white'
+                          ? 'bg-[var(--v2-gold)] text-[#07152e]'
                           : state === 'complete'
-                            ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-500/15 dark:text-blue-200 dark:hover:bg-blue-500/20'
-                            : 'text-zinc-400 dark:text-zinc-500'
+                            ? 'bg-[var(--v2-surface-raised)] text-[var(--v2-gold)] hover:brightness-110'
+                            : 'text-[var(--v2-muted)] opacity-55'
                       }`}
                     >
                       <span className="flex h-5 w-5 items-center justify-center text-xs font-semibold tabular-nums">
@@ -466,7 +466,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
           </nav>
 
           <div className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <section className="min-w-0 rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-7">
+            <section className="v2-surface min-w-0 p-5 sm:p-7">
               {step === 'package' && (
                 <>
                   <h2 ref={stepHeadingRef} tabIndex={-1} className="text-2xl font-semibold text-zinc-950 outline-none dark:text-white">
@@ -488,19 +488,19 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                             aria-pressed={isSelected}
                             aria-label={`${formatAmount(pkg.amount)} IQD${pkg.isPopular ? `, ${t('Popular', 'الأكثر اختياراً', '热门')}` : ''}`}
                             onClick={() => setSelectedPackage(pkg)}
-                            className={`relative flex min-h-32 flex-col justify-between rounded-lg border p-4 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                            className={`relative flex min-h-28 flex-col justify-between rounded-lg border p-4 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] sm:min-h-36 ${
                               isSelected
-                                ? 'border-blue-600 bg-blue-50 ring-1 ring-blue-600 dark:bg-blue-500/15'
-                                : 'border-black/10 bg-white hover:border-blue-300 hover:bg-zinc-50 dark:border-white/10 dark:bg-zinc-950 dark:hover:border-blue-400 dark:hover:bg-white/5'
+                                ? 'border-[var(--v2-gold)] bg-[color-mix(in_srgb,var(--v2-gold)_10%,var(--v2-surface))] ring-1 ring-[var(--v2-gold)]'
+                                : 'border-[var(--v2-border)] bg-[var(--v2-surface-raised)] hover:border-[var(--v2-gold)]'
                             }`}
                           >
                             <span className="flex w-full items-start justify-between gap-2">
                               <span>
                                 <span className="block text-2xl font-semibold tabular-nums text-zinc-950 dark:text-white">{formatAmount(pkg.amount)}</span>
-                                <span className="mt-1 block text-xs font-semibold text-blue-700 dark:text-blue-300">IQD</span>
+                                <span className="mt-1 block text-xs font-bold text-[var(--v2-gold)]">IQD</span>
                               </span>
                               {isSelected ? (
-                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white">
+                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--v2-gold)] text-[#07152e]">
                                   <Check className="h-4 w-4" />
                                 </span>
                               ) : pkg.isPopular ? (
@@ -527,7 +527,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                   <Button
                     onClick={() => goToStep('details')}
                     disabled={!selectedPackage}
-                    className="mt-6 w-full bg-blue-600 text-white hover:bg-blue-700"
+                    className="v2-primary-button mt-6 hidden w-full lg:flex"
                   >
                     {selectedPackage
                       ? t(`Continue with ${selectedAmountText} IQD`, `تابع مع ${selectedAmountText} د.ع`, `继续充值 ${selectedAmountText} IQD`)
@@ -563,7 +563,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                         }}
                         autoComplete="off"
                         placeholder={t('Example: 984231', 'مثال: 984231', '例如：984231')}
-                        className="h-12 bg-zinc-50 text-base dark:bg-zinc-950"
+                        className="v2-input h-12 text-base"
                       />
                       <Button
                         type="button"
@@ -590,7 +590,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                         id="waho-reference"
                         value={zoneId}
                         onChange={(event) => setZoneId(event.target.value)}
-                        className="mt-2 h-12 bg-zinc-50 dark:bg-zinc-950"
+                        className="v2-input mt-2 h-12"
                       />
                     </div>
                   )}
@@ -607,7 +607,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     </div>
                   )}
 
-                  <div className="mt-6 grid grid-cols-[auto_minmax(0,1fr)] gap-3">
+                  <div className="mt-6 hidden grid-cols-[auto_minmax(0,1fr)] gap-3 lg:grid">
                     <Button type="button" variant="outline" onClick={() => goToStep('package')}>
                       <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
                       <span className="hidden sm:inline">{t('Back', 'رجوع', '返回')}</span>
@@ -616,7 +616,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                       type="button"
                       onClick={handleProceedToPayment}
                       disabled={game.requiresUserId && !verifiedUsername}
-                      className="bg-blue-600 text-white hover:bg-blue-700"
+                      className="v2-primary-button"
                     >
                       {t('Continue to payment', 'تابع إلى الدفع', '继续付款')}
                       <ArrowRight className="h-4 w-4 rtl:rotate-180" />
@@ -641,34 +641,34 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                         <label
                           key={method.id}
                           aria-disabled={method.disabled}
-                          className={`flex min-h-20 items-center gap-3 rounded-lg border p-4 transition-colors focus-within:ring-2 focus-within:ring-blue-500 ${
+                          className={`flex min-h-20 items-center gap-3 rounded-lg border p-4 transition-colors focus-within:ring-2 focus-within:ring-[var(--v2-gold)] ${
                             method.disabled
-                              ? 'cursor-not-allowed border-black/10 bg-zinc-100 opacity-65 dark:border-white/10 dark:bg-zinc-950'
+                              ? 'cursor-not-allowed border-[var(--v2-border)] bg-[var(--v2-surface-raised)] opacity-50'
                               : isSelected
-                              ? 'border-blue-600 bg-blue-50 dark:bg-blue-500/15'
-                              : 'cursor-pointer border-black/10 bg-white hover:border-blue-300 dark:border-white/10 dark:bg-zinc-950 dark:hover:border-blue-400'
+                              ? 'border-[var(--v2-gold)] bg-[color-mix(in_srgb,var(--v2-gold)_10%,var(--v2-surface))]'
+                              : 'cursor-pointer border-[var(--v2-border)] bg-[var(--v2-surface-raised)] hover:border-[var(--v2-gold)]'
                           }`}
                         >
-                          <RadioGroupItem value={method.id} disabled={method.disabled} className="border-blue-600 text-blue-600" />
-                          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-blue-700 dark:bg-zinc-900 dark:text-blue-300">
+                          <RadioGroupItem value={method.id} disabled={method.disabled} className="border-[var(--v2-gold)] text-[var(--v2-gold)]" />
+                          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--v2-navy)] text-[var(--v2-gold)]">
                             <method.icon className="h-5 w-5" />
                           </span>
                           <span className="min-w-0 flex-1">
                             <span className="block font-semibold text-zinc-950 dark:text-white">{method.name}</span>
                             <span className="mt-0.5 block text-xs leading-5 text-zinc-500 dark:text-zinc-400">{method.description}</span>
                           </span>
-                          {isSelected && !method.disabled && <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-blue-700 dark:text-blue-300" />}
+                          {isSelected && !method.disabled && <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-[var(--v2-gold)]" />}
                         </label>
                       );
                     })}
                   </RadioGroup>
 
-                  <div className="mt-6 grid grid-cols-[auto_minmax(0,1fr)] gap-3">
+                  <div className="mt-6 hidden grid-cols-[auto_minmax(0,1fr)] gap-3 lg:grid">
                     <Button type="button" variant="outline" onClick={() => goToStep('details')}>
                       <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
                       <span className="hidden sm:inline">{t('Back', 'رجوع', '返回')}</span>
                     </Button>
-                    <Button type="button" onClick={() => goToStep('confirm')} className="bg-blue-600 text-white hover:bg-blue-700">
+                    <Button type="button" onClick={() => goToStep('confirm')} className="v2-primary-button">
                       {t('Review order', 'راجع الطلب', '检查订单')}
                       <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </Button>
@@ -718,7 +718,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                           </p>
                         </div>
                       </div>
-                      <Button type="button" onClick={handleLoginForCheckout} className="mt-4 w-full bg-blue-600 text-white hover:bg-blue-700">
+                      <Button type="button" onClick={handleLoginForCheckout} className="v2-primary-button mt-4 w-full">
                         {t('Log in to continue', 'سجل الدخول للمتابعة', '登录后继续')}
                         <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                       </Button>
@@ -745,7 +745,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                           inputMode="numeric"
                           autoComplete="one-time-code"
                           placeholder="000000"
-                          className="h-12 bg-zinc-50 text-center text-lg font-semibold tracking-[0.25em] tabular-nums dark:bg-zinc-950"
+                          className="v2-input h-12 text-center text-lg font-semibold tracking-[0.25em] tabular-nums"
                         />
                         <Button type="button" variant="outline" onClick={handleRequestOrderOtp} disabled={isRequestingOtp} className="h-12">
                           {isRequestingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
@@ -755,7 +755,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     </div>
                   )}
 
-                  <div className="mt-6 grid grid-cols-[auto_minmax(0,1fr)] gap-3">
+                  <div className="mt-6 hidden grid-cols-[auto_minmax(0,1fr)] gap-3 lg:grid">
                     <Button type="button" variant="outline" onClick={() => goToStep('payment')}>
                       <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
                       <span className="hidden sm:inline">{t('Back', 'رجوع', '返回')}</span>
@@ -764,7 +764,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                       type="button"
                       onClick={isAuthenticated ? handleConfirmOrder : handleLoginForCheckout}
                       disabled={isProcessing || (isAuthenticated && financialOtp.length !== 6)}
-                      className="bg-blue-600 text-white hover:bg-blue-700"
+                      className="v2-primary-button"
                     >
                       {isProcessing ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -780,7 +780,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
               )}
 
               {selectedPackage && step !== 'confirm' && (
-                <div className="mt-6 flex items-center justify-between gap-4 rounded-lg bg-zinc-100 p-3 lg:hidden dark:bg-zinc-950">
+                <div className="v2-surface-raised mt-6 flex items-center justify-between gap-4 p-3 lg:hidden">
                   <div>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('Selected', 'المحدد', '已选择')}</p>
                     <p className="mt-0.5 text-sm font-semibold tabular-nums text-zinc-950 dark:text-white">{selectedAmountText} IQD</p>
@@ -793,7 +793,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
               )}
             </section>
 
-            <aside className="sticky top-24 hidden rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 lg:block">
+            <aside className="v2-surface sticky top-24 hidden p-5 lg:block">
               <h2 className="text-base font-semibold text-zinc-950 dark:text-white">{t('Your top-up', 'عملية الشحن', '您的充值')}</h2>
               {selectedPackage ? (
                 <div className="mt-5">
@@ -838,6 +838,59 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
           </div>
         </div>
       </main>
+
+      <div className="fixed inset-x-0 bottom-[calc(68px+env(safe-area-inset-bottom))] z-[55] border-t border-white/10 bg-[#020817]/96 p-3 shadow-[0_-14px_36px_rgba(0,0,0,0.28)] backdrop-blur-xl lg:hidden">
+        <div className={`mx-auto grid max-w-xl gap-3 ${step === 'package' ? 'grid-cols-1' : 'grid-cols-[48px_minmax(0,1fr)]'}`}>
+          {step !== 'package' && (
+            <Button
+              type="button"
+              variant="outline"
+              aria-label={t('Back to previous step', 'العودة إلى الخطوة السابقة', '返回上一步')}
+              onClick={() => goToStep(step === 'details' ? 'package' : step === 'payment' ? 'details' : 'payment')}
+              className="h-12 border-white/15 bg-white/5 px-0 text-white hover:bg-white/10 hover:text-white"
+            >
+              <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+            </Button>
+          )}
+
+          {step === 'package' && (
+            <Button type="button" onClick={() => goToStep('details')} disabled={!selectedPackage} className="v2-primary-button w-full">
+              {selectedPackage
+                ? t(`Continue with ${selectedAmountText} IQD`, `تابع مع ${selectedAmountText} د.ع`, `继续充值 ${selectedAmountText} IQD`)
+                : t('Choose an amount to continue', 'اختر مبلغاً للمتابعة', '选择金额后继续')}
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+            </Button>
+          )}
+
+          {step === 'details' && (
+            <Button type="button" onClick={handleProceedToPayment} disabled={game.requiresUserId && !verifiedUsername} className="v2-primary-button w-full">
+              {t('Continue to payment', 'تابع إلى الدفع', '继续付款')}
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+            </Button>
+          )}
+
+          {step === 'payment' && (
+            <Button type="button" onClick={() => goToStep('confirm')} className="v2-primary-button w-full">
+              {t('Review order', 'راجع الطلب', '检查订单')}
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+            </Button>
+          )}
+
+          {step === 'confirm' && (
+            <Button
+              type="button"
+              onClick={isAuthenticated ? handleConfirmOrder : handleLoginForCheckout}
+              disabled={isProcessing || (isAuthenticated && financialOtp.length !== 6)}
+              className="v2-primary-button w-full"
+            >
+              {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+              {isAuthenticated
+                ? t('Confirm and place order', 'أكد وأرسل الطلب', '确认并提交订单')
+                : t('Log in to continue', 'سجل الدخول للمتابعة', '登录后继续')}
+            </Button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -846,7 +899,7 @@ function TopUpDetailFallback() {
   const { t, dir } = useApp();
 
   return (
-    <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
       <main className="container mx-auto max-w-5xl px-4 py-8" role="status" aria-live="polite">
         <div className="flex items-center gap-3 text-sm font-medium text-zinc-600 dark:text-zinc-300">

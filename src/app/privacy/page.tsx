@@ -21,7 +21,7 @@ export default function PrivacyPage() {
         },
         {
           title: { en: 'Saved on your device', ar: 'محفوظ على جهازك', zh: '保存在您的设备上' },
-          body: { en: 'Your language and theme can stay in this browser so the app opens the same way next time.', ar: 'يمكن أن تبقى لغتك ومظهرك في هذا المتصفح ليفتح التطبيق بالطريقة نفسها لاحقاً.', zh: '语言和主题可保存在当前浏览器中，以便下次以相同方式打开应用。' },
+          body: { en: 'Your language can stay in this browser so the app opens in the same language next time.', ar: 'يمكن أن تبقى لغتك محفوظة في هذا المتصفح ليفتح التطبيق باللغة نفسها لاحقاً.', zh: '语言偏好可保存在当前浏览器中，以便下次以相同语言打开应用。' },
         },
       ]}
     />

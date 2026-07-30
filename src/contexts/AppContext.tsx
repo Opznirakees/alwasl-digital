@@ -4,18 +4,12 @@ import React, { createContext, useContext, useState, useCallback, useEffect, typ
 import type { Language, User, Country, CartItem, Order, WalletTransaction } from '@/types';
 import { resolveOtpPhone } from './auth-flow';
 
-type Theme = 'dark' | 'light';
-
 interface AppContextType {
   // Language
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (en: string, ar: string, zh?: string) => string;
   dir: 'ltr' | 'rtl';
-
-  // Theme
-  theme: Theme;
-  toggleTheme: () => void;
 
   // Auth
   user: User | null;
@@ -61,7 +55,6 @@ async function fetchAccountData(input: RequestInfo | URL, init?: RequestInit) {
 
 const storageKeys = {
   language: 'alwasl-language',
-  theme: 'theme',
   country: 'alwasl-country',
   cart: 'alwasl-demo-cart',
 };
@@ -369,8 +362,6 @@ const zhTranslations: Record<string, string> = {
   'Maximum discount': '最高优惠',
   'All products': '全部商品',
   'Manage language, region, and display preferences.': '管理语言、地区和显示偏好。',
-  'Theme': '主题',
-  'Switch between dark and light mode.': '在深色和浅色模式之间切换。',
   'Language': '语言',
   'Country': '国家/地区',
   'Profile': '个人资料',
@@ -502,7 +493,6 @@ const zhTranslations: Record<string, string> = {
   'Sharing': '共享',
   'Order data may be shared with payment and fulfillment providers only where needed to complete the service.': '仅在完成服务所需时，订单数据才会与支付和交付服务商共享。',
   'Local preferences': '本地偏好',
-  'Language and theme choices can be stored in the browser so the site opens the way you prefer next time.': '语言和主题选择可存储在浏览器中，以便下次按你的偏好打开网站。',
   'Clear rules for using Al-Wasl Digital.': '使用 Al-Wasl 数字服务的清晰规则。',
   'Please check the WAHO ID, selected amount, and payment details before confirming a recharge.': '确认充值前，请检查 WAHO ID、选择的金额和付款信息。',
   'Account use': '账号使用',
@@ -565,7 +555,6 @@ const languageLabels: Record<Language, { short: string; locale: string; htmlLang
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('en');
-  const [theme, setTheme] = useState<Theme>('light');
   const [user, setUser] = useState<User | null>(null);
   const [countries, setCountries] = useState<Country[]>([defaultCountry]);
   const [selectedCountry, setSelectedCountryState] = useState<Country>(defaultCountry);
@@ -632,10 +621,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Restore browser preferences. Account/order/wallet data is loaded from the API.
   useEffect(() => {
-    const savedTheme = localStorage.getItem(storageKeys.theme) as Theme | null;
-    if (savedTheme === 'dark' || savedTheme === 'light') {
-      setTheme(savedTheme);
-    }
     const savedLanguage =
       (localStorage.getItem(storageKeys.language) as Language | null) ||
       (localStorage.getItem('language') as Language | null);
@@ -675,20 +660,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, [isHydrated]);
 
-  // Apply theme class to document
-  useEffect(() => {
-    if (!isHydrated) return;
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-      root.classList.remove('light');
-    } else {
-      root.classList.add('light');
-      root.classList.remove('dark');
-    }
-    localStorage.setItem(storageKeys.theme, theme);
-  }, [isHydrated, theme]);
-
   useEffect(() => {
     if (!isHydrated) return;
     void refreshAccount();
@@ -698,10 +669,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!isHydrated) return;
     localStorage.setItem(storageKeys.cart, JSON.stringify(cart));
   }, [cart, isHydrated]);
-
-  const toggleTheme = useCallback(() => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  }, []);
 
   const setSelectedCountry = useCallback((country: Country) => {
     setSelectedCountryState(country);
@@ -830,8 +797,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setLanguage,
       t,
       dir,
-      theme,
-      toggleTheme,
       user,
       isAuthenticated: !!user,
       isAccountLoading,

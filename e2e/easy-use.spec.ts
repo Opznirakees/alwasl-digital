@@ -26,6 +26,8 @@ const product = {
     { id: 'pkg-5000', name: '5,000 IQD WAHO Top-Up', nameAr: 'شحن WAHO 5,000 د.ع', amount: 5000, unit: 'IQD top-up', unitAr: 'شحن د.ع', basePrice: 5000, currency: 'IQD', inStock: true },
     { id: 'pkg-10000', name: '10,000 IQD WAHO Top-Up', nameAr: 'شحن WAHO 10,000 د.ع', amount: 10000, unit: 'IQD top-up', unitAr: 'شحن د.ع', basePrice: 10000, currency: 'IQD', inStock: true, isPopular: true },
     { id: 'pkg-25000', name: '25,000 IQD WAHO Top-Up', nameAr: 'شحن WAHO 25,000 د.ع', amount: 25000, unit: 'IQD top-up', unitAr: 'شحن د.ع', basePrice: 25000, currency: 'IQD', inStock: true },
+    { id: 'pkg-50000', name: '50,000 IQD WAHO Top-Up', nameAr: 'شحن WAHO 50,000 د.ع', amount: 50000, unit: 'IQD top-up', unitAr: 'شحن د.ع', basePrice: 50000, currency: 'IQD', inStock: true },
+    { id: 'pkg-100000', name: '100,000 IQD WAHO Top-Up', nameAr: 'شحن WAHO 100,000 د.ع', amount: 100000, unit: 'IQD top-up', unitAr: 'شحن د.ع', basePrice: 100000, currency: 'IQD', inStock: true },
   ],
 };
 
@@ -182,6 +184,12 @@ async function captureVisual(page: Page, projectName: string, name: string) {
   const outputDirectory = process.env.UX_SCREENSHOT_DIR;
   if (!outputDirectory) return;
 
+  await page.waitForFunction(
+    () => Array.from(document.querySelectorAll<HTMLImageElement>('[data-visual-required-image]'))
+      .every((image) => image.complete && image.naturalWidth > 0),
+    undefined,
+    { timeout: 5000 }
+  );
   await mkdir(outputDirectory, { recursive: true });
   await page.screenshot({
     path: join(outputDirectory, `${projectName}-${name}.png`),
@@ -333,14 +341,15 @@ test.describe('generation 2 customer experience', () => {
     await page.getByRole('button', { name: 'Change language' }).click();
     await page.getByRole('menuitem', { name: '中文' }).click();
     await expect(page.getByRole('heading', { level: 1, name: '为您的 WAHO 余额充值' })).toBeVisible();
+    await captureVisual(page, testInfo.project.name, 'home-chinese-dark-mobile');
 
     await page.getByRole('button', { name: '切换语言' }).click();
     await page.getByRole('menuitem', { name: 'العربية' }).click();
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.getByRole('heading', { level: 1, name: 'اشحن رصيد WAHO' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'التبديل إلى الوضع الداكن' }).click();
     await expect(page.locator('html')).toHaveClass(/dark/);
+    await expect(page.getByRole('button', { name: 'التبديل إلى الوضع الفاتح' })).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'home-arabic-dark-mobile');
 
@@ -351,6 +360,12 @@ test.describe('generation 2 customer experience', () => {
     await expect(page.locator('html')).toHaveClass(/dark/);
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'wizard-arabic-dark-mobile');
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/');
+    await expect(page.getByRole('heading', { level: 1, name: 'اشحن رصيد WAHO' })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await captureVisual(page, testInfo.project.name, 'home-arabic-dark-desktop');
   });
 
   test('uses wide screens for overview without stretching the main task', async ({ page }, testInfo) => {

@@ -123,9 +123,9 @@ function AuthPageContent() {
   };
 
   return (
-    <div className={`min-h-screen bg-[#f5f5f7] px-4 py-5 dark:bg-zinc-950 sm:py-10 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`v2-page px-4 py-5 sm:py-10 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <main className="mx-auto w-full max-w-md">
-        <Link href={returnPath === '/' ? '/' : returnPath} className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-zinc-500 hover:text-blue-700 dark:text-zinc-400 dark:hover:text-blue-300">
+        <Link href={returnPath === '/' ? '/' : returnPath} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--v2-muted)] hover:text-[var(--v2-gold)]">
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           {returnPath === '/'
             ? t('Back home', 'العودة للرئيسية', '返回首页')
@@ -142,10 +142,10 @@ function AuthPageContent() {
           </div>
         </div>
 
-        <section className="mt-6 rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-zinc-900 sm:p-7">
+        <section className="v2-surface mt-6 p-5 sm:p-7">
           {step === 'phone' ? (
             <>
-              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+              <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--v2-surface-raised)] text-[var(--v2-gold)]">
                 <Phone className="h-5 w-5" />
               </div>
               <h1 className="mt-5 text-2xl font-semibold text-zinc-950 dark:text-white">
@@ -169,7 +169,7 @@ function AuthPageContent() {
                           role="combobox"
                           aria-expanded={phoneCountryOpen}
                           aria-label={t('Country calling code', 'رمز اتصال الدولة', '国家/地区区号')}
-                          className="h-12 justify-between bg-zinc-50 px-3 dark:bg-zinc-950"
+                          className="v2-input h-12 justify-between px-3"
                         >
                           <span className="flex min-w-0 items-center gap-2">
                             <span className="text-lg leading-none">{selectedPhoneCountry.flag}</span>
@@ -217,7 +217,7 @@ function AuthPageContent() {
                         onChange={(event) => setPhone(event.target.value.replace(/[^\d\s()-]/g, ''))}
                         placeholder={t('Phone without country code', 'الهاتف بدون رمز الدولة', '不含国家区号的号码')}
                         aria-invalid={Boolean(formError)}
-                        className="h-12 bg-zinc-50 ps-10 dark:bg-zinc-950"
+                        className="v2-input h-12 ps-10"
                       />
                     </div>
                   </div>
@@ -232,7 +232,7 @@ function AuthPageContent() {
                   </p>
                 </div>
 
-                <Button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white hover:bg-blue-700">
+                <Button type="submit" disabled={isLoading} className="v2-primary-button w-full">
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
                   {t('Send WhatsApp code', 'أرسل رمز واتساب', '发送 WhatsApp 验证码')}
                   {!isLoading && <ChevronRight className="h-4 w-4 rtl:rotate-180" />}
@@ -253,7 +253,7 @@ function AuthPageContent() {
                 {t('Change phone number', 'غير رقم الهاتف', '更换手机号码')}
               </button>
 
-              <div className="mt-3 flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+              <div className="mt-3 flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--v2-surface-raised)] text-[var(--v2-gold)]">
                 <LockKeyhole className="h-5 w-5" />
               </div>
               <h1 className="mt-5 text-2xl font-semibold text-zinc-950 dark:text-white">
@@ -277,13 +277,13 @@ function AuthPageContent() {
                     onChange={(event) => setOtpCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="000000"
                     aria-invalid={Boolean(formError)}
-                    className="mt-2 h-14 bg-zinc-50 text-center text-2xl font-semibold tracking-[0.3em] tabular-nums dark:bg-zinc-950"
+                    className="v2-input mt-2 h-14 text-center text-2xl font-semibold tracking-[0.3em] tabular-nums"
                   />
                 </div>
 
                 {formError && <p role="alert" className="text-sm leading-6 text-red-600 dark:text-red-300">{formError}</p>}
 
-                <Button type="submit" disabled={isLoading || otpCode.length !== 6} className="w-full bg-blue-600 text-white hover:bg-blue-700">
+                <Button type="submit" disabled={isLoading || otpCode.length !== 6} className="v2-primary-button w-full">
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LockKeyhole className="h-4 w-4" />}
                   {t('Log in', 'تسجيل الدخول', '登录')}
                 </Button>
@@ -316,7 +316,7 @@ function AuthPageFallback() {
   const { t, dir } = useApp();
 
   return (
-    <div className={`min-h-screen bg-[#f5f5f7] px-4 py-10 dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`v2-page px-4 py-10 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <main className="mx-auto w-full max-w-md" role="status" aria-live="polite">
         <div className="flex items-center gap-3 text-sm font-medium text-zinc-600 dark:text-zinc-300">
           <Loader2 className="h-5 w-5 animate-spin text-blue-600 motion-reduce:animate-none" />

@@ -26,7 +26,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+      <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
         <Header />
         <main className="container mx-auto flex min-h-[65vh] max-w-xl flex-col items-center justify-center px-4 text-center">
           <span className="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
@@ -88,12 +88,12 @@ export default function ProfilePage() {
       href: '/settings',
       icon: Settings,
       title: t('Settings', 'الإعدادات', '设置'),
-      description: t('Choose language, theme and country.', 'اختر اللغة والمظهر والبلد.', '选择语言、主题和国家。'),
+      description: t('Choose language and country.', 'اختر اللغة والبلد.', '选择语言和国家/地区。'),
     },
   ];
 
   return (
-    <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
       <main className="container mx-auto max-w-5xl px-4 py-6 sm:py-10">

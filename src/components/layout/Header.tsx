@@ -13,10 +13,8 @@ import {
   Loader2,
   LogOut,
   Menu,
-  Moon,
   ReceiptText,
   Settings,
-  Sun,
   User,
   Wallet,
   Zap,
@@ -60,8 +58,6 @@ export function Header() {
     isAccountLoading,
     logout,
     formatLocalAmount,
-    theme,
-    toggleTheme,
   } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const activeLanguage = languageOptions.find((option) => option.id === language) ?? languageOptions[0];
@@ -74,10 +70,10 @@ export function Header() {
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
   const navLinkClass = (href: string) => cn(
-    'flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
+    'flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928]',
     isRouteActive(href)
-      ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200'
-      : 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-200 dark:hover:bg-white/10'
+      ? 'bg-[#f7b928] text-[#07152e]'
+      : 'text-white/75 hover:bg-white/10 hover:text-white'
   );
 
   const mobileTabs = [
@@ -125,29 +121,29 @@ export function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-black/10 bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/90">
+      <header data-v2-header className="v2-brand-header sticky top-0 z-50 w-full border-b backdrop-blur-xl">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="grid h-16 grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2 lg:flex lg:gap-6">
+          <div className="grid h-[68px] grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2 lg:flex lg:gap-7">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button
                   aria-label={t('Open menu', 'افتح القائمة', '打开菜单')}
                   variant="ghost"
                   size="icon"
-                  className="lg:hidden"
+                  className="text-white hover:bg-white/10 hover:text-white lg:hidden"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
               <SheetContent
                 side={dir === 'rtl' ? 'right' : 'left'}
-                className="w-[calc(100vw-1.5rem)] max-w-sm overflow-y-auto border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-950"
+                className="w-[calc(100vw-1.5rem)] max-w-sm overflow-y-auto border-white/10 bg-[#020817] p-5 text-white"
               >
                 <SheetHeader className={dir === 'rtl' ? 'text-right' : 'text-left'}>
-                  <SheetTitle className="text-zinc-950 dark:text-white">
+                  <SheetTitle className="text-white">
                     {t('Menu', 'القائمة', '菜单')}
                   </SheetTitle>
-                  <SheetDescription className="text-zinc-500 dark:text-zinc-400">
+                  <SheetDescription className="text-[#b8c5db]">
                     {t(
                       mobileMenuSheetCopy.description.en,
                       mobileMenuSheetCopy.description.ar,
@@ -184,10 +180,10 @@ export function Header() {
                   </Link>
                 </nav>
 
-                <section className="mt-7 border-t border-black/10 pt-6 dark:border-white/10">
+                <section className="mt-7 border-t border-white/10 pt-6">
                   <div className="mb-3 flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-blue-600 dark:text-blue-300" />
-                    <h2 className="text-sm font-semibold text-zinc-950 dark:text-white">
+                    <Globe className="h-4 w-4 text-[#f7b928]" />
+                    <h2 className="text-sm font-semibold text-white">
                       {t('Language', 'اللغة', '语言')}
                     </h2>
                   </div>
@@ -199,7 +195,7 @@ export function Header() {
                         size="sm"
                         variant={language === option.id ? 'default' : 'outline'}
                         onClick={() => setLanguage(option.id)}
-                        className={language === option.id ? 'bg-blue-600 text-white hover:bg-blue-700' : ''}
+                        className={language === option.id ? 'bg-[#f7b928] text-[#07152e] hover:bg-[#ffd05a]' : 'border-white/15 bg-white/5 text-white hover:bg-white/10'}
                       >
                         {option.label}
                       </Button>
@@ -207,10 +203,10 @@ export function Header() {
                   </div>
                 </section>
 
-                <div className="mt-7 border-t border-black/10 pt-6 dark:border-white/10">
+                <div className="mt-7 border-t border-white/10 pt-6">
                   {isAccountLoading ? (
-                    <div className="flex min-h-12 items-center gap-3 rounded-lg bg-zinc-100 px-4 text-sm text-zinc-600 dark:bg-white/5 dark:text-zinc-300" role="status">
-                      <Loader2 className="h-4 w-4 animate-spin text-blue-600 motion-reduce:animate-none" />
+                    <div className="flex min-h-12 items-center gap-3 rounded-lg bg-white/5 px-4 text-sm text-[#b8c5db]" role="status">
+                      <Loader2 className="h-4 w-4 animate-spin text-[#f7b928] motion-reduce:animate-none" />
                       {t('Checking account...', 'جارٍ التحقق من الحساب...', '正在检查账号...')}
                     </div>
                   ) : isAuthenticated ? (
@@ -234,7 +230,7 @@ export function Header() {
                       </Button>
                     </div>
                   ) : (
-                    <Button asChild className="w-full bg-blue-600 text-white hover:bg-blue-700">
+                    <Button asChild className="v2-primary-button w-full">
                       <Link href="/auth" onClick={closeMobileMenu}>
                         {t('Login', 'تسجيل الدخول', '登录')}
                       </Link>
@@ -245,7 +241,7 @@ export function Header() {
             </Sheet>
 
             <Link href="/" className="mx-auto flex min-h-11 min-w-0 items-center gap-2 lg:mx-0" aria-label={t('Al-Wasl Digital home', 'الرئيسية للوصول الرقمي', 'Al-Wasl 数字服务首页')}>
-              <span className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white shadow-sm">
+              <span className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg border border-white/20 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.22)]">
                 <Image
                   src="/brand/alwasl-mark.jpg"
                   alt=""
@@ -256,10 +252,10 @@ export function Header() {
                 />
               </span>
               <span className="hidden min-w-0 sm:block">
-                <span className="block truncate text-sm font-semibold text-zinc-950 dark:text-white">
+                <span className="block truncate text-sm font-semibold text-white">
                   {t('Al-Wasl Digital', 'الوصل', 'Al-Wasl 数字服务')}
                 </span>
-                <span className="block text-[11px] text-zinc-500 dark:text-zinc-400">
+                <span className="block text-[11px] text-[#b8c5db]">
                   {t('WAHO top-ups', 'شحن WAHO', 'WAHO 充值')}
                 </span>
               </span>
@@ -276,16 +272,16 @@ export function Header() {
                   href={item.href}
                   aria-current={isRouteActive(item.href) ? 'page' : undefined}
                   className={cn(
-                    'flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors',
+                    'relative flex min-h-11 items-center rounded-md px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928]',
                     isRouteActive(item.href)
-                      ? 'bg-zinc-100 text-zinc-950 dark:bg-white/10 dark:text-white'
-                      : 'text-zinc-600 hover:text-zinc-950 dark:text-zinc-300 dark:hover:text-white'
+                      ? 'bg-white/10 text-[#f7b928] after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:bg-[#f7b928]'
+                      : 'text-white/70 hover:bg-white/5 hover:text-white'
                   )}
                 >
                   {item.label}
                 </Link>
               ))}
-              <Button asChild className="ms-2 bg-blue-600 text-white hover:bg-blue-700">
+              <Button asChild className="v2-primary-button ms-2">
                 <Link href="/top-up/waho-top-up" aria-current={pathname.startsWith('/top-up') ? 'page' : undefined}>
                   <Zap className="h-4 w-4" />
                   {t('Top up WAHO', 'اشحن WAHO', '充值 WAHO')}
@@ -294,28 +290,17 @@ export function Header() {
             </nav>
 
             <div className="flex items-center justify-end gap-0.5 sm:gap-1">
-              <Button
-                aria-label={theme === 'light'
-                  ? t('Switch to dark mode', 'التبديل إلى الوضع الداكن', '切换到深色模式')
-                  : t('Switch to light mode', 'التبديل إلى الوضع الفاتح', '切换到浅色模式')}
-                variant="ghost"
-                size="icon"
-                onClick={toggleTheme}
-              >
-                {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-              </Button>
-
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     aria-label={t('Change language', 'تغيير اللغة', '切换语言')}
                     variant="ghost"
                     size="sm"
-                    className="gap-1 px-2 sm:px-3"
+                    className="gap-1 px-2 text-white/80 hover:bg-white/10 hover:text-white sm:px-3"
                   >
-                    <Globe className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                    <Globe className="h-4 w-4 text-[#f7b928]" />
                     <span className="text-xs font-medium">{activeLanguage.short}</span>
-                    <ChevronDown className="hidden h-3 w-3 text-zinc-400 sm:block" />
+                    <ChevronDown className="hidden h-3 w-3 text-white/45 sm:block" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -323,7 +308,7 @@ export function Header() {
                     <DropdownMenuItem
                       key={option.id}
                       onClick={() => setLanguage(option.id)}
-                      className={language === option.id ? 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-200' : ''}
+                      className={language === option.id ? 'bg-[#f7b928]/15 text-[#9b6800] dark:text-[#f7b928]' : ''}
                     >
                       {option.label}
                     </DropdownMenuItem>
@@ -333,15 +318,15 @@ export function Header() {
 
               {isAccountLoading ? (
                 <span className="flex h-10 w-10 items-center justify-center" role="status" aria-label={t('Checking account', 'جارٍ التحقق من الحساب', '正在检查账号')}>
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-600 motion-reduce:animate-none" />
+                  <Loader2 className="h-4 w-4 animate-spin text-[#f7b928] motion-reduce:animate-none" />
                 </span>
               ) : isAuthenticated ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button aria-label={t('Open account menu', 'افتح قائمة الحساب', '打开账号菜单')} variant="ghost" size="icon">
-                      <Avatar className="h-8 w-8 border border-black/10 dark:border-white/10">
+                    <Button aria-label={t('Open account menu', 'افتح قائمة الحساب', '打开账号菜单')} variant="ghost" size="icon" className="text-white hover:bg-white/10">
+                      <Avatar className="h-8 w-8 border border-white/15">
                         <AvatarImage src={user?.avatar} alt={user?.name} />
-                        <AvatarFallback className="bg-blue-50 text-xs font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-200">
+                        <AvatarFallback className="bg-[#f7b928] text-xs font-semibold text-[#07152e]">
                           {user?.name?.charAt(0) || 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -376,7 +361,7 @@ export function Header() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button asChild size="sm" className="hidden bg-blue-600 text-white hover:bg-blue-700 sm:inline-flex">
+                <Button asChild size="sm" className="v2-primary-button hidden sm:inline-flex">
                   <Link href="/auth">{t('Login', 'دخول', '登录')}</Link>
                 </Button>
               )}
@@ -388,7 +373,7 @@ export function Header() {
       <nav
         data-mobile-tab-bar
         aria-label={t('Mobile navigation', 'التنقل عبر الهاتف', '移动导航')}
-        className="fixed inset-x-0 bottom-0 z-[60] border-t border-black/10 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl dark:border-white/10 dark:bg-zinc-950/95 lg:hidden"
+        className="v2-mobile-navigation fixed inset-x-0 bottom-0 z-[60] border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
       >
         <div className="mx-auto grid max-w-lg grid-cols-4 px-1">
           {mobileTabs.map((item) => (
@@ -397,13 +382,13 @@ export function Header() {
               href={item.href}
               aria-current={item.active ? 'page' : undefined}
               className={cn(
-                'flex min-h-[68px] flex-col items-center justify-center gap-1 rounded-md px-1 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500',
+                'relative flex min-h-[68px] flex-col items-center justify-center gap-1 rounded-md px-1 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#f7b928]',
                 item.active
-                  ? 'text-blue-700 dark:text-blue-300'
-                  : 'text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-white'
+                  ? 'text-[#f7b928] after:absolute after:inset-x-5 after:top-0 after:h-0.5 after:bg-[#f7b928]'
+                  : 'text-white/55 hover:text-white'
               )}
             >
-              <item.icon className={cn('h-5 w-5', item.active && 'fill-blue-100 dark:fill-blue-950')} />
+              <item.icon className="h-5 w-5" />
               <span className="max-w-full truncate">{item.label}</span>
             </Link>
           ))}

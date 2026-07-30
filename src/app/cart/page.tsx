@@ -10,7 +10,7 @@ export default function CartPage() {
   const { t, dir } = useApp();
 
   return (
-    <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
       <main className="container mx-auto px-4 py-8">

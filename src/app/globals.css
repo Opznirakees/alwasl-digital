@@ -11,25 +11,37 @@
     --card-foreground: 220 24% 12%;
     --popover: 0 0% 100%;
     --popover-foreground: 220 24% 12%;
-    --primary: 211 100% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 42 91% 48%;
+    --primary-foreground: 220 84% 13%;
     --secondary: 220 16% 93%;
     --secondary-foreground: 220 24% 12%;
     --muted: 220 16% 94%;
     --muted-foreground: 220 8% 42%;
-    --accent: 43 86% 50%;
+    --accent: 213 83% 51%;
     --accent-foreground: 220 24% 12%;
     --destructive: 4 86% 58%;
     --destructive-foreground: 0 0% 100%;
     --border: 220 14% 88%;
     --input: 220 14% 90%;
-    --ring: 211 100% 50%;
+    --ring: 42 91% 48%;
     --radius: 0.5rem;
     --chart-1: 211 100% 50%;
     --chart-2: 43 86% 50%;
     --chart-3: 160 84% 36%;
     --chart-4: 220 9% 46%;
     --chart-5: 4 86% 58%;
+    --v2-canvas: #f5f7fb;
+    --v2-surface: #ffffff;
+    --v2-surface-raised: #eef3fa;
+    --v2-navy: #020817;
+    --v2-navy-soft: #06152f;
+    --v2-navy-raised: #0a2148;
+    --v2-gold: #e7a600;
+    --v2-gold-hover: #c98d00;
+    --v2-blue: #1769d2;
+    --v2-text: #07152e;
+    --v2-muted: #53627a;
+    --v2-border: #d9e1ec;
   }
 
   .dark {
@@ -39,24 +51,36 @@
     --card-foreground: 0 0% 96%;
     --popover: 240 8% 10%;
     --popover-foreground: 0 0% 96%;
-    --primary: 211 100% 50%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 43 92% 56%;
+    --primary-foreground: 220 84% 13%;
     --secondary: 240 6% 15%;
     --secondary-foreground: 0 0% 96%;
     --muted: 240 5% 16%;
     --muted-foreground: 240 5% 66%;
-    --accent: 43 86% 50%;
+    --accent: 213 83% 58%;
     --accent-foreground: 0 0% 98%;
     --destructive: 4 86% 58%;
     --destructive-foreground: 0 0% 100%;
     --border: 240 5% 22%;
     --input: 240 5% 22%;
-    --ring: 211 100% 50%;
+    --ring: 43 92% 56%;
     --chart-1: 211 100% 60%;
     --chart-2: 43 86% 56%;
     --chart-3: 160 84% 42%;
     --chart-4: 240 5% 66%;
     --chart-5: 4 86% 64%;
+    --v2-canvas: #020817;
+    --v2-surface: #06152f;
+    --v2-surface-raised: #0a2148;
+    --v2-navy: #020817;
+    --v2-navy-soft: #06152f;
+    --v2-navy-raised: #0a2148;
+    --v2-gold: #f7b928;
+    --v2-gold-hover: #ffd05a;
+    --v2-blue: #4e9cff;
+    --v2-text: #ffffff;
+    --v2-muted: #b8c5db;
+    --v2-border: rgba(255, 255, 255, 0.14);
   }
 
   * {
@@ -71,7 +95,7 @@
   body {
     @apply bg-background text-foreground;
     min-height: 100vh;
-    background: #f5f5f7;
+    background: var(--v2-canvas);
     font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
     text-rendering: optimizeLegibility;
   }
@@ -89,8 +113,8 @@
   }
 
   .dark body {
-    background: #09090b;
-    color: #f4f4f5;
+    background: #020817;
+    color: #ffffff;
   }
 
   .light body {
@@ -99,6 +123,164 @@
 
   [dir="rtl"] {
     font-family: var(--font-arabic), var(--font-geist-sans), system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .v2-page {
+    min-height: 100vh;
+    overflow-x: clip;
+    background: var(--v2-canvas);
+    color: var(--v2-text);
+  }
+
+  .v2-surface {
+    border: 1px solid var(--v2-border);
+    border-radius: 0.5rem;
+    background: var(--v2-surface);
+    color: var(--v2-text);
+    box-shadow: 0 18px 52px rgba(1, 8, 24, 0.1);
+  }
+
+  .dark .v2-surface {
+    box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+  }
+
+  .v2-surface-raised {
+    border: 1px solid var(--v2-border);
+    border-radius: 0.5rem;
+    background: var(--v2-surface-raised);
+    color: var(--v2-text);
+  }
+
+  .v2-primary-button {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    background: var(--v2-gold);
+    padding: 0.75rem 1.25rem;
+    color: #07152e;
+    font-size: 0.875rem;
+    font-weight: 700;
+    transition: background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .v2-primary-button:hover {
+    background: var(--v2-gold-hover);
+  }
+
+  .v2-primary-button:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 3px;
+  }
+
+  .v2-primary-button:disabled,
+  .v2-primary-button[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .v2-secondary-button {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--v2-border);
+    border-radius: 0.375rem;
+    background: color-mix(in srgb, var(--v2-surface) 72%, transparent);
+    padding: 0.75rem 1.25rem;
+    color: var(--v2-text);
+    font-size: 0.875rem;
+    font-weight: 700;
+    transition: background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .v2-secondary-button:hover {
+    border-color: color-mix(in srgb, var(--v2-gold) 72%, transparent);
+    background: var(--v2-surface-raised);
+  }
+
+  .v2-secondary-button:focus-visible {
+    outline: 3px solid var(--v2-gold);
+    outline-offset: 3px;
+  }
+
+  .v2-kicker {
+    color: var(--v2-gold);
+    font-size: 0.8125rem;
+    font-weight: 700;
+  }
+
+  .v2-muted {
+    color: var(--v2-muted);
+  }
+
+  .v2-input {
+    border-color: var(--v2-border);
+    background: var(--v2-surface-raised);
+    color: var(--v2-text);
+  }
+
+  .v2-input::placeholder {
+    color: color-mix(in srgb, var(--v2-muted) 74%, transparent);
+  }
+
+  .v2-input:focus-visible {
+    border-color: var(--v2-gold);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--v2-gold) 25%, transparent);
+  }
+
+  .v2-brand-header {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(2, 8, 23, 0.96);
+    color: #ffffff;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18);
+  }
+
+  .v2-mobile-navigation {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(2, 8, 23, 0.97);
+    color: #ffffff;
+    box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.22);
+  }
+
+  .v2-admin-page {
+    min-height: 100vh;
+    overflow-x: clip;
+    background: var(--v2-navy);
+    color: #ffffff;
+  }
+
+  .v2-admin-page button.bg-emerald-600,
+  .v2-admin-page button.bg-emerald-500,
+  .v2-admin-page button.from-emerald-500 {
+    border-color: transparent !important;
+    background: var(--v2-gold) !important;
+    background-image: none !important;
+    color: #07152e !important;
+  }
+
+  .v2-admin-page button.bg-emerald-600:hover,
+  .v2-admin-page button.bg-emerald-500:hover,
+  .v2-admin-page button.from-emerald-500:hover {
+    background: var(--v2-gold-hover) !important;
+  }
+
+  .v2-admin-page button.border-emerald-500\/30,
+  .v2-admin-page a.border-emerald-500\/30 {
+    border-color: color-mix(in srgb, var(--v2-gold) 42%, transparent) !important;
+    color: var(--v2-gold) !important;
+  }
+
+  .v2-admin-page button.border-emerald-500\/30:hover,
+  .v2-admin-page a.border-emerald-500\/30:hover {
+    background: color-mix(in srgb, var(--v2-gold) 10%, transparent) !important;
+    color: var(--v2-gold-hover) !important;
   }
 }
 
@@ -154,4 +336,58 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 122, 255, 0.42);
   }
+}
+
+/* Scoped compatibility for customer pages that still use existing dark utilities. */
+.dark .v2-page .dark\:bg-zinc-900 {
+  background-color: var(--v2-surface) !important;
+}
+
+.dark .v2-page .dark\:bg-zinc-950,
+.dark .v2-page .dark\:bg-white\/5 {
+  background-color: var(--v2-surface-raised) !important;
+}
+
+.dark .v2-page .dark\:text-blue-200,
+.dark .v2-page .dark\:text-blue-300 {
+  color: var(--v2-gold) !important;
+}
+
+.dark .v2-page .dark\:border-blue-400,
+.dark .v2-page .dark\:border-blue-400\/25 {
+  border-color: color-mix(in srgb, var(--v2-gold) 55%, transparent) !important;
+}
+
+.dark .v2-page .dark\:bg-blue-500\/10,
+.dark .v2-page .dark\:bg-blue-500\/15 {
+  background-color: color-mix(in srgb, var(--v2-gold) 10%, var(--v2-surface)) !important;
+}
+
+.dark .v2-page .dark\:hover\:border-blue-400:hover {
+  border-color: var(--v2-gold) !important;
+}
+
+.v2-page .bg-blue-600 {
+  background-color: var(--v2-gold) !important;
+  color: #07152e !important;
+}
+
+.v2-page .hover\:bg-blue-700:hover {
+  background-color: var(--v2-gold-hover) !important;
+  color: #07152e !important;
+}
+
+.v2-page .text-blue-700,
+.v2-page .text-blue-600 {
+  color: var(--v2-gold) !important;
+}
+
+.v2-page .border-blue-600,
+.v2-page .border-blue-300 {
+  border-color: var(--v2-gold) !important;
+}
+
+.v2-page .focus-visible\:ring-blue-500:focus-visible,
+.v2-page .focus-within\:ring-blue-500:focus-within {
+  --tw-ring-color: var(--v2-gold) !important;
 }

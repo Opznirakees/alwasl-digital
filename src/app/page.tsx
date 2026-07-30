@@ -6,11 +6,12 @@ import { useEffect, useState } from 'react';
 import {
   ArrowRight,
   BadgeCheck,
-  CheckCircle2,
   CreditCard,
+  Gem,
   Headphones,
   Loader2,
   MessageCircle,
+  ReceiptText,
   RefreshCw,
   ShieldCheck,
   UserRoundCheck,
@@ -24,7 +25,7 @@ import { useApp } from '@/contexts/AppContext';
 import type { Banner, Game } from '@/types';
 
 export default function HomePage() {
-  const { t, dir, language, selectedCountry } = useApp();
+  const { t, dir, language, selectedCountry, formatLocalAmount } = useApp();
   const [wahoTopUp, setWahoTopUp] = useState<Game | null>(null);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [isLoadingHome, setIsLoadingHome] = useState(true);
@@ -85,192 +86,236 @@ export default function HomePage() {
     {
       icon: WalletCards,
       number: '1',
-      title: t('Choose an amount', 'اختر المبلغ', '选择金额'),
-      body: t('Tap the balance you want to add.', 'اضغط على الرصيد الذي تريد إضافته.', '点击您想充值的金额。'),
+      title: t('Choose balance', 'اختر الرصيد', '选择余额'),
+      body: t('Tap the amount you want.', 'اضغط على المبلغ الذي تريده.', '点击您需要的金额。'),
     },
     {
       icon: UserRoundCheck,
       number: '2',
-      title: t('Check the WAHO ID', 'تحقق من معرف WAHO', '检查 WAHO ID'),
-      body: t('Enter the ID and check the account name.', 'أدخل المعرف وتحقق من اسم الحساب.', '输入 ID 并核对账号名称。'),
+      title: t('Check WAHO ID', 'تحقق من معرف WAHO', '检查 WAHO ID'),
+      body: t('Confirm the right account.', 'أكد الحساب الصحيح.', '确认正确的账号。'),
     },
     {
-      icon: CreditCard,
+      icon: ReceiptText,
       number: '3',
-      title: t('Pay and follow', 'ادفع وتابع', '付款并跟踪'),
-      body: t('Pay, then follow the order with its order ID.', 'ادفع ثم تابع الطلب باستخدام رقمه.', '付款后使用订单号跟踪。'),
+      title: t('Confirm order', 'أكد الطلب', '确认订单'),
+      body: t('Pay and keep the order ID.', 'ادفع واحتفظ برقم الطلب.', '付款并保存订单号。'),
+    },
+  ];
+
+  const serviceItems = [
+    {
+      icon: CreditCard,
+      title: t('Clear payment choice', 'خيار دفع واضح', '付款选择清晰'),
+      body: t('See the total before confirming.', 'شاهد الإجمالي قبل التأكيد.', '确认前查看总价。'),
+    },
+    {
+      icon: ShieldCheck,
+      title: t('Account check', 'فحص الحساب', '账号检查'),
+      body: t('Check the WAHO name first.', 'تحقق من اسم WAHO أولاً.', '先核对 WAHO 名称。'),
+    },
+    {
+      icon: ReceiptText,
+      title: t('Track your order', 'تتبع طلبك', '跟踪订单'),
+      body: t('Use one clear order ID.', 'استخدم رقم طلب واضحاً.', '使用清晰的订单号。'),
+    },
+    {
+      icon: Headphones,
+      title: t('Help from LEO', 'مساعدة من LEO', 'LEO 为您提供帮助'),
+      body: t('Send your ID on WhatsApp.', 'أرسل معرفك عبر واتساب.', '通过 WhatsApp 发送您的 ID。'),
     },
   ];
 
   return (
-    <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div data-v2-home className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
-      <main className="container mx-auto space-y-14 px-4 py-4 sm:py-6 md:space-y-20 md:py-8">
-        <HeroBanner banner={banners[0]} />
+      <main>
+        <div className="mx-auto max-w-[1280px] px-3 pb-0 pt-3 sm:px-4 sm:pt-5">
+          <HeroBanner banner={banners[0]} />
+        </div>
 
-        <section aria-labelledby="amount-heading">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <section data-v2-steps-strip className="v2-light-band mt-3 border-y border-[#d9e1ec] bg-white text-[#07152e] sm:mt-4" aria-labelledby="steps-heading">
+          <div className="mx-auto max-w-[1280px] px-4 py-5 sm:py-6 lg:grid lg:grid-cols-[230px_minmax(0,1fr)] lg:items-center lg:gap-7">
             <div>
-              <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                {t('Start here', 'ابدأ من هنا', '从这里开始')}
-              </p>
-              <h2 id="amount-heading" className="mt-2 text-2xl font-semibold text-zinc-950 dark:text-white sm:text-3xl">
-                {t('How much WAHO balance do you need?', 'كم تحتاج من رصيد WAHO؟', '您需要充值多少 WAHO 余额？')}
+              <p className="text-xs font-bold text-[#9b6800]">{t('How it works', 'كيف يعمل', '充值方法')}</p>
+              <h2 id="steps-heading" className="mt-1 text-2xl font-bold sm:text-3xl lg:text-2xl">
+                {t('Top up in 3 steps', 'اشحن في 3 خطوات', '3 步完成充值')}
               </h2>
-            </div>
-            <p className="max-w-md text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-              {t('Choose now. You can still change the amount on the next screen.', 'اختر الآن. يمكنك تغيير المبلغ في الشاشة التالية.', '现在选择，下一页仍可更改金额。')}
-            </p>
-          </div>
-
-          {isLoadingHome ? (
-            <div className="mt-6" role="status" aria-live="polite">
-              <p className="mb-3 flex items-center gap-2 text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                <Loader2 className="h-4 w-4 animate-spin text-blue-600 motion-reduce:animate-none" />
-                {t('Checking available amounts...', 'جارٍ التحقق من المبالغ المتاحة...', '正在查看可用金额...')}
+              <p className="mt-2 text-sm leading-5 text-[#53627a]">
+                {t('Your details stay visible until you confirm.', 'تبقى بياناتك واضحة حتى التأكيد.', '确认前信息始终可见。')}
               </p>
-              <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 10rem), 1fr))' }}>
-                {[1, 2, 3, 4, 5].map((item) => <div key={item} className="h-28 animate-pulse rounded-lg bg-white motion-reduce:animate-none dark:bg-zinc-900" />)}
-              </div>
             </div>
-          ) : topUpPackages.length > 0 ? (
-            <div className="mt-6 grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 10rem), 1fr))' }}>
-              {topUpPackages.map((pkg) => {
-                const amount = formatAmount(pkg.amount);
-                return (
-                  <Link
-                    key={pkg.id}
-                    href={`/top-up/${wahoTopUp?.slug ?? 'waho-top-up'}?amount=${pkg.amount}`}
-                    aria-label={t(`Choose ${amount} IQD`, `اختر ${amount} د.ع`, `选择 ${amount} IQD`)}
-                    className="group relative flex min-h-28 flex-col justify-between rounded-lg border border-black/10 bg-white p-4 shadow-sm transition-colors hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-white/10 dark:bg-zinc-900 dark:hover:border-blue-400 dark:hover:bg-blue-500/10"
-                  >
-                    {pkg.isPopular && (
-                      <span className="absolute end-3 top-3 rounded-full bg-[#ffd33d] px-2 py-1 text-[10px] font-semibold text-[#071b46]">
-                        {t('Popular', 'الأكثر اختياراً', '热门')}
-                      </span>
-                    )}
-                    <span className="text-2xl font-semibold tabular-nums text-zinc-950 dark:text-white">{amount}</span>
-                    <span className="mt-4 inline-flex items-center justify-between text-xs font-semibold text-blue-700 dark:text-blue-300">
-                      IQD
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 rtl:rotate-180" />
-                    </span>
-                  </Link>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="mt-6 flex flex-col gap-4 rounded-lg border border-black/10 bg-white p-5 text-sm text-zinc-600 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="font-semibold text-zinc-950 dark:text-white">{homeError ? t('Amounts could not be loaded', 'تعذر تحميل المبالغ', '无法加载金额') : t('No amounts are available right now', 'لا توجد مبالغ متاحة الآن', '目前没有可用金额')}</p>
-                <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">{t('Try again before starting your top-up.', 'حاول مرة أخرى قبل بدء الشحن.', '开始充值前请重试。')}</p>
-              </div>
-              <Button type="button" variant="outline" onClick={() => setLoadAttempt((value) => value + 1)}>
-                <RefreshCw className="h-4 w-4" />
-                {t('Try again', 'حاول مرة أخرى', '重试')}
-              </Button>
-            </div>
-          )}
-        </section>
 
-        <section aria-labelledby="steps-heading">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-              {t('Three simple steps', 'ثلاث خطوات بسيطة', '简单三步')}
-            </p>
-            <h2 id="steps-heading" className="mt-2 text-2xl font-semibold text-zinc-950 dark:text-white sm:text-3xl">
-              {t('You always know what comes next', 'تعرف دائماً ما هي الخطوة التالية', '每一步都清楚明白')}
-            </h2>
-          </div>
-
-          <ol className="mt-7 grid gap-4 md:grid-cols-3">
-            {steps.map((step) => (
-              <li key={step.number} className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
+            <ol className="mt-5 grid gap-3 md:grid-cols-3 lg:mt-0">
+              {steps.map((step) => (
+                <li key={step.number} className="flex min-h-20 items-center gap-3 rounded-lg border border-[#d9e1ec] bg-[#f7f9fc] px-3 py-3">
+                  <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-[#071b46] text-[#f7b928]">
                     <step.icon className="h-5 w-5" />
                   </span>
-                  <span className="text-sm font-semibold tabular-nums text-zinc-400 dark:text-zinc-500">
-                    {t(`Step ${step.number}`, `الخطوة ${step.number}`, `第 ${step.number} 步`)}
-                  </span>
-                </div>
-                <h3 className="mt-5 text-lg font-semibold text-zinc-950 dark:text-white">{step.title}</h3>
-                <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{step.body}</p>
-              </li>
-            ))}
-          </ol>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-[#9b6800]">
+                      {t(`Step ${step.number}`, `الخطوة ${step.number}`, `第 ${step.number} 步`)}
+                    </p>
+                    <h3 className="mt-0.5 font-bold text-[#07152e]">{step.title}</h3>
+                    <p className="mt-1 text-sm leading-5 text-[#53627a]">{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
         </section>
 
-        <section className="grid gap-6 rounded-lg border border-black/10 bg-white p-6 dark:border-white/10 dark:bg-zinc-900 md:grid-cols-[1fr_auto] md:items-center md:p-8">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-[#eaf8ee] text-[#1f8f3a] dark:bg-[#34c759]/15 dark:text-[#52d273]">
-              <MessageCircle className="h-6 w-6" />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-zinc-950 dark:text-white">
-                {t('Need help from LEO?', 'تحتاج مساعدة من LEO؟', '需要 LEO 的帮助？')}
-              </h2>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                {t('Send your WAHO ID or order ID on WhatsApp. We will help you find the next step.', 'أرسل معرف WAHO أو رقم الطلب عبر واتساب وسنساعدك في الخطوة التالية.', '通过 WhatsApp 发送 WAHO ID 或订单号，我们会帮助您完成下一步。')}
+        <section id="amounts" aria-labelledby="amount-heading" className="bg-[#020817] py-10 text-white sm:py-12">
+          <div className="mx-auto max-w-[1280px] px-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="v2-kicker">{t('WAHO top-up packages', 'باقات شحن WAHO', 'WAHO 充值套餐')}</p>
+                <h2 id="amount-heading" className="mt-2 text-3xl font-bold text-white sm:text-4xl">
+                  {t('Choose your WAHO balance', 'اختر رصيد WAHO', '选择 WAHO 余额')}
+                </h2>
+              </div>
+              <p className="max-w-md text-sm leading-6 text-[#b8c5db]">
+                {t('Tap one amount to continue. You can change it in the next step.', 'اضغط على مبلغ للمتابعة. يمكنك تغييره في الخطوة التالية.', '点击一个金额继续，下一步仍可更改。')}
               </p>
             </div>
+
+            {isLoadingHome ? (
+              <div className="mt-7" role="status" aria-live="polite">
+                <p className="mb-3 flex items-center gap-2 text-sm font-semibold text-[#b8c5db]">
+                  <Loader2 className="h-4 w-4 animate-spin text-[#f7b928] motion-reduce:animate-none" />
+                  {t('Checking available amounts...', 'جارٍ التحقق من المبالغ المتاحة...', '正在查看可用金额...')}
+                </p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  {[1, 2, 3, 4, 5].map((item) => (
+                    <div key={item} className="h-64 animate-pulse rounded-lg border border-white/10 bg-[#06152f] motion-reduce:animate-none" />
+                  ))}
+                </div>
+              </div>
+            ) : topUpPackages.length > 0 ? (
+              <div className={`mt-6 grid gap-4 ${dir === 'rtl' ? 'lg:grid-cols-[240px_minmax(0,1fr)]' : 'lg:grid-cols-[minmax(0,1fr)_240px]'}`}>
+                <div data-v2-package-grid className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-5">
+                  {topUpPackages.map((pkg) => {
+                    const amount = formatAmount(pkg.amount);
+                    const price = formatLocalAmount(pkg.salePrice || pkg.basePrice);
+                    return (
+                      <Link
+                        key={pkg.id}
+                        href={`/top-up/${wahoTopUp?.slug ?? 'waho-top-up'}?amount=${pkg.amount}`}
+                        aria-label={t(`Choose ${amount} IQD`, `اختر ${amount} د.ع`, `选择 ${amount} IQD`)}
+                        className="v2-package-card group relative flex min-h-60 flex-col overflow-hidden rounded-lg border border-[#f7b928]/38 bg-[#06152f] p-3.5 text-white shadow-[0_18px_42px_rgba(0,0,0,0.22)] transition-colors hover:border-[#f7b928] hover:bg-[#0a2148] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928] focus-visible:ring-offset-2 focus-visible:ring-offset-[#020817]"
+                      >
+                        {pkg.isPopular && (
+                          <span className="absolute end-2 top-2 rounded-full bg-[#f7b928] px-2 py-1 text-[10px] font-bold text-[#07152e]">
+                            {t('Popular', 'الأكثر اختياراً', '热门')}
+                          </span>
+                        )}
+                        <div className="flex min-h-14 items-center gap-2 pe-12">
+                          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#020817]">
+                            <Gem className="h-5 w-5 text-[#4e9cff]" />
+                          </span>
+                          <span className="text-sm font-bold text-[#57e7cf]">WAHO</span>
+                        </div>
+                        <div className="mt-3">
+                          <span className="block text-2xl font-bold tabular-nums text-white sm:text-3xl">{amount}</span>
+                          <span className="mt-1 block text-xs font-semibold text-[#b8c5db]">
+                            {t('IQD balance', 'رصيد د.ع', 'IQD 余额')}
+                          </span>
+                        </div>
+                        <div className="mt-auto border-t border-white/10 pt-3">
+                          <span className="block text-[11px] text-[#b8c5db]">{t('You pay', 'تدفع', '您支付')}</span>
+                          <span className="mt-1 block text-sm font-bold tabular-nums text-[#f7b928]">{price}</span>
+                          <span className="mt-2.5 flex min-h-9 items-center justify-center gap-1.5 rounded-md bg-[#f7b928] px-2 text-xs font-bold text-[#07152e] group-hover:bg-[#ffd05a]">
+                            {t('Choose amount', 'اختر المبلغ', '选择金额')}
+                            <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
+                          </span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                <aside className={`v2-leo-panel flex min-h-60 flex-col items-center justify-center rounded-lg border border-[#f7b928]/35 bg-[#06152f] p-5 text-center shadow-[0_18px_42px_rgba(0,0,0,0.22)] ${dir === 'rtl' ? 'lg:-order-1' : ''}`}>
+                  <div className="relative h-24 w-24 overflow-hidden rounded-full border-4 border-[#f7b928] bg-[#020817]">
+                    <Image data-visual-required-image src="/brand/leo-waho-agent.jpeg" alt="" fill priority unoptimized className="object-cover object-[52%_27%]" sizes="96px" />
+                  </div>
+                  <p className="mt-3 flex items-center gap-2 text-2xl font-bold text-[#f7b928]">
+                    LEO <BadgeCheck className="h-5 w-5 text-[#4e9cff]" />
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-white">
+                    {t('WAHO top-up contact', 'جهة التواصل لشحن WAHO', 'WAHO 充值联系人')}
+                  </p>
+                  <p className="mt-3 max-w-[220px] text-xs leading-5 text-[#b8c5db]">
+                    {t('Send your WAHO ID or order ID when you need help.', 'أرسل معرف WAHO أو رقم الطلب عندما تحتاج للمساعدة.', '需要帮助时，请发送 WAHO ID 或订单号。')}
+                  </p>
+                  <a href={supportWhatsAppHref} target="_blank" rel="noopener noreferrer" className="v2-primary-button mt-4 w-full">
+                    <MessageCircle className="h-4 w-4" />
+                    {t('Ask LEO', 'اسأل LEO', '联系 LEO')}
+                  </a>
+                </aside>
+              </div>
+            ) : (
+              <div className="mt-7 flex flex-col gap-4 rounded-lg border border-white/12 bg-[#06152f] p-5 text-sm text-[#b8c5db] sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-bold text-white">
+                    {homeError ? t('Amounts could not be loaded', 'تعذر تحميل المبالغ', '无法加载金额') : t('No amounts are available right now', 'لا توجد مبالغ متاحة الآن', '目前没有可用金额')}
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-[#b8c5db]">{t('Try again before starting your top-up.', 'حاول مرة أخرى قبل بدء الشحن.', '开始充值前请重试。')}</p>
+                </div>
+                <Button type="button" variant="outline" onClick={() => setLoadAttempt((value) => value + 1)} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                  <RefreshCw className="h-4 w-4" />
+                  {t('Try again', 'حاول مرة أخرى', '重试')}
+                </Button>
+              </div>
+            )}
           </div>
-          <a
-            href={supportWhatsAppHref}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#1f8f3a] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#187631] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#34c759] focus-visible:ring-offset-2 dark:ring-offset-zinc-900"
-          >
-            <MessageCircle className="h-4 w-4" />
-            {t('Chat on WhatsApp', 'تواصل عبر واتساب', 'WhatsApp 咨询')}
-          </a>
         </section>
 
-        <section aria-label={t('Service promises', 'وعود الخدمة', '服务承诺')} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {[
-            { icon: ShieldCheck, title: t('Checked first', 'فحص أولاً', '先检查'), body: t('We check the WAHO account before payment.', 'نفحص حساب WAHO قبل الدفع.', '付款前检查 WAHO 账号。') },
-            { icon: BadgeCheck, title: t('Clear order status', 'حالة طلب واضحة', '订单状态清晰'), body: t('Follow every top-up with an order ID.', 'تابع كل شحن باستخدام رقم الطلب.', '使用订单号跟踪每次充值。') },
-            { icon: Headphones, title: t('Real support', 'دعم حقيقي', '真人客服'), body: t('WhatsApp help when something needs attention.', 'مساعدة عبر واتساب عند الحاجة.', '需要时可通过 WhatsApp 获得帮助。') },
-          ].map((item) => (
-            <div key={item.title} className="flex items-start gap-3 rounded-lg bg-zinc-100 p-4 dark:bg-zinc-900">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-700 dark:text-blue-300" />
-              <div>
-                <h3 className="text-sm font-semibold text-zinc-950 dark:text-white">{item.title}</h3>
-                <p className="mt-1 text-xs leading-5 text-zinc-600 dark:text-zinc-300">{item.body}</p>
+        <section data-v2-service-strip aria-label={t('Service promises', 'وعود الخدمة', '服务承诺')} className="border-y border-[#d9e1ec] bg-white text-[#07152e]">
+          <div className="mx-auto grid max-w-[1280px] gap-0 px-4 py-4 sm:grid-cols-2 lg:grid-cols-4">
+            {serviceItems.map((item) => (
+              <div key={item.title} className="flex min-h-20 items-center gap-3 border-[#d9e1ec] px-3 py-3 lg:border-e last:lg:border-e-0">
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-[#071b46] text-[#f7b928]">
+                  <item.icon className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-[#07152e]">{item.title}</h3>
+                  <p className="mt-1 text-xs leading-5 text-[#53627a]">{item.body}</p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </section>
+
       </main>
 
-      <footer className="mt-16 border-t border-black/10 bg-white dark:border-white/10 dark:bg-zinc-900 md:mt-24">
-        <div className="container mx-auto grid gap-8 px-4 py-9 sm:grid-cols-[1fr_auto] sm:items-start">
+      <footer className="border-t border-[#f7b928]/20 bg-[#020817] text-white">
+        <div className="mx-auto grid max-w-[1280px] gap-6 px-4 py-6 sm:grid-cols-[1fr_auto] sm:items-start">
           <div className="max-w-md">
             <div className="flex items-center gap-3">
-              <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-black/10 bg-white">
-                <Image src="/brand/alwasl-mark.jpg" alt="" fill className="object-contain p-1" sizes="40px" />
+              <div className="relative h-11 w-11 overflow-hidden rounded-lg border border-white/15 bg-white">
+                <Image src="/brand/alwasl-mark.jpg" alt="" fill className="object-contain p-1" sizes="44px" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-zinc-950 dark:text-white">{t('Al-Wasl Digital', 'الوصل', 'Al-Wasl 数字服务')}</p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('WAHO balance top-ups', 'شحن رصيد WAHO', 'WAHO 余额充值')}</p>
+                <p className="text-sm font-bold text-white">{t('Al-Wasl Digital', 'الوصل', 'Al-Wasl 数字服务')}</p>
+                <p className="text-xs text-[#b8c5db]">{t('WAHO balance top-ups', 'شحن رصيد WAHO', 'WAHO 余额充值')}</p>
               </div>
             </div>
-            <p className="mt-4 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-              {t('Simple WAHO top-ups with clear amounts, order tracking, and WhatsApp support.', 'شحن WAHO ببساطة مع مبالغ واضحة وتتبع للطلب ودعم واتساب.', '简单的 WAHO 充值，金额清晰，可跟踪订单并提供 WhatsApp 支持。')}
+            <p className="mt-3 text-sm leading-6 text-[#b8c5db]">
+              {t('Choose the balance, check the account, and follow the order clearly.', 'اختر الرصيد وتحقق من الحساب وتابع الطلب بوضوح.', '选择余额，检查账号，并清楚跟踪订单。')}
             </p>
           </div>
-
-          <nav aria-label={t('Footer links', 'روابط التذييل', '页脚链接')} className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:grid-cols-3">
-            <Link href="/top-up/waho-top-up" className="flex min-h-11 items-center text-zinc-600 hover:text-blue-700 dark:text-zinc-300 dark:hover:text-blue-300">{t('Top up', 'اشحن', '充值')}</Link>
-            <Link href="/orders" className="flex min-h-11 items-center text-zinc-600 hover:text-blue-700 dark:text-zinc-300 dark:hover:text-blue-300">{t('Orders', 'الطلبات', '订单')}</Link>
-            <Link href="/help" className="flex min-h-11 items-center text-zinc-600 hover:text-blue-700 dark:text-zinc-300 dark:hover:text-blue-300">{t('Help', 'مساعدة', '帮助')}</Link>
-            <Link href="/contact" className="flex min-h-11 items-center text-zinc-600 hover:text-blue-700 dark:text-zinc-300 dark:hover:text-blue-300">{t('Contact', 'تواصل', '联系')}</Link>
-            <Link href="/terms" className="flex min-h-11 items-center text-zinc-600 hover:text-blue-700 dark:text-zinc-300 dark:hover:text-blue-300">{t('Terms', 'الشروط', '条款')}</Link>
-            <Link href="/privacy" className="flex min-h-11 items-center text-zinc-600 hover:text-blue-700 dark:text-zinc-300 dark:hover:text-blue-300">{t('Privacy', 'الخصوصية', '隐私')}</Link>
+          <nav aria-label={t('Footer links', 'روابط التذييل', '页脚链接')} className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm text-[#b8c5db] sm:grid-cols-3">
+            <Link href="/top-up/waho-top-up" className="hover:text-[#f7b928]">{t('Top up', 'اشحن', '充值')}</Link>
+            <Link href="/orders" className="hover:text-[#f7b928]">{t('Orders', 'الطلبات', '订单')}</Link>
+            <Link href="/help" className="hover:text-[#f7b928]">{t('Help', 'مساعدة', '帮助')}</Link>
+            <Link href="/contact" className="hover:text-[#f7b928]">{t('Contact', 'اتصل بنا', '联系我们')}</Link>
+            <Link href="/terms" className="hover:text-[#f7b928]">{t('Terms', 'الشروط', '条款')}</Link>
+            <Link href="/privacy" className="hover:text-[#f7b928]">{t('Privacy', 'الخصوصية', '隐私')}</Link>
           </nav>
         </div>
-        <div className="container mx-auto border-t border-black/10 px-4 py-5 text-xs text-zinc-400 dark:border-white/10 dark:text-zinc-500">
-          © 2026 {t('Al-Wasl Digital Services. All rights reserved.', 'الوصل للخدمات الإلكترونية. جميع الحقوق محفوظة.', 'Al-Wasl 数字服务。版权所有。')}
+        <div className="mx-auto max-w-[1280px] border-t border-white/10 px-4 py-3 text-xs text-white/45">
+          © 2026 Al-Wasl Digital Services. {t('All rights reserved.', 'جميع الحقوق محفوظة.', '保留所有权利。')}
         </div>
       </footer>
     </div>

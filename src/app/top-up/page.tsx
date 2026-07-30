@@ -46,7 +46,7 @@ export default function TopUpPage() {
   const topUpPackages = wahoTopUp?.packages.filter((item) => item.inStock) ?? [];
 
   return (
-    <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
       <main className="container mx-auto max-w-5xl px-4 py-6 sm:py-10">

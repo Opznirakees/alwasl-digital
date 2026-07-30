@@ -2,11 +2,10 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Check, Globe, MapPin, Moon, Search, Sun } from 'lucide-react';
+import { ArrowLeft, Check, Globe, MapPin, Search } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { useApp } from '@/contexts/AppContext';
 
 export default function SettingsPage() {
@@ -15,8 +14,6 @@ export default function SettingsPage() {
     language,
     setLanguage,
     dir,
-    theme,
-    toggleTheme,
     countries,
     selectedCountry,
     setSelectedCountry,
@@ -42,7 +39,7 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className={`min-h-screen bg-[#f5f5f7] dark:bg-zinc-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
       <main className="container mx-auto max-w-4xl px-4 py-6 sm:py-10">
@@ -55,34 +52,11 @@ export default function SettingsPage() {
           <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t('Your preferences', 'تفضيلاتك', '您的偏好')}</p>
           <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white sm:text-4xl">{t('Settings', 'الإعدادات', '设置')}</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-            {t('Choose how the app looks and which local prices you see.', 'اختر مظهر التطبيق والأسعار المحلية التي تراها.', '选择应用外观以及您看到的当地价格。')}
+            {t('Choose your language and which local prices you see.', 'اختر لغتك والأسعار المحلية التي تراها.', '选择语言以及您看到的当地价格。')}
           </p>
         </header>
 
         <div className="mt-6 space-y-5">
-          <section className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
-            <div className="flex min-h-14 items-center justify-between gap-4">
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-                  {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-                </span>
-                <div>
-                  <h2 className="font-semibold text-zinc-950 dark:text-white">{t('Dark appearance', 'المظهر الداكن', '深色外观')}</h2>
-                  <p className="mt-1 text-sm leading-5 text-zinc-500 dark:text-zinc-400">
-                    {theme === 'dark'
-                      ? t('Dark mode is on.', 'الوضع الداكن مفعّل.', '深色模式已开启。')
-                      : t('Turn this on for a darker screen.', 'فعّل هذا الخيار لشاشة داكنة.', '开启后屏幕会变暗。')}
-                  </p>
-                </div>
-              </div>
-              <Switch
-                aria-label={t('Use dark mode', 'استخدم الوضع الداكن', '使用深色模式')}
-                checked={theme === 'dark'}
-                onCheckedChange={toggleTheme}
-              />
-            </div>
-          </section>
-
           <section className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
             <div className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"><Globe className="h-5 w-5" /></span>

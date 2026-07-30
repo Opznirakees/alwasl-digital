@@ -1079,9 +1079,12 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+    <div
+      data-v2-admin
+      className={`v2-admin-page min-h-screen bg-gradient-to-b from-[#020817] via-[#06152f] to-[#020817] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}
+    >
       {/* Top Navigation */}
-      <header className="sticky top-0 z-50 border-b border-emerald-800/30 bg-slate-950/90 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-[#f7b928]/20 bg-[#020817]/95 backdrop-blur-xl">
         <div className="flex items-center justify-between gap-3 px-3 sm:px-4 h-16">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <Button
@@ -1140,7 +1143,7 @@ export default function AdminDashboard() {
               )}
             </Button>
             <Link href="/">
-              <Button variant="outline" size="sm" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
+              <Button variant="outline" size="sm" className="border-[#f7b928]/35 text-[#f7b928] hover:bg-[#f7b928]/10 hover:text-[#ffd05a]">
                 <Globe className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">{t('View Site', 'عرض الموقع')}</span>
               </Button>
@@ -1168,9 +1171,9 @@ export default function AdminDashboard() {
                     setActiveTab(item.id);
                     setMobileNavOpen(false);
                   }}
-                  className={`flex min-h-12 w-full items-center gap-3 rounded-md px-4 text-start text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
-                    activeTab === item.id
-                      ? 'bg-blue-500/20 text-blue-200'
+                    className={`flex min-h-12 w-full items-center gap-3 rounded-md px-4 text-start text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928] ${
+                      activeTab === item.id
+                      ? 'border border-[#f7b928]/30 bg-[#f7b928]/10 text-[#f7b928]'
                       : 'text-white/75 hover:bg-white/10 hover:text-white'
                   }`}
                 >
@@ -1186,7 +1189,7 @@ export default function AdminDashboard() {
       <div className="flex">
         {/* Sidebar */}
         <aside
-          className={`fixed left-0 top-16 z-40 hidden h-[calc(100vh-4rem)] bg-slate-900/50 border-r border-emerald-800/30 transition-all duration-300 md:block ${
+          className={`fixed left-0 top-16 z-40 hidden h-[calc(100vh-4rem)] border-r border-[#f7b928]/20 bg-[#06152f]/72 transition-all duration-300 md:block ${
             sidebarOpen ? 'w-64' : 'w-20'
           }`}
         >
@@ -1197,7 +1200,7 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                   activeTab === item.id
-                    ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/10 text-emerald-400 border border-emerald-500/30'
+                    ? 'border border-[#f7b928]/30 bg-[#f7b928]/10 text-[#f7b928]'
                     : 'text-white/70 hover:bg-slate-800/50 hover:text-white'
                 }`}
               >
