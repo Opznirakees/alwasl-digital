@@ -57,7 +57,7 @@ import {
 } from '../src/lib/membership';
 import { mapUser } from '../src/server/mappers';
 import { isOtpAttemptLocked, nextOtpAttemptCount } from '../src/server/otp-policy';
-import { isFakePaymentEnabled } from '../src/server/payment-policy';
+import { isFakePaymentEnabled, isOrderPaymentMethodEnabled } from '../src/server/payment-policy';
 import { createOtpMessage, deliverOtp, isDirectWahaOtpEnabled } from '../src/server/providers/otp';
 import { getProviderAvailableBalance, selectProviderAccounts } from '../src/server/providers/provider-registry';
 import { getWahoProvider, getWahoProviderInfo, isMockWahoEnabled, isWahaWahoProviderEnabled } from '../src/server/providers/waho';
@@ -609,6 +609,31 @@ describe('fake payment rules', () => {
     expect(isFakePaymentEnabled({ NODE_ENV: 'development', ENABLE_FAKE_PAYMENTS: 'true' })).toBe(true);
     expect(isFakePaymentEnabled({ NODE_ENV: 'development', ENABLE_FAKE_PAYMENTS: 'false' })).toBe(false);
     expect(isFakePaymentEnabled({ NODE_ENV: 'test' })).toBe(false);
+  });
+
+  test('only exposes a production checkout method that has a complete server-side payment path', () => {
+    expect(isOrderPaymentMethodEnabled('wallet', { NODE_ENV: 'production' })).toBe(true);
+    expect(isOrderPaymentMethodEnabled('zaincash', { NODE_ENV: 'production', ENABLE_FAKE_PAYMENTS: 'true' })).toBe(false);
+    expect(isOrderPaymentMethodEnabled('asiahawala', { NODE_ENV: 'production', ENABLE_FAKE_PAYMENTS: 'true' })).toBe(false);
+    expect(isOrderPaymentMethodEnabled('card', { NODE_ENV: 'production', ENABLE_FAKE_PAYMENTS: 'true' })).toBe(false);
+    expect(isOrderPaymentMethodEnabled('zaincash', { NODE_ENV: 'development', ENABLE_FAKE_PAYMENTS: 'true' })).toBe(true);
+  });
+
+  test('settles wallet orders through the protected order endpoint and keeps unfinished methods out of the UI', () => {
+    const repoRoot = join(import.meta.dir, '..');
+    const ordersRoute = readFileSync(join(repoRoot, 'src/app/api/orders/route.ts'), 'utf8');
+    const orderService = readFileSync(join(repoRoot, 'src/server/services/orders.ts'), 'utf8');
+    const topUpPage = readFileSync(join(repoRoot, 'src/app/top-up/[slug]/page.tsx'), 'utf8');
+
+    expect(ordersRoute).toContain('assertOrderPaymentMethodEnabled');
+    expect(ordersRoute).toContain('confirmWalletPayment');
+    expect(orderService).toContain('export async function confirmWalletPayment');
+    expect(orderService).toContain("idempotency, 'wallet'");
+    expect(topUpPage).toContain("id: 'wallet'");
+    expect(topUpPage).not.toContain("id: 'zaincash'");
+    expect(topUpPage).not.toContain("id: 'asiahawala'");
+    expect(topUpPage).not.toContain("id: 'card'");
+    expect(topUpPage).toContain('href="/wallet"');
   });
 
   test('marks successful completed provider responses as completed', () => {
@@ -2039,7 +2064,9 @@ describe('admin CRUD rules', () => {
     expect(adminPage).not.toContain('<Switch defaultChecked />');
     expect(adminPage).not.toContain("{ id: 'settings'");
     expect(adminPage).toContain('const canViewAdminDashboard = shouldLoadAdminSummary(user);');
-    expect(adminPage).toContain('canViewAdminDashboard && !adminError');
+    expect(adminPage).toContain('canViewAdminDashboard && !isSummaryLoading');
+    expect(adminPage).not.toContain('canViewAdminDashboard && !adminError');
+    expect(adminPage).toContain('retryAdminData');
   });
 });
 

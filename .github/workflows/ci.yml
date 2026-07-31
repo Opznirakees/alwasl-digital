@@ -78,6 +78,9 @@ jobs:
       - name: Seed database
         run: bun run db:seed
 
+      - name: Database integration tests
+        run: bun run test:integration
+
       - name: Install Playwright browser
         run: bunx playwright install --with-deps chromium
 

@@ -19,6 +19,7 @@ const publicErrors: Record<string, { message: string; status: number }> = {
   INSUFFICIENT_WALLET_BALANCE: { message: 'Insufficient wallet balance', status: 402 },
   ORDER_NOT_REFUNDABLE: { message: 'Order is not refundable', status: 409 },
   REFUND_LEDGER_CONFLICT: { message: 'Refund could not be completed safely', status: 409 },
+  PAYMENT_METHOD_UNAVAILABLE: { message: 'Payment method is not available', status: 400 },
   CRON_SECRET_NOT_CONFIGURED: { message: 'Scheduled jobs are not configured', status: 424 },
   PAYMENT_PROVIDER_NOT_CONFIGURED: { message: 'Payment is temporarily unavailable', status: 424 },
   WAHO_PROVIDER_NOT_CONFIGURED: { message: 'WAHO verification is temporarily unavailable', status: 424 },

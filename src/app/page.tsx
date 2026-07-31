@@ -106,8 +106,8 @@ export default function HomePage() {
   const serviceItems = [
     {
       icon: CreditCard,
-      title: t('Clear payment choices', 'خيارات دفع واضحة', '付款选择清晰'),
-      body: t('Choose an available method and see the total.', 'اختر طريقة متاحة وشاهد الإجمالي.', '选择可用方式并查看总价。'),
+      title: t('Pay from your wallet', 'ادفع من محفظتك', '使用钱包付款'),
+      body: t('See your balance and total before you confirm.', 'شاهد رصيدك والإجمالي قبل التأكيد.', '确认前查看钱包余额和总价。'),
     },
     {
       icon: ShieldCheck,
@@ -209,6 +209,10 @@ export default function HomePage() {
                         aria-label={t(`Choose ${amount} IQD`, `اختر ${amount} د.ع`, `选择 ${amount} IQD`)}
                         className={`v2-package-card group relative flex min-h-64 flex-col overflow-hidden rounded-lg border bg-[#06152f] p-3.5 text-center text-white shadow-[0_18px_42px_rgba(0,0,0,0.22)] transition-colors hover:border-[#f7b928] hover:bg-[#0a2148] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928] focus-visible:ring-offset-2 focus-visible:ring-offset-[#020817] ${
                           pkg.isPopular ? 'border-[#f7b928]/80 bg-[#08204a]' : 'border-[#f7b928]/38'
+                        } ${
+                          topUpPackages.length % 2 === 1
+                            ? 'last:col-span-2 last:mx-auto last:w-[calc(50%-0.3125rem)] sm:last:col-span-1 sm:last:w-full'
+                            : ''
                         }`}
                       >
                         {pkg.isPopular && (

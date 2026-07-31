@@ -92,9 +92,9 @@ describe('V2 visual system', () => {
     expect(hero).toContain('Protected order');
     expect(hero).toContain('طلب محمي');
     expect(hero).toContain('订单保护');
-    expect(home).toContain('Clear payment choices');
-    expect(home).toContain('خيارات دفع واضحة');
-    expect(home).toContain('付款选择清晰');
+    expect(home).toContain('Pay from your wallet');
+    expect(home).toContain('ادفع من محفظتك');
+    expect(home).toContain('使用钱包付款');
     expect(home).toContain('supportWhatsAppNumber');
     expect(`${hero}\n${home}`).not.toMatch(/24\/7|instant top-up|official WAHO|all games|all apps/i);
   });

@@ -9,16 +9,13 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
-  Banknote,
   Check,
   CheckCircle2,
-  CreditCard,
   Gem,
   Loader2,
   LockKeyhole,
   MessageCircle,
   ShieldCheck,
-  Smartphone,
   Wallet,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -68,7 +65,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
   const [zoneId, setZoneId] = useState('');
   const [verifiedUsername, setVerifiedUsername] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('zaincash');
+  const [paymentMethod, setPaymentMethod] = useState('wallet');
   const [financialOtp, setFinancialOtp] = useState('');
   const [otpRequested, setOtpRequested] = useState(false);
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
@@ -136,8 +133,8 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
 
       setUserId(pendingCheckout.userId?.slice(0, 80) ?? '');
       setZoneId(pendingCheckout.zoneId?.slice(0, 80) ?? '');
-      if (['wallet', 'zaincash', 'asiahawala', 'card'].includes(pendingCheckout.paymentMethod ?? '')) {
-        setPaymentMethod(pendingCheckout.paymentMethod ?? 'zaincash');
+      if (pendingCheckout.paymentMethod === 'wallet') {
+        setPaymentMethod('wallet');
       }
       shouldFocusStepRef.current = true;
       setStep('details');
@@ -325,6 +322,10 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       return;
     }
     if (!selectedPackage) return;
+    if (user && user.walletBalance < total) {
+      toast.error(t('Add enough wallet balance before placing the order.', 'أضف رصيداً كافياً إلى المحفظة قبل إرسال الطلب.', '提交订单前，请先充值足够的钱包余额。'));
+      return;
+    }
     if (!/^\d{6}$/.test(financialOtp)) {
       toast.error(t('Enter the 6-digit WhatsApp code', 'أدخل رمز واتساب المكون من 6 أرقام', '请输入 6 位 WhatsApp 验证码'));
       return;
@@ -378,32 +379,12 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
           ? t(`You need ${formatLocalAmount(total)} in your wallet`, `تحتاج إلى ${formatLocalAmount(total)} في محفظتك`, `钱包需要有 ${formatLocalAmount(total)}`)
           : t(`Available: ${formatLocalAmount(user.walletBalance)}`, `المتاح: ${formatLocalAmount(user.walletBalance)}`, `可用余额：${formatLocalAmount(user.walletBalance)}`),
       icon: Wallet,
-      disabled: !user || user.walletBalance < total,
-    },
-    {
-      id: 'zaincash',
-      name: 'ZainCash',
-      description: t('Payment is checked before the top-up starts.', 'يتم فحص الدفع قبل بدء الشحن.', '充值开始前会核对付款。'),
-      icon: Smartphone,
-      disabled: false,
-    },
-    {
-      id: 'asiahawala',
-      name: 'AsiaHawala',
-      description: t('Payment is checked before the top-up starts.', 'يتم فحص الدفع قبل بدء الشحن.', '充值开始前会核对付款。'),
-      icon: Banknote,
-      disabled: false,
-    },
-    {
-      id: 'card',
-      name: t('Bank card', 'بطاقة مصرفية', '银行卡'),
-      description: t('Use your card details at the payment step.', 'استخدم بيانات بطاقتك في خطوة الدفع.', '在付款步骤输入银行卡信息。'),
-      icon: CreditCard,
-      disabled: false,
+      disabled: Boolean(user && user.walletBalance < total),
     },
   ];
 
   const selectedPayment = paymentMethods.find((item) => item.id === paymentMethod) ?? paymentMethods[0];
+  const canReviewPayment = !selectedPayment.disabled;
   const selectedAmountText = selectedPackage ? formatAmount(selectedPackage.amount) : '';
 
   return (
@@ -418,7 +399,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
 
         <section data-v2-checkout-brand className="v2-surface mt-3 flex items-center gap-3 p-3 sm:p-4">
           <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10">
-            <Image src="/brand/waho-app-icon.webp" alt="" fill className="object-cover" sizes="48px" priority />
+            <Image data-visual-required-image src="/brand/waho-app-icon.webp" alt="" fill className="object-cover" sizes="48px" priority />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-[var(--v2-gold)]">WAHO</p>
@@ -500,6 +481,10 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                               isSelected
                                 ? 'border-[var(--v2-gold)] bg-[color-mix(in_srgb,var(--v2-gold)_10%,var(--v2-surface))] ring-1 ring-[var(--v2-gold)]'
                                 : 'border-[var(--v2-border)] bg-[var(--v2-surface-raised)] hover:border-[var(--v2-gold)]'
+                            } ${
+                              availablePackages.length % 2 === 1
+                                ? 'last:col-span-2 last:mx-auto last:w-[calc(50%-0.25rem)] sm:last:col-span-1 sm:last:w-full'
+                                : ''
                             }`}
                           >
                             <span className={isSelected ? 'pe-7' : undefined}>
@@ -640,10 +625,10 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
               {step === 'payment' && (
                 <>
                   <h2 ref={stepHeadingRef} tabIndex={-1} className="text-2xl font-semibold text-zinc-950 outline-none dark:text-white">
-                    {t('How do you want to pay?', 'كيف تريد الدفع؟', '您想如何付款？')}
+                    {t('Pay with your wallet', 'ادفع من محفظتك', '使用钱包付款')}
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                    {t('Choose one method. We confirm payment before sending the balance to WAHO.', 'اختر طريقة واحدة. نؤكد الدفع قبل إرسال الرصيد إلى WAHO.', '选择一种方式。确认付款后才会向 WAHO 充值。')}
+                    {t('We check your wallet balance now. The WAHO top-up starts after you confirm.', 'نتحقق من رصيد محفظتك الآن. يبدأ شحن WAHO بعد التأكيد.', '我们现在检查您的钱包余额。确认后开始 WAHO 充值。')}
                   </p>
 
                   <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-5 grid gap-3">
@@ -675,12 +660,29 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     })}
                   </RadioGroup>
 
+                  {user && user.walletBalance < total && (
+                    <div role="alert" className="mt-4 rounded-lg border border-amber-400/30 bg-amber-400/10 p-4">
+                      <p className="text-sm font-semibold text-amber-200">
+                        {t('Your wallet needs more balance', 'تحتاج محفظتك إلى رصيد إضافي', '您的钱包余额不足')}
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-zinc-300">
+                        {t('Add balance first, then return here to finish this top-up.', 'أضف رصيداً أولاً، ثم عد إلى هنا لإكمال الشحن.', '请先充值钱包余额，然后返回此处完成充值。')}
+                      </p>
+                      <Button asChild variant="outline" className="mt-3 border-amber-300/40 text-amber-200 hover:bg-amber-300/10 hover:text-amber-100">
+                        <Link href="/wallet">
+                          <Wallet className="h-4 w-4" />
+                          {t('Add wallet balance', 'أضف رصيداً للمحفظة', '充值钱包余额')}
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+
                   <div className="mt-6 hidden grid-cols-[auto_minmax(0,1fr)] gap-3 lg:grid">
                     <Button type="button" variant="outline" onClick={() => goToStep('details')}>
                       <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
                       <span className="hidden sm:inline">{t('Back', 'رجوع', '返回')}</span>
                     </Button>
-                    <Button type="button" onClick={() => goToStep('confirm')} className="v2-primary-button">
+                    <Button type="button" onClick={() => goToStep('confirm')} disabled={!canReviewPayment} className="v2-primary-button">
                       {t('Review order', 'راجع الطلب', '检查订单')}
                       <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                     </Button>
@@ -882,7 +884,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
           )}
 
           {step === 'payment' && (
-            <Button type="button" onClick={() => goToStep('confirm')} className="v2-primary-button w-full">
+            <Button type="button" onClick={() => goToStep('confirm')} disabled={!canReviewPayment} className="v2-primary-button w-full">
               {t('Review order', 'راجع الطلب', '检查订单')}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </Button>

@@ -92,6 +92,10 @@ function AuthPageContent() {
     setFormError('');
     try {
       await requestOtp(submittedPhone);
+    } catch {
+      const message = t('We could not send the WhatsApp code. Try again.', 'تعذر إرسال رمز واتساب. حاول مرة أخرى.', '无法发送 WhatsApp 验证码，请重试。');
+      setFormError(message);
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }

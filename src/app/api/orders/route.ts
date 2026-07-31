@@ -4,11 +4,12 @@ import { requireUser } from '@/server/auth';
 import { handleApiError, ok } from '@/server/http';
 import { createIdempotencyFingerprint, requireIdempotencyKey } from '@/server/idempotency';
 import { mapOrder } from '@/server/mappers';
+import { assertOrderPaymentMethodEnabled } from '@/server/payment-policy';
 import { hasPermission } from '@/server/permissions';
 import { prisma } from '@/server/prisma';
 import { assertRateLimit } from '@/server/rate-limit';
 import { verifySensitiveOtpChallenge } from '@/server/sensitive-otp';
-import { createPendingOrder } from '@/server/services/orders';
+import { confirmWalletPayment, createPendingOrder } from '@/server/services/orders';
 import { createOrderSchema } from '@/server/validation';
 
 export const runtime = 'nodejs';
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireUser();
     const body = createOrderSchema.parse(await request.json());
+    assertOrderPaymentMethodEnabled(body.paymentMethod);
     const idempotencyKey = requireIdempotencyKey(request.headers);
     const idempotencyFingerprint = createIdempotencyFingerprint('orders.create', {
       productSlug: body.productSlug,
@@ -70,15 +72,25 @@ export async function POST(request: NextRequest) {
       await verifySensitiveOtpChallenge(user, 'ORDER_CONFIRMATION', body.otp);
     }
 
-    const result = await createPendingOrder(user, body, {
+    const pendingResult = await createPendingOrder(user, body, {
       key: idempotencyKey,
       fingerprint: idempotencyFingerprint,
     });
+    const result = body.paymentMethod === 'wallet'
+      ? await confirmWalletPayment(user, { orderId: pendingResult.order.id }, {
+          key: idempotencyKey,
+          fingerprint: createIdempotencyFingerprint('orders.wallet.confirm', {
+            orderId: pendingResult.order.id,
+          }),
+        })
+      : pendingResult;
+    const replayed = pendingResult.replayed || result.replayed;
+
     return ok(
-      { order: mapOrder(result.order), replayed: result.replayed },
+      { order: mapOrder(result.order), replayed },
       {
-        status: result.replayed ? 200 : 201,
-        headers: { 'Idempotency-Replayed': result.replayed ? 'true' : 'false' },
+        status: replayed ? 200 : 201,
+        headers: { 'Idempotency-Replayed': replayed ? 'true' : 'false' },
       }
     );
   } catch (error) {

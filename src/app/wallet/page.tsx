@@ -197,7 +197,7 @@ export default function WalletPage() {
                     <div className="rounded-lg border border-white/10 bg-[#0a2148] p-4 text-sm leading-6 text-[#dce6f5]">
                       <ol className="space-y-1">
                         <li>{t('1. Make the payment with your chosen method.', '1. نفذ الدفع بالطريقة المختارة.', '1. 使用所选方式付款。')}</li>
-                        <li>{t('2. Copy its transaction ID below.', '2. انسخ رقم المعاملة أدناه.', '2. 在下方填写交易 ID。')}</li>
+                        <li>{t('2. Enter the transaction ID shown on the payment receipt.', '2. أدخل رقم المعاملة الظاهر في إيصال الدفع.', '2. 输入付款凭证上显示的交易 ID。')}</li>
                         <li>{t('3. We review it before adding the balance.', '3. نراجعه قبل إضافة الرصيد.', '3. 审核后余额才会到账。')}</li>
                       </ol>
                     </div>

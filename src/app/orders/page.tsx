@@ -51,15 +51,25 @@ export default function OrdersPage() {
 
   useEffect(() => {
     let active = true;
+    const controller = new AbortController();
+
     async function loadProducts() {
-      const response = await fetch(`/api/products?country=${selectedCountry.id}`);
-      if (!response.ok) return;
-      const payload = await response.json();
-      if (active) setProducts(payload.products ?? []);
+      try {
+        const response = await fetch(`/api/products?country=${selectedCountry.id}`, {
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const payload = await response.json();
+        if (active) setProducts(payload.products ?? []);
+      } catch {
+        if (active) setProducts([]);
+      }
     }
+
     void loadProducts();
     return () => {
       active = false;
+      controller.abort();
     };
   }, [selectedCountry.id]);
 
@@ -89,8 +99,12 @@ export default function OrdersPage() {
   })[method] ?? method;
 
   const copyOrderId = async (orderId: string) => {
-    await navigator.clipboard.writeText(orderId);
-    toast.success(t('Order ID copied', 'تم نسخ رقم الطلب', '订单号已复制'));
+    try {
+      await navigator.clipboard.writeText(orderId);
+      toast.success(t('Order ID copied', 'تم نسخ رقم الطلب', '订单号已复制'));
+    } catch {
+      toast.error(t('Could not copy the order ID', 'تعذر نسخ رقم الطلب', '无法复制订单号'));
+    }
   };
 
   if (isAccountLoading) return <AccountPageLoading />;

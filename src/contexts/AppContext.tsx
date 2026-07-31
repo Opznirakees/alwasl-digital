@@ -636,21 +636,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let active = true;
 
     async function loadCountries() {
-      const response = await fetch('/api/countries');
-      if (!response.ok) return;
-      const payload = await response.json().catch(() => null);
-      const loadedCountries = Array.isArray(payload?.countries) && payload.countries.length
-        ? payload.countries as Country[]
-        : [defaultCountry];
-      if (!active) return;
+      try {
+        const response = await fetch('/api/countries');
+        if (!response.ok) return;
+        const payload = await response.json().catch(() => null);
+        const loadedCountries = Array.isArray(payload?.countries) && payload.countries.length
+          ? payload.countries as Country[]
+          : [defaultCountry];
+        if (!active) return;
 
-      setCountries(loadedCountries);
-      setSelectedCountryState((current) => {
-        const savedCountryId = localStorage.getItem(storageKeys.country);
-        return loadedCountries.find((country) => country.id === savedCountryId)
-          ?? loadedCountries.find((country) => country.id === current.id)
-          ?? loadedCountries[0];
-      });
+        setCountries(loadedCountries);
+        setSelectedCountryState((current) => {
+          const savedCountryId = localStorage.getItem(storageKeys.country);
+          return loadedCountries.find((country) => country.id === savedCountryId)
+            ?? loadedCountries.find((country) => country.id === current.id)
+            ?? loadedCountries[0];
+        });
+      } catch {
+        // Keep the built-in Iraq fallback when country metadata is temporarily unavailable.
+      }
     }
 
     void loadCountries();
@@ -708,47 +712,52 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [dir, language]);
 
   const login = useCallback(async (phone: string): Promise<boolean> => {
-    const response = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone }),
-      credentials: 'include',
-    });
+    try {
+      const response = await fetchAccountData('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+        credentials: 'include',
+      });
 
-    if (!response.ok) return false;
-    const payload = await response.json();
-    if (payload.debugOtp) {
-      console.info(`Al-Wasl OTP for ${phone}: ${payload.debugOtp}`);
+      if (!response.ok) return false;
+      await response.json();
+      setPendingPhone(phone);
+      return true;
+    } catch {
+      return false;
     }
-    setPendingPhone(phone);
-    return true;
   }, []);
 
   const verifyOtp = useCallback(async (otp: string, phoneOverride?: string): Promise<boolean> => {
     const phone = resolveOtpPhone(pendingPhone, phoneOverride);
     if (!phone) return false;
 
-    const response = await fetch('/api/auth/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone, otp }),
-      credentials: 'include',
-    });
+    try {
+      const response = await fetchAccountData('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp }),
+        credentials: 'include',
+      });
 
-    if (!response.ok) return false;
+      if (!response.ok) return false;
 
-    const payload = await response.json();
-    setUser(payload.user);
-    setPendingPhone('');
-    await refreshAccount();
-    return true;
+      const payload = await response.json();
+      setUser(payload.user);
+      setPendingPhone('');
+      await refreshAccount();
+      return true;
+    } catch {
+      return false;
+    }
   }, [pendingPhone, refreshAccount]);
 
   const logout = useCallback(() => {
-    void fetch('/api/auth/logout', {
+    void fetchAccountData('/api/auth/logout', {
       method: 'POST',
       credentials: 'include',
-    });
+    }).catch(() => undefined);
     setUser(null);
     setCart([]);
     setOrders([]);

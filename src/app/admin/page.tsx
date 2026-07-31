@@ -149,7 +149,7 @@ function getReportWindow(period: ReportPeriod) {
 }
 
 export default function AdminDashboard() {
-  const { t, language, dir, user } = useApp();
+  const { t, language, dir, user, isAccountLoading } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -181,6 +181,7 @@ export default function AdminDashboard() {
   const [adminReport, setAdminReport] = useState<AdminReportPayload | null>(null);
   const [isReportLoading, setIsReportLoading] = useState(false);
   const [monitoringDashboard, setMonitoringDashboard] = useState<MonitoringDashboard | null>(null);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(true);
   const [isMonitoringLoading, setIsMonitoringLoading] = useState(false);
   const [adminError, setAdminError] = useState<string | null>(null);
   const [isMutating, setIsMutating] = useState(false);
@@ -282,41 +283,53 @@ export default function AdminDashboard() {
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
 
   const reloadSummary = useCallback(async (shouldApply: () => boolean = () => true) => {
+    if (isAccountLoading) return;
+
+    setIsSummaryLoading(true);
     if (!user) {
       setAdminError(t('Please login as an admin to view this dashboard.', 'يرجى تسجيل الدخول كمسؤول لعرض لوحة التحكم.', '请以管理员身份登录以查看此仪表板。'));
+      setIsSummaryLoading(false);
       return;
     }
 
     if (!shouldLoadAdminSummary(user)) {
       setAdminError(t('Admin access is required to view this dashboard.', 'تحتاج إلى صلاحيات المسؤول لعرض لوحة التحكم.', '需要管理员权限才能查看此仪表板。'));
+      setIsSummaryLoading(false);
       return;
     }
 
-    const response = await fetch('/api/admin/summary', { credentials: 'include' });
-    const payload = await response.json().catch(() => null);
+    try {
+      const response = await fetch('/api/admin/summary', { credentials: 'include' });
+      const payload = await response.json().catch(() => null);
 
-    if (!shouldApply()) return;
+      if (!shouldApply()) return;
 
-    if (!response.ok) {
-      setAdminError(payload?.error ?? 'Admin data unavailable');
-      return;
+      if (!response.ok) {
+        setAdminError(payload?.error ?? t('Admin dashboard data could not be loaded.', 'تعذر تحميل بيانات لوحة التحكم.', '无法加载管理仪表板数据。'));
+        return;
+      }
+
+      setDashboardStats(payload.stats);
+      setOrders(payload.orders ?? []);
+      setProducts(payload.products ?? []);
+      setProviders(payload.providers ?? []);
+      setProviderBalanceAlerts(payload.providerBalanceAlerts ?? []);
+      setPromotions(payload.promotions ?? []);
+      setCustomPricingRules(payload.customPricingRules ?? []);
+      setBanners(payload.banners ?? []);
+      setCountries(payload.countries ?? []);
+      setExchangeRates(payload.exchangeRates ?? []);
+      setUsers(payload.users ?? []);
+      setWalletTransactions(payload.walletTransactions ?? []);
+      setManualDeposits(payload.manualDeposits ?? []);
+      setAdminError(null);
+    } catch {
+      if (!shouldApply()) return;
+      setAdminError(t('Admin dashboard data could not be loaded.', 'تعذر تحميل بيانات لوحة التحكم.', '无法加载管理仪表板数据。'));
+    } finally {
+      if (shouldApply()) setIsSummaryLoading(false);
     }
-
-    setDashboardStats(payload.stats);
-    setOrders(payload.orders ?? []);
-    setProducts(payload.products ?? []);
-    setProviders(payload.providers ?? []);
-    setProviderBalanceAlerts(payload.providerBalanceAlerts ?? []);
-    setPromotions(payload.promotions ?? []);
-    setCustomPricingRules(payload.customPricingRules ?? []);
-    setBanners(payload.banners ?? []);
-    setCountries(payload.countries ?? []);
-    setExchangeRates(payload.exchangeRates ?? []);
-    setUsers(payload.users ?? []);
-    setWalletTransactions(payload.walletTransactions ?? []);
-    setManualDeposits(payload.manualDeposits ?? []);
-    setAdminError(null);
-  }, [t, user]);
+  }, [isAccountLoading, t, user]);
 
   useEffect(() => {
     let active = true;
@@ -420,6 +433,12 @@ export default function AdminDashboard() {
     };
   }, [activeTab, loadAdminMonitoring]);
 
+  const retryAdminData = () => {
+    if (activeTab === 'reports') return loadAdminReport(reportPeriod);
+    if (activeTab === 'monitoring') return loadAdminMonitoring();
+    return reloadSummary();
+  };
+
   const revenueData = useMemo(() => {
     const days = Array.from({ length: 7 }, (_, index) => {
       const date = new Date();
@@ -443,6 +462,11 @@ export default function AdminDashboard() {
 
     return days;
   }, [orders]);
+
+  const revenueMax = useMemo(
+    () => Math.max(1, ...revenueData.map((data) => data.revenue)),
+    [revenueData]
+  );
 
   const reportMaxRevenue = useMemo(() => (
     Math.max(1, ...(adminReport?.buckets.map((bucket) => bucket.revenue) ?? [0]))
@@ -1019,7 +1043,15 @@ export default function AdminDashboard() {
   };
 
   const getPaymentMethodLabel = (method: string) => {
-    return t(method, method);
+    const labels: Record<string, { en: string; ar: string; zh: string }> = {
+      wallet: { en: 'Wallet', ar: 'المحفظة', zh: '钱包' },
+      zaincash: { en: 'ZainCash', ar: 'زين كاش', zh: 'ZainCash' },
+      asiahawala: { en: 'AsiaHawala', ar: 'آسيا حوالة', zh: 'AsiaHawala' },
+      card: { en: 'Bank card', ar: 'بطاقة مصرفية', zh: '银行卡' },
+      usdt: { en: 'USDT', ar: 'USDT', zh: 'USDT' },
+    };
+    const label = labels[method];
+    return label ? t(label.en, label.ar, label.zh) : method;
   };
 
   const pricingProduct = products.find((product) => product.id === pricingForm.productId) ?? products[0];
@@ -1189,7 +1221,10 @@ export default function AdminDashboard() {
       <div className="flex">
         {/* Sidebar */}
         <aside
-          className={`fixed left-0 top-16 z-40 hidden h-[calc(100vh-4rem)] border-r border-[#f7b928]/20 bg-[#06152f]/72 transition-all duration-300 md:block ${
+          data-admin-sidebar
+          className={`fixed top-16 z-40 hidden h-[calc(100vh-4rem)] border-[#f7b928]/20 bg-[#06152f]/92 shadow-2xl backdrop-blur-xl transition-all duration-300 md:block ${
+            dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'
+          } ${
             sidebarOpen ? 'w-64' : 'w-20'
           }`}
         >
@@ -1198,7 +1233,7 @@ export default function AdminDashboard() {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                className={`flex min-h-12 w-full items-center gap-3 rounded-md px-4 py-3 text-start transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928] ${
                   activeTab === item.id
                     ? 'border border-[#f7b928]/30 bg-[#f7b928]/10 text-[#f7b928]'
                     : 'text-white/70 hover:bg-slate-800/50 hover:text-white'
@@ -1212,14 +1247,46 @@ export default function AdminDashboard() {
         </aside>
 
         {/* Main Content */}
-        <main className={`min-w-0 flex-1 p-4 transition-all duration-300 sm:p-6 ${sidebarOpen ? 'md:ml-64' : 'md:ml-20'}`}>
-          {adminError && (
-            <Card className="mb-6 border-rose-500/30 bg-rose-500/10 p-4">
-              <p className="text-sm text-rose-200">{adminError}</p>
+        <main className={`min-w-0 flex-1 p-4 transition-all duration-300 sm:p-6 ${
+          dir === 'rtl'
+            ? sidebarOpen ? 'md:mr-64' : 'md:mr-20'
+            : sidebarOpen ? 'md:ml-64' : 'md:ml-20'
+        }`}>
+          {isSummaryLoading && (
+            <Card role="status" aria-live="polite" className="mb-6 border-[#f7b928]/20 bg-[#081a38]/80 p-5">
+              <div className="flex items-center gap-3 text-sm font-medium text-white/75">
+                <RefreshCw className="h-4 w-4 animate-spin text-[#f7b928] motion-reduce:animate-none" />
+                {t('Loading admin dashboard...', 'جارٍ تحميل لوحة التحكم...', '正在加载管理仪表板...')}
+              </div>
             </Card>
           )}
 
-          {canViewAdminDashboard && !adminError && (
+          {adminError && (
+            <Card data-admin-error role="alert" className="mb-6 border-rose-500/30 bg-rose-500/10 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-sm text-rose-100">{adminError}</p>
+                {user && canViewAdminDashboard ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    aria-label={t('Try loading admin data again', 'حاول تحميل بيانات الإدارة مرة أخرى', '重新加载管理数据')}
+                    onClick={() => void retryAdminData()}
+                    disabled={isSummaryLoading}
+                    className="border-rose-300/30 text-rose-100 hover:bg-rose-300/10 hover:text-white"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    {t('Try again', 'حاول مرة أخرى', '重试')}
+                  </Button>
+                ) : (
+                  <Button asChild className="bg-[#f7b928] text-[#07152e] hover:bg-[#ffd05a]">
+                    <Link href="/auth?next=%2Fadmin">{t('Admin login', 'دخول المسؤول', '管理员登录')}</Link>
+                  </Button>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {canViewAdminDashboard && !isSummaryLoading && (
             <>
           {activeTab === 'overview' && (
             <div className="space-y-6">
@@ -1274,7 +1341,7 @@ export default function AdminDashboard() {
               <div className="grid lg:grid-cols-3 gap-6">
                 {/* Revenue Chart */}
                 <Card className="lg:col-span-2 bg-slate-900/50 border-emerald-800/20 p-6">
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <h3 className="text-lg font-bold text-white">{t('Revenue Overview', 'نظرة عامة على الإيرادات')}</h3>
                     <Button
                       variant="outline"
@@ -1286,12 +1353,13 @@ export default function AdminDashboard() {
                       {t('Export', 'تصدير')}
                     </Button>
                   </div>
-                  <div className="h-64 flex items-end gap-2">
+                  <div className="flex h-64 items-end gap-2">
                     {revenueData.map((data, i) => (
                       <div key={i} className="flex-1 flex flex-col items-center gap-2">
                         <div
-                          className="w-full bg-gradient-to-t from-emerald-500 to-teal-400 rounded-t-lg transition-all hover:opacity-80"
-                          style={{ height: `${(data.revenue / 25000000) * 100}%` }}
+                          className="w-full rounded-t-md bg-gradient-to-t from-[#ca8a04] to-[#facc15] transition-opacity hover:opacity-80"
+                          style={{ height: `${Math.max(data.revenue > 0 ? 6 : 1, (data.revenue / revenueMax) * 100)}%` }}
+                          title={`${formatCurrency(data.revenue)} IQD`}
                         />
                         <span className="text-[10px] text-white/50">
                           {new Date(data.date).toLocaleDateString(locale, { weekday: 'short' })}
@@ -1371,56 +1439,103 @@ export default function AdminDashboard() {
 
           {activeTab === 'orders' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-2xl font-bold text-white">{t('Orders Management', 'إدارة الطلبات')}</h2>
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
                     onClick={() => void downloadAdminExport('orders')}
-                    className="border-emerald-500/30 text-emerald-400"
+                    className="border-[#f7b928]/35 text-[#f7b928] hover:bg-[#f7b928]/10 hover:text-[#ffd05a]"
                   >
-                    <Download className="w-4 h-4 mr-2" />
+                    <Download className="h-4 w-4" />
                     {t('Export', 'تصدير')}
                   </Button>
                 </div>
               </div>
 
-              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
-                <Table className="min-w-[58rem]">
-                  <TableHeader>
-                    <TableRow className="border-emerald-800/20">
-                      <TableHead className="text-white/50">{t('Order ID', 'رقم الطلب')}</TableHead>
-                      <TableHead className="text-white/50">{t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}</TableHead>
-                      <TableHead className="text-white/50">{t('Top-up amount', 'مبلغ الشحن', '充值金额')}</TableHead>
-                      <TableHead className="text-white/50">{t('WAHO ID', 'معرف WAHO')}</TableHead>
-                      <TableHead className="text-white/50">{t('Amount', 'المبلغ')}</TableHead>
-                      <TableHead className="text-white/50">{t('Payment', 'الدفع')}</TableHead>
-                      <TableHead className="text-white/50">{t('Status', 'الحالة')}</TableHead>
-                      <TableHead className="text-white/50">{t('Date', 'التاريخ')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+              {orders.length > 0 ? (
+                <>
+                  <div className="space-y-3 sm:hidden">
                     {orders.map((order) => (
-                      <TableRow key={order.id} className="border-emerald-800/20">
-                        <TableCell className="font-mono text-sm text-white">{order.id}</TableCell>
-                        <TableCell className="text-white">{getOrderGameName(order)}</TableCell>
-                        <TableCell className="text-emerald-400">{getOrderPackageName(order)}</TableCell>
-                        <TableCell className="text-white/70">{order.gameUserId || '-'}</TableCell>
-                        <TableCell className="text-emerald-400 font-medium">
-                          {formatCurrency(order.finalPrice)} IQD
-                        </TableCell>
-                        <TableCell className="text-white/70">{getPaymentMethodLabel(order.paymentMethod)}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={getStatusColor(order.status)}>
+                      <Card
+                        key={order.id}
+                        data-admin-mobile-order
+                        className="border-[#f7b928]/18 bg-[#081a38]/88 p-4 shadow-[0_16px_40px_rgba(0,0,0,0.18)]"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="break-all font-mono text-xs font-semibold text-white">{order.id}</p>
+                            <p className="mt-1 text-sm font-semibold text-[#f7b928]">{getOrderPackageName(order)}</p>
+                          </div>
+                          <Badge variant="outline" className={`flex-shrink-0 ${getStatusColor(order.status)}`}>
                             {getStatusLabel(order.status)}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-white/50 text-sm">{formatDate(order.createdAt)}</TableCell>
-                      </TableRow>
+                        </div>
+                        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-white/10 pt-4 text-sm">
+                          <div className="min-w-0">
+                            <dt className="text-xs text-white/45">{t('WAHO ID', 'معرف WAHO', 'WAHO ID')}</dt>
+                            <dd className="mt-1 break-all font-medium text-white">{order.gameUserId || '-'}</dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-white/45">{t('Amount', 'المبلغ', '金额')}</dt>
+                            <dd className="mt-1 font-semibold tabular-nums text-[#f7b928]">{formatCurrency(order.finalPrice)} IQD</dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-white/45">{t('Payment', 'الدفع', '付款')}</dt>
+                            <dd className="mt-1 text-white/80">{getPaymentMethodLabel(order.paymentMethod)}</dd>
+                          </div>
+                          <div>
+                            <dt className="text-xs text-white/45">{t('Date', 'التاريخ', '日期')}</dt>
+                            <dd className="mt-1 text-white/70">{formatDate(order.createdAt)}</dd>
+                          </div>
+                        </dl>
+                      </Card>
                     ))}
-                  </TableBody>
-                </Table>
-              </Card>
+                  </div>
+
+                  <Card data-admin-desktop-orders className="hidden border-[#f7b928]/15 bg-[#081a38]/78 p-5 sm:block">
+                    <Table className="min-w-[58rem]">
+                      <TableHeader>
+                        <TableRow className="border-white/10">
+                          <TableHead className="text-white/50">{t('Order ID', 'رقم الطلب')}</TableHead>
+                          <TableHead className="text-white/50">{t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}</TableHead>
+                          <TableHead className="text-white/50">{t('Top-up amount', 'مبلغ الشحن', '充值金额')}</TableHead>
+                          <TableHead className="text-white/50">{t('WAHO ID', 'معرف WAHO')}</TableHead>
+                          <TableHead className="text-white/50">{t('Amount', 'المبلغ')}</TableHead>
+                          <TableHead className="text-white/50">{t('Payment', 'الدفع')}</TableHead>
+                          <TableHead className="text-white/50">{t('Status', 'الحالة')}</TableHead>
+                          <TableHead className="text-white/50">{t('Date', 'التاريخ')}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {orders.map((order) => (
+                          <TableRow key={order.id} className="border-white/10">
+                            <TableCell className="font-mono text-sm text-white">{order.id}</TableCell>
+                            <TableCell className="text-white">{getOrderGameName(order)}</TableCell>
+                            <TableCell className="text-[#f7b928]">{getOrderPackageName(order)}</TableCell>
+                            <TableCell className="text-white/70">{order.gameUserId || '-'}</TableCell>
+                            <TableCell className="font-medium text-[#f7b928]">
+                              {formatCurrency(order.finalPrice)} IQD
+                            </TableCell>
+                            <TableCell className="text-white/70">{getPaymentMethodLabel(order.paymentMethod)}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={getStatusColor(order.status)}>
+                                {getStatusLabel(order.status)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-white/50">{formatDate(order.createdAt)}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </Card>
+                </>
+              ) : (
+                <Card className="border-[#f7b928]/15 bg-[#081a38]/78 p-8 text-center">
+                  <ShoppingCart className="mx-auto h-6 w-6 text-[#f7b928]" />
+                  <p className="mt-3 font-semibold text-white">{t('No orders yet', 'لا توجد طلبات بعد', '暂无订单')}</p>
+                </Card>
+              )}
             </div>
           )}
 
@@ -1731,14 +1846,14 @@ export default function AdminDashboard() {
 
           {activeTab === 'pricing' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-white">{t('Custom pricing', 'تسعير خاص', '自定义价格')}</h2>
                   <p className="mt-1 text-sm text-white/50">
                     {t('Set WAHO prices for distributors, customer groups, or a specific user.', 'حدد أسعار WAHO للموزعين أو مجموعات العملاء أو مستخدم محدد.', '为分销商、客户组或指定用户设置 WAHO 价格。')}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <Button
                     variant="outline"
                     onClick={() => void downloadAdminExport('pricing')}
@@ -1946,9 +2061,9 @@ export default function AdminDashboard() {
 
           {activeTab === 'providers' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-2xl font-bold text-white">{t('Delivery Partners', 'شركاء التسليم')}</h2>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <Button
                     variant="outline"
                     onClick={() => void downloadAdminExport('providers')}
@@ -1996,7 +2111,6 @@ export default function AdminDashboard() {
                         >
                           <option value="WAHA_WHATSAPP">WAHA WhatsApp</option>
                           <option value="WAHO_API">WAHO API</option>
-                          <option value="MOCK">Mock</option>
                         </select>
                       </div>
                       <div className="space-y-2">
@@ -2156,9 +2270,9 @@ export default function AdminDashboard() {
 
           {activeTab === 'promotions' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-2xl font-bold text-white">{t('Promotions', 'العروض')}</h2>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <Button
                     variant="outline"
                     onClick={() => void downloadAdminExport('promotions')}
@@ -2329,9 +2443,9 @@ export default function AdminDashboard() {
 
           {activeTab === 'banners' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-2xl font-bold text-white">{t('Banners', 'الإعلانات', '横幅')}</h2>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <Button
                     variant="outline"
                     onClick={() => void downloadAdminExport('banners')}
@@ -2527,7 +2641,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'currencies' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-2xl font-bold text-white">{t('Currency & exchange rates', 'العملات وأسعار الصرف', '货币和汇率')}</h2>
                 <Button
                   variant="outline"
@@ -2662,7 +2776,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'users' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-2xl font-bold text-white">{t('Users', 'المستخدمين')}</h2>
                 <Button
                   variant="outline"
@@ -2772,7 +2886,7 @@ export default function AdminDashboard() {
 
           {activeTab === 'wallets' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <h2 className="text-2xl font-bold text-white">{t('Wallets', 'المحافظ')}</h2>
                 <Button
                   variant="outline"
@@ -2784,7 +2898,7 @@ export default function AdminDashboard() {
                 </Button>
               </div>
               <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h3 className="font-semibold text-white">{t('Manual deposits', 'الإيداعات اليدوية', '手动充值')}</h3>
                     <p className="text-xs text-white/50">

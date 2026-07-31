@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { AlertCircle, ArrowLeft, ArrowRight, BadgeCheck, CheckCircle2, Gem } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, BadgeCheck, Gem } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
@@ -104,7 +104,7 @@ export default function TopUpPage() {
                   {t('Tap an amount to continue. You will check the WAHO account before payment.', 'اضغط على المبلغ للمتابعة. ستتحقق من حساب WAHO قبل الدفع.', '点击金额继续。付款前会先检查 WAHO 账号。')}
                 </p>
               </div>
-              <div className="relative h-16 w-16 overflow-hidden rounded-lg border border-white/12 bg-[#06152f] shadow-[0_12px_30px_rgba(0,0,0,0.24)]">
+              <div className="relative hidden h-16 w-16 overflow-hidden rounded-lg border border-white/12 bg-[#06152f] shadow-[0_12px_30px_rgba(0,0,0,0.24)] sm:block">
                 <Image src="/brand/waho-app-icon.webp" alt="" fill className="object-cover" sizes="64px" priority />
               </div>
             </header>
@@ -121,6 +121,10 @@ export default function TopUpPage() {
                       aria-label={t(`Choose ${amount} IQD`, `اختر ${amount} د.ع`, `选择 ${amount} IQD`)}
                       className={`v2-overview-package group relative flex min-h-52 flex-col overflow-hidden rounded-lg border bg-[#06152f] p-3 text-white shadow-[0_16px_38px_rgba(0,0,0,0.2)] transition-colors hover:border-[var(--v2-gold)] hover:bg-[#0a2148] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] ${
                         pkg.isPopular ? 'border-[var(--v2-gold)]' : 'border-white/12'
+                      } ${
+                        topUpPackages.length % 2 === 1
+                          ? 'last:col-span-2 last:mx-auto last:w-[calc(50%-0.375rem)] sm:last:col-span-1 sm:last:w-full'
+                          : ''
                       }`}
                     >
                       {pkg.isPopular && (
@@ -152,16 +156,6 @@ export default function TopUpPage() {
               </div>
             </section>
 
-            <div className="v2-surface-raised mt-6 flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-300">
-                <CheckCircle2 className="h-5 w-5 flex-shrink-0 text-blue-700 dark:text-blue-300" />
-                {t('Not sure yet? Start without choosing an amount.', 'لست متأكداً؟ ابدأ دون اختيار مبلغ.', '还不确定？可以先开始，稍后再选金额。')}
-              </div>
-              <Link href={`/top-up/${wahoTopUp.slug}`} className="v2-primary-button">
-                {t('Start top-up', 'ابدأ الشحن', '开始充值')}
-                <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-              </Link>
-            </div>
           </>
         )}
       </main>

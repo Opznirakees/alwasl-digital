@@ -131,7 +131,9 @@ async function mockCustomerApi(page: Page, initiallyAuthenticated = false) {
   });
 }
 
-async function mockAdminApi(page: Page) {
+async function mockAdminApi(page: Page, options: { failSummaryOnce?: boolean } = {}) {
+  let summaryFailuresRemaining = options.failSummaryOnce ? 1 : 0;
+
   await page.route('**/api/**', async (route: Route) => {
     const path = new URL(route.request().url()).pathname;
     const json = (payload: unknown, status = 200) => route.fulfill({
@@ -145,6 +147,11 @@ async function mockAdminApi(page: Page) {
     if (path === '/api/orders') return json({ orders: [order] });
     if (path === '/api/wallet') return json({ user: adminUser, transactions: [walletTransaction], manualDeposits: [] });
     if (path === '/api/admin/summary') {
+      if (summaryFailuresRemaining > 0) {
+        summaryFailuresRemaining -= 1;
+        return route.abort('failed');
+      }
+
       return json({
         stats: {
           totalUsers: 24,
@@ -173,6 +180,72 @@ async function mockAdminApi(page: Page) {
         providerRequests: [],
         whatsappNotifications: [],
         auditLogs: [],
+      });
+    }
+    if (path === '/api/admin/reports') {
+      return json({
+        report: {
+          period: 'daily',
+          from: '2026-07-17',
+          to: '2026-07-31',
+          summary: {
+            orders: 42,
+            completedOrders: 36,
+            failedOrders: 2,
+            refundedOrders: 1,
+            revenue: 420000,
+            walletRevenue: 420000,
+            externalPaymentRevenue: 0,
+            manualDeposits: 1,
+            manualDepositAmount: 100000,
+            newUsers: 4,
+            avgOrderValue: 10000,
+            conversionRate: 80,
+            refundRate: 2,
+          },
+          buckets: [{
+            key: '2026-07-18',
+            label: '18 Jul',
+            start: '2026-07-18T00:00:00.000Z',
+            end: '2026-07-19T00:00:00.000Z',
+            orders: 1,
+            completedOrders: 1,
+            failedOrders: 0,
+            refundedOrders: 0,
+            revenue: 10000,
+            walletRevenue: 10000,
+            externalPaymentRevenue: 0,
+            manualDeposits: 0,
+            manualDepositAmount: 0,
+            newUsers: 1,
+          }],
+        },
+      });
+    }
+    if (path === '/api/admin/monitoring') {
+      return json({
+        monitoring: {
+          settings: {
+            id: 'monitoring-settings',
+            logRetentionDays: 30,
+            uptimeEnabled: true,
+            createdAt: '2026-07-01T00:00:00.000Z',
+            updatedAt: '2026-07-18T00:00:00.000Z',
+          },
+          targets: [],
+          events: [],
+          summary: {
+            activeTargets: 0,
+            downTargets: 0,
+            errorEvents24h: 0,
+            criticalEvents24h: 0,
+          },
+          external: {
+            healthEndpoint: 'https://example.test/api/health',
+            errorWebhookConfigured: true,
+            statusWebhookConfigured: true,
+          },
+        },
       });
     }
 
@@ -380,8 +453,8 @@ test.describe('generation 2 customer experience', () => {
     await expect(page.getByText('Account found', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Continue to payment' }).click();
 
-    await expect(page.getByRole('heading', { name: 'How do you want to pay?' })).toBeFocused();
-    await expect(page.getByText('Payment is checked before the top-up starts.').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Pay with your wallet' })).toBeFocused();
+    await expect(page.getByText('Available: 100,000 د.ع')).toBeVisible();
     await page.getByRole('button', { name: 'Review order' }).click();
 
     await expect(page.getByRole('heading', { name: 'Check everything once more' })).toBeFocused();
@@ -555,7 +628,77 @@ test.describe('generation 2 customer experience', () => {
     await adminNavigation.getByRole('button', { name: 'Orders' }).click();
     await expect(adminNavigation).not.toBeVisible();
     await expect(page.getByRole('button', { name: 'Admin alerts: 2' })).toHaveText('2');
+    await expect(page.locator('[data-admin-mobile-order]')).toHaveCount(1);
+    await expect(page.locator('[data-admin-mobile-order]')).toBeVisible();
+    await expect(page.locator('[data-admin-desktop-orders]')).toBeHidden();
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'admin-orders-mobile');
+  });
+
+  test('keeps every admin workspace readable and reachable on a phone', async ({ page }, testInfo) => {
+    test.setTimeout(60_000);
+    test.skip(testInfo.project.name !== 'chromium', 'The admin route matrix only needs one browser project.');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockAdminApi(page);
+    await page.goto('/admin');
+    await expect(page.getByText('Total Revenue')).toBeVisible();
+
+    const sections = [
+      ['Top-up amounts', 'WAHO-first catalog'],
+      ['Custom pricing', 'Custom pricing'],
+      ['Users', 'Users'],
+      ['Providers', 'Delivery Partners'],
+      ['WAHO Offers', 'Promotions'],
+      ['Banners', 'Banners'],
+      ['Currencies', 'Currency & exchange rates'],
+      ['Wallets', 'Wallets'],
+      ['Reports', 'Reports'],
+      ['Monitoring', 'Monitoring'],
+    ] as const;
+
+    for (const [navigationLabel, heading] of sections) {
+      await page.getByRole('button', { name: 'Open admin navigation' }).click();
+      const navigation = page.getByRole('navigation', { name: 'Admin sections' });
+      await navigation.getByRole('button', { name: navigationLabel, exact: true }).click();
+      await expect(page.getByRole('heading', { level: 2, name: heading, exact: true })).toBeVisible();
+      await expectNoHorizontalOverflow(page);
+    }
+
+    await expect(page.locator('body')).not.toContainText(/\b(?:mock|demo)\b/i);
+    await captureVisual(page, testInfo.project.name, 'admin-monitoring-mobile');
+  });
+
+  test('lets an admin recover from a failed dashboard load without reloading the page', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'The admin recovery flow only needs one browser project.');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockAdminApi(page, { failSummaryOnce: true });
+    await page.goto('/admin');
+
+    await expect(page.locator('[data-admin-error]')).toContainText('dashboard');
+    const retry = page.getByRole('button', { name: 'Try loading admin data again' });
+    await expect(retry).toBeVisible();
+    await retry.click();
+
+    await expect(page.getByText('Total Revenue')).toBeVisible();
+    await expect(page.locator('[data-admin-error]')).toHaveCount(0);
+  });
+
+  test('places the desktop admin navigation on the reading side in Arabic', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'The RTL desktop shell only needs one browser project.');
+    await page.setViewportSize({ width: 1024, height: 900 });
+    await page.addInitScript(() => {
+      localStorage.setItem('alwasl-language', 'ar');
+      localStorage.setItem('language', 'ar');
+    });
+    await mockAdminApi(page);
+    await page.goto('/admin');
+
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    const sidebar = page.locator('[data-admin-sidebar]');
+    await expect(sidebar).toBeVisible();
+    const bounds = await sidebar.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(Math.abs(1024 - ((bounds?.x ?? 0) + (bounds?.width ?? 0)))).toBeLessThanOrEqual(1);
+    await expectNoHorizontalOverflow(page);
   });
 });

@@ -91,7 +91,9 @@ async function deliverOtpViaWebhook(input: DeliverOtpInput, options: DeliverOtpO
     throw new Error('OTP provider is not configured');
   }
 
-  console.info(`Al-Wasl OTP for ${input.phone}: ${input.code}`);
+  console.info('Al-Wasl OTP generated for local development', {
+    phoneSuffix: maskedPhoneSuffix(input.phone),
+  });
 }
 
 export async function deliverOtp(input: DeliverOtpInput, options: DeliverOtpOptions = {}) {

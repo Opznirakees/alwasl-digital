@@ -235,6 +235,8 @@ interface ConfirmFakePaymentInput {
   success: boolean;
 }
 
+type PaymentConfirmationMode = 'fake' | 'wallet';
+
 function canAccessOrder(user: User, orderUserId: string) {
   return user.role === 'ADMIN' || user.id === orderUserId;
 }
@@ -468,14 +470,70 @@ export async function refundOrderById(orderId: string, reason = 'Manual refund')
   return refundPaidOrder(orderId, { reason });
 }
 
-export async function confirmFakePayment(
+async function claimPendingPaymentAttempt(
+  tx: Prisma.TransactionClient,
+  order: Order,
+  idempotency: IdempotencyInput,
+  mode: PaymentConfirmationMode
+) {
+  const pendingAttempt = await tx.paymentAttempt.findFirst({
+    where: {
+      orderId: order.id,
+      status: 'PENDING',
+      idempotencyKey: null,
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+  const attemptData = {
+    method: order.paymentMethod,
+    status: 'PENDING' as const,
+    amount: order.finalPrice,
+    currency: order.currency,
+    idempotencyKey: idempotency.key,
+    idempotencyFingerprint: idempotency.fingerprint,
+    metadata: {
+      mode,
+      state: 'reserved',
+    },
+  };
+
+  if (pendingAttempt) {
+    const claimed = await tx.paymentAttempt.updateMany({
+      where: {
+        id: pendingAttempt.id,
+        status: 'PENDING',
+        idempotencyKey: null,
+      },
+      data: attemptData,
+    });
+
+    if (claimed.count === 1) {
+      return tx.paymentAttempt.findUniqueOrThrow({
+        where: { id: pendingAttempt.id },
+      });
+    }
+  }
+
+  return tx.paymentAttempt.create({
+    data: {
+      orderId: order.id,
+      ...attemptData,
+    },
+  });
+}
+
+async function confirmPayment(
   user: User,
   input: ConfirmFakePaymentInput,
-  idempotency: IdempotencyInput
+  idempotency: IdempotencyInput,
+  mode: PaymentConfirmationMode
 ): Promise<OrderMutationResult> {
   const existing = await prisma.order.findUnique({ where: { id: input.orderId } });
   if (!existing) throw new Error('NOT_FOUND');
   if (!canAccessOrder(user, existing.userId)) throw new Error('FORBIDDEN');
+  if (mode === 'wallet' && existing.paymentMethod !== 'WALLET') {
+    throw new Error('PAYMENT_METHOD_UNAVAILABLE');
+  }
 
   const existingAttempt = await replayPaymentFromIdempotency(existing.id, idempotency);
   if (existingAttempt) return existingAttempt;
@@ -527,29 +585,15 @@ export async function confirmFakePayment(
       const order = await tx.order.findUnique({ where: { id: existing.id } });
       if (!order) throw new Error('NOT_FOUND');
 
-      const attempt = await tx.paymentAttempt.create({
-        data: {
-          orderId: order.id,
-          method: order.paymentMethod,
-          status: 'PENDING',
-          amount: order.finalPrice,
-          currency: order.currency,
-          idempotencyKey: idempotency.key,
-          idempotencyFingerprint: idempotency.fingerprint,
-          metadata: {
-            mode: 'fake',
-            state: 'reserved',
-          },
-        },
-      });
+      const attempt = await claimPendingPaymentAttempt(tx, order, idempotency, mode);
 
       if (order.paymentStatus === 'COMPLETED') {
         await tx.paymentAttempt.update({
           where: { id: attempt.id },
           data: {
             status: 'COMPLETED',
-            providerRef: `FAKE-PAID-${order.id}`,
-            metadata: { mode: 'fake', state: 'replayed_completed_order' },
+            providerRef: `${mode === 'wallet' ? 'WALLET' : 'FAKE'}-PAID-${order.id}`,
+            metadata: { mode, state: 'replayed_completed_order' },
           },
         });
         return order;
@@ -571,7 +615,7 @@ export async function confirmFakePayment(
           where: { id: attempt.id },
           data: {
             status: current.paymentStatus,
-            metadata: { mode: 'fake', state: 'order_not_claimed' },
+            metadata: { mode, state: 'order_not_claimed' },
           },
         });
         return current;
@@ -621,8 +665,8 @@ export async function confirmFakePayment(
         data: {
           method: order.paymentMethod as DbPaymentMethod,
           status: 'COMPLETED',
-          providerRef: `FAKE-PAID-${order.id}`,
-          metadata: { mode: 'fake', state: 'paid' },
+          providerRef: `${mode === 'wallet' ? 'WALLET' : 'FAKE'}-PAID-${order.id}`,
+          metadata: { mode, state: 'paid' },
         },
       });
 
@@ -722,4 +766,20 @@ export async function confirmFakePayment(
   }
 
   return { order, replayed: false };
+}
+
+export async function confirmFakePayment(
+  user: User,
+  input: ConfirmFakePaymentInput,
+  idempotency: IdempotencyInput
+): Promise<OrderMutationResult> {
+  return confirmPayment(user, input, idempotency, 'fake');
+}
+
+export async function confirmWalletPayment(
+  user: User,
+  input: { orderId: string },
+  idempotency: IdempotencyInput
+): Promise<OrderMutationResult> {
+  return confirmPayment(user, { ...input, success: true }, idempotency, 'wallet');
 }

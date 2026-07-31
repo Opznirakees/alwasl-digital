@@ -85,10 +85,11 @@ test.describe('WAHO production smoke', () => {
 
     await page.goto('/top-up');
     await expect(page.locator('main')).toContainText('WAHO Top-Up', { timeout: 15_000 });
-    const startTopUpLink = page.getByRole('link', { name: /Start top-up/i }).first();
+    const overviewAmount = new Intl.NumberFormat('en-IQ').format(firstPackage.amount);
+    const startTopUpLink = page.getByRole('link', { name: `Choose ${overviewAmount} IQD` }).first();
     await expect(startTopUpLink).toBeVisible({ timeout: 15_000 });
     await startTopUpLink.click();
-    await expect(page).toHaveURL(new RegExp(`/top-up/${product.slug}`));
+    await expect(page).toHaveURL(new RegExp(`/top-up/${product.slug}\\?amount=${firstPackage.amount}`));
     await expect(page.getByRole('heading', { name: /Choose your amount/i })).toBeVisible();
 
     await page.goto(`/top-up/${product.slug}`);
