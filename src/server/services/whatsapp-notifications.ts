@@ -6,12 +6,16 @@ import {
   type WhatsAppNotificationType,
 } from '../domain/whatsapp-notifications';
 import { prisma } from '../prisma';
-import { sendWhatsAppText } from '../providers/waha-whatsapp';
+import {
+  sendWhatsAppText,
+  type WahaEnv,
+} from '../providers/waha-whatsapp';
+import { getManagedContent } from './content';
 
 type Fetcher = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 
-interface WhatsAppNotificationOptions {
-  env?: NodeJS.ProcessEnv;
+export interface WhatsAppNotificationOptions {
+  env?: WahaEnv | NodeJS.ProcessEnv;
   fetcher?: Fetcher;
 }
 
@@ -23,6 +27,7 @@ interface SendWhatsAppNotificationInput {
   userId?: string;
   orderId?: string;
   manualDepositId?: string;
+  accessBlockId?: string;
   createdByAdminId?: string;
   batchId?: string;
   metadata?: Prisma.InputJsonValue;
@@ -71,6 +76,7 @@ export async function sendWhatsAppNotification(
         userId: input.userId,
         orderId: input.orderId,
         manualDepositId: input.manualDepositId,
+        accessBlockId: input.accessBlockId,
         createdByAdminId: input.createdByAdminId,
         batchId: input.batchId,
         phone: input.phone,
@@ -121,6 +127,80 @@ export async function sendWhatsAppNotification(
 
     return { notification: failed, created: true };
   }
+}
+
+export async function notifyOrderCreatedForOrder(orderId: string, options: WhatsAppNotificationOptions = {}) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { user: { select: { id: true, phone: true, isBlocked: true } } },
+  });
+  if (!order || order.user.isBlocked) return null;
+
+  const formattedAmount = `${new Intl.NumberFormat('en-IQ').format(order.finalPrice)} ${order.currency}`;
+  const message = await getManagedContent(
+    'whatsapp.orderCreated',
+    createWhatsAppNotificationMessage({
+      type: 'ORDER_CREATED',
+      orderId: order.id,
+      amount: order.finalPrice,
+      currency: order.currency,
+      wahoId: order.gameUserId,
+    }),
+    {
+      orderId: order.id,
+      amount: formattedAmount,
+      wahoId: order.gameUserId,
+    }
+  );
+
+  return sendWhatsAppNotification({
+    type: 'ORDER_CREATED',
+    dedupeKey: createWhatsAppNotificationDedupeKey('ORDER_CREATED', 'order', order.id),
+    userId: order.userId,
+    orderId: order.id,
+    phone: order.user.phone,
+    message,
+    metadata: {
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+    },
+  }, options);
+}
+
+export async function notifyAccountBlocked(accessBlockId: string, options: WhatsAppNotificationOptions = {}) {
+  const block = await prisma.accessBlock.findUnique({
+    where: { id: accessBlockId },
+    include: { user: { select: { id: true } } },
+  });
+  if (!block || block.type !== 'WHATSAPP' || !block.notificationRequested) return null;
+
+  const message = await getManagedContent(
+    'whatsapp.accountBlocked',
+    createWhatsAppNotificationMessage({
+      type: 'ACCOUNT_BLOCKED',
+      reason: block.reason,
+    }),
+    { reason: block.reason }
+  );
+
+  return sendWhatsAppNotification({
+    type: 'ACCOUNT_BLOCKED',
+    dedupeKey: createWhatsAppNotificationDedupeKey(
+      'ACCOUNT_BLOCKED',
+      'access-block',
+      block.id,
+      String(block.updatedAt.getTime())
+    ),
+    userId: block.user?.id,
+    accessBlockId: block.id,
+    createdByAdminId: block.createdByAdminId,
+    phone: block.normalizedValue,
+    message,
+    metadata: {
+      blockType: block.type,
+      maskedValue: block.maskedValue,
+    },
+  }, options);
 }
 
 export async function notifyPaymentReceivedForOrder(orderId: string, options: WhatsAppNotificationOptions = {}) {

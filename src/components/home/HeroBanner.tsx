@@ -47,7 +47,7 @@ export function HeroBanner({ banner }: HeroBannerProps) {
     <section
       data-v2-hero
       aria-label={banner ? t(banner.title, banner.titleAr, banner.title) : t('WAHO top-up', 'شحن WAHO', 'WAHO 充值')}
-      className="relative min-h-[560px] overflow-hidden rounded-lg border border-white/10 bg-[#020817] text-white shadow-[0_28px_90px_rgba(0,0,0,0.35)] sm:min-h-[560px] lg:min-h-[500px]"
+      className="v2-mobile-hero relative min-h-[390px] overflow-hidden border-y border-white/10 bg-[#020817] text-white shadow-[0_28px_90px_rgba(0,0,0,0.35)] sm:min-h-[560px] sm:rounded-lg sm:border lg:min-h-[500px]"
     >
       <div className={`absolute inset-y-0 ${dir === 'rtl' ? 'left-0' : 'right-0'} w-full sm:w-[72%] lg:w-[60%]`}>
         <Image
@@ -55,7 +55,7 @@ export function HeroBanner({ banner }: HeroBannerProps) {
           alt={t('LEO, your WAHO top-up contact', 'LEO، جهة التواصل لشحن WAHO', 'LEO，您的 WAHO 充值联系人')}
           fill
           priority
-          className={`object-cover ${dir === 'rtl' ? 'object-[44%_32%]' : 'object-[56%_32%]'} sm:object-center`}
+          className={`object-cover ${dir === 'rtl' ? 'object-[100%_18%]' : 'object-[0%_18%]'} sm:object-center`}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 72vw, 760px"
         />
       </div>
@@ -68,6 +68,14 @@ export function HeroBanner({ banner }: HeroBannerProps) {
         }`}
       />
       <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,8,23,0.04)_20%,rgba(2,8,23,0.28)_64%,#020817_100%)] sm:bg-[linear-gradient(180deg,rgba(2,8,23,0.02)_28%,rgba(2,8,23,0.18)_62%,#020817_100%)]" />
+
+      <div
+        data-v2-mobile-brandmark
+        aria-hidden="true"
+        className="absolute end-4 top-4 z-20 h-12 w-12 overflow-hidden rounded-lg border border-[#f7b928]/55 bg-[#020817]/78 shadow-[0_10px_30px_rgba(0,0,0,0.3)] backdrop-blur-md sm:hidden"
+      >
+        <Image src="/brand/waho-app-icon.webp" alt="" fill priority className="object-cover" sizes="48px" />
+      </div>
 
       <div
         data-v2-brand-corner
@@ -89,19 +97,19 @@ export function HeroBanner({ banner }: HeroBannerProps) {
         </div>
       </div>
 
-      <div className="relative z-10 flex min-h-[560px] items-center px-5 pb-36 pt-7 sm:min-h-[560px] sm:px-10 sm:pb-32 lg:min-h-[500px] lg:px-12 lg:pb-28">
-        <div className={`max-w-[610px] ${dir === 'rtl' ? 'text-right lg:ms-48' : 'text-left'}`}>
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#f7b928]/35 bg-[#071b46]/72 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md">
+      <div className="relative z-10 flex min-h-[390px] items-end px-5 pb-[94px] pt-14 sm:min-h-[560px] sm:items-center sm:px-10 sm:pb-32 sm:pt-7 lg:min-h-[500px] lg:px-12 lg:pb-28">
+        <div data-v2-mobile-hero-copy className={`max-w-[610px] ${dir === 'rtl' ? 'text-right lg:ms-48' : 'text-left'}`}>
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#f7b928]/40 bg-[#071b46]/78 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5 sm:text-xs">
             <ShieldCheck className="h-4 w-4 text-[#f7b928]" />
             {t('Fast and clear WAHO top-up', 'شحن WAHO بسرعة ووضوح', '快速清晰地充值 WAHO')}
           </div>
 
-          <h1 className="mt-4 max-w-2xl text-[2rem] font-bold leading-[1.08] text-white sm:mt-5 sm:text-5xl lg:text-5xl xl:text-6xl">
+          <h1 className="mt-3 max-w-[330px] text-[1.9rem] font-bold leading-[1.06] text-white sm:mt-5 sm:max-w-2xl sm:text-5xl lg:text-5xl xl:text-6xl">
             {t('Top up your', 'اشحن رصيد', '为您的')}{' '}
             <span className="text-[#f7b928]">WAHO</span>{' '}
             {dir !== 'rtl' && t('balance', 'الرصيد', '余额充值')}
           </h1>
-          <p className="mt-4 max-w-xl text-sm leading-6 text-white/76 sm:mt-5 sm:text-lg sm:leading-7">
+          <p className="mt-3 line-clamp-2 max-w-[340px] text-[13px] leading-5 text-white/78 sm:mt-5 sm:line-clamp-none sm:max-w-xl sm:text-lg sm:leading-7">
             {t(
               'Choose the balance, check the WAHO account name before payment, then follow the order with your order ID.',
               'اختر الرصيد وتحقق من اسم حساب WAHO قبل الدفع، ثم تابع الطلب باستخدام رقمه.',
@@ -109,12 +117,12 @@ export function HeroBanner({ banner }: HeroBannerProps) {
             )}
           </p>
 
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link data-testid="home-primary-topup" href="/top-up/waho-top-up" className="v2-primary-button sm:min-w-44">
+          <div className="mt-4 flex gap-3 sm:mt-6 sm:flex-row">
+            <Link data-testid="home-primary-topup" href="/top-up/waho-top-up" className="v2-primary-button min-h-11 flex-1 sm:min-w-44 sm:flex-none">
               {t('Choose amount', 'اختر المبلغ', '选择金额')}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </Link>
-            <Link href="/help" className="v2-secondary-button border-white/22 bg-white/5 text-white hover:bg-white/10 sm:min-w-40">
+            <Link href="/help" className="v2-secondary-button hidden border-white/22 bg-white/5 text-white hover:bg-white/10 sm:inline-flex sm:min-w-40">
               <CircleHelp className="h-4 w-4 text-[#f7b928]" />
               {t('How it works', 'كيف يعمل', '如何操作')}
             </Link>
@@ -136,13 +144,13 @@ export function HeroBanner({ banner }: HeroBannerProps) {
         </div>
       </div>
 
-      <div className="v2-hero-metrics absolute inset-x-0 bottom-0 z-20 grid grid-cols-2 border-t border-white/12 bg-[#020817]/90 px-3 py-3 backdrop-blur-xl sm:grid-cols-4 sm:px-7 sm:py-3 lg:px-10">
+      <div className="v2-hero-metrics absolute inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-white/12 bg-[#020817]/92 px-1.5 py-2 backdrop-blur-xl sm:px-7 sm:py-3 lg:px-10">
         {metrics.map((item) => (
-          <div key={item.title} className="flex min-h-[62px] items-center gap-2.5 border-white/10 px-2 py-2 sm:min-h-[58px] sm:border-e sm:px-4 last:sm:border-e-0">
-            <item.icon className="h-5 w-5 flex-shrink-0 text-[#f7b928]" />
+          <div key={item.title} className="flex min-h-[70px] flex-col items-center justify-center gap-1 border-e border-white/10 px-1 py-1.5 text-center last:border-e-0 sm:min-h-[58px] sm:flex-row sm:justify-start sm:gap-2.5 sm:px-4 sm:py-2 sm:text-start">
+            <item.icon className="h-[18px] w-[18px] flex-shrink-0 text-[#f7b928] sm:h-5 sm:w-5" />
             <div className="min-w-0">
-              <p className="text-xs font-bold leading-5 text-white sm:text-sm">{item.title}</p>
-              <p className="text-[11px] leading-4 text-white/58 sm:text-xs">{item.body}</p>
+              <p className="line-clamp-2 text-[10px] font-bold leading-3.5 text-white sm:text-sm sm:leading-5">{item.title}</p>
+              <p className="hidden text-xs leading-4 text-white/58 sm:block">{item.body}</p>
             </div>
           </div>
         ))}

@@ -16,6 +16,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:push": "prisma db push",
     "db:seed": "prisma db seed",
+    "content:generate": "bun run scripts/generate-content-catalog.ts",
     "test": "bun test tests/*.test.ts",
     "test:unit": "bun test tests/*.test.ts",
     "test:integration": "NODE_ENV=test ENABLE_MOCK_WAHO=true bun test integration-tests",
@@ -52,10 +53,12 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-grab": "latest",
+    "react-simple-maps": "^3.0.0",
     "same-runtime": "^0.0.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
+    "world-atlas": "^2.0.2",
     "world-countries": "^5.1.0",
     "zod": "^4.4.3"
   },
@@ -68,17 +71,22 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^18.3.22",
     "@types/react-dom": "^18.3.7",
+    "@types/react-simple-maps": "^3.0.6",
     "eslint": "^9.39.4",
     "eslint-config-next": "15.5.22",
-    "postcss": "8.5.25",
+    "postcss": "8.5.26",
     "prisma": "^7.8.0",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.8.3"
   },
   "overrides": {
     "brace-expansion": "5.0.9",
-    "fast-uri": "3.1.4",
-    "postcss": "8.5.25",
-    "sharp": "0.35.3"
+    "d3-color": "3.1.0",
+    "deepmerge-ts": "8.0.0",
+    "fast-uri": "3.1.5",
+    "nanoid": "3.3.18",
+    "postcss": "8.5.26",
+    "sharp": "0.35.3",
+    "uuid": "11.1.1"
   }
 }

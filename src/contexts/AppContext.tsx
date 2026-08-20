@@ -1,8 +1,9 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
-import type { Language, User, Country, CartItem, Order, WalletTransaction } from '@/types';
+import type { Language, User, Country, CountryPriceCurrency, CartItem, Order, WalletTransaction } from '@/types';
 import { resolveOtpPhone } from './auth-flow';
+import { resolveContentValue, type ContentOverrideValue } from '@/server/domain/content-overrides';
 
 interface AppContextType {
   // Language
@@ -25,6 +26,7 @@ interface AppContextType {
   selectedCountry: Country;
   setSelectedCountry: (country: Country) => void;
   formatLocalAmount: (amountIqd: number, options?: { includeCurrency?: boolean; absolute?: boolean }) => string;
+  formatPriceOptions: (amountIqd: number, options?: { absolute?: boolean }) => Array<CountryPriceCurrency & { formatted: string }>;
 
   // Cart
   cart: CartItem[];
@@ -64,6 +66,7 @@ const defaultCountry: Country = {
   code: 'IQ',
   name: 'Iraq',
   nameAr: 'العراق',
+  nameZh: '伊拉克',
   flag: '🇮🇶',
   phoneCode: '+964',
   currency: 'IQD',
@@ -72,6 +75,19 @@ const defaultCountry: Country = {
   decimalPlaces: 0,
   exchangeRate: 1,
   exchangeRateBase: 'IQD',
+  primaryPriceCurrency: 'IQD',
+  showPricesInIqd: true,
+  showPricesInUsd: false,
+  showPricesInLocal: true,
+  priceCurrencies: [{
+    code: 'IQD',
+    name: 'Iraqi Dinar',
+    symbol: 'د.ع',
+    decimalPlaces: 0,
+    rate: 1,
+    isPrimary: true,
+    isAvailable: true,
+  }],
   isActive: true,
 };
 
@@ -545,6 +561,14 @@ const zhTranslations: Record<string, string> = {
   'Continue top-up': '继续充值',
   'Saved top-up items for checkout': '已保存待结账的充值项目',
   'Browse top-ups': '浏览充值',
+  'Account type': '账户类型',
+  'Available balance': '可用余额',
+  'Balance': '余额',
+  'Description': '说明',
+  'Last Login': '上次登录',
+  'Reference': '参考编号',
+  'Slug': '短链接',
+  'URL': '网址',
 };
 
 const languageLabels: Record<Language, { short: string; locale: string; htmlLang: string }> = {
@@ -564,6 +588,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [pendingPhone, setPendingPhone] = useState<string>('');
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAccountLoading, setIsAccountLoading] = useState(true);
+  const [contentOverrides, setContentOverrides] = useState<Record<string, ContentOverrideValue>>({});
 
   const refreshAccount = useCallback(async () => {
     setIsAccountLoading(true);
@@ -637,9 +662,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     async function loadCountries() {
       try {
-        const response = await fetch('/api/countries');
-        if (!response.ok) return;
-        const payload = await response.json().catch(() => null);
+        const [countryResponse, contentResponse] = await Promise.all([
+          fetch('/api/countries'),
+          fetch('/api/content'),
+        ]);
+        if (!countryResponse.ok) return;
+        const payload = await countryResponse.json().catch(() => null);
         const loadedCountries = Array.isArray(payload?.countries) && payload.countries.length
           ? payload.countries as Country[]
           : [defaultCountry];
@@ -652,6 +680,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ?? loadedCountries.find((country) => country.id === current.id)
             ?? loadedCountries[0];
         });
+
+        if (contentResponse.ok) {
+          const contentPayload = await contentResponse.json().catch(() => null);
+          const overrides = Array.isArray(contentPayload?.overrides)
+            ? contentPayload.overrides as Array<ContentOverrideValue & { key: string }>
+            : [];
+          setContentOverrides(Object.fromEntries(overrides.map((override) => [override.key, override])));
+        }
       } catch {
         // Keep the built-in Iraq fallback when country metadata is temporarily unavailable.
       }
@@ -682,17 +718,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const t = useCallback((en: string, ar: string, zh?: string) => {
-    if (language === 'ar') return ar;
-    if (language === 'zh') return zh || zhTranslations[en] || en;
-    return en;
-  }, [language]);
+    return resolveContentValue(language, {
+      en,
+      ar,
+      zh: zh || zhTranslations[en] || en,
+    }, contentOverrides[en]);
+  }, [contentOverrides, language]);
 
   const dir = language === 'ar' ? 'rtl' : 'ltr';
   const locale = languageLabels[language].locale;
 
   const formatLocalAmount = useCallback((amountIqd: number, options?: { includeCurrency?: boolean; absolute?: boolean }) => {
-    const rate = selectedCountry.exchangeRate && selectedCountry.exchangeRate > 0 ? selectedCountry.exchangeRate : 1;
-    const decimalPlaces = selectedCountry.decimalPlaces ?? 0;
+    const primary = selectedCountry.priceCurrencies?.find((currency) => currency.isPrimary && currency.isAvailable)
+      ?? selectedCountry.priceCurrencies?.find((currency) => currency.isAvailable);
+    const rate = primary?.rate ?? 1;
+    const decimalPlaces = primary?.decimalPlaces ?? 0;
     const amount = (options?.absolute ? Math.abs(amountIqd) : amountIqd) * rate;
     const formatted = new Intl.NumberFormat(locale, {
       minimumFractionDigits: decimalPlaces,
@@ -701,8 +741,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     return options?.includeCurrency === false
       ? formatted
-      : `${formatted} ${selectedCountry.currencySymbol}`;
+      : `${formatted} ${primary?.symbol ?? 'د.ع'}`;
   }, [locale, selectedCountry]);
+
+  const formatPriceOptions = useCallback((amountIqd: number, options?: { absolute?: boolean }) => {
+    const value = options?.absolute ? Math.abs(amountIqd) : amountIqd;
+    const available = (selectedCountry.priceCurrencies ?? [])
+      .filter((currency) => currency.isAvailable)
+      .map((currency) => ({
+        ...currency,
+        formatted: `${new Intl.NumberFormat(locale, {
+          minimumFractionDigits: currency.decimalPlaces,
+          maximumFractionDigits: currency.decimalPlaces,
+        }).format(value * currency.rate)} ${currency.symbol}`,
+      }));
+    if (available.length) return available;
+
+    return [{
+      code: 'IQD',
+      name: 'Iraqi Dinar',
+      symbol: 'د.ع',
+      decimalPlaces: 0,
+      rate: 1,
+      isPrimary: true,
+      isAvailable: true,
+      formatted: `${new Intl.NumberFormat(locale, {
+        maximumFractionDigits: 0,
+      }).format(value)} د.ع`,
+    }];
+  }, [locale, selectedCountry.priceCurrencies]);
 
   useEffect(() => {
     document.documentElement.lang = languageLabels[language].htmlLang;
@@ -817,6 +884,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectedCountry,
       setSelectedCountry,
       formatLocalAmount,
+      formatPriceOptions,
       cart,
       addToCart,
       removeFromCart,

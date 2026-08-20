@@ -7,6 +7,8 @@ import { resolveDemoOtpForPhone } from '@/server/demo-auth';
 import { deliverOtp } from '@/server/providers/otp';
 import { assertRateLimit } from '@/server/rate-limit';
 import { loginSchema, normalizePhone } from '@/server/validation';
+import { getClientIpFromHeaders } from '@/server/domain/access-blocks';
+import { assertRequestAccessAllowed } from '@/server/services/access-blocks';
 
 export const runtime = 'nodejs';
 
@@ -14,11 +16,12 @@ export async function POST(request: NextRequest) {
   try {
     const body = loginSchema.parse(await request.json());
     const phone = normalizePhone(body.phone);
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
+    const ip = getClientIpFromHeaders(request.headers) ?? 'local';
 
     await assertRateLimit(`auth-login:${ip}`, { limit: 20, windowMs: 15 * 60 * 1000 });
     await assertRateLimit(`auth-login:${phone}`, { limit: 5, windowMs: 10 * 60 * 1000 });
     await assertPhoneNotBlocked(phone);
+    await assertRequestAccessAllowed(request.headers);
 
     const demoOtp = resolveDemoOtpForPhone(phone);
     const code = demoOtp ?? createOtpCode();

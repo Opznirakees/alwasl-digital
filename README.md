@@ -8,12 +8,16 @@ The app is now full-stack:
 - OTP auth with httpOnly session cookies and direct WAHA WhatsApp delivery when configured.
 - Action-scoped OTP challenges for WAHO order confirmation, payment confirmation, and wallet changes.
 - Server-side WAHO product catalog and order creation.
-- Payment adapters are intentionally closed in production until real providers are configured.
+- QiCard hosted checkout supports authenticated payment creation, server-side status confirmation, signed webhooks, cancellation, and external refunds.
 - WAHO fulfillment can send production requests through the WAHA WhatsApp bridge when configured.
 - Wallet ledger updates through database transactions.
 - WAHO provider registry with priority, fallback, account balance, local mock, WAHA WhatsApp fulfillment bridge, and native WAHO API placeholders.
 - Provider low-balance alerts are stored for admins and can send WhatsApp alerts through WAHA when configured.
 - Provider retry jobs persist failed fulfillment attempts, retry after 3 minutes, and stop after 3 attempts before final compensation.
+- Central access blocks can stop a WhatsApp number, WAHO ID, or IP address and keep a complete admin audit trail.
+- WAHA sends idempotent order receipts and optional WhatsApp block reasons without rolling back the business action on delivery failure.
+- Country pricing can show IQD, USD, local currency, or a managed combination with manual exchange rates.
+- Admins with `CONTENT_MANAGE` can update more than 700 EN/AR/ZH website labels, steps, instructions, information pages, and WhatsApp templates.
 
 ## Setup
 
@@ -52,6 +56,7 @@ bun run db:generate  # regenerate Prisma client
 bun run db:migrate   # apply production migrations
 bun run db:push      # push schema in development
 bun run db:seed      # seed WAHO product/packages and admin user
+bun run content:generate # rebuild the editable EN/AR/ZH content catalog
 bun run test         # backend domain tests
 bun run test:e2e     # Playwright browser/API smoke tests
 bun run ops:check-backups # verify DigitalOcean managed database backups
@@ -115,6 +120,36 @@ Important production variables:
 - `WAHO_PROVIDER_LOW_BALANCE_THRESHOLD`
 - `PROVIDER_ALERT_WHATSAPP_PHONE`
 - `WAHO_FULFILLMENT_PHONE`
+- `QICARD_ENABLED`
+- `QICARD_BASE_URL`
+- `QICARD_USERNAME`
+- `QICARD_PASSWORD`
+- `QICARD_TERMINAL_ID`
+- `QICARD_WEBHOOK_PUBLIC_KEY`
+- `APP_BASE_URL`
+
+Never commit real WAHA credentials. Store `WAHA_API_KEY` as an encrypted
+DigitalOcean runtime secret; it is read only by server-side WAHA calls.
+
+## QiCard Payments
+
+QiCard uses a hosted payment form. The browser never receives merchant credentials and never determines whether an order is paid. A return to `/payments/qicard/return` triggers an authenticated server-to-server status lookup; only QiCard `SUCCESS` can settle the order and start WAHO fulfillment.
+
+Set all `QICARD_*` values as encrypted runtime secrets. `APP_BASE_URL` must be the public HTTPS application origin so QiCard can reach `/api/webhooks/qicard`. Obtain `QICARD_WEBHOOK_PUBLIC_KEY` from Qi and keep webhook processing disabled until that key is configured. The webhook validates `X-Signature` with RSA-SHA256, checks `X-Terminal-Id`, deduplicates delivery, and confirms the payment once more through the authenticated Qi API before fulfillment.
+
+The sandbox base URL is suitable only for local and test transactions. The application rejects a sandbox QiCard endpoint automatically when `NODE_ENV=production`, preventing a public test card from triggering real WAHO fulfillment. Moving to real payments requires merchant production credentials, a production terminal, the matching webhook public key, and Qi acceptance testing. Never reuse sandbox credentials in production mode.
+
+## Admin Operations
+
+- **Access blocks** manages WhatsApp-, WAHO-ID-, and IP-based rules. WhatsApp
+  blocks can immediately send the recorded reason and failed sends can be retried.
+- **Currencies** contains the world map, per-country visible currencies, the
+  primary display currency, manual exchange rates, and a live conversion example.
+- **Website text** exposes generated EN/AR/ZH content by module. Required
+  `{{placeholders}}` are validated so transactional values cannot be removed.
+
+The implementation and remaining production activation steps are tracked in
+[`to-do.md`](to-do.md).
 
 ## DigitalOcean Deployment Notes
 
@@ -154,4 +189,4 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR_APP_URL/api/jobs/monit
 curl -H "Authorization: Bearer $CRON_SECRET" https://YOUR_APP_URL/api/jobs/log-retention
 ```
 
-The app exposes `GET /api/health` for external uptime providers. Admins can manage additional uptime targets and log retention in the admin Monitoring tab. Set `MONITORING_ERROR_WEBHOOK_URL` and/or `MONITORING_STATUS_WEBHOOK_URL` to forward events to an external error tracking or incident system. Payment remains unavailable in production until the real payment provider contract is implemented and approved. Configure `WAHA_BASE_URL`, `WAHA_API_KEY`, and `WAHA_SESSION` for direct WhatsApp OTP delivery. Native WAHO API fulfillment can still be added later; until then, add `WAHO_FULFILLMENT_PHONE` to route paid WAHO top-up requests to the operator WhatsApp queue. Provider accounts are seeded with priority/fallback metadata, an initial routing balance from `WAHO_PROVIDER_INITIAL_BALANCE`, and a low-balance threshold from `WAHO_PROVIDER_LOW_BALANCE_THRESHOLD`; set `PROVIDER_ALERT_WHATSAPP_PHONE` to receive WhatsApp alerts. Manage real operational balances carefully after seed. Do not enable local-only demo or fake payment flags in production.
+The app exposes `GET /api/health` for external uptime providers. Admins can manage additional uptime targets and log retention in the admin Monitoring tab. Set `MONITORING_ERROR_WEBHOOK_URL` and/or `MONITORING_STATUS_WEBHOOK_URL` to forward events to an external error tracking or incident system. QiCard checkout is available only when its explicit server-side configuration is complete; production activation additionally requires the official Qi webhook public key and merchant acceptance. Configure `WAHA_BASE_URL`, `WAHA_API_KEY`, and `WAHA_SESSION` for direct WhatsApp OTP delivery. Native WAHO API fulfillment can still be added later; until then, add `WAHO_FULFILLMENT_PHONE` to route paid WAHO top-up requests to the operator WhatsApp queue. Provider accounts are seeded with priority/fallback metadata, an initial routing balance from `WAHO_PROVIDER_INITIAL_BALANCE`, and a low-balance threshold from `WAHO_PROVIDER_LOW_BALANCE_THRESHOLD`; set `PROVIDER_ALERT_WHATSAPP_PHONE` to receive WhatsApp alerts. Manage real operational balances carefully after seed. Do not enable local-only demo or fake payment flags in production.

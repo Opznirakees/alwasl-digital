@@ -11,6 +11,8 @@ import { assertRateLimit } from '@/server/rate-limit';
 import { verifySensitiveOtpChallenge } from '@/server/sensitive-otp';
 import { confirmWalletPayment, createPendingOrder } from '@/server/services/orders';
 import { createOrderSchema } from '@/server/validation';
+import { getClientIpFromHeaders } from '@/server/domain/access-blocks';
+import { assertAccessAllowed } from '@/server/services/access-blocks';
 
 export const runtime = 'nodejs';
 
@@ -48,6 +50,7 @@ export async function POST(request: NextRequest) {
   try {
     const user = await requireUser();
     const body = createOrderSchema.parse(await request.json());
+    await assertAccessAllowed({ wahoId: body.wahoId });
     assertOrderPaymentMethodEnabled(body.paymentMethod);
     const idempotencyKey = requireIdempotencyKey(request.headers);
     const idempotencyFingerprint = createIdempotencyFingerprint('orders.create', {
@@ -57,7 +60,7 @@ export async function POST(request: NextRequest) {
       zoneId: body.zoneId || '',
       paymentMethod: body.paymentMethod,
     });
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
+    const ip = getClientIpFromHeaders(request.headers) ?? 'local';
     await assertRateLimit(`orders:create:${user.id}:${ip}`, { limit: 30, windowMs: 15 * 60 * 1000 });
 
     const existingOrder = await prisma.order.findFirst({

@@ -12,6 +12,7 @@ Included:
 - Customer order creation/history/detail.
 - Wallet ledger and manual deposit requests.
 - Public countries, banners, and promotions.
+- QiCard hosted checkout creation, authenticated status refresh, and cancellation.
 
 Excluded from the mobile contract:
 
@@ -39,7 +40,7 @@ Use these purposes:
 
 - `ORDER_CONFIRMATION` before `POST /api/orders`.
 - `WALLET_TOP_UP` before `POST /api/wallet/manual-deposits`.
-- `PAYMENT_CONFIRMATION` is reserved for future real payment confirmation.
+- `PAYMENT_CONFIRMATION` is reserved for payment actions that require an additional challenge; QiCard settlement itself is confirmed server-to-server.
 - `WALLET_CHANGE` is reserved for future wallet/security changes.
 
 ## Idempotency
@@ -50,7 +51,7 @@ If the same key is replayed with the same payload, the API returns the existing 
 
 ## Production Behavior
 
-Real payment providers are not part of API v1 yet. Wallet funding should use manual deposits, where the balance is credited only after admin approval.
+QiCard hosted checkout is part of API v1 when the server reports it as enabled through `GET /api/payments/methods`. Create the order first, then call `POST /api/payments/qicard/create` and open the returned Qi-hosted URL. Never infer payment success from the browser return URL; call `GET /api/payments/qicard/{orderId}/status` and use the returned order as the source of truth. Wallet funding still uses manual deposits, where the balance is credited only after admin approval.
 
 WAHO fulfillment can return dependency errors when the live provider path is not configured or temporarily unavailable. Mobile clients should show a retry-safe message and keep the order status from the API as the source of truth.
 

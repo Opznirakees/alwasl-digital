@@ -15,6 +15,7 @@ import {
 } from '../providers/waho-router';
 import { scheduleProviderRetryJob } from './provider-retry-jobs';
 import {
+  notifyOrderCreatedForOrder,
   notifyPaymentReceivedForOrder,
   notifyTopupFailureForOrder,
   notifyTopupSuccessForOrder,
@@ -73,7 +74,7 @@ function toDbMembershipLevel(level: ReturnType<typeof resolveMembershipForSpend>
   return level.toUpperCase() as DbUserLevel;
 }
 
-async function syncMembershipForUser(tx: Prisma.TransactionClient, userId: string) {
+export async function syncMembershipForUser(tx: Prisma.TransactionClient, userId: string) {
   const account = await tx.user.findUnique({
     where: { id: userId },
     select: { walletBalance: true, totalSpent: true },
@@ -219,6 +220,7 @@ export async function createPendingOrder(
       },
     });
 
+    await safeWhatsAppNotification(() => notifyOrderCreatedForOrder(order.id));
     return { order, replayed: false };
   } catch (error) {
     if (isUniqueConstraintError(error)) {
@@ -350,6 +352,16 @@ async function scheduleProviderCreateRetry(
 }
 
 export async function refundPaidOrder(orderId: string, input: RefundOrderInput): Promise<Order> {
+  const paymentSource = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { paymentMethod: true },
+  });
+  if (!paymentSource) throw new Error('NOT_FOUND');
+  if (paymentSource.paymentMethod === 'QICARD') {
+    const { refundQiCardOrder } = await import('./qicard-payments');
+    return refundQiCardOrder(orderId, input.reason);
+  }
+
   let refundedOrder: Order;
 
   try {
@@ -686,8 +698,14 @@ async function confirmPayment(
 
   await safeWhatsAppNotification(() => notifyPaymentReceivedForOrder(claimed.id));
 
+  return fulfillPaidOrder(claimed.id);
+}
+
+export async function fulfillPaidOrder(orderId: string): Promise<OrderMutationResult> {
+  const claimed = await prisma.order.findUnique({ where: { id: orderId } });
+  if (!claimed) throw new Error('NOT_FOUND');
   if (claimed.status !== 'PROCESSING' || claimed.paymentStatus !== 'COMPLETED') {
-    return { order: claimed, replayed: false };
+    return { order: claimed, replayed: true };
   }
 
   const providerInput = createWahoTopupInput(claimed);

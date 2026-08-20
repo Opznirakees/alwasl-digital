@@ -197,7 +197,7 @@ export async function GET(request: NextRequest) {
           rate.baseCurrencyCode === BASE_CURRENCY &&
           rate.quoteCurrencyCode === country.currencyCode
         ));
-        return mapCountry(country, exchangeRate, BASE_CURRENCY);
+        return mapCountry(country, exchangeRate, BASE_CURRENCY, exchangeRates);
       }),
       exchangeRates: exchangeRates.map(mapExchangeRate),
       customPricingRules: customPricingRules.map(mapCustomPricingRule),

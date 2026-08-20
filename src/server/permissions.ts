@@ -14,6 +14,7 @@ export const staffPermissions = [
   'PROVIDER_MANAGE',
   'PROMOTION_MANAGE',
   'BANNER_MANAGE',
+  'CONTENT_MANAGE',
   'CURRENCY_MANAGE',
   'PRICING_MANAGE',
   'EXPORT_DATA',
@@ -72,6 +73,7 @@ export const staffRolePermissionMap: Record<StaffRole, StaffPermission[]> = {
     'USER_READ',
     'PROMOTION_MANAGE',
     'BANNER_MANAGE',
+    'CONTENT_MANAGE',
     'WHATSAPP_MARKETING',
   ],
   VIEWER: [

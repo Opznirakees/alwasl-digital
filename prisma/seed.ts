@@ -13,6 +13,7 @@ async function main() {
   const product = games[0];
   const currencySeeds = [
     { code: 'IQD', name: 'Iraqi Dinar', symbol: 'د.ع', decimalPlaces: 0 },
+    { code: 'USD', name: 'US Dollar', symbol: '$', decimalPlaces: 2 },
     { code: 'SAR', name: 'Saudi Riyal', symbol: 'ر.س', decimalPlaces: 2 },
     { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ', decimalPlaces: 2 },
     { code: 'EGP', name: 'Egyptian Pound', symbol: 'ج.م', decimalPlaces: 2 },
@@ -20,6 +21,7 @@ async function main() {
     { code: 'KWD', name: 'Kuwaiti Dinar', symbol: 'د.ك', decimalPlaces: 3 },
   ];
   const manualExchangeRates = [
+    { baseCurrencyCode: 'IQD', quoteCurrencyCode: 'USD', rate: 0.000763 },
     { baseCurrencyCode: 'IQD', quoteCurrencyCode: 'SAR', rate: 0.00275 },
     { baseCurrencyCode: 'IQD', quoteCurrencyCode: 'AED', rate: 0.00280 },
     { baseCurrencyCode: 'IQD', quoteCurrencyCode: 'EGP', rate: 0.03650 },
@@ -61,9 +63,14 @@ async function main() {
         code: country.code,
         name: country.name,
         nameAr: country.nameAr,
+        nameZh: country.nameZh,
         flag: country.flag,
         phoneCode: country.phoneCode,
         currencyCode: country.currency,
+        primaryPriceCurrency: country.primaryPriceCurrency,
+        showPricesInIqd: country.showPricesInIqd,
+        showPricesInUsd: country.showPricesInUsd,
+        showPricesInLocal: country.showPricesInLocal,
         isActive: country.isActive,
       },
       create: {
@@ -71,9 +78,14 @@ async function main() {
         code: country.code,
         name: country.name,
         nameAr: country.nameAr,
+        nameZh: country.nameZh,
         flag: country.flag,
         phoneCode: country.phoneCode,
         currencyCode: country.currency,
+        primaryPriceCurrency: country.primaryPriceCurrency,
+        showPricesInIqd: country.showPricesInIqd,
+        showPricesInUsd: country.showPricesInUsd,
+        showPricesInLocal: country.showPricesInLocal,
         isActive: country.isActive,
       },
     });

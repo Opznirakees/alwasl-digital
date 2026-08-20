@@ -17,16 +17,42 @@ const wahoTopUpMark = '/brand/alwasl-mark.jpg';
 const wahoTopUpBanner = '/brand/alwasl-banner.jpg';
 
 // Countries
+function seededCountryPricing(
+  currency: string,
+  symbol: string,
+  rate: number,
+  decimalPlaces = 2
+): Pick<Country, 'primaryPriceCurrency' | 'showPricesInIqd' | 'showPricesInUsd' | 'showPricesInLocal' | 'priceCurrencies'> {
+  const isIqd = currency === 'IQD';
+  return {
+    primaryPriceCurrency: isIqd ? 'IQD' : 'LOCAL',
+    showPricesInIqd: true,
+    showPricesInUsd: false,
+    showPricesInLocal: true,
+    priceCurrencies: [{
+      code: currency,
+      name: currency,
+      symbol,
+      decimalPlaces,
+      rate,
+      isPrimary: true,
+      isAvailable: true,
+    }],
+  };
+}
+
 export const countries: Country[] = [
   {
     id: 'iq',
     code: 'IQ',
     name: 'Iraq',
     nameAr: 'العراق',
+    nameZh: '伊拉克',
     flag: '🇮🇶',
     phoneCode: '+964',
     currency: 'IQD',
     currencySymbol: 'د.ع',
+    ...seededCountryPricing('IQD', 'د.ع', 1, 0),
     isActive: true,
   },
   {
@@ -34,10 +60,12 @@ export const countries: Country[] = [
     code: 'SA',
     name: 'Saudi Arabia',
     nameAr: 'السعودية',
+    nameZh: '沙特阿拉伯',
     flag: '🇸🇦',
     phoneCode: '+966',
     currency: 'SAR',
     currencySymbol: 'ر.س',
+    ...seededCountryPricing('SAR', 'ر.س', 0.00275),
     isActive: true,
   },
   {
@@ -45,10 +73,12 @@ export const countries: Country[] = [
     code: 'AE',
     name: 'UAE',
     nameAr: 'الإمارات',
+    nameZh: '阿拉伯联合酋长国',
     flag: '🇦🇪',
     phoneCode: '+971',
     currency: 'AED',
     currencySymbol: 'د.إ',
+    ...seededCountryPricing('AED', 'د.إ', 0.00280),
     isActive: true,
   },
   {
@@ -56,10 +86,12 @@ export const countries: Country[] = [
     code: 'EG',
     name: 'Egypt',
     nameAr: 'مصر',
+    nameZh: '埃及',
     flag: '🇪🇬',
     phoneCode: '+20',
     currency: 'EGP',
     currencySymbol: 'ج.م',
+    ...seededCountryPricing('EGP', 'ج.م', 0.03650),
     isActive: true,
   },
   {
@@ -67,10 +99,12 @@ export const countries: Country[] = [
     code: 'JO',
     name: 'Jordan',
     nameAr: 'الأردن',
+    nameZh: '约旦',
     flag: '🇯🇴',
     phoneCode: '+962',
     currency: 'JOD',
     currencySymbol: 'د.أ',
+    ...seededCountryPricing('JOD', 'د.أ', 0.00054, 3),
     isActive: true,
   },
   {
@@ -78,10 +112,12 @@ export const countries: Country[] = [
     code: 'KW',
     name: 'Kuwait',
     nameAr: 'الكويت',
+    nameZh: '科威特',
     flag: '🇰🇼',
     phoneCode: '+965',
     currency: 'KWD',
     currencySymbol: 'د.ك',
+    ...seededCountryPricing('KWD', 'د.ك', 0.00023, 3),
     isActive: true,
   },
 ];

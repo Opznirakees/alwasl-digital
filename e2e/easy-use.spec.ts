@@ -32,8 +32,102 @@ const product = {
 };
 
 const countries = [
-  { id: 'iq', code: 'IQ', name: 'Iraq', nameAr: 'العراق', flag: '🇮🇶', phoneCode: '+964', currency: 'IQD', currencySymbol: 'د.ع', decimalPlaces: 0, exchangeRate: 1, isActive: true },
-  { id: 'nl', code: 'NL', name: 'Netherlands', nameAr: 'هولندا', flag: '🇳🇱', phoneCode: '+31', currency: 'EUR', currencySymbol: '€', decimalPlaces: 2, exchangeRate: 0.00065, isActive: true },
+  {
+    id: 'iq',
+    code: 'IQ',
+    name: 'Iraq',
+    nameAr: 'العراق',
+    nameZh: '伊拉克',
+    flag: '🇮🇶',
+    phoneCode: '+964',
+    currency: 'IQD',
+    currencySymbol: 'د.ع',
+    decimalPlaces: 0,
+    exchangeRate: 1,
+    primaryPriceCurrency: 'IQD',
+    showPricesInIqd: true,
+    showPricesInUsd: false,
+    showPricesInLocal: true,
+    priceCurrencies: [{
+      code: 'IQD',
+      name: 'Iraqi Dinar',
+      symbol: 'د.ع',
+      decimalPlaces: 0,
+      rate: 1,
+      isPrimary: true,
+      isAvailable: true,
+    }],
+    isActive: true,
+  },
+  {
+    id: 'nl',
+    code: 'NL',
+    name: 'Netherlands',
+    nameAr: 'هولندا',
+    nameZh: '荷兰',
+    flag: '🇳🇱',
+    phoneCode: '+31',
+    currency: 'EUR',
+    currencySymbol: '€',
+    decimalPlaces: 2,
+    exchangeRate: 0.00065,
+    primaryPriceCurrency: 'LOCAL',
+    showPricesInIqd: true,
+    showPricesInUsd: false,
+    showPricesInLocal: true,
+    priceCurrencies: [
+      {
+        code: 'EUR',
+        name: 'Euro',
+        symbol: '€',
+        decimalPlaces: 2,
+        rate: 0.00065,
+        isPrimary: true,
+        isAvailable: true,
+      },
+      {
+        code: 'IQD',
+        name: 'Iraqi Dinar',
+        symbol: 'د.ع',
+        decimalPlaces: 0,
+        rate: 1,
+        isPrimary: false,
+        isAvailable: true,
+      },
+    ],
+    isActive: true,
+  },
+];
+
+const countryCatalog = [
+  {
+    id: 'iq',
+    code: 'IQ',
+    numericCode: '368',
+    name: 'Iraq',
+    nameAr: 'العراق',
+    nameZh: '伊拉克',
+    flag: '🇮🇶',
+    phoneCode: '+964',
+    currencyCode: 'IQD',
+    currencyName: 'Iraqi Dinar',
+    currencySymbol: 'د.ع',
+    decimalPlaces: 0,
+  },
+  {
+    id: 'nl',
+    code: 'NL',
+    numericCode: '528',
+    name: 'Netherlands',
+    nameAr: 'هولندا',
+    nameZh: '荷兰',
+    flag: '🇳🇱',
+    phoneCode: '+31',
+    currencyCode: 'EUR',
+    currencyName: 'Euro',
+    currencySymbol: '€',
+    decimalPlaces: 2,
+  },
 ];
 
 const user = {
@@ -109,10 +203,17 @@ async function mockCustomerApi(page: Page, initiallyAuthenticated = false) {
     });
 
     if (path === '/api/countries') return json({ countries });
+    if (path === '/api/content') return json({ overrides: [] });
     if (path === '/api/banners') return json({ banners: [] });
     if (path === '/api/products') return json({ products: [product] });
     if (path === '/api/products/waho-top-up') return json({ product });
     if (path === '/api/promotions') return json({ promotions: [] });
+    if (path === '/api/payments/methods') return json({
+      methods: [
+        { id: 'wallet', enabled: true },
+        { id: 'qicard', enabled: true, environment: 'sandbox' },
+      ],
+    });
     if (path === '/api/auth/me') return json({ user: authenticated ? user : null });
     if (path === '/api/orders' && method === 'POST') return json({ order }, 201);
     if (path === '/api/orders') return json({ orders: authenticated ? [order] : [] });
@@ -126,6 +227,24 @@ async function mockCustomerApi(page: Page, initiallyAuthenticated = false) {
       return json({ user });
     }
     if (path === '/api/auth/otp/request' && method === 'POST') return json({ debugOtp: '123456' });
+    if (path === '/api/payments/qicard/create' && method === 'POST') {
+      return json({
+        order: { ...order, paymentMethod: 'qicard', paymentStatus: 'pending', status: 'pending' },
+        checkoutUrl: `${url.origin}/payments/qicard/return?orderId=${order.id}`,
+        environment: 'sandbox',
+        replayed: false,
+      });
+    }
+    if (path === `/api/payments/qicard/${order.id}/status`) {
+      return json({
+        order: { ...order, paymentMethod: 'qicard', paymentStatus: 'completed', status: 'processing' },
+      });
+    }
+    if (path === `/api/payments/qicard/${order.id}/cancel` && method === 'POST') {
+      return json({
+        order: { ...order, paymentMethod: 'qicard', paymentStatus: 'failed', status: 'cancelled' },
+      });
+    }
 
     return json({ error: `Unhandled test route: ${method} ${path}` }, 404);
   });
@@ -133,9 +252,12 @@ async function mockCustomerApi(page: Page, initiallyAuthenticated = false) {
 
 async function mockAdminApi(page: Page, options: { failSummaryOnce?: boolean } = {}) {
   let summaryFailuresRemaining = options.failSummaryOnce ? 1 : 0;
+  let accessBlocks: Array<Record<string, unknown>> = [];
+  let contentOverride: Record<string, unknown> | null = null;
 
   await page.route('**/api/**', async (route: Route) => {
     const path = new URL(route.request().url()).pathname;
+    const method = route.request().method();
     const json = (payload: unknown, status = 200) => route.fulfill({
       status,
       contentType: 'application/json',
@@ -143,6 +265,7 @@ async function mockAdminApi(page: Page, options: { failSummaryOnce?: boolean } =
     });
 
     if (path === '/api/countries') return json({ countries });
+    if (path === '/api/content') return json({ overrides: [] });
     if (path === '/api/auth/me') return json({ user: adminUser });
     if (path === '/api/orders') return json({ orders: [order] });
     if (path === '/api/wallet') return json({ user: adminUser, transactions: [walletTransaction], manualDeposits: [] });
@@ -248,8 +371,68 @@ async function mockAdminApi(page: Page, options: { failSummaryOnce?: boolean } =
         },
       });
     }
+    if (path === '/api/admin/countries/catalog') return json({ countries: countryCatalog });
+    if (path === '/api/admin/access-blocks' && method === 'GET') return json({ blocks: accessBlocks });
+    if (path === '/api/admin/access-blocks' && method === 'POST') {
+      const body = route.request().postDataJSON() as {
+        type: string;
+        value: string;
+        reason: string;
+        notifyByWhatsApp: boolean;
+      };
+      const block = {
+        id: 'block-1',
+        type: body.type,
+        maskedValue: '*******5678',
+        reason: body.reason,
+        isActive: true,
+        expiresAt: null,
+        revokedAt: null,
+        notificationRequested: body.notifyByWhatsApp,
+        notificationStatus: body.notifyByWhatsApp ? 'SENT' : null,
+        notificationError: null,
+        createdAt: '2026-07-31T10:00:00.000Z',
+        user,
+        createdByAdmin: { id: adminUser.id, name: adminUser.name },
+      };
+      accessBlocks = [block];
+      return json({ block }, 201);
+    }
+    if (/^\/api\/admin\/access-blocks\/[^/]+$/.test(path) && method === 'PATCH') {
+      const body = route.request().postDataJSON() as { isActive: boolean };
+      accessBlocks = accessBlocks.map((block) => ({ ...block, isActive: body.isActive }));
+      return json({ block: accessBlocks[0] });
+    }
+    if (/^\/api\/admin\/access-blocks\/[^/]+\/notify$/.test(path) && method === 'POST') {
+      accessBlocks = accessBlocks.map((block) => ({ ...block, notificationStatus: 'SENT' }));
+      return json({ block: accessBlocks[0] });
+    }
+    if (path === '/api/admin/content' && method === 'GET') {
+      return json({
+        entries: [{
+          key: 'Choose amount',
+          module: 'home',
+          valueEn: 'Choose amount',
+          valueAr: 'اختر المبلغ',
+          valueZh: '选择金额',
+          override: contentOverride,
+        }],
+      });
+    }
+    if (path === '/api/admin/content' && method === 'PUT') {
+      const body = route.request().postDataJSON() as Record<string, unknown>;
+      contentOverride = { id: 'content-1', ...body };
+      return json({ override: contentOverride });
+    }
+    if (path === '/api/admin/content' && method === 'DELETE') {
+      contentOverride = null;
+      return json({ deleted: true });
+    }
+    if (/^\/api\/admin\/countries\/[^/]+$/.test(path) && method === 'PATCH') {
+      return json({ country: countries.find((country) => path.endsWith(country.id)) });
+    }
 
-    return json({ error: `Unhandled admin test route: ${route.request().method()} ${path}` }, 404);
+    return json({ error: `Unhandled admin test route: ${method} ${path}` }, 404);
   });
 }
 
@@ -332,7 +515,32 @@ test.describe('generation 2 customer experience', () => {
 
     const mobileTabs = page.locator('[data-mobile-tab-bar]');
     await expect(mobileTabs).toBeVisible();
+    await expect(mobileTabs.getByRole('link')).toHaveCount(5);
     await expect(mobileTabs.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
+
+    const heroMetrics = await page.locator('.v2-hero-metrics > div').evaluateAll((items) => items.map((item) => {
+      const rect = item.getBoundingClientRect();
+      return { y: Math.round(rect.y), width: Math.round(rect.width) };
+    }));
+    expect(heroMetrics).toHaveLength(4);
+    expect(new Set(heroMetrics.map((item) => item.y)).size).toBe(1);
+    expect(heroMetrics.every((item) => item.width >= 88)).toBe(true);
+
+    const processItems = await page.locator('[data-v2-mobile-process-rail] > li').evaluateAll((items) => items.map((item) => {
+      const rect = item.getBoundingClientRect();
+      return { y: Math.round(rect.y), width: Math.round(rect.width) };
+    }));
+    expect(processItems).toHaveLength(3);
+    expect(new Set(processItems.map((item) => item.y)).size).toBe(1);
+    expect(processItems.every((item) => item.width >= 110)).toBe(true);
+
+    const packageCards = await page.getByTestId('home-package-card').evaluateAll((items) => items.slice(0, 3).map((item) => {
+      const rect = item.getBoundingClientRect();
+      return { y: Math.round(rect.y), width: Math.round(rect.width) };
+    }));
+    expect(packageCards).toHaveLength(3);
+    expect(new Set(packageCards.map((item) => item.y)).size).toBe(1);
+    expect(packageCards.every((item) => item.width >= 108)).toBe(true);
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'home-mobile');
   });
@@ -346,7 +554,10 @@ test.describe('generation 2 customer experience', () => {
     const primaryActionBox = await primaryAction.boundingBox();
     expect(primaryActionBox?.height ?? 0).toBeGreaterThanOrEqual(44);
 
-    const mobileTabBoxes = await page.locator('[data-mobile-tab-bar] a').evaluateAll((links) => (
+    const mobileNavigation = page.locator('[data-mobile-tab-bar]');
+    await expect(mobileNavigation.getByRole('link')).toHaveCount(5);
+    await expect(mobileNavigation.getByRole('link', { name: 'Login' })).toBeVisible();
+    const mobileTabBoxes = await page.locator('[data-mobile-tab-bar] a:visible').evaluateAll((links) => (
       links.map((link) => {
         const rect = link.getBoundingClientRect();
         return { width: rect.width, height: rect.height };
@@ -362,9 +573,12 @@ test.describe('generation 2 customer experience', () => {
     await expect(amountCards).toHaveCount(5);
     const firstCard = await amountCards.nth(0).boundingBox();
     const secondCard = await amountCards.nth(1).boundingBox();
-    expect(firstCard?.width ?? 0).toBeGreaterThan(120);
-    expect(secondCard?.width ?? 0).toBeGreaterThan(120);
+    const thirdCard = await amountCards.nth(2).boundingBox();
+    expect(firstCard?.width ?? 0).toBeGreaterThanOrEqual(80);
+    expect(secondCard?.width ?? 0).toBeGreaterThanOrEqual(80);
+    expect(thirdCard?.width ?? 0).toBeGreaterThanOrEqual(80);
     expect(Math.abs((firstCard?.y ?? 0) - (secondCard?.y ?? 100))).toBeLessThan(3);
+    expect(Math.abs((firstCard?.y ?? 0) - (thirdCard?.y ?? 100))).toBeLessThan(3);
     const selectedCheck = page.locator('[data-selected-package-check]');
     await expect(selectedCheck).toHaveCount(1);
     const selectedCheckBox = await selectedCheck.boundingBox();
@@ -453,7 +667,7 @@ test.describe('generation 2 customer experience', () => {
     await expect(page.getByText('Account found', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Continue to payment' }).click();
 
-    await expect(page.getByRole('heading', { name: 'Pay with your wallet' })).toBeFocused();
+    await expect(page.getByRole('heading', { name: 'Choose how to pay' })).toBeFocused();
     await expect(page.getByText('Available: 100,000 د.ع')).toBeVisible();
     await page.getByRole('button', { name: 'Review order' }).click();
 
@@ -470,6 +684,36 @@ test.describe('generation 2 customer experience', () => {
     await page.getByRole('button', { name: 'Confirm and place order' }).click();
     await expect(page).toHaveURL(/\/orders$/);
     await expect(page.getByText('WAHO-2026-000042')).toBeVisible();
+  });
+
+  test('completes the QiCard handoff and confirms payment from the status API', async ({ page }, testInfo) => {
+    await page.setViewportSize(testInfo.project.name === 'mobile-chromium'
+      ? { width: 390, height: 844 }
+      : { width: 1280, height: 900 });
+    await mockCustomerApi(page, true);
+    await page.goto('/top-up/waho-top-up?amount=10000');
+
+    await page.getByRole('button', { name: /Continue with 10,000 IQD/ }).click();
+    await page.getByRole('textbox', { name: 'WAHO ID', exact: true }).fill('123456789');
+    await page.getByRole('button', { name: 'Check ID' }).click();
+    await page.getByRole('button', { name: 'Continue to payment' }).click();
+
+    const qiCard = page.getByRole('radio', { name: /QiCard/ });
+    await expect(qiCard).toBeVisible();
+    await qiCard.click();
+    await expect(page.getByText('Secure card checkout in test mode')).toBeVisible();
+    await page.getByRole('button', { name: 'Review order' }).click();
+    await expect(page.getByText('QiCard', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Send code' }).click();
+    await expect(page.getByLabel('6-digit verification code')).toHaveValue('123456');
+    await page.getByRole('button', { name: 'Continue to secure payment' }).click();
+
+    await expect(page).toHaveURL(new RegExp(`/payments/qicard/return\\?orderId=${order.id}$`));
+    await expect(page.getByRole('heading', { name: 'Payment confirmed' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'View my orders' })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await captureVisual(page, testInfo.project.name, 'qicard-return');
   });
 
   test('keeps Chinese, Arabic RTL and dark mode complete', async ({ page }, testInfo) => {
@@ -601,7 +845,7 @@ test.describe('generation 2 customer experience', () => {
       if (width === 320) {
         const selectedCard = page.locator('button[aria-pressed="true"]').filter({ hasText: '10,000' });
         const selectedCardBox = await selectedCard.boundingBox();
-        expect(selectedCardBox?.width ?? 0).toBeGreaterThan(120);
+        expect(selectedCardBox?.width ?? 0).toBeGreaterThan(80);
         await captureVisual(page, testInfo.project.name, 'wizard-320');
       }
     }
@@ -647,9 +891,11 @@ test.describe('generation 2 customer experience', () => {
       ['Top-up amounts', 'WAHO-first catalog'],
       ['Custom pricing', 'Custom pricing'],
       ['Users', 'Users'],
+      ['Access blocks', 'Access blocks'],
       ['Providers', 'Delivery Partners'],
       ['WAHO Offers', 'Promotions'],
       ['Banners', 'Banners'],
+      ['Website text', 'Website text'],
       ['Currencies', 'Currency & exchange rates'],
       ['Wallets', 'Wallets'],
       ['Reports', 'Reports'],
@@ -666,6 +912,85 @@ test.describe('generation 2 customer experience', () => {
 
     await expect(page.locator('body')).not.toContainText(/\b(?:mock|demo)\b/i);
     await captureVisual(page, testInfo.project.name, 'admin-monitoring-mobile');
+  });
+
+  test('keeps the new admin controls balanced on desktop', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'The desktop admin visual pass only needs one browser project.');
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await mockAdminApi(page);
+    await page.goto('/admin');
+    await expect(page.getByText('Total Revenue')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Access blocks', exact: true }).click();
+    await expect(page.getByRole('heading', { level: 2, name: 'Access blocks' })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await captureVisual(page, testInfo.project.name, 'admin-access-blocks-desktop');
+
+    await page.getByRole('button', { name: 'Currencies', exact: true }).click();
+    await expect(page.getByRole('heading', { level: 3, name: 'Price display by country' })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await captureVisual(page, testInfo.project.name, 'admin-country-pricing-desktop');
+
+    await page.getByRole('button', { name: 'Website text', exact: true }).click();
+    await expect(page.getByRole('heading', { level: 2, name: 'Website text' })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await captureVisual(page, testInfo.project.name, 'admin-content-desktop');
+  });
+
+  test('lets an admin block access, send the reason, and edit website text on mobile', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'The admin mutation flow only needs one browser project.');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockAdminApi(page);
+    await page.goto('/admin');
+    await expect(page.getByText('Total Revenue')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Open admin navigation' }).click();
+    await page.getByRole('navigation', { name: 'Admin sections' }).getByRole('button', { name: 'Access blocks' }).click();
+    await page.getByRole('button', { name: 'Add block' }).click();
+    const blockDialog = page.getByRole('dialog', { name: 'Block access' });
+    await blockDialog.getByLabel('WhatsApp number').fill('+31612345678');
+    await blockDialog.getByLabel('Reason shown to the customer').fill('Repeated invalid account details');
+    await expect(blockDialog.getByText('Send reason on WhatsApp')).toBeVisible();
+    await blockDialog.getByRole('button', { name: 'Block access' }).click();
+    await expect(page.getByText('Repeated invalid account details')).toBeVisible();
+    await expect(page.getByText('WhatsApp reason sent')).toBeVisible();
+    await page.getByPlaceholder('Search blocks or reasons').fill('invalid');
+    await expect(page.getByText('Repeated invalid account details')).toBeVisible();
+    await page.getByLabel('Filter by block type').selectOption('WHATSAPP');
+    await expectNoHorizontalOverflow(page);
+    await captureVisual(page, testInfo.project.name, 'admin-access-blocks-mobile');
+
+    await page.getByRole('button', { name: 'Open admin navigation' }).click();
+    await page.getByRole('navigation', { name: 'Admin sections' }).getByRole('button', { name: 'Website text' }).click();
+    await page.getByRole('button', { name: 'Edit' }).click();
+    const contentDialog = page.getByRole('dialog', { name: 'Edit website text' });
+    await contentDialog.getByLabel('English').fill('Select your balance');
+    await contentDialog.getByRole('button', { name: 'Save text' }).click();
+    await expect(page.getByText('Select your balance')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await captureVisual(page, testInfo.project.name, 'admin-content-mobile');
+  });
+
+  test('keeps country price controls usable beside the world map', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'chromium', 'The admin map flow only needs one browser project.');
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockAdminApi(page);
+    await page.goto('/admin');
+    await expect(page.getByText('Total Revenue')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Open admin navigation' }).click();
+    await page.getByRole('navigation', { name: 'Admin sections' }).getByRole('button', { name: 'Currencies' }).click();
+    await expect(page.getByRole('heading', { name: 'Price display by country' })).toBeVisible();
+    const countryPricing = page.getByRole('region', { name: 'Price display by country' });
+    await expect(countryPricing.getByText('Local currency', { exact: true })).toHaveCount(0);
+    await page.getByPlaceholder('Search country or currency').fill('Netherlands');
+    await page.getByRole('button', { name: 'Netherlands', exact: true }).click();
+    await expect(countryPricing.getByText('Local currency', { exact: true })).toBeVisible();
+    await expect(page.getByLabel('Primary price')).toHaveValue('LOCAL');
+    await expect(page.getByText('Example for 10,000 IQD')).toBeVisible();
+    await expect(page.getByText('Currently available: EUR, IQD')).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await captureVisual(page, testInfo.project.name, 'admin-country-pricing-mobile');
   });
 
   test('lets an admin recover from a failed dashboard load without reloading the page', async ({ page }, testInfo) => {

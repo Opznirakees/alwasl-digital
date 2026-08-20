@@ -15,9 +15,10 @@ export async function GET() {
       include: { currency: true },
       orderBy: { name: 'asc' },
     });
-    const quoteCurrencyCodes = countries
-      .map((country) => country.currencyCode)
-      .filter((currencyCode) => currencyCode !== BASE_CURRENCY);
+    const quoteCurrencyCodes = [...new Set([
+      ...countries.map((country) => country.currencyCode),
+      'USD',
+    ])].filter((currencyCode) => currencyCode !== BASE_CURRENCY);
     const exchangeRates = await prisma.exchangeRate.findMany({
       where: {
         baseCurrencyCode: BASE_CURRENCY,
@@ -30,8 +31,14 @@ export async function GET() {
     return ok(
       {
         baseCurrency: BASE_CURRENCY,
-        countries: countries.map((country) => mapCountry(country, ratesByQuote.get(country.currencyCode), BASE_CURRENCY)),
-        currencies: countries.map((country) => mapCurrency(country.currency)),
+        countries: countries.map((country) => mapCountry(
+          country,
+          ratesByQuote.get(country.currencyCode),
+          BASE_CURRENCY,
+          exchangeRates
+        )),
+        currencies: [...new Map(countries.map((country) => [country.currency.code, country.currency])).values()]
+          .map(mapCurrency),
       },
       { headers: noStoreHeaders }
     );

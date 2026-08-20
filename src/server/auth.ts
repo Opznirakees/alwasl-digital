@@ -3,6 +3,11 @@ import type { User } from '@prisma/client';
 import { prisma } from './prisma';
 import { createOpaqueToken, sha256 } from './crypto';
 import { hasPermission, type StaffPermission } from './permissions';
+import { getClientIpFromHeaders } from './domain/access-blocks';
+import {
+  assertAccessAllowed,
+  assertRequestAccessAllowed,
+} from './services/access-blocks';
 
 export const SESSION_COOKIE = 'alwasl_session';
 const SESSION_DAYS = 30;
@@ -15,13 +20,14 @@ export async function createSession(userId: string) {
   const token = createOpaqueToken();
   const expiresAt = sessionExpiry();
   const headerStore = await headers();
+  const ipAddress = getClientIpFromHeaders(headerStore);
 
   await prisma.session.create({
     data: {
       userId,
       tokenHash: sha256(token),
       expiresAt,
-      ipAddress: headerStore.get('x-forwarded-for')?.split(',')[0]?.trim(),
+      ipAddress,
       userAgent: headerStore.get('user-agent'),
     },
   });
@@ -69,23 +75,30 @@ export async function getCurrentUser(): Promise<User | null> {
 }
 
 export async function assertPhoneNotBlocked(phone: string) {
-  const user = await prisma.user.findUnique({
-    where: { phone },
+  const normalizedPhone = phone.startsWith('+') ? phone : `+${phone.replace(/\D/g, '')}`;
+  const user = await prisma.user.findFirst({
+    where: { phone: { in: [phone, normalizedPhone] } },
     select: { isBlocked: true },
   });
 
   if (user?.isBlocked) throw new Error('USER_BLOCKED');
+  await assertAccessAllowed({ phone });
 }
 
-export async function assertUserNotBlocked(user: Pick<User, 'id' | 'isBlocked'> | null) {
-  if (!user?.isBlocked) return;
+export async function assertUserNotBlocked(user: Pick<User, 'id' | 'phone' | 'isBlocked'> | null) {
+  if (!user) return;
 
-  await prisma.session.updateMany({
-    where: { userId: user.id, revokedAt: null },
-    data: { revokedAt: new Date() },
-  });
+  try {
+    if (user.isBlocked) throw new Error('USER_BLOCKED');
+    await assertRequestAccessAllowed(await headers(), { phone: user.phone });
+  } catch (error) {
+    await prisma.session.updateMany({
+      where: { userId: user.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
 
-  throw new Error('USER_BLOCKED');
+    throw error;
+  }
 }
 
 export async function requireUser() {

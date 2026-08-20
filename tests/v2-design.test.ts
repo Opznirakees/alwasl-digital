@@ -115,6 +115,26 @@ describe('V2 visual system', () => {
     expect(home).not.toContain('A question before you top up?');
   });
 
+  it('uses the reference composition as a first-class mobile layout', () => {
+    const header = read('src/components/layout/Header.tsx');
+    const hero = read('src/components/home/HeroBanner.tsx');
+    const home = read('src/app/page.tsx');
+    const styles = read('src/app/globals.css');
+
+    expect(header).toContain('data-v2-mobile-brand');
+    expect(header).toContain('grid-cols-5');
+    expect(hero).toContain('data-v2-mobile-brandmark');
+    expect(hero).toContain('data-v2-mobile-hero-copy');
+    expect(hero).toContain('grid-cols-4');
+    expect(home).toContain('data-v2-mobile-process-rail');
+    expect(home).toContain('data-v2-package-rail');
+    expect(home).toContain('snap-x');
+    expect(home).toContain('data-v2-leo-mobile');
+    expect(styles).toContain('.v2-mobile-hero');
+    expect(styles).toContain('.v2-mobile-package-card');
+    expect(styles).toContain('.v2-mobile-leo-panel');
+  });
+
   it('applies the V2 shell to every customer-facing route', () => {
     const customerShellFiles = [
       'src/app/page.tsx',
@@ -139,18 +159,23 @@ describe('V2 visual system', () => {
     const overview = read('src/app/top-up/page.tsx');
     const wizard = read('src/app/top-up/[slug]/page.tsx');
     const orders = read('src/app/orders/page.tsx');
+    const auth = read('src/app/auth/page.tsx');
 
     expect(overview).toContain('data-v2-amount-overview');
     expect(overview).toContain('/brand/waho-app-icon.webp');
     expect(overview).toContain('v2-overview-package');
-    expect(overview).toContain('grid-cols-2');
+    expect(overview).toContain('grid-cols-3');
     expect(overview).not.toContain('/brand/alwasl-mark.jpg');
     expect(wizard).toContain('data-v2-wizard');
     expect(wizard).toContain('v2-wizard-progress');
+    expect(wizard).toContain('data-v2-mobile-wizard-packages');
+    expect(wizard).toContain('grid-cols-3');
+    expect(wizard).toContain('v2-mobile-wizard-package');
     expect(wizard).toContain('v2-primary-button');
     expect(wizard).toContain('v2-surface');
     expect(orders).toContain('/brand/waho-app-icon.webp');
     expect(orders).not.toContain('/brand/alwasl-mark.jpg');
+    expect(auth).toContain('<Header />');
   });
 
   it('keeps the operational admin shell inside the same brand system', () => {

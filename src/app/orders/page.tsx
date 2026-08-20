@@ -96,6 +96,7 @@ export default function OrdersPage() {
     asiahawala: 'AsiaHawala',
     card: t('Bank card', 'بطاقة مصرفية', '银行卡'),
     usdt: 'USDT',
+    qicard: 'QiCard',
   })[method] ?? method;
 
   const copyOrderId = async (orderId: string) => {

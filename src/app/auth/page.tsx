@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -27,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Header } from '@/components/layout/Header';
 import { useApp } from '@/contexts/AppContext';
 import { getDefaultPhoneCountry, getPhoneCountryById, phoneCountries } from '@/data/phone-countries';
 import { getSafeInternalReturnPath } from '@/lib/easy-use';
@@ -127,8 +127,9 @@ function AuthPageContent() {
   };
 
   return (
-    <div className={`v2-page px-4 py-5 sm:py-10 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
-      <main className="mx-auto w-full max-w-md">
+    <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+      <Header />
+      <main className="mx-auto w-full max-w-md px-4 pb-24 pt-3 sm:py-10">
         <Link href={returnPath === '/' ? '/' : returnPath} className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--v2-muted)] hover:text-[var(--v2-gold)]">
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           {returnPath === '/'
@@ -136,17 +137,7 @@ function AuthPageContent() {
             : t('Back to top-up', 'العودة إلى الشحن', '返回充值')}
         </Link>
 
-        <div className="mt-5 flex items-center gap-3">
-          <div className="relative h-12 w-12 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10">
-            <Image src="/brand/alwasl-mark.jpg" alt="" fill className="object-contain p-1" sizes="48px" priority />
-          </div>
-          <div>
-            <p className="font-semibold text-zinc-950 dark:text-white">{t('Al-Wasl Digital', 'الوصل', 'Al-Wasl 数字服务')}</p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('Secure WAHO login', 'دخول آمن إلى WAHO', '安全登录 WAHO')}</p>
-          </div>
-        </div>
-
-        <section className="v2-surface mt-6 p-5 sm:p-7">
+        <section className="v2-surface mt-2 p-5 sm:mt-6 sm:p-7">
           {step === 'phone' ? (
             <>
               <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-[var(--v2-surface-raised)] text-[var(--v2-gold)]">
@@ -264,7 +255,7 @@ function AuthPageContent() {
                 {t('Enter the WhatsApp code', 'أدخل رمز واتساب', '输入 WhatsApp 验证码')}
               </h1>
               <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                {t(`We sent 6 digits to ${submittedPhone}.`, `أرسلنا 6 أرقام إلى ${submittedPhone}.`, `我们已向 ${submittedPhone} 发送 6 位验证码。`)}
+                {t('We sent 6 digits to {{phone}}.', 'أرسلنا 6 أرقام إلى {{phone}}.', '我们已向 {{phone}} 发送 6 位验证码。').replace('{{phone}}', submittedPhone)}
               </p>
 
               <form onSubmit={handleOtpSubmit} className="mt-6 space-y-5" noValidate>
@@ -320,8 +311,9 @@ function AuthPageFallback() {
   const { t, dir } = useApp();
 
   return (
-    <div className={`v2-page px-4 py-10 ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
-      <main className="mx-auto w-full max-w-md" role="status" aria-live="polite">
+    <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
+      <Header />
+      <main className="mx-auto w-full max-w-md px-4 py-10" role="status" aria-live="polite">
         <div className="flex items-center gap-3 text-sm font-medium text-zinc-600 dark:text-zinc-300">
           <Loader2 className="h-5 w-5 animate-spin text-blue-600 motion-reduce:animate-none" />
           {t('Opening secure login...', 'جارٍ فتح تسجيل الدخول الآمن...', '正在打开安全登录...')}

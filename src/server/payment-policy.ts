@@ -1,6 +1,7 @@
 import type { PaymentMethod } from '@/types';
+import { isQiCardCheckoutEnabled } from './payments/qicard';
 
-interface PaymentEnv {
+interface PaymentEnv extends Record<string, string | undefined> {
   NODE_ENV?: string;
   ENABLE_FAKE_PAYMENTS?: string;
 }
@@ -16,7 +17,9 @@ export function assertFakePaymentEndpointEnabled(env: PaymentEnv = process.env) 
 }
 
 export function isOrderPaymentMethodEnabled(method: PaymentMethod, env: PaymentEnv = process.env) {
-  return method === 'wallet' || isFakePaymentEnabled(env);
+  if (method === 'wallet') return true;
+  if (method === 'qicard') return isQiCardCheckoutEnabled(env);
+  return isFakePaymentEnabled(env);
 }
 
 export function assertOrderPaymentMethodEnabled(method: PaymentMethod, env: PaymentEnv = process.env) {

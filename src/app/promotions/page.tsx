@@ -158,8 +158,8 @@ export default function PromotionsPage() {
                 .filter((product): product is Game => Boolean(product));
               const product = applicableProducts.find((item) => item.slug === 'waho-top-up') ?? applicableProducts[0];
               const discountText = promotion.type === 'percentage'
-                ? t(`${promotion.value}% discount`, `خصم ${promotion.value}%`, `${promotion.value}% 折扣`)
-                : t(`${formatLocalAmount(promotion.value)} discount`, `خصم ${formatLocalAmount(promotion.value)}`, `优惠 ${formatLocalAmount(promotion.value)}`);
+                ? t('{{value}}% discount', 'خصم {{value}}%', '{{value}}% 折扣').replace('{{value}}', String(promotion.value))
+                : t('{{amount}} discount', 'خصم {{amount}}', '优惠 {{amount}}').replace('{{amount}}', formatLocalAmount(promotion.value));
               const copied = copiedCode === promotion.code;
 
               return (
@@ -179,7 +179,7 @@ export default function PromotionsPage() {
                   <button
                     type="button"
                     onClick={() => void copyCode(promotion.code)}
-                    aria-label={t(`Copy offer code ${promotion.code}`, `انسخ رمز العرض ${promotion.code}`, `复制优惠码 ${promotion.code}`)}
+                    aria-label={t('Copy offer code {{code}}', 'انسخ رمز العرض {{code}}', '复制优惠码 {{code}}').replace('{{code}}', promotion.code)}
                     className="mt-5 flex min-h-12 w-full items-center justify-between gap-3 rounded-lg border border-dashed border-blue-300 bg-blue-50 px-4 text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-blue-500/50 dark:bg-blue-500/10 dark:text-blue-100"
                   >
                     <span className="font-mono text-base font-semibold tracking-wide">{promotion.code}</span>

@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
+  CreditCard,
   Check,
   CheckCircle2,
   Gem,
@@ -24,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { PriceDisplay } from '@/components/pricing/PriceDisplay';
 import { useApp } from '@/contexts/AppContext';
 import {
   checkoutSteps,
@@ -66,6 +68,8 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
   const [verifiedUsername, setVerifiedUsername] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('wallet');
+  const [qiCardEnabled, setQiCardEnabled] = useState(false);
+  const [qiCardEnvironment, setQiCardEnvironment] = useState<'sandbox' | 'production' | null>(null);
   const [financialOtp, setFinancialOtp] = useState('');
   const [otpRequested, setOtpRequested] = useState(false);
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
@@ -111,6 +115,35 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
   }, [selectedCountry.id, slug]);
 
   useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+
+    async function loadPaymentMethods() {
+      try {
+        const response = await fetch('/api/payments/methods', { signal: controller.signal });
+        if (!response.ok) return;
+        const payload = await response.json();
+        const qiCard = payload.methods?.find((method: { id?: string }) => method.id === 'qicard');
+        if (active) {
+          setQiCardEnabled(Boolean(qiCard?.enabled));
+          setQiCardEnvironment(qiCard?.environment === 'sandbox' ? 'sandbox' : qiCard?.environment === 'production' ? 'production' : null);
+        }
+      } catch {
+        if (active) {
+          setQiCardEnabled(false);
+          setQiCardEnvironment(null);
+        }
+      }
+    }
+
+    void loadPaymentMethods();
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!game) return;
     const packageId = getInitialPackageId(game.packages, searchParams.get('amount'));
     if (packageId) {
@@ -133,8 +166,8 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
 
       setUserId(pendingCheckout.userId?.slice(0, 80) ?? '');
       setZoneId(pendingCheckout.zoneId?.slice(0, 80) ?? '');
-      if (pendingCheckout.paymentMethod === 'wallet') {
-        setPaymentMethod('wallet');
+      if (pendingCheckout.paymentMethod === 'wallet' || pendingCheckout.paymentMethod === 'qicard') {
+        setPaymentMethod(pendingCheckout.paymentMethod);
       }
       shouldFocusStepRef.current = true;
       setStep('details');
@@ -322,7 +355,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       return;
     }
     if (!selectedPackage) return;
-    if (user && user.walletBalance < total) {
+    if (paymentMethod === 'wallet' && user && user.walletBalance < total) {
       toast.error(t('Add enough wallet balance before placing the order.', 'أضف رصيداً كافياً إلى المحفظة قبل إرسال الطلب.', '提交订单前，请先充值足够的钱包余额。'));
       return;
     }
@@ -353,6 +386,26 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       const orderPayload = await orderResponse.json();
       if (!orderResponse.ok) throw new Error(orderPayload.error || 'ORDER_CREATION_FAILED');
 
+      if (paymentMethod === 'qicard') {
+        const checkoutResponse = await fetch('/api/payments/qicard/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            orderId: orderPayload.order.id,
+            locale: language === 'ar' ? 'ar_IQ' : 'en_US',
+          }),
+        });
+        const checkoutPayload = await checkoutResponse.json();
+        if (!checkoutResponse.ok || !checkoutPayload.checkoutUrl) {
+          throw new Error(checkoutPayload.error || 'QICARD_CHECKOUT_FAILED');
+        }
+
+        orderIdempotencyKeyRef.current = null;
+        window.location.assign(checkoutPayload.checkoutUrl);
+        return;
+      }
+
       await refreshAccount();
       orderIdempotencyKeyRef.current = null;
       setFinancialOtp('');
@@ -376,11 +429,20 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       description: !user
         ? t('Log in to use your wallet', 'سجل الدخول لاستخدام المحفظة', '登录后使用钱包')
         : user.walletBalance < total
-          ? t(`You need ${formatLocalAmount(total)} in your wallet`, `تحتاج إلى ${formatLocalAmount(total)} في محفظتك`, `钱包需要有 ${formatLocalAmount(total)}`)
-          : t(`Available: ${formatLocalAmount(user.walletBalance)}`, `المتاح: ${formatLocalAmount(user.walletBalance)}`, `可用余额：${formatLocalAmount(user.walletBalance)}`),
+          ? t('You need {{amount}} in your wallet', 'تحتاج إلى {{amount}} في محفظتك', '钱包需要有 {{amount}}').replace('{{amount}}', formatLocalAmount(total))
+          : t('Available: {{amount}}', 'المتاح: {{amount}}', '可用余额：{{amount}}').replace('{{amount}}', formatLocalAmount(user.walletBalance)),
       icon: Wallet,
       disabled: Boolean(user && user.walletBalance < total),
     },
+    ...(qiCardEnabled ? [{
+      id: 'qicard',
+      name: 'QiCard',
+      description: qiCardEnvironment === 'sandbox'
+        ? t('Secure card checkout in test mode', 'دفع آمن بالبطاقة في وضع الاختبار', '测试模式下的安全银行卡付款')
+        : t('Pay securely with your QiCard or bank card', 'ادفع بأمان باستخدام QiCard أو البطاقة المصرفية', '使用 QiCard 或银行卡安全付款'),
+      icon: CreditCard,
+      disabled: false,
+    }] : []),
   ];
 
   const selectedPayment = paymentMethods.find((item) => item.id === paymentMethod) ?? paymentMethods[0];
@@ -391,19 +453,19 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
     <div data-v2-wizard className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
-      <main className="container mx-auto max-w-6xl px-4 pb-40 pt-5 sm:pt-8 lg:pb-8">
+      <main className="container mx-auto max-w-6xl px-3 pb-40 pt-3 sm:px-4 sm:pt-8 lg:pb-8">
         <Link href="/top-up" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--v2-muted)] hover:text-[var(--v2-gold)]">
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           {t('All amounts', 'كل المبالغ', '全部金额')}
         </Link>
 
-        <section data-v2-checkout-brand className="v2-surface mt-3 flex items-center gap-3 p-3 sm:p-4">
-          <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10">
+        <section data-v2-checkout-brand className="v2-surface mt-2 flex items-center gap-2.5 p-2.5 sm:mt-3 sm:gap-3 sm:p-4">
+          <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-md border border-black/10 bg-white dark:border-white/10 sm:h-12 sm:w-12 sm:rounded-lg">
             <Image data-visual-required-image src="/brand/waho-app-icon.webp" alt="" fill className="object-cover" sizes="48px" priority />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-[var(--v2-gold)]">WAHO</p>
-            <h1 className="truncate text-lg font-semibold text-zinc-950 dark:text-white sm:text-xl">
+            <h1 className="truncate text-base font-semibold text-zinc-950 dark:text-white sm:text-xl">
               {t('Balance top-up', 'شحن الرصيد', '余额充值')}
             </h1>
             <p className="mt-0.5 hidden text-xs text-zinc-500 dark:text-zinc-400 sm:block">
@@ -417,7 +479,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
         </section>
 
         <div ref={wizardRef} className="scroll-mt-20">
-          <nav aria-label={t('Top-up progress', 'تقدم عملية الشحن', '充值进度')} className="v2-surface v2-wizard-progress mt-5 p-2 sm:p-3">
+          <nav aria-label={t('Top-up progress', 'تقدم عملية الشحن', '充值进度')} className="v2-surface v2-wizard-progress mt-3 p-1.5 sm:mt-5 sm:p-3">
             <ol className="grid grid-cols-4 gap-1 sm:gap-2">
               {checkoutSteps.map((item, index) => {
                 const state = getCheckoutStepState(step, item.id);
@@ -430,8 +492,10 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                       disabled={!canReturn}
                       onClick={() => canReturn && goToStep(item.id)}
                       aria-current={state === 'current' ? 'step' : undefined}
-                      aria-label={t(`Step ${index + 1}: ${label}`, `الخطوة ${index + 1}: ${label}`, `第 ${index + 1} 步：${label}`)}
-                      className={`flex min-h-14 w-full flex-col items-center justify-center gap-1 rounded-md px-1 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] ${
+                      aria-label={t('Step {{number}}: {{label}}', 'الخطوة {{number}}: {{label}}', '第 {{number}} 步：{{label}}')
+                        .replace('{{number}}', String(index + 1))
+                        .replace('{{label}}', label)}
+                      className={`flex min-h-[52px] w-full flex-col items-center justify-center gap-0.5 rounded-md px-1 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] sm:min-h-14 sm:gap-1 ${
                         state === 'current'
                           ? 'bg-[var(--v2-gold)] text-[#07152e]'
                           : state === 'complete'
@@ -455,19 +519,19 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
             </ol>
           </nav>
 
-          <div className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
-            <section className="v2-surface min-w-0 p-4 sm:p-7">
+          <div className="mt-3 grid items-start gap-5 sm:mt-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <section className="v2-surface min-w-0 p-3 sm:p-7">
               {step === 'package' && (
                 <>
-                  <h2 ref={stepHeadingRef} tabIndex={-1} className="text-2xl font-semibold text-zinc-950 outline-none dark:text-white">
+                  <h2 ref={stepHeadingRef} tabIndex={-1} className="text-xl font-semibold text-zinc-950 outline-none dark:text-white sm:text-2xl">
                     {t('Choose your amount', 'اختر المبلغ', '选择金额')}
                   </h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                  <p className="mt-1 text-xs leading-5 text-zinc-600 dark:text-zinc-300 sm:mt-2 sm:text-sm sm:leading-6">
                     {t('This is the balance that will be added to the WAHO account.', 'هذا هو الرصيد الذي سيضاف إلى حساب WAHO.', '此金额将充值到 WAHO 账号。')}
                   </p>
 
                   {availablePackages.length > 0 ? (
-                    <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
+                    <div data-v2-mobile-wizard-packages className="mt-3 grid grid-cols-3 gap-2 sm:mt-5 sm:gap-3">
                       {availablePackages.map((pkg) => {
                         const isSelected = selectedPackage?.id === pkg.id;
                         return (
@@ -477,24 +541,21 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                             aria-pressed={isSelected}
                             aria-label={`${formatAmount(pkg.amount)} IQD${pkg.isPopular ? `, ${t('Popular', 'الأكثر اختياراً', '热门')}` : ''}`}
                             onClick={() => setSelectedPackage(pkg)}
-                            className={`v2-wizard-package relative flex min-h-36 flex-col justify-between rounded-lg border p-3 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] sm:min-h-40 sm:p-4 ${
+                            className={`v2-wizard-package v2-mobile-wizard-package relative flex min-h-[126px] flex-col justify-between rounded-lg border p-2 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] sm:min-h-40 sm:p-4 ${
                               isSelected
                                 ? 'border-[var(--v2-gold)] bg-[color-mix(in_srgb,var(--v2-gold)_10%,var(--v2-surface))] ring-1 ring-[var(--v2-gold)]'
                                 : 'border-[var(--v2-border)] bg-[var(--v2-surface-raised)] hover:border-[var(--v2-gold)]'
-                            } ${
-                              availablePackages.length % 2 === 1
-                                ? 'last:col-span-2 last:mx-auto last:w-[calc(50%-0.25rem)] sm:last:col-span-1 sm:last:w-full'
-                                : ''
                             }`}
                           >
                             <span className={isSelected ? 'pe-7' : undefined}>
-                              <span className="block text-xl font-semibold leading-none tabular-nums text-zinc-950 dark:text-white sm:text-2xl">{formatAmount(pkg.amount)}</span>
-                              <span className="mt-2 inline-flex whitespace-nowrap items-center gap-1 text-[10px] font-bold text-[var(--v2-gold)] sm:text-xs">
+                              <span className="block text-[1.05rem] font-semibold leading-none tabular-nums text-zinc-950 dark:text-white sm:text-2xl">{formatAmount(pkg.amount)}</span>
+                              <span className="mt-1.5 inline-flex items-center gap-1 text-[9px] font-bold leading-3 text-[var(--v2-gold)] sm:mt-2 sm:whitespace-nowrap sm:text-xs">
                                 <Gem className="h-3 w-3 text-[var(--v2-blue)] sm:h-3.5 sm:w-3.5" />
-                                {t('WAHO balance', 'رصيد WAHO', 'WAHO 余额')}
+                                <span className="sm:hidden">WAHO</span>
+                                <span className="hidden sm:inline">{t('WAHO balance', 'رصيد WAHO', 'WAHO 余额')}</span>
                               </span>
                               {pkg.isPopular && !isSelected && (
-                                <span className="mt-2 block w-fit rounded-full bg-[#ffd33d] px-2 py-1 text-[10px] font-semibold text-[#071b46]">
+                                <span className="mt-1.5 block w-fit rounded bg-[#ffd33d] px-1.5 py-0.5 text-[8px] font-semibold text-[#071b46] sm:mt-2 sm:rounded-full sm:px-2 sm:py-1 sm:text-[10px]">
                                   {t('Popular', 'شائع', '热门')}
                                 </span>
                               )}
@@ -502,14 +563,19 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                             {isSelected && (
                               <span
                                 data-selected-package-check
-                                className="absolute end-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--v2-gold)] text-[#07152e]"
+                                className="absolute end-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--v2-gold)] text-[#07152e] sm:end-2 sm:top-2 sm:h-6 sm:w-6"
                               >
-                                <Check className="h-4 w-4" />
+                                <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               </span>
                             )}
-                            <span className="mt-3 border-t border-black/10 pt-2 text-[11px] text-zinc-500 dark:border-white/10 dark:text-zinc-400">
+                            <span className="mt-2 border-t border-black/10 pt-1.5 text-[9px] text-zinc-500 dark:border-white/10 dark:text-zinc-400 sm:mt-3 sm:pt-2 sm:text-[11px]">
                               {t('You pay', 'ستدفع', '需支付')}
-                              <strong className="mt-1 block font-semibold tabular-nums text-zinc-950 dark:text-white">{formatLocalAmount(calculateFinalPrice(pkg))}</strong>
+                              <PriceDisplay
+                                amountIqd={calculateFinalPrice(pkg)}
+                                compact
+                                primaryClassName="mt-0.5 text-[11px] text-zinc-950 dark:text-white sm:mt-1 sm:text-sm"
+                                secondaryClassName="text-zinc-500 dark:text-zinc-300"
+                              />
                             </span>
                           </button>
                         );
@@ -527,7 +593,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     className="v2-primary-button mt-6 hidden w-full lg:flex"
                   >
                     {selectedPackage
-                      ? t(`Continue with ${selectedAmountText} IQD`, `تابع مع ${selectedAmountText} د.ع`, `继续充值 ${selectedAmountText} IQD`)
+                      ? t('Continue with {{amount}} IQD', 'تابع مع {{amount}} د.ع', '继续充值 {{amount}} IQD').replace('{{amount}}', selectedAmountText)
                       : t('Choose an amount to continue', 'اختر مبلغاً للمتابعة', '选择金额后继续')}
                     <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                   </Button>
@@ -625,10 +691,10 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
               {step === 'payment' && (
                 <>
                   <h2 ref={stepHeadingRef} tabIndex={-1} className="text-2xl font-semibold text-zinc-950 outline-none dark:text-white">
-                    {t('Pay with your wallet', 'ادفع من محفظتك', '使用钱包付款')}
+                    {t('Choose how to pay', 'اختر طريقة الدفع', '选择付款方式')}
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                    {t('We check your wallet balance now. The WAHO top-up starts after you confirm.', 'نتحقق من رصيد محفظتك الآن. يبدأ شحن WAHO بعد التأكيد.', '我们现在检查您的钱包余额。确认后开始 WAHO 充值。')}
+                    {t('Select a payment method. Your WAHO top-up starts only after payment is confirmed.', 'اختر طريقة الدفع. يبدأ شحن WAHO فقط بعد تأكيد الدفع.', '请选择付款方式。仅在付款确认后才会开始 WAHO 充值。')}
                   </p>
 
                   <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-5 grid gap-3">
@@ -660,7 +726,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     })}
                   </RadioGroup>
 
-                  {user && user.walletBalance < total && (
+                  {paymentMethod === 'wallet' && user && user.walletBalance < total && (
                     <div role="alert" className="mt-4 rounded-lg border border-amber-400/30 bg-amber-400/10 p-4">
                       <p className="text-sm font-semibold text-amber-200">
                         {t('Your wallet needs more balance', 'تحتاج محفظتك إلى رصيد إضافي', '您的钱包余额不足')}
@@ -717,7 +783,14 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     </div>
                     <div className="flex items-center justify-between gap-4 py-4">
                       <dt className="font-semibold text-zinc-950 dark:text-white">{t('Total', 'الإجمالي', '总计')}</dt>
-                      <dd className="text-lg font-semibold tabular-nums text-zinc-950 dark:text-white">{formatLocalAmount(total)}</dd>
+                      <dd>
+                        <PriceDisplay
+                          amountIqd={total}
+                          align="end"
+                          primaryClassName="text-lg text-zinc-950 dark:text-white"
+                          secondaryClassName="text-zinc-500 dark:text-zinc-300"
+                        />
+                      </dd>
                     </div>
                   </dl>
 
@@ -786,7 +859,9 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                         <ShieldCheck className="h-4 w-4" />
                       )}
                       {isAuthenticated
-                        ? t('Confirm and place order', 'أكد وأرسل الطلب', '确认并提交订单')
+                        ? paymentMethod === 'qicard'
+                          ? t('Continue to secure payment', 'تابع إلى الدفع الآمن', '继续安全付款')
+                          : t('Confirm and place order', 'أكد وأرسل الطلب', '确认并提交订单')
                         : t('Log in to continue', 'سجل الدخول للمتابعة', '登录后继续')}
                     </Button>
                   </div>
@@ -870,7 +945,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
           {step === 'package' && (
             <Button type="button" onClick={() => goToStep('details')} disabled={!selectedPackage} className="v2-primary-button w-full">
               {selectedPackage
-                ? t(`Continue with ${selectedAmountText} IQD`, `تابع مع ${selectedAmountText} د.ع`, `继续充值 ${selectedAmountText} IQD`)
+                ? t('Continue with {{amount}} IQD', 'تابع مع {{amount}} د.ع', '继续充值 {{amount}} IQD').replace('{{amount}}', selectedAmountText)
                 : t('Choose an amount to continue', 'اختر مبلغاً للمتابعة', '选择金额后继续')}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </Button>
@@ -899,7 +974,9 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
             >
               {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
               {isAuthenticated
-                ? t('Confirm and place order', 'أكد وأرسل الطلب', '确认并提交订单')
+                ? paymentMethod === 'qicard'
+                  ? t('Continue to secure payment', 'تابع إلى الدفع الآمن', '继续安全付款')
+                  : t('Confirm and place order', 'أكد وأرسل الطلب', '确认并提交订单')
                 : t('Log in to continue', 'سجل الدخول للمتابعة', '登录后继续')}
             </Button>
           )}

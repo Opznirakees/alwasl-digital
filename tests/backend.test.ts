@@ -483,9 +483,9 @@ describe('custom pricing rules', () => {
 
     expect(schema).toContain('model CustomPricingRule');
     expect(schema).toContain('enum PricingRuleTargetType');
-    expect(schema).toContain('accountType        UserAccountType');
-    expect(schema).toContain('customPricingRuleId String?');
-    expect(schema).toContain('pricingSnapshot Json?');
+    expect(schema).toMatch(/accountType\s+UserAccountType/);
+    expect(schema).toMatch(/customPricingRuleId\s+String\?/);
+    expect(schema).toMatch(/pricingSnapshot\s+Json\?/);
     expect(migration).toContain('CREATE TABLE "custom_pricing_rules"');
     expect(migration).toContain('custom_pricing_rules_value_non_negative');
     expect(migration).toContain('custom_pricing_rules_user_target_requires_user');
@@ -843,8 +843,8 @@ describe('multi-provider routing rules', () => {
     expect(schema).toContain('enum ProviderAccountType');
     expect(schema).toContain('enum ProviderAccountStatus');
     expect(schema).toContain('providerAccountId');
-    expect(schema).toContain('balance           Int');
-    expect(schema).toContain('fallbackEnabled   Boolean');
+    expect(schema).toMatch(/balance\s+Int/);
+    expect(schema).toMatch(/fallbackEnabled\s+Boolean/);
     expect(migration).toContain('CREATE TABLE "providers"');
     expect(migration).toContain('CREATE TABLE "provider_accounts"');
     expect(migration).toContain('provider_accounts_balance_non_negative');
@@ -1138,8 +1138,8 @@ describe('provider low-balance alert rules', () => {
 
     expect(schema).toContain('enum ProviderBalanceAlertStatus');
     expect(schema).toContain('model ProviderBalanceAlert');
-    expect(schema).toContain('lowBalanceThreshold Int');
-    expect(schema).toContain('balanceAlerts     ProviderBalanceAlert[]');
+    expect(schema).toMatch(/lowBalanceThreshold\s+Int/);
+    expect(schema).toMatch(/balanceAlerts\s+ProviderBalanceAlert\[\]/);
     expect(migration).toContain('CREATE TABLE "provider_balance_alerts"');
     expect(migration).toContain('ALTER TABLE "provider_accounts" ADD COLUMN "lowBalanceThreshold"');
     expect(migration).toContain('provider_accounts_low_balance_threshold_non_negative');
@@ -1751,8 +1751,10 @@ describe('wallet accessibility copy', () => {
 });
 
 describe('mobile menu accessibility copy', () => {
-  test('provides a description for the mobile navigation sheet', () => {
-    expect(mobileMenuSheetCopy.description.en).toContain('navigation');
+  test('describes the customer task instead of the interface', () => {
+    expect(mobileMenuSheetCopy.description.en).toContain('WAHO balance');
+    expect(mobileMenuSheetCopy.description.en).not.toContain('navigation');
+    expect(mobileMenuSheetCopy.description.en).not.toContain('controls');
     expect(mobileMenuSheetCopy.description.ar.length).toBeGreaterThan(10);
     expect(mobileMenuSheetCopy.description.zh.length).toBeGreaterThan(5);
   });
@@ -2543,10 +2545,10 @@ describe('customer blocking rules', () => {
     const mapper = readFileSync(join(repoRoot, 'src/server/mappers.ts'), 'utf8');
     const types = readFileSync(join(repoRoot, 'src/types/index.ts'), 'utf8');
 
-    expect(schema).toContain('isBlocked         Boolean');
-    expect(schema).toContain('blockedReason     String?');
-    expect(schema).toContain('blockedAt         DateTime?');
-    expect(schema).toContain('blockedByAdminId  String?');
+    expect(schema).toMatch(/isBlocked\s+Boolean/);
+    expect(schema).toMatch(/blockedReason\s+String\?/);
+    expect(schema).toMatch(/blockedAt\s+DateTime\?/);
+    expect(schema).toMatch(/blockedByAdminId\s+String\?/);
     expect(schema).toContain('@@index([isBlocked, phone])');
     expect(migration).toContain('ALTER TABLE "users" ADD COLUMN "isBlocked" BOOLEAN NOT NULL DEFAULT false');
     expect(migration).toContain('users_blockedByAdminId_fkey');
@@ -2578,6 +2580,7 @@ describe('customer blocking rules', () => {
     const route = readFileSync(routePath, 'utf8');
     const validation = readFileSync(join(repoRoot, 'src/server/validation.ts'), 'utf8');
     const adminPage = readFileSync(join(repoRoot, 'src/app/admin/page.tsx'), 'utf8');
+    const accessBlockService = readFileSync(join(repoRoot, 'src/server/services/access-blocks.ts'), 'utf8');
     const exportRoute = readFileSync(join(repoRoot, 'src/app/api/admin/export/route.ts'), 'utf8');
 
     expect(existsSync(routePath)).toBe(true);
@@ -2585,7 +2588,9 @@ describe('customer blocking rules', () => {
     expect(route).toContain("requirePermission('USER_MANAGE')");
     expect(route).toContain('adminUserBlockSchema');
     expect(route).toContain('prisma.user.update');
-    expect(route).toContain('prisma.session.updateMany');
+    expect(route).toContain('createAccessBlock');
+    expect(route).toContain('revokeAccessBlock');
+    expect(accessBlockService).toContain('prisma.session.updateMany');
     expect(route).toContain("action: 'admin.user.block.update'");
     expect(validation).toContain('adminUserBlockSchema');
     expect(adminPage).toContain('toggleUserBlocked');

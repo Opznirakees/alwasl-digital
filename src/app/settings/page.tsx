@@ -126,7 +126,7 @@ export default function SettingsPage() {
                   >
                     <span className="text-2xl" aria-hidden="true">{country.flag}</span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-semibold text-zinc-950 dark:text-white">{t(country.name, country.nameAr, country.name)}</span>
+                      <span className="block truncate text-sm font-semibold text-zinc-950 dark:text-white">{t(country.name, country.nameAr, country.nameZh)}</span>
                       <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400" dir="ltr">{country.currency} · {country.phoneCode}</span>
                     </span>
                     {selected && <Check className="h-4 w-4 flex-shrink-0 text-blue-700 dark:text-blue-300" aria-hidden="true" />}

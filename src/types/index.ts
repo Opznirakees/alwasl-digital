@@ -38,6 +38,7 @@ export type StaffPermission =
   | 'PROVIDER_MANAGE'
   | 'PROMOTION_MANAGE'
   | 'BANNER_MANAGE'
+  | 'CONTENT_MANAGE'
   | 'CURRENCY_MANAGE'
   | 'PRICING_MANAGE'
   | 'EXPORT_DATA'
@@ -59,6 +60,7 @@ export interface Country {
   code: string;
   name: string;
   nameAr: string;
+  nameZh: string;
   flag: string;
   phoneCode: string;
   currency: string;
@@ -68,7 +70,22 @@ export interface Country {
   exchangeRate?: number;
   exchangeRateBase?: string;
   exchangeRateUpdatedAt?: string;
+  primaryPriceCurrency: 'IQD' | 'USD' | 'LOCAL';
+  showPricesInIqd: boolean;
+  showPricesInUsd: boolean;
+  showPricesInLocal: boolean;
+  priceCurrencies: CountryPriceCurrency[];
   isActive: boolean;
+}
+
+export interface CountryPriceCurrency {
+  code: string;
+  name: string;
+  symbol: string;
+  decimalPlaces: number;
+  rate: number;
+  isPrimary: boolean;
+  isAvailable: boolean;
 }
 
 export interface Currency {
@@ -192,7 +209,7 @@ export interface Order {
 
 export type OrderStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'cancelled';
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
-export type PaymentMethod = 'wallet' | 'zaincash' | 'asiahawala' | 'card' | 'usdt';
+export type PaymentMethod = 'wallet' | 'zaincash' | 'asiahawala' | 'card' | 'usdt' | 'qicard';
 
 // Provider Types
 export interface Provider {

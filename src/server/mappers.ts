@@ -24,6 +24,7 @@ import type {
 } from '@prisma/client';
 import { getProviderAvailableBalance } from './providers/provider-registry';
 import { activeMembershipLevelIds, resolveMembershipForSpend, type AnyMembershipLevel } from '@/lib/membership';
+import { resolveCountryPriceCurrencies } from './domain/country-pricing';
 import type {
   AdminAuditLog as AdminAuditLogDto,
   Banner,
@@ -74,6 +75,7 @@ const paymentMethodMap: Record<DbPaymentMethod, PaymentMethod> = {
   ASIAHAWALA: 'asiahawala',
   CARD: 'card',
   USDT: 'usdt',
+  QICARD: 'qicard',
 };
 
 const paymentStatusMap: Record<DbPaymentStatus, PaymentStatus> = {
@@ -104,6 +106,7 @@ export function toDbPaymentMethod(method: PaymentMethod): DbPaymentMethod {
     asiahawala: 'ASIAHAWALA',
     card: 'CARD',
     usdt: 'USDT',
+    qicard: 'QICARD',
   };
 
   return values[method];
@@ -421,14 +424,49 @@ export function mapCurrency(currency: DbCurrency): Currency {
   };
 }
 
-export function mapCountry(country: CountryWithCurrency, exchangeRate?: DbExchangeRate | null, baseCurrency = 'IQD'): Country {
+export function mapCountry(
+  country: CountryWithCurrency,
+  exchangeRate?: DbExchangeRate | null,
+  baseCurrency = 'IQD',
+  allExchangeRates: DbExchangeRate[] = exchangeRate ? [exchangeRate] : []
+): Country {
   const rate = country.currencyCode === baseCurrency ? 1 : Number(exchangeRate?.rate ?? 0);
+  const ratesByQuote = new Map(
+    allExchangeRates
+      .filter((item) => item.baseCurrencyCode === baseCurrency && item.isActive)
+      .map((item) => [item.quoteCurrencyCode, item])
+  );
+  const configuredCurrencies = resolveCountryPriceCurrencies({
+    localCurrencyCode: country.currencyCode,
+    primaryPriceCurrency: country.primaryPriceCurrency,
+    showPricesInIqd: country.showPricesInIqd,
+    showPricesInUsd: country.showPricesInUsd,
+    showPricesInLocal: country.showPricesInLocal,
+  });
+  const primaryCode = country.primaryPriceCurrency === 'LOCAL'
+    ? country.currencyCode
+    : country.primaryPriceCurrency;
+  const priceCurrencies = configuredCurrencies.map((code) => {
+    const managedRate = code === baseCurrency ? 1 : Number(ratesByQuote.get(code)?.rate ?? 0);
+    const isLocal = code === country.currencyCode;
+
+    return {
+      code,
+      name: isLocal ? country.currency.name : code === 'USD' ? 'US Dollar' : 'Iraqi Dinar',
+      symbol: isLocal ? country.currency.symbol : code === 'USD' ? '$' : 'د.ع',
+      decimalPlaces: isLocal ? country.currency.decimalPlaces : code === 'USD' ? 2 : 0,
+      rate: managedRate,
+      isPrimary: code === primaryCode,
+      isAvailable: code === baseCurrency || managedRate > 0,
+    };
+  });
 
   return {
     id: country.id,
     code: country.code,
     name: country.name,
     nameAr: country.nameAr,
+    nameZh: country.nameZh,
     flag: country.flag,
     phoneCode: country.phoneCode,
     currency: country.currencyCode,
@@ -438,6 +476,11 @@ export function mapCountry(country: CountryWithCurrency, exchangeRate?: DbExchan
     exchangeRate: rate,
     exchangeRateBase: baseCurrency,
     exchangeRateUpdatedAt: exchangeRate?.updatedAt.toISOString(),
+    primaryPriceCurrency: country.primaryPriceCurrency,
+    showPricesInIqd: country.showPricesInIqd,
+    showPricesInUsd: country.showPricesInUsd,
+    showPricesInLocal: country.showPricesInLocal,
+    priceCurrencies,
     isActive: country.isActive,
   };
 }

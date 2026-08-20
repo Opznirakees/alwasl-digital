@@ -31,7 +31,7 @@ export const createOrderSchema = z.object({
   packageId: z.string().min(1),
   wahoId: z.string().trim().min(3).max(80),
   zoneId: z.string().trim().max(80).optional().or(z.literal('')),
-  paymentMethod: z.enum(['wallet', 'zaincash', 'asiahawala', 'card', 'usdt']),
+  paymentMethod: z.enum(['wallet', 'zaincash', 'asiahawala', 'card', 'usdt', 'qicard']),
   otp: otpCodeSchema.optional(),
 });
 
@@ -39,6 +39,11 @@ export const fakePaymentConfirmSchema = z.object({
   orderId: z.string().min(1),
   success: z.boolean().default(true),
   otp: otpCodeSchema.optional(),
+});
+
+export const qiCardCheckoutSchema = z.object({
+  orderId: z.string().min(1).max(120),
+  locale: z.enum(['en_US', 'ar_IQ']).optional(),
 });
 
 export const refundOrderSchema = z.object({
@@ -308,12 +313,90 @@ export const currencyCodeSchema = z.string().trim().regex(/^[A-Z]{3,8}$/);
 export const updateAdminCountrySchema = z.object({
   name: z.string().trim().min(2).max(120).optional(),
   nameAr: z.string().trim().min(2).max(120).optional(),
+  nameZh: z.string().trim().min(1).max(120).optional(),
   flag: z.string().trim().min(1).max(16).optional(),
   phoneCode: z.string().trim().regex(/^\+[1-9][0-9]{0,5}$/).optional(),
   currencyCode: currencyCodeSchema.optional(),
+  primaryPriceCurrency: z.enum(['IQD', 'USD', 'LOCAL']).optional(),
+  showPricesInIqd: z.boolean().optional(),
+  showPricesInUsd: z.boolean().optional(),
+  showPricesInLocal: z.boolean().optional(),
   isActive: z.boolean().optional(),
-}).refine((payload) => Object.keys(payload).length > 0, {
-  message: 'At least one country field is required',
+}).superRefine((payload, context) => {
+  if (!Object.keys(payload).length) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'At least one country field is required',
+    });
+  }
+
+  const explicitlyDisabled = [
+    payload.showPricesInIqd,
+    payload.showPricesInUsd,
+    payload.showPricesInLocal,
+  ].every((value) => value === false);
+  if (explicitlyDisabled) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'At least one price currency must be visible',
+      path: ['showPricesInIqd'],
+    });
+  }
+});
+
+export const createAdminCountrySchema = z.object({
+  id: z.string().trim().regex(/^[a-z0-9-]{2,12}$/),
+  code: z.string().trim().regex(/^[A-Z]{2}$/),
+  name: z.string().trim().min(2).max(120),
+  nameAr: z.string().trim().min(2).max(120),
+  nameZh: z.string().trim().min(1).max(120),
+  flag: z.string().trim().min(1).max(16),
+  phoneCode: z.string().trim().regex(/^\+[1-9][0-9]{0,5}$/),
+  currencyCode: currencyCodeSchema,
+  currencyName: z.string().trim().min(2).max(120),
+  currencySymbol: z.string().trim().min(1).max(16),
+  decimalPlaces: z.coerce.number().int().min(0).max(4).default(2),
+  primaryPriceCurrency: z.enum(['IQD', 'USD', 'LOCAL']).default('IQD'),
+  showPricesInIqd: z.boolean().default(true),
+  showPricesInUsd: z.boolean().default(false),
+  showPricesInLocal: z.boolean().default(true),
+  isActive: z.boolean().default(true),
+}).refine((payload) => payload.showPricesInIqd || payload.showPricesInUsd || payload.showPricesInLocal, {
+  message: 'At least one price currency must be visible',
+  path: ['showPricesInIqd'],
+});
+
+export const createAdminAccessBlockSchema = z.object({
+  type: z.enum(['WHATSAPP', 'WAHO_ID', 'IP_ADDRESS']),
+  value: z.string().trim().min(2).max(160),
+  reason: z.string().trim().min(3).max(500),
+  expiresAt: z.string().datetime().nullable().optional(),
+  notifyByWhatsApp: z.boolean().default(false),
+}).superRefine((payload, context) => {
+  if (payload.notifyByWhatsApp && payload.type !== 'WHATSAPP') {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'WhatsApp notification is only available for WhatsApp-number blocks',
+      path: ['notifyByWhatsApp'],
+    });
+  }
+});
+
+export const updateAdminAccessBlockSchema = z.object({
+  isActive: z.boolean(),
+});
+
+export const adminContentOverrideSchema = z.object({
+  key: z.string().trim().min(1).max(500),
+  module: z.string().trim().min(2).max(80),
+  valueEn: z.string().trim().min(1).max(2000),
+  valueAr: z.string().trim().min(1).max(2000),
+  valueZh: z.string().trim().min(1).max(2000),
+  isActive: z.boolean().default(true),
+});
+
+export const adminContentOverrideDeleteSchema = z.object({
+  key: z.string().trim().min(1).max(500),
 });
 
 export const createAdminExchangeRateSchema = z.object({
@@ -414,6 +497,7 @@ export const runMonitoringChecksSchema = z.object({
 export const adminUserBlockSchema = z.object({
   isBlocked: z.boolean(),
   reason: z.string().trim().min(3).max(240).optional(),
+  notifyByWhatsApp: z.boolean().default(false),
 }).refine((payload) => !payload.isBlocked || Boolean(payload.reason?.trim()), {
   message: 'A block reason is required',
   path: ['reason'],

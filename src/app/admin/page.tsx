@@ -11,6 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
+import { CountryPricingMap } from '@/components/admin/CountryPricingMap';
+import { AccessBlockManager } from '@/components/admin/AccessBlockManager';
+import { ContentManager } from '@/components/admin/ContentManager';
 import {
   Dialog,
   DialogContent,
@@ -58,6 +61,8 @@ import {
   Activity,
   Server,
   Zap,
+  Ban,
+  FilePenLine,
 } from 'lucide-react';
 
 type AdminRoleValue = 'USER' | 'ADMIN' | 'STAFF';
@@ -191,6 +196,7 @@ export default function AdminDashboard() {
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
   const [monitoringDialogOpen, setMonitoringDialogOpen] = useState(false);
+  const [pendingAccessBlockValue, setPendingAccessBlockValue] = useState<string | null>(null);
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [topupForm, setTopupForm] = useState({
     productId: 'waho-top-up',
@@ -860,19 +866,27 @@ export default function AdminDashboard() {
   }
 
   async function toggleUserBlocked(userId: string, isBlocked: boolean) {
+    if (isBlocked) {
+      const account = users.find((item) => item.id === userId);
+      if (!account) return;
+      setPendingAccessBlockValue(account.phone);
+      setActiveTab('access');
+      toast.info(t(
+        'Add a clear reason before blocking this customer.',
+        'أضف سبباً واضحاً قبل حظر هذا العميل.',
+        '封锁该客户前，请填写明确原因。'
+      ));
+      return;
+    }
+
     await runAdminMutation(async () => {
       await adminJsonRequest(`/api/admin/users/${userId}/block`, {
         method: 'PATCH',
         body: JSON.stringify({
-          isBlocked,
-          reason: isBlocked ? 'Blocked by admin from dashboard' : undefined,
+          isBlocked: false,
         }),
       });
-      toast.success(
-        isBlocked
-          ? t('Customer blocked', 'تم حظر العميل', '客户已被封锁')
-          : t('Customer unblocked', 'تم إلغاء حظر العميل', '客户已解除封锁')
-      );
+      toast.success(t('Customer unblocked', 'تم إلغاء حظر العميل', '客户已解除封锁'));
     });
   }
 
@@ -1049,6 +1063,7 @@ export default function AdminDashboard() {
       asiahawala: { en: 'AsiaHawala', ar: 'آسيا حوالة', zh: 'AsiaHawala' },
       card: { en: 'Bank card', ar: 'بطاقة مصرفية', zh: '银行卡' },
       usdt: { en: 'USDT', ar: 'USDT', zh: 'USDT' },
+      qicard: { en: 'QiCard', ar: 'QiCard', zh: 'QiCard' },
     };
     const label = labels[method];
     return label ? t(label.en, label.ar, label.zh) : method;
@@ -1071,6 +1086,8 @@ export default function AdminDashboard() {
 
   const currencyOptions = useMemo(() => {
     const options = new Map<string, { code: string; symbol: string; name: string }>();
+    options.set('IQD', { code: 'IQD', symbol: 'د.ع', name: 'Iraqi Dinar' });
+    options.set('USD', { code: 'USD', symbol: '$', name: 'US Dollar' });
     for (const country of countries) {
       options.set(country.currency, {
         code: country.currency,
@@ -1078,8 +1095,13 @@ export default function AdminDashboard() {
         name: country.currencyName ?? country.currency,
       });
     }
+    for (const rate of exchangeRates) {
+      for (const code of [rate.baseCurrencyCode, rate.quoteCurrencyCode]) {
+        if (!options.has(code)) options.set(code, { code, symbol: code, name: code });
+      }
+    }
     return Array.from(options.values()).sort((a, b) => a.code.localeCompare(b.code));
-  }, [countries]);
+  }, [countries, exchangeRates]);
 
   const getExchangeRateForCurrency = (currencyCode: string) => {
     if (currencyCode === 'IQD') return 1;
@@ -1095,9 +1117,11 @@ export default function AdminDashboard() {
     { id: 'products', icon: MessageCircle, label: t('Top-up amounts', 'مبالغ الشحن', '充值金额') },
     { id: 'pricing', icon: DollarSign, label: t('Custom pricing', 'تسعير خاص', '自定义价格') },
     { id: 'users', icon: Users, label: t('Users', 'المستخدمين') },
+    { id: 'access', icon: Ban, label: t('Access blocks', 'حظر الوصول', '访问封锁') },
     { id: 'providers', icon: Server, label: t('Providers', 'الموردين') },
     { id: 'promotions', icon: TicketPercent, label: t('WAHO Offers', 'عروض WAHO') },
     { id: 'banners', icon: Megaphone, label: t('Banners', 'الإعلانات', '横幅') },
+    { id: 'content', icon: FilePenLine, label: t('Website text', 'نصوص الموقع', '网站文本') },
     { id: 'currencies', icon: DollarSign, label: t('Currencies', 'العملات', '货币') },
     { id: 'wallets', icon: Wallet, label: t('Wallets', 'المحافظ') },
     { id: 'reports', icon: TrendingUp, label: t('Reports', 'التقارير') },
@@ -1164,7 +1188,7 @@ export default function AdminDashboard() {
               variant="ghost"
               size="icon"
               onClick={openAdminAlerts}
-              aria-label={t(`Admin alerts: ${adminAlertCount}`, `تنبيهات الإدارة: ${adminAlertCount}`, `管理提醒：${adminAlertCount}`)}
+              aria-label={t('Admin alerts: {{count}}', 'تنبيهات الإدارة: {{count}}', '管理提醒：{{count}}').replace('{{count}}', String(adminAlertCount))}
               className="relative flex-shrink-0 text-white hover:bg-white/10"
             >
               <Bell className="w-5 h-5" />
@@ -1586,7 +1610,7 @@ export default function AdminDashboard() {
                   <form onSubmit={createProduct} className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="product-slug">{t('Slug', 'المعرف', 'Slug')}</Label>
+                        <Label htmlFor="product-slug">{t('Slug', 'المعرف', '短链接')}</Label>
                         <Input
                           id="product-slug"
                           value={productForm.slug}
@@ -2653,6 +2677,13 @@ export default function AdminDashboard() {
                 </Button>
               </div>
 
+              <CountryPricingMap
+                countries={countries}
+                exchangeRates={exchangeRates}
+                onChanged={() => reloadSummary()}
+                t={t}
+              />
+
               <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
                 <form onSubmit={updateExchangeRate} className="grid gap-4 lg:grid-cols-[0.7fr_0.7fr_0.9fr_1.2fr_auto] lg:items-end">
                   <div className="space-y-2">
@@ -2728,14 +2759,16 @@ export default function AdminDashboard() {
                         <TableRow key={country.id} className="border-emerald-800/20">
                           <TableCell className="text-white">
                             <span className="mr-2">{country.flag}</span>
-                            {t(country.name, country.nameAr, country.name)}
+                            {t(country.name, country.nameAr, country.nameZh)}
                           </TableCell>
                           <TableCell className="text-white/70">{country.phoneCode}</TableCell>
                           <TableCell className="text-white/70">
                             {country.currency} <span className="text-white/40">({country.currencySymbol})</span>
                           </TableCell>
                           <TableCell className="text-emerald-400">
-                            {getExchangeRateForCurrency(country.currency)}
+                            {new Intl.NumberFormat('en-US', { maximumFractionDigits: 8 }).format(
+                              getExchangeRateForCurrency(country.currency) || country.exchangeRate || 0
+                            )}
                           </TableCell>
                           <TableCell>
                             <Switch
@@ -2763,7 +2796,9 @@ export default function AdminDashboard() {
                             {rate.isActive ? t('Active', 'نشط', '启用') : t('Inactive', 'غير نشط', '停用')}
                           </Badge>
                         </div>
-                        <p className="mt-2 text-2xl font-bold text-emerald-400">{rate.rate}</p>
+                        <p className="mt-2 text-2xl font-bold text-emerald-400">
+                          {new Intl.NumberFormat('en-US', { maximumFractionDigits: 8 }).format(rate.rate)}
+                        </p>
                         <p className="mt-1 text-xs text-white/40">{formatDate(rate.updatedAt)}</p>
                         {rate.note && <p className="mt-2 text-xs text-white/50">{rate.note}</p>}
                       </div>
@@ -2882,6 +2917,19 @@ export default function AdminDashboard() {
                 </Table>
               </Card>
             </div>
+          )}
+
+          {activeTab === 'access' && (
+            <AccessBlockManager
+              t={t}
+              initialWhatsAppValue={pendingAccessBlockValue}
+              onInitialValueConsumed={() => setPendingAccessBlockValue(null)}
+              onChanged={() => reloadSummary()}
+            />
+          )}
+
+          {activeTab === 'content' && (
+            <ContentManager t={t} />
           )}
 
           {activeTab === 'wallets' && (
@@ -3481,7 +3529,7 @@ export default function AdminDashboard() {
                           />
                         </div>
                         <div>
-                          <Label className="text-white/70">{t('URL', 'الرابط', 'URL')}</Label>
+                          <Label className="text-white/70">{t('URL', 'الرابط', '网址')}</Label>
                           <Input
                             value={monitoringForm.url}
                             onChange={(event) => setMonitoringForm({ ...monitoringForm, url: event.target.value })}
@@ -3559,7 +3607,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab !== 'overview' && activeTab !== 'orders' && activeTab !== 'products' && activeTab !== 'pricing' && activeTab !== 'providers' && activeTab !== 'promotions' && activeTab !== 'banners' && activeTab !== 'currencies' && activeTab !== 'reports' && activeTab !== 'monitoring' && activeTab !== 'users' && activeTab !== 'wallets' && (
+          {activeTab !== 'overview' && activeTab !== 'orders' && activeTab !== 'products' && activeTab !== 'pricing' && activeTab !== 'providers' && activeTab !== 'promotions' && activeTab !== 'banners' && activeTab !== 'currencies' && activeTab !== 'reports' && activeTab !== 'monitoring' && activeTab !== 'users' && activeTab !== 'access' && activeTab !== 'content' && activeTab !== 'wallets' && (
             <div className="flex flex-col items-center justify-center h-96">
               <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
                 <Activity className="w-10 h-10 text-white/20" />

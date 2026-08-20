@@ -4,6 +4,11 @@ import { requirePermission } from '@/server/auth';
 import { handleApiError, ok } from '@/server/http';
 import { mapUser } from '@/server/mappers';
 import { prisma } from '@/server/prisma';
+import { normalizeAccessBlockValue } from '@/server/domain/access-blocks';
+import {
+  createAccessBlock,
+  revokeAccessBlock,
+} from '@/server/services/access-blocks';
 import { adminUserBlockSchema } from '@/server/validation';
 
 export const runtime = 'nodejs';
@@ -22,30 +27,40 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     if (!target) throw new Error('NOT_FOUND');
     if (target.role !== 'USER' && body.isBlocked) throw new Error('FORBIDDEN');
 
-    const now = new Date();
-    const user = await prisma.user.update({
-      where: { id },
-      data: body.isBlocked
-        ? {
-            isBlocked: true,
-            blockedReason: body.reason,
-            blockedAt: now,
-            blockedByAdminId: admin.id,
-          }
-        : {
+    if (body.isBlocked) {
+      await createAccessBlock(admin, {
+        type: 'WHATSAPP',
+        value: target.phone,
+        reason: body.reason ?? 'Access blocked by administration',
+        notifyByWhatsApp: body.notifyByWhatsApp,
+      });
+    } else {
+      const normalizedValue = normalizeAccessBlockValue('WHATSAPP', target.phone);
+      const block = await prisma.accessBlock.findUnique({
+        where: {
+          type_normalizedValue: {
+            type: 'WHATSAPP',
+            normalizedValue,
+          },
+        },
+      });
+
+      if (block) {
+        await revokeAccessBlock(admin, block.id);
+      } else {
+        await prisma.user.update({
+          where: { id },
+          data: {
             isBlocked: false,
             blockedReason: null,
             blockedAt: null,
             blockedByAdminId: null,
           },
-    });
-
-    if (body.isBlocked) {
-      await prisma.session.updateMany({
-        where: { userId: user.id, revokedAt: null },
-        data: { revokedAt: now },
-      });
+        });
+      }
     }
+
+    const user = await prisma.user.findUniqueOrThrow({ where: { id } });
 
     await recordAdminAuditLog({
       admin,
@@ -54,9 +69,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       entityType: 'user',
       entityId: user.id,
       metadata: {
-        phone: user.phone,
+        phoneSuffix: user.phone.replace(/\D/g, '').slice(-4),
         isBlocked: user.isBlocked,
         reason: user.blockedReason,
+        notificationRequested: body.notifyByWhatsApp,
       },
     });
 

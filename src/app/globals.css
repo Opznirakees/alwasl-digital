@@ -260,6 +260,18 @@
     box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.22);
   }
 
+  .v2-mobile-hero {
+    isolation: isolate;
+  }
+
+  .v2-mobile-package-card {
+    flex: 0 0 auto;
+  }
+
+  .v2-mobile-leo-panel {
+    isolation: isolate;
+  }
+
   .v2-hero-brandmark {
     isolation: isolate;
     filter: drop-shadow(0 18px 32px rgba(0, 0, 0, 0.32));
@@ -332,6 +344,10 @@
 
   .v2-wizard-package {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  }
+
+  .v2-mobile-wizard-package {
+    min-width: 0;
   }
 
   .v2-overview-package::before {
@@ -414,6 +430,46 @@
 }
 
 @media (max-width: 640px) {
+  .v2-brand-header [data-v2-mobile-brand] {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  [dir="rtl"] .v2-brand-header [data-v2-mobile-brand] {
+    left: 50%;
+    right: auto;
+  }
+
+  .v2-mobile-hero::after {
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    z-index: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(247, 185, 40, 0.65), transparent);
+    content: "";
+    pointer-events: none;
+  }
+
+  .v2-mobile-package-card {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 28px rgba(0, 0, 0, 0.2);
+  }
+
+  .v2-mobile-leo-panel::after {
+    position: absolute;
+    inset-block: 0.75rem;
+    inset-inline-start: 6.4rem;
+    width: 1px;
+    background: linear-gradient(transparent, rgba(247, 185, 40, 0.42), transparent);
+    content: "";
+    pointer-events: none;
+  }
+
+  [dir="rtl"] .v2-mobile-leo-panel::after {
+    inset-inline-start: 6.4rem;
+  }
+
   main a.inline-flex.items-center.gap-2.text-sm {
     min-height: 44px;
     padding-bottom: 0.5rem;

@@ -11,7 +11,7 @@ const manualDepositInclude = {
 
 interface CreateManualDepositInput {
   amount: number;
-  paymentMethod: Exclude<PaymentMethod, 'wallet'>;
+  paymentMethod: Exclude<PaymentMethod, 'wallet' | 'qicard'>;
   transactionId: string;
   note?: string;
 }

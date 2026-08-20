@@ -84,19 +84,18 @@ export function Header() {
       icon: Zap,
       active: pathname.startsWith('/top-up'),
     },
-    isAuthenticated
-      ? {
-          href: '/orders',
-          label: t('Orders', 'الطلبات', '订单'),
-          icon: ReceiptText,
-          active: pathname.startsWith('/orders'),
-        }
-      : {
-          href: '/help',
-          label: t('Help', 'مساعدة', '帮助'),
-          icon: CircleHelp,
-          active: pathname.startsWith('/help') || pathname.startsWith('/faq') || pathname.startsWith('/contact'),
-        },
+    {
+      href: '/orders',
+      label: t('Orders', 'الطلبات', '订单'),
+      icon: ReceiptText,
+      active: pathname.startsWith('/orders'),
+    },
+    {
+      href: '/wallet',
+      label: t('Wallet', 'المحفظة', '钱包'),
+      icon: Wallet,
+      active: pathname.startsWith('/wallet'),
+    },
     isAccountLoading
       ? {
           href: '/profile',
@@ -123,7 +122,7 @@ export function Header() {
     <>
       <header data-v2-header className="v2-brand-header sticky top-0 z-50 w-full border-b backdrop-blur-xl">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="grid h-[68px] grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-2 lg:flex lg:gap-7">
+          <div className="grid h-[66px] grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2 lg:flex lg:h-[68px] lg:gap-7">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -240,14 +239,22 @@ export function Header() {
               </SheetContent>
             </Sheet>
 
-            <Link href="/" className="mx-auto flex min-h-11 min-w-0 items-center gap-2 lg:mx-0" aria-label={t('Al-Wasl Digital home', 'الرئيسية للوصول الرقمي', 'Al-Wasl 数字服务首页')}>
-              <span className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-lg border border-white/20 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.22)]">
+            <Link data-v2-mobile-brand href="/" className="mx-auto flex min-h-11 min-w-0 items-center gap-2 lg:mx-0" aria-label={t('Al-Wasl Digital home', 'الرئيسية للوصول الرقمي', 'Al-Wasl 数字服务首页')}>
+              <span className="relative h-12 w-[68px] flex-shrink-0 overflow-hidden rounded-md border border-[#f7b928]/25 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.22)] sm:h-11 sm:w-11 sm:rounded-lg sm:border-white/20">
+                <Image
+                  src="/brand/alwasl-lockup.webp"
+                  alt=""
+                  fill
+                  className="object-contain px-2 py-1 sm:hidden"
+                  sizes="68px"
+                  priority
+                />
                 <Image
                   src="/brand/alwasl-mark.jpg"
                   alt=""
                   fill
-                  className="object-contain p-1"
-                  sizes="40px"
+                  className="hidden object-contain p-1 sm:block"
+                  sizes="44px"
                   priority
                 />
               </span>
@@ -296,10 +303,10 @@ export function Header() {
                     aria-label={t('Change language', 'تغيير اللغة', '切换语言')}
                     variant="ghost"
                     size="sm"
-                    className="gap-1 px-2 text-white/80 hover:bg-white/10 hover:text-white sm:px-3"
+                    className="h-11 w-11 gap-0 px-0 text-white/80 hover:bg-white/10 hover:text-white sm:w-auto sm:gap-1 sm:px-3"
                   >
                     <Globe className="h-4 w-4 text-[#f7b928]" />
-                    <span className="text-xs font-medium">{activeLanguage.short}</span>
+                    <span className="sr-only sm:not-sr-only sm:text-xs sm:font-medium">{activeLanguage.short}</span>
                     <ChevronDown className="hidden h-3 w-3 text-white/45 sm:block" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -375,14 +382,14 @@ export function Header() {
         aria-label={t('Mobile navigation', 'التنقل عبر الهاتف', '移动导航')}
         className="v2-mobile-navigation fixed inset-x-0 bottom-0 z-[60] border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
       >
-        <div className="mx-auto grid max-w-lg grid-cols-4 px-1">
+        <div className="mx-auto grid max-w-lg grid-cols-5 px-1">
           {mobileTabs.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               aria-current={item.active ? 'page' : undefined}
               className={cn(
-                'relative flex min-h-[68px] flex-col items-center justify-center gap-1 rounded-md px-1 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#f7b928]',
+                'relative flex min-h-[66px] flex-col items-center justify-center gap-1 rounded-md px-1 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#f7b928]',
                 item.active
                   ? 'text-[#f7b928] after:absolute after:inset-x-5 after:top-0 after:h-0.5 after:bg-[#f7b928]'
                   : 'text-white/55 hover:text-white'

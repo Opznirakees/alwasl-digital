@@ -35,6 +35,7 @@ enum StaffPermission {
   PROVIDER_MANAGE
   PROMOTION_MANAGE
   BANNER_MANAGE
+  CONTENT_MANAGE
   CURRENCY_MANAGE
   PRICING_MANAGE
   EXPORT_DATA
@@ -86,6 +87,21 @@ enum PaymentMethod {
   ASIAHAWALA
   CARD
   USDT
+  QICARD
+}
+
+enum PaymentWebhookProcessingStatus {
+  RECEIVED
+  PROCESSED
+  REJECTED
+  FAILED
+}
+
+enum PaymentRefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
 }
 
 enum WalletTransactionType {
@@ -154,9 +170,11 @@ enum ProviderBalanceAlertStatus {
 }
 
 enum WhatsAppNotificationType {
+  ORDER_CREATED
   PAYMENT_RECEIVED
   TOPUP_SUCCESS
   TOPUP_FAILURE
+  ACCOUNT_BLOCKED
   MARKETING
 }
 
@@ -198,41 +216,57 @@ enum PricingRulePriceType {
   FIXED_DISCOUNT
 }
 
+enum AccessBlockType {
+  WHATSAPP
+  WAHO_ID
+  IP_ADDRESS
+}
+
+enum PrimaryPriceCurrency {
+  IQD
+  USD
+  LOCAL
+}
+
 model User {
-  id                 String              @id @default(cuid())
-  phone              String              @unique
-  name               String
-  email              String?             @unique
-  avatar             String?
-  role               UserRole            @default(USER)
-  staffRole          StaffRole?
-  staffPermissions   StaffPermission[]    @default([])
-  accountType        UserAccountType     @default(CUSTOMER)
-  level              UserLevel           @default(BRONZE)
-  walletBalance      Int                 @default(0)
-  totalSpent         Int                 @default(0)
-  isVerified         Boolean             @default(false)
-  discountPercentage Int                 @default(0)
-  isBlocked         Boolean             @default(false)
-  blockedReason     String?
-  blockedAt         DateTime?
-  blockedByAdminId  String?
-  blockedByAdmin    User?               @relation("UserBlockedByAdmin", fields: [blockedByAdminId], references: [id], onDelete: SetNull)
-  blockedUsers      User[]              @relation("UserBlockedByAdmin")
-  registeredAt       DateTime            @default(now())
-  lastLogin          DateTime?
-  orders             Order[]
-  sessions           Session[]
-  otpCodes           OtpCode[]
-  walletTransactions WalletTransaction[]
-  manualDeposits     ManualDeposit[]     @relation("ManualDepositUser")
-  reviewedManualDeposits ManualDeposit[] @relation("ManualDepositReviewedByAdmin")
-  adminAuditLogs     AdminAuditLog[]     @relation("AdminAuditActor")
-  exchangeRateUpdates ExchangeRate[]      @relation("ExchangeRateUpdatedBy")
-  customPricingRules CustomPricingRule[] @relation("CustomPricingRuleUser")
-  createdPricingRules CustomPricingRule[] @relation("CustomPricingRuleAdmin")
-  whatsappNotifications WhatsAppNotification[] @relation("WhatsAppNotificationUser")
+  id                           String                 @id @default(cuid())
+  phone                        String                 @unique
+  name                         String
+  email                        String?                @unique
+  avatar                       String?
+  role                         UserRole               @default(USER)
+  staffRole                    StaffRole?
+  staffPermissions             StaffPermission[]      @default([])
+  accountType                  UserAccountType        @default(CUSTOMER)
+  level                        UserLevel              @default(BRONZE)
+  walletBalance                Int                    @default(0)
+  totalSpent                   Int                    @default(0)
+  isVerified                   Boolean                @default(false)
+  discountPercentage           Int                    @default(0)
+  isBlocked                    Boolean                @default(false)
+  blockedReason                String?
+  blockedAt                    DateTime?
+  blockedByAdminId             String?
+  blockedByAdmin               User?                  @relation("UserBlockedByAdmin", fields: [blockedByAdminId], references: [id], onDelete: SetNull)
+  blockedUsers                 User[]                 @relation("UserBlockedByAdmin")
+  registeredAt                 DateTime               @default(now())
+  lastLogin                    DateTime?
+  orders                       Order[]
+  sessions                     Session[]
+  otpCodes                     OtpCode[]
+  walletTransactions           WalletTransaction[]
+  manualDeposits               ManualDeposit[]        @relation("ManualDepositUser")
+  reviewedManualDeposits       ManualDeposit[]        @relation("ManualDepositReviewedByAdmin")
+  adminAuditLogs               AdminAuditLog[]        @relation("AdminAuditActor")
+  exchangeRateUpdates          ExchangeRate[]         @relation("ExchangeRateUpdatedBy")
+  customPricingRules           CustomPricingRule[]    @relation("CustomPricingRuleUser")
+  createdPricingRules          CustomPricingRule[]    @relation("CustomPricingRuleAdmin")
+  whatsappNotifications        WhatsAppNotification[] @relation("WhatsAppNotificationUser")
   createdWhatsAppNotifications WhatsAppNotification[] @relation("WhatsAppNotificationCreatedByAdmin")
+  accessBlocks                 AccessBlock[]          @relation("AccessBlockUser")
+  createdAccessBlocks          AccessBlock[]          @relation("AccessBlockCreatedByAdmin")
+  revokedAccessBlocks          AccessBlock[]          @relation("AccessBlockRevokedByAdmin")
+  updatedContentOverrides      ContentOverride[]      @relation("ContentOverrideUpdatedByAdmin")
 
   /// Financial CHECK constraints are enforced in migration 20260619122500_add_financial_check_constraints.
   /// Staff role constraints are enforced in migration 20260620180000_add_staff_roles_permissions.
@@ -274,57 +308,57 @@ model Session {
 }
 
 model Product {
-  id                String         @id
-  slug              String         @unique
-  name              String
-  nameAr            String
-  description       String
-  descriptionAr     String
-  image             String
-  banner            String?
-  category          ProductCategory @default(TOP_UP)
-  publisher         String
-  isPopular         Boolean        @default(false)
-  isFeatured        Boolean        @default(false)
-  isActive          Boolean        @default(true)
-  requiresUserId    Boolean        @default(true)
-  userIdLabel       String
-  userIdLabelAr     String
-  userIdPlaceholder String
+  id                  String              @id
+  slug                String              @unique
+  name                String
+  nameAr              String
+  description         String
+  descriptionAr       String
+  image               String
+  banner              String?
+  category            ProductCategory     @default(TOP_UP)
+  publisher           String
+  isPopular           Boolean             @default(false)
+  isFeatured          Boolean             @default(false)
+  isActive            Boolean             @default(true)
+  requiresUserId      Boolean             @default(true)
+  userIdLabel         String
+  userIdLabelAr       String
+  userIdPlaceholder   String
   userIdPlaceholderAr String
-  zoneIdRequired    Boolean        @default(false)
-  zoneIdLabel       String?
-  zoneIdLabelAr     String?
-  countries         String[]
-  packages          TopupPackage[]
-  orders            Order[]
-  banners           Banner[]
-  customPricingRules CustomPricingRule[]
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  zoneIdRequired      Boolean             @default(false)
+  zoneIdLabel         String?
+  zoneIdLabelAr       String?
+  countries           String[]
+  packages            TopupPackage[]
+  orders              Order[]
+  banners             Banner[]
+  customPricingRules  CustomPricingRule[]
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
 
   @@map("products")
 }
 
 model TopupPackage {
-  id        String   @id
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  name      String
-  nameAr    String
-  amount    Int
-  unit      String
-  unitAr    String
-  basePrice Int
-  salePrice Int?
-  currency  String   @default("IQD")
-  inStock   Boolean  @default(true)
-  isPopular Boolean  @default(false)
-  sortOrder Int      @default(0)
-  orders    Order[]
+  id                 String              @id
+  productId          String
+  product            Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name               String
+  nameAr             String
+  amount             Int
+  unit               String
+  unitAr             String
+  basePrice          Int
+  salePrice          Int?
+  currency           String              @default("IQD")
+  inStock            Boolean             @default(true)
+  isPopular          Boolean             @default(false)
+  sortOrder          Int                 @default(0)
+  orders             Order[]
   customPricingRules CustomPricingRule[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 
   /// Financial CHECK constraints are enforced in migration 20260619122500_add_financial_check_constraints.
   @@index([productId, inStock, sortOrder])
@@ -332,75 +366,76 @@ model TopupPackage {
 }
 
 model Order {
-  id              String           @id
-  userId          String
-  user            User             @relation(fields: [userId], references: [id], onDelete: Restrict)
-  productId       String
-  product         Product          @relation(fields: [productId], references: [id], onDelete: Restrict)
-  packageId       String
-  package         TopupPackage     @relation(fields: [packageId], references: [id], onDelete: Restrict)
-  gameName        String
-  packageName     String
-  gameUserId      String
-  gameUsername    String?
-  zoneId          String?
-  quantity        Int              @default(1)
-  unitPrice       Int
-  totalPrice      Int
-  discount        Int              @default(0)
-  finalPrice      Int
-  currency        String           @default("IQD")
-  status          OrderStatus      @default(PENDING)
-  paymentMethod   PaymentMethod
-  paymentStatus   PaymentStatus    @default(PENDING)
-  providerId      String?
-  providerOrderId String?
-  customPricingRuleId String?
-  customPricingRule CustomPricingRule? @relation(fields: [customPricingRuleId], references: [id], onDelete: SetNull)
-  pricingSnapshot Json?
-  idempotencyKey  String?
+  id                     String                 @id
+  userId                 String
+  user                   User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  productId              String
+  product                Product                @relation(fields: [productId], references: [id], onDelete: Restrict)
+  packageId              String
+  package                TopupPackage           @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  gameName               String
+  packageName            String
+  gameUserId             String
+  gameUsername           String?
+  zoneId                 String?
+  quantity               Int                    @default(1)
+  unitPrice              Int
+  totalPrice             Int
+  discount               Int                    @default(0)
+  finalPrice             Int
+  currency               String                 @default("IQD")
+  status                 OrderStatus            @default(PENDING)
+  paymentMethod          PaymentMethod
+  paymentStatus          PaymentStatus          @default(PENDING)
+  providerId             String?
+  providerOrderId        String?
+  customPricingRuleId    String?
+  customPricingRule      CustomPricingRule?     @relation(fields: [customPricingRuleId], references: [id], onDelete: SetNull)
+  pricingSnapshot        Json?
+  idempotencyKey         String?
   idempotencyFingerprint String?
-  paymentAttempts PaymentAttempt[]
-  providerRequests ProviderRequest[]
-  providerRetryJobs ProviderRetryJob[]
-  walletTransactions WalletTransaction[]
-  whatsappNotifications WhatsAppNotification[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  completedAt     DateTime?
-  refundedAt      DateTime?
-  refundReason    String?
+  paymentAttempts        PaymentAttempt[]
+  paymentRefunds         PaymentRefund[]
+  providerRequests       ProviderRequest[]
+  providerRetryJobs      ProviderRetryJob[]
+  walletTransactions     WalletTransaction[]
+  whatsappNotifications  WhatsAppNotification[]
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  completedAt            DateTime?
+  refundedAt             DateTime?
+  refundReason           String?
 
+  @@unique([userId, idempotencyKey])
   /// Financial CHECK constraints are enforced in migration 20260619122500_add_financial_check_constraints.
   @@index([userId, createdAt])
   @@index([status, paymentStatus])
   @@index([customPricingRuleId])
-  @@unique([userId, idempotencyKey])
   @@map("orders")
 }
 
 model CustomPricingRule {
-  id                      String                 @id @default(cuid())
+  id                      String                @id @default(cuid())
   name                    String
   targetType              PricingRuleTargetType
   priceType               PricingRulePriceType
   value                   Int
   productId               String?
-  product                 Product?               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product                 Product?              @relation(fields: [productId], references: [id], onDelete: Cascade)
   packageId               String?
-  package                 TopupPackage?          @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  package                 TopupPackage?         @relation(fields: [packageId], references: [id], onDelete: Cascade)
   userId                  String?
-  user                    User?                  @relation("CustomPricingRuleUser", fields: [userId], references: [id], onDelete: Cascade)
-  priority                Int                    @default(100)
-  isActive                Boolean                @default(true)
-  applyMembershipDiscount Boolean                @default(false)
+  user                    User?                 @relation("CustomPricingRuleUser", fields: [userId], references: [id], onDelete: Cascade)
+  priority                Int                   @default(100)
+  isActive                Boolean               @default(true)
+  applyMembershipDiscount Boolean               @default(false)
   startDate               DateTime?
   endDate                 DateTime?
   createdByAdminId        String?
-  createdByAdmin          User?                  @relation("CustomPricingRuleAdmin", fields: [createdByAdminId], references: [id], onDelete: SetNull)
+  createdByAdmin          User?                 @relation("CustomPricingRuleAdmin", fields: [createdByAdminId], references: [id], onDelete: SetNull)
   orders                  Order[]
-  createdAt               DateTime               @default(now())
-  updatedAt               DateTime               @updatedAt
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
 
   /// Custom pricing CHECK constraints are enforced in migration 20260620150000_add_custom_pricing_rules.
   @@index([isActive, targetType, priority])
@@ -411,24 +446,74 @@ model CustomPricingRule {
 }
 
 model PaymentAttempt {
-  id          String        @id @default(cuid())
-  orderId     String
-  order       Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  method      PaymentMethod
-  status      PaymentStatus @default(PENDING)
-  amount      Int
-  currency    String        @default("IQD")
-  providerRef String?       @unique
-  idempotencyKey String?
+  id                     String                @id @default(cuid())
+  orderId                String
+  order                  Order                 @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  method                 PaymentMethod
+  status                 PaymentStatus         @default(PENDING)
+  amount                 Int
+  currency               String                @default("IQD")
+  providerRef            String?               @unique
+  providerRequestId      String?               @unique
+  providerStatus         String?
+  checkoutUrl            String?
+  providerUpdatedAt      DateTime?
+  idempotencyKey         String?
   idempotencyFingerprint String?
-  metadata    Json?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  metadata               Json?
+  webhookEvents          PaymentWebhookEvent[]
+  refunds                PaymentRefund[]
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
 
+  @@unique([orderId, idempotencyKey])
   /// Financial CHECK constraints are enforced in migration 20260619122500_add_financial_check_constraints.
   @@index([orderId, status])
-  @@unique([orderId, idempotencyKey])
   @@map("payment_attempts")
+}
+
+model PaymentWebhookEvent {
+  id                String                         @id @default(cuid())
+  provider          String                         @default("QICARD")
+  eventKey          String                         @unique
+  providerPaymentId String
+  providerStatus    String
+  payloadHash       String
+  signatureHash     String
+  signatureValid    Boolean
+  processingStatus  PaymentWebhookProcessingStatus @default(RECEIVED)
+  paymentAttemptId  String?
+  paymentAttempt    PaymentAttempt?                @relation(fields: [paymentAttemptId], references: [id], onDelete: SetNull)
+  error             String?
+  receivedAt        DateTime                       @default(now())
+  processedAt       DateTime?
+
+  @@index([providerPaymentId, receivedAt])
+  @@index([processingStatus, receivedAt])
+  @@index([paymentAttemptId, receivedAt])
+  @@map("payment_webhook_events")
+}
+
+model PaymentRefund {
+  id               String              @id @default(cuid())
+  orderId          String
+  order            Order               @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  paymentAttemptId String
+  paymentAttempt   PaymentAttempt      @relation(fields: [paymentAttemptId], references: [id], onDelete: Restrict)
+  requestId        String              @unique
+  providerRefundId String?             @unique
+  amount           Int
+  currency         String              @default("IQD")
+  status           PaymentRefundStatus @default(PENDING)
+  reason           String
+  metadata         Json?
+  completedAt      DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@index([orderId, status])
+  @@index([paymentAttemptId, status])
+  @@map("payment_refunds")
 }
 
 model WalletTransaction {
@@ -447,31 +532,31 @@ model WalletTransaction {
   reference     String?
   createdAt     DateTime              @default(now())
 
+  @@unique([userId, reference])
   /// The ledger amount can be negative for purchases; balance is constrained non-negative in migration 20260619122500_add_financial_check_constraints.
   @@index([userId, createdAt])
-  @@unique([userId, reference])
   @@map("wallet_transactions")
 }
 
 model ManualDeposit {
-  id                  String              @id @default(cuid())
-  userId              String
-  user                User                @relation("ManualDepositUser", fields: [userId], references: [id], onDelete: Cascade)
-  amount              Int
-  currency            String              @default("IQD")
-  paymentMethod       PaymentMethod
-  transactionId       String              @unique
-  status              ManualDepositStatus @default(PENDING)
-  note                String?
-  reviewedByAdminId   String?
-  reviewedByAdmin     User?               @relation("ManualDepositReviewedByAdmin", fields: [reviewedByAdminId], references: [id], onDelete: SetNull)
-  reviewedAt          DateTime?
-  rejectionReason     String?
-  walletTransactionId String?             @unique
-  walletTransaction   WalletTransaction?  @relation(fields: [walletTransactionId], references: [id], onDelete: SetNull)
+  id                    String                 @id @default(cuid())
+  userId                String
+  user                  User                   @relation("ManualDepositUser", fields: [userId], references: [id], onDelete: Cascade)
+  amount                Int
+  currency              String                 @default("IQD")
+  paymentMethod         PaymentMethod
+  transactionId         String                 @unique
+  status                ManualDepositStatus    @default(PENDING)
+  note                  String?
+  reviewedByAdminId     String?
+  reviewedByAdmin       User?                  @relation("ManualDepositReviewedByAdmin", fields: [reviewedByAdminId], references: [id], onDelete: SetNull)
+  reviewedAt            DateTime?
+  rejectionReason       String?
+  walletTransactionId   String?                @unique
+  walletTransaction     WalletTransaction?     @relation(fields: [walletTransactionId], references: [id], onDelete: SetNull)
   whatsappNotifications WhatsAppNotification[]
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
 
   /// Manual deposit CHECK constraints are enforced in migration 20260620160000_add_manual_deposits.
   @@index([userId, status, createdAt])
@@ -498,35 +583,35 @@ model Provider {
 }
 
 model ProviderAccount {
-  id                String                @id
-  providerId        String
-  provider          Provider              @relation(fields: [providerId], references: [id], onDelete: Cascade)
-  name              String
-  type              ProviderAccountType
-  apiEndpoint       String?
-  isActive          Boolean               @default(false)
-  priority          Int                   @default(100)
-  fallbackEnabled   Boolean               @default(true)
-  balance           Int                   @default(0)
-  reservedBalance   Int                   @default(0)
-  minBalance        Int                   @default(0)
-  lowBalanceThreshold Int                 @default(0)
-  currency          String                @default("IQD")
-  dailyLimit        Int?
-  dailyUsed         Int                   @default(0)
-  successRate       Int                   @default(100)
-  avgResponseTimeMs Int                   @default(0)
-  status            ProviderAccountStatus @default(OFFLINE)
-  failureCount      Int                   @default(0)
-  lastHealthCheck   DateTime?
-  lastFailureAt     DateTime?
-  supportedProducts String[]
-  config            Json?
-  providerRequests  ProviderRequest[]
-  providerRetryJobs ProviderRetryJob[]
-  balanceAlerts     ProviderBalanceAlert[]
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
+  id                  String                 @id
+  providerId          String
+  provider            Provider               @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  name                String
+  type                ProviderAccountType
+  apiEndpoint         String?
+  isActive            Boolean                @default(false)
+  priority            Int                    @default(100)
+  fallbackEnabled     Boolean                @default(true)
+  balance             Int                    @default(0)
+  reservedBalance     Int                    @default(0)
+  minBalance          Int                    @default(0)
+  lowBalanceThreshold Int                    @default(0)
+  currency            String                 @default("IQD")
+  dailyLimit          Int?
+  dailyUsed           Int                    @default(0)
+  successRate         Int                    @default(100)
+  avgResponseTimeMs   Int                    @default(0)
+  status              ProviderAccountStatus  @default(OFFLINE)
+  failureCount        Int                    @default(0)
+  lastHealthCheck     DateTime?
+  lastFailureAt       DateTime?
+  supportedProducts   String[]
+  config              Json?
+  providerRequests    ProviderRequest[]
+  providerRetryJobs   ProviderRetryJob[]
+  balanceAlerts       ProviderBalanceAlert[]
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
 
   /// Balance CHECK constraints are enforced in migration 20260619150000_add_multi_provider_accounts.
   @@index([providerId, isActive, status, priority])
@@ -561,19 +646,19 @@ model ProviderBalanceAlert {
 }
 
 model ProviderRequest {
-  id              String                @id @default(cuid())
-  orderId         String?
-  order           Order?                @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  id                String                @id @default(cuid())
+  orderId           String?
+  order             Order?                @relation(fields: [orderId], references: [id], onDelete: SetNull)
   providerAccountId String?
-  providerAccount ProviderAccount?      @relation(fields: [providerAccountId], references: [id], onDelete: SetNull)
-  provider        String
-  action          String
-  status          ProviderRequestStatus @default(PENDING)
-  providerOrderId String?
-  requestPayload  Json?
-  responsePayload Json?
-  error           String?
-  createdAt       DateTime              @default(now())
+  providerAccount   ProviderAccount?      @relation(fields: [providerAccountId], references: [id], onDelete: SetNull)
+  provider          String
+  action            String
+  status            ProviderRequestStatus @default(PENDING)
+  providerOrderId   String?
+  requestPayload    Json?
+  responsePayload   Json?
+  error             String?
+  createdAt         DateTime              @default(now())
 
   @@index([orderId, provider, action])
   @@index([providerAccountId, createdAt])
@@ -618,6 +703,8 @@ model WhatsAppNotification {
   order             Order?                     @relation(fields: [orderId], references: [id], onDelete: SetNull)
   manualDepositId   String?
   manualDeposit     ManualDeposit?             @relation(fields: [manualDepositId], references: [id], onDelete: SetNull)
+  accessBlockId     String?
+  accessBlock       AccessBlock?               @relation(fields: [accessBlockId], references: [id], onDelete: SetNull)
   createdByAdminId  String?
   createdByAdmin    User?                      @relation("WhatsAppNotificationCreatedByAdmin", fields: [createdByAdminId], references: [id], onDelete: SetNull)
   batchId           String?
@@ -635,6 +722,7 @@ model WhatsAppNotification {
   @@index([userId, createdAt])
   @@index([orderId, createdAt])
   @@index([manualDepositId, createdAt])
+  @@index([accessBlockId, createdAt])
   @@index([batchId, createdAt])
   @@map("whatsapp_notifications")
 }
@@ -662,21 +750,21 @@ model Promotion {
 }
 
 model Banner {
-  id        String   @id @default(cuid())
-  title     String
-  titleAr   String
-  subtitle  String?
+  id         String   @id @default(cuid())
+  title      String
+  titleAr    String
+  subtitle   String?
   subtitleAr String?
-  image     String
-  link      String?
-  productId String?
-  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
-  startDate DateTime
-  endDate   DateTime
-  isActive  Boolean  @default(true)
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  image      String
+  link       String?
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  startDate  DateTime
+  endDate    DateTime
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   /// Banner CHECK constraints are enforced in migration 20260620130000_add_banner_management.
   @@index([isActive, startDate, endDate, sortOrder])
@@ -702,17 +790,22 @@ model Currency {
 }
 
 model Country {
-  id           String   @id
-  code         String   @unique
-  name         String
-  nameAr       String
-  flag         String
-  phoneCode    String
-  currencyCode String
-  currency     Currency @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                   String               @id
+  code                 String               @unique
+  name                 String
+  nameAr               String
+  nameZh               String               @default("")
+  flag                 String
+  phoneCode            String
+  currencyCode         String
+  currency             Currency             @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  primaryPriceCurrency PrimaryPriceCurrency @default(LOCAL)
+  showPricesInIqd      Boolean              @default(true)
+  showPricesInUsd      Boolean              @default(false)
+  showPricesInLocal    Boolean              @default(true)
+  isActive             Boolean              @default(true)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
 
   @@index([isActive, code])
   @@index([currencyCode])
@@ -739,6 +832,54 @@ model ExchangeRate {
   @@index([isActive, baseCurrencyCode, quoteCurrencyCode])
   @@index([updatedByAdminId, updatedAt])
   @@map("exchange_rates")
+}
+
+model AccessBlock {
+  id                    String                      @id @default(cuid())
+  type                  AccessBlockType
+  normalizedValue       String
+  maskedValue           String
+  reason                String
+  isActive              Boolean                     @default(true)
+  expiresAt             DateTime?
+  revokedAt             DateTime?
+  userId                String?
+  user                  User?                       @relation("AccessBlockUser", fields: [userId], references: [id], onDelete: SetNull)
+  createdByAdminId      String
+  createdByAdmin        User                        @relation("AccessBlockCreatedByAdmin", fields: [createdByAdminId], references: [id], onDelete: Restrict)
+  revokedByAdminId      String?
+  revokedByAdmin        User?                       @relation("AccessBlockRevokedByAdmin", fields: [revokedByAdminId], references: [id], onDelete: SetNull)
+  notificationRequested Boolean                     @default(false)
+  notificationStatus    WhatsAppNotificationStatus?
+  notifiedAt            DateTime?
+  notificationError     String?
+  whatsappNotifications WhatsAppNotification[]
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+
+  @@unique([type, normalizedValue])
+  @@index([type, isActive, expiresAt])
+  @@index([userId, isActive])
+  @@index([createdByAdminId, createdAt])
+  @@map("access_blocks")
+}
+
+model ContentOverride {
+  id               String   @id @default(cuid())
+  key              String   @unique
+  module           String
+  valueEn          String
+  valueAr          String
+  valueZh          String
+  isActive         Boolean  @default(true)
+  updatedByAdminId String?
+  updatedByAdmin   User?    @relation("ContentOverrideUpdatedByAdmin", fields: [updatedByAdminId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([module, isActive])
+  @@index([updatedByAdminId, updatedAt])
+  @@map("content_overrides")
 }
 
 model AdminAuditLog {
@@ -781,20 +922,20 @@ model MonitoringTarget {
 }
 
 model MonitoringEvent {
-  id         String                   @id @default(cuid())
-  severity   MonitoringEventSeverity  @default(INFO)
+  id         String                  @id @default(cuid())
+  severity   MonitoringEventSeverity @default(INFO)
   source     String
   message    String
   status     MonitoringCheckStatus?
   targetId   String?
-  target     MonitoringTarget?        @relation(fields: [targetId], references: [id], onDelete: SetNull)
+  target     MonitoringTarget?       @relation(fields: [targetId], references: [id], onDelete: SetNull)
   path       String?
   method     String?
   statusCode Int?
   latencyMs  Int?
   requestId  String?
   metadata   Json?
-  createdAt  DateTime                 @default(now())
+  createdAt  DateTime                @default(now())
 
   @@index([severity, createdAt])
   @@index([source, createdAt])

@@ -6,11 +6,12 @@ import { useEffect, useState } from 'react';
 import { AlertCircle, ArrowLeft, ArrowRight, BadgeCheck, Gem } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { Button } from '@/components/ui/button';
+import { PriceDisplay } from '@/components/pricing/PriceDisplay';
 import { useApp } from '@/contexts/AppContext';
 import type { Game } from '@/types';
 
 export default function TopUpPage() {
-  const { t, dir, language, selectedCountry, formatLocalAmount } = useApp();
+  const { t, dir, language, selectedCountry } = useApp();
   const [wahoTopUp, setWahoTopUp] = useState<Game | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
@@ -49,7 +50,7 @@ export default function TopUpPage() {
     <div data-v2-amount-overview className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
-      <main className="container mx-auto max-w-5xl px-4 py-6 sm:py-10">
+      <main className="container mx-auto max-w-5xl px-3 py-3 sm:px-4 sm:py-10">
         {isLoading ? (
           <div role="status" className="mx-auto max-w-3xl py-10" aria-live="polite">
             <p className="mb-5 flex items-center gap-3 text-sm font-medium text-zinc-600 dark:text-zinc-300">
@@ -91,16 +92,16 @@ export default function TopUpPage() {
               {t('Back home', 'العودة للرئيسية', '返回首页')}
             </Link>
 
-            <header className="mt-5 grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end">
+            <header className="mt-3 grid gap-5 sm:mt-5 sm:grid-cols-[1fr_auto] sm:items-end">
               <div>
                 <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--v2-gold)]">
                   <BadgeCheck className="h-4 w-4" />
                   {t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}
                 </div>
-                <h1 className="mt-3 text-3xl font-semibold leading-tight text-zinc-950 dark:text-white sm:text-4xl">
+                <h1 className="mt-2 text-2xl font-semibold leading-tight text-zinc-950 dark:text-white sm:mt-3 sm:text-4xl">
                   {t('Choose your WAHO amount', 'اختر مبلغ شحن WAHO', '选择 WAHO 充值金额')}
                 </h1>
-                <p className="mt-3 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300">
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300 sm:mt-3 sm:text-base sm:leading-7">
                   {t('Tap an amount to continue. You will check the WAHO account before payment.', 'اضغط على المبلغ للمتابعة. ستتحقق من حساب WAHO قبل الدفع.', '点击金额继续。付款前会先检查 WAHO 账号。')}
                 </p>
               </div>
@@ -109,46 +110,48 @@ export default function TopUpPage() {
               </div>
             </header>
 
-            <section aria-labelledby="available-amounts" className="mt-8">
+            <section aria-labelledby="available-amounts" className="mt-5 sm:mt-8">
               <h2 id="available-amounts" className="sr-only">{t('Available amounts', 'المبالغ المتاحة', '可选金额')}</h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-5">
                 {topUpPackages.map((pkg) => {
                   const amount = formatAmount(pkg.amount);
                   return (
                     <Link
                       key={pkg.id}
                       href={`/top-up/${wahoTopUp.slug}?amount=${pkg.amount}`}
-                      aria-label={t(`Choose ${amount} IQD`, `اختر ${amount} د.ع`, `选择 ${amount} IQD`)}
-                      className={`v2-overview-package group relative flex min-h-52 flex-col overflow-hidden rounded-lg border bg-[#06152f] p-3 text-white shadow-[0_16px_38px_rgba(0,0,0,0.2)] transition-colors hover:border-[var(--v2-gold)] hover:bg-[#0a2148] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] ${
+                      aria-label={t('Choose {{amount}} IQD', 'اختر {{amount}} د.ع', '选择 {{amount}} IQD').replace('{{amount}}', amount)}
+                      className={`v2-overview-package group relative flex min-h-[184px] min-w-0 flex-col overflow-hidden rounded-lg border bg-[#06152f] p-2 text-white shadow-[0_16px_38px_rgba(0,0,0,0.2)] transition-colors hover:border-[var(--v2-gold)] hover:bg-[#0a2148] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] sm:min-h-52 sm:p-3 ${
                         pkg.isPopular ? 'border-[var(--v2-gold)]' : 'border-white/12'
-                      } ${
-                        topUpPackages.length % 2 === 1
-                          ? 'last:col-span-2 last:mx-auto last:w-[calc(50%-0.375rem)] sm:last:col-span-1 sm:last:w-full'
-                          : ''
                       }`}
                     >
                       {pkg.isPopular && (
-                        <span className="absolute end-3 top-3 rounded-full bg-[#ffd33d] px-2 py-1 text-[10px] font-semibold text-[#071b46]">
-                          {t('Popular', 'الأكثر اختياراً', '热门')}
+                        <span className="absolute end-1.5 top-1.5 rounded bg-[#ffd33d] px-1.5 py-0.5 text-[8px] font-semibold text-[#071b46] sm:end-3 sm:top-3 sm:rounded-full sm:px-2 sm:py-1 sm:text-[10px]">
+                          <span className="sm:hidden">★</span>
+                          <span className="hidden sm:inline">{t('Popular', 'الأكثر اختياراً', '热门')}</span>
                         </span>
                       )}
                       <span className="flex flex-col items-start">
-                        <span className="relative h-10 w-10 overflow-hidden rounded-lg border border-white/12">
+                        <span className="relative h-9 w-9 overflow-hidden rounded-md border border-white/12 sm:h-10 sm:w-10 sm:rounded-lg">
                           <Image data-visual-required-image src="/brand/waho-app-icon.webp" alt="" fill className="object-cover" sizes="40px" />
                         </span>
-                        <span className="mt-4 block text-2xl font-semibold leading-none tabular-nums text-white">{amount}</span>
-                        <span className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-[#b8c5db]">
+                        <span className="mt-3 block text-[1.05rem] font-semibold leading-none tabular-nums text-white sm:mt-4 sm:text-2xl">{amount}</span>
+                        <span className="mt-1.5 inline-flex items-center gap-1 text-[9px] font-semibold text-[#b8c5db] sm:mt-2 sm:text-[11px]">
                           <Gem className="h-3.5 w-3.5 text-[var(--v2-blue)]" />
-                          {t('WAHO balance', 'رصيد WAHO', 'WAHO 余额')}
+                          <span className="sm:hidden">WAHO</span>
+                          <span className="hidden sm:inline">{t('WAHO balance', 'رصيد WAHO', 'WAHO 余额')}</span>
                         </span>
-                        <span className="mt-3 text-[10px] text-[#b8c5db]">{t('You pay', 'تدفع', '您支付')}</span>
-                        <span className="mt-1 text-xs font-bold tabular-nums text-[var(--v2-gold)]">
-                          {formatLocalAmount(pkg.salePrice || pkg.basePrice)}
-                        </span>
+                        <span className="mt-2 text-[9px] text-[#b8c5db] sm:mt-3 sm:text-[10px]">{t('You pay', 'تدفع', '您支付')}</span>
+                        <PriceDisplay
+                          amountIqd={pkg.salePrice || pkg.basePrice}
+                          compact
+                          primaryClassName="mt-0.5 text-[10px] font-bold text-[var(--v2-gold)] sm:mt-1 sm:text-xs"
+                          secondaryClassName="text-[#dbe5f6]"
+                        />
                       </span>
-                      <span className="mt-4 flex min-h-10 items-center justify-center gap-1.5 rounded-md bg-[var(--v2-gold)] px-2 text-xs font-bold text-[#07152e] group-hover:bg-[var(--v2-gold-hover)]">
-                        {t('Choose amount', 'اختر المبلغ', '选择金额')}
-                        <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                      <span className="mt-auto flex min-h-9 items-center justify-center gap-1 rounded-md bg-[var(--v2-gold)] px-1 text-[10px] font-bold text-[#07152e] group-hover:bg-[var(--v2-gold-hover)] sm:mt-4 sm:min-h-10 sm:gap-1.5 sm:px-2 sm:text-xs">
+                        <span className="sm:hidden">{t('Choose', 'اختر', '选择')}</span>
+                        <span className="hidden sm:inline">{t('Choose amount', 'اختر المبلغ', '选择金额')}</span>
+                        <ArrowRight className="h-3 w-3 rtl:rotate-180 sm:h-4 sm:w-4" />
                       </span>
                     </Link>
                   );

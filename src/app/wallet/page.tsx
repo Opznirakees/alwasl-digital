@@ -309,7 +309,9 @@ export default function WalletPage() {
               <div className="mt-5 border-t border-black/10 pt-4 dark:border-white/10">
                 <div className="flex justify-between gap-3 text-xs"><span className="text-zinc-500 dark:text-zinc-400">{t('Next level', 'المستوى التالي', '下一等级')}</span><span className="font-semibold text-zinc-950 dark:text-white">{t(nextLevel.en, nextLevel.ar, nextLevel.zh)}</span></div>
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-800"><div className="h-full rounded-full bg-blue-600" style={{ width: `${progress}%` }} /></div>
-                <p className="mt-2 text-xs leading-5 text-zinc-500 dark:text-zinc-400">{t(`${formatLocalAmount(remaining)} until the next level`, `${formatLocalAmount(remaining)} حتى المستوى التالي`, `距离下一等级还差 ${formatLocalAmount(remaining)}`)}</p>
+                <p className="mt-2 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+                  {t('{{amount}} until the next level', '{{amount}} حتى المستوى التالي', '距离下一等级还差 {{amount}}').replace('{{amount}}', formatLocalAmount(remaining))}
+                </p>
               </div>
             )}
           </aside>

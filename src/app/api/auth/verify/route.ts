@@ -8,6 +8,8 @@ import { isOtpAttemptLocked, nextOtpAttemptCount } from '@/server/otp-policy';
 import { prisma } from '@/server/prisma';
 import { assertRateLimit } from '@/server/rate-limit';
 import { normalizePhone, verifyOtpSchema } from '@/server/validation';
+import { getClientIpFromHeaders } from '@/server/domain/access-blocks';
+import { assertRequestAccessAllowed } from '@/server/services/access-blocks';
 
 export const runtime = 'nodejs';
 
@@ -15,11 +17,12 @@ export async function POST(request: NextRequest) {
   try {
     const body = verifyOtpSchema.parse(await request.json());
     const phone = normalizePhone(body.phone);
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'local';
+    const ip = getClientIpFromHeaders(request.headers) ?? 'local';
 
     await assertRateLimit(`auth-verify:${ip}`, { limit: 30, windowMs: 15 * 60 * 1000 });
     await assertRateLimit(`auth-verify:${phone}`, { limit: 8, windowMs: 10 * 60 * 1000 });
     await assertPhoneNotBlocked(phone);
+    await assertRequestAccessAllowed(request.headers);
 
     if (isBlockedProductionDemoOtp(phone, body.otp)) {
       return fail('Invalid OTP', 401);
