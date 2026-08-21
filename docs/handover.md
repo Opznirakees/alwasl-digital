@@ -103,9 +103,9 @@ bun run test:e2e
 Manual verification:
 
 - Home page loads.
-- Language and theme controls work on mobile.
-- WAHO product list shows the WAHO top-up launch product.
-- Catalog scope record confirms WAHO is the launch focus and future products are inactive until approved.
+- Language controls work on mobile.
+- Catalog shows the active WAHO and Asiacell categories.
+- Prices stay hidden until WhatsApp login and follow the authenticated customer's country.
 - Login OTP can be delivered through configured provider.
 - Wallet page loads for a logged-in user.
 - Admin dashboard loads for an authorized admin/staff user.
@@ -118,7 +118,7 @@ Manual verification:
 - Native app notes: `docs/mobile-api-contract.md`
 - Database backup runbook: `docs/database-backups.md`
 - Technical ownership runbook: `docs/technical-ownership.md`
-- WAHO-first catalog scope: `docs/scope-deviations.md`
+- Multi-category catalog scope: `docs/scope-deviations.md`
 - Timeline and milestones: `docs/project-timeline.md`
 - Support and warranty: `docs/support-warranty.md`
 - Contract deliverables: `docs/contract-deliverables.md`
@@ -141,6 +141,6 @@ Record at handover:
 - Ownership verification timestamp:
 - Admin phone transferred:
 - Known deferred items:
-- WAHO-first catalog scope confirmed:
+- Multi-category catalog scope confirmed:
 - Receiving operator:
 - Delivering maintainer:

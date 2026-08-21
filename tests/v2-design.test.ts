@@ -5,140 +5,132 @@ import { join } from 'node:path';
 const repoRoot = join(import.meta.dir, '..');
 const read = (path: string) => readFileSync(join(repoRoot, path), 'utf8');
 
-describe('V2 visual system', () => {
-  it('defines one semantic navy and gold customer theme', () => {
+describe('V2 multi-category visual system', () => {
+  it('keeps the dark brand base and adds the requested pastel accent palette', () => {
     const styles = read('src/app/globals.css');
 
-    expect(styles).toContain('--v2-canvas');
-    expect(styles).toContain('--v2-surface');
-    expect(styles).toContain('--v2-gold');
-    expect(styles).toContain('--v2-text');
-    expect(styles).toContain('.v2-page');
-    expect(styles).toContain('.v2-primary-button');
-    expect(styles).toContain('.v2-surface');
+    for (const token of [
+      '--v2-canvas',
+      '--v2-surface',
+      '--v2-gold',
+      '--v2-pink',
+      '--v2-sky',
+      '--v2-mint',
+      '--v2-lavender',
+    ]) {
+      expect(styles).toContain(token);
+    }
+    expect(styles).toContain('#020817');
+    expect(styles).toContain('#f6b7cc');
+    expect(styles).toContain('#9bd8f2');
+    expect(styles).toContain('#8fe3d2');
+    expect(styles).toContain('#c4b5fd');
   });
 
-  it('uses a branded header and mobile navigation with a gold active state', () => {
+  it('uses a branded responsive header with protected mobile destinations', () => {
     const header = read('src/components/layout/Header.tsx');
 
     expect(header).toContain('data-v2-header');
-    expect(header).toContain('v2-brand-header');
-    expect(header).toContain('v2-primary-button');
-    expect(header).toContain('data-mobile-tab-bar');
-    expect(header).toContain('v2-mobile-navigation');
-  });
-
-  it('keeps the V2 brand dark without exposing a color switcher', () => {
-    const header = read('src/components/layout/Header.tsx');
-    const settings = read('src/app/settings/page.tsx');
-    const context = read('src/contexts/AppContext.tsx');
-    const layout = read('src/app/layout.tsx');
-    const toaster = read('src/components/ui/sonner.tsx');
-    const packageJson = read('package.json');
-
-    expect(layout).toContain('<html lang="en" className="dark"');
-    expect(toaster).toContain('theme="dark"');
-    expect(header).not.toMatch(/toggleTheme|Switch to dark mode|Switch to light mode/);
-    expect(settings).not.toMatch(/toggleTheme|Dark appearance|Use dark mode/);
-    expect(context).not.toContain('toggleTheme');
-    expect(packageJson).not.toContain('next-themes');
-  });
-
-  it('matches the reference composition without adding unrelated products', () => {
-    const hero = read('src/components/home/HeroBanner.tsx');
-    const home = read('src/app/page.tsx');
-
-    expect(hero).toContain('data-v2-hero');
-    expect(hero).toContain('v2-hero-brandmark');
-    expect(hero).toContain('v2-hero-metrics');
-    expect(home).toContain('data-v2-package-grid');
-    expect(home).toContain('v2-package-card');
-    expect(home).toContain('v2-leo-panel');
-    expect(`${hero}\n${home}`).not.toMatch(/PUBG|Free Fire|TikTok|Google Play/);
-  });
-
-  it('finishes the reference-inspired brand corner and WAHO package identity', () => {
-    const hero = read('src/components/home/HeroBanner.tsx');
-    const home = read('src/app/page.tsx');
-    const wizard = read('src/app/top-up/[slug]/page.tsx');
-    const styles = read('src/app/globals.css');
-
-    expect(hero).toContain('data-v2-brand-corner');
-    expect(hero).toContain('v2-hero-brandmark-surface');
-    expect(hero).toContain('v2-hero-brandmark-accent');
-    expect(hero).toContain('/brand/alwasl-lockup.webp');
-    expect(hero).toContain('object-contain');
-    expect(styles).toContain('.v2-hero-brandmark-surface');
-    expect(styles).toContain('clip-path');
-    expect(home).toContain('data-v2-amount-stage');
-    expect(home).toContain('/brand/waho-app-icon.webp');
-    expect(home).toContain('v2-package-card-app-icon');
-    expect(home).toContain('v2-package-card-balance');
-    expect(styles).toContain('.v2-package-card::before');
-    expect(styles).toContain('.v2-amount-stage');
-    expect(wizard).toContain('data-v2-checkout-brand');
-    expect(wizard).toContain('/brand/waho-app-icon.webp');
-    expect(existsSync(join(repoRoot, 'public/brand/alwasl-lockup.webp'))).toBe(true);
-    expect(existsSync(join(repoRoot, 'public/brand/waho-app-icon.webp'))).toBe(true);
-  });
-
-  it('adapts the useful reference promises without adding unsupported claims', () => {
-    const hero = read('src/components/home/HeroBanner.tsx');
-    const home = read('src/app/page.tsx');
-
-    expect(hero).toContain('Fast and clear WAHO top-up');
-    expect(hero).toContain('شحن WAHO بسرعة ووضوح');
-    expect(hero).toContain('快速清晰地充值 WAHO');
-    expect(hero).toContain('Protected order');
-    expect(hero).toContain('طلب محمي');
-    expect(hero).toContain('订单保护');
-    expect(home).toContain('Pay from your wallet');
-    expect(home).toContain('ادفع من محفظتك');
-    expect(home).toContain('使用钱包付款');
-    expect(home).toContain('supportWhatsAppNumber');
-    expect(`${hero}\n${home}`).not.toMatch(/24\/7|instant top-up|official WAHO|all games|all apps/i);
-  });
-
-  it('uses the compact reference rhythm without a redundant support band', () => {
-    const hero = read('src/components/home/HeroBanner.tsx');
-    const home = read('src/app/page.tsx');
-
-    expect(hero).toContain('lg:min-h-[500px]');
-    expect(hero).toContain('lg:w-[60%]');
-    expect(hero).toContain('right-0');
-    expect(home).toContain('data-v2-steps-strip');
-    expect(home).toContain('data-v2-service-strip');
-    expect(home).toContain('data-visual-required-image');
-    expect(home).toContain('priority');
-    expect(home).toContain("dir === 'rtl' ? 'lg:-order-1'");
-    expect(home).toContain("dir === 'rtl' ? 'lg:grid-cols-[240px_minmax(0,1fr)]'");
-    expect(home).not.toContain('A question before you top up?');
-  });
-
-  it('uses the reference composition as a first-class mobile layout', () => {
-    const header = read('src/components/layout/Header.tsx');
-    const hero = read('src/components/home/HeroBanner.tsx');
-    const home = read('src/app/page.tsx');
-    const styles = read('src/app/globals.css');
-
     expect(header).toContain('data-v2-mobile-brand');
+    expect(header).toContain('data-mobile-tab-bar');
     expect(header).toContain('grid-cols-5');
-    expect(hero).toContain('data-v2-mobile-brandmark');
-    expect(hero).toContain('data-v2-mobile-hero-copy');
-    expect(hero).toContain('grid-cols-4');
-    expect(home).toContain('data-v2-mobile-process-rail');
-    expect(home).toContain('data-v2-package-rail');
-    expect(home).toContain('snap-x');
-    expect(home).toContain('data-v2-leo-mobile');
-    expect(styles).toContain('.v2-mobile-hero');
-    expect(styles).toContain('.v2-mobile-package-card');
-    expect(styles).toContain('.v2-mobile-leo-panel');
+    expect(header).toContain('protectedHref');
+    expect(header).toContain('/auth?next=');
+    expect(header).toContain("t('Change language'");
   });
 
-  it('applies the V2 shell to every customer-facing route', () => {
-    const customerShellFiles = [
+  it('renders admin-managed responsive banners as an automatic carousel', () => {
+    const hero = read('src/components/home/HeroBanner.tsx');
+    const home = read('src/app/page.tsx');
+    const bannerRoute = read('src/app/api/banners/route.ts');
+
+    expect(hero).toContain('aria-roledescription="carousel"');
+    expect(hero).toContain('window.setInterval');
+    expect(hero).toContain('<picture');
+    expect(hero).toContain('active.mobileImage');
+    expect(hero).toContain('/brand/recharge-hero-v3.webp');
+    expect(hero).toContain('/brand/recharge-hero-mobile-v3.webp');
+    expect(hero).toContain("role=\"tablist\"");
+    expect(home).toContain("fetch('/api/banners',");
+    expect(home).toContain('<HeroBanner banners={banners}');
+    expect(bannerRoute).toContain('isActive: true');
+  });
+
+  it('keeps LEO out of the hero and exposes only a subtle footer contact', () => {
+    const hero = read('src/components/home/HeroBanner.tsx');
+    const home = read('src/app/page.tsx');
+
+    expect(hero).not.toContain('leo-waho-agent');
+    expect(home).toContain('/brand/leo-waho-agent.jpeg');
+    expect(home).toContain('sizes="32px"');
+    expect(home).toContain('supportWhatsAppHref');
+  });
+
+  it('shows public category metadata but sends logged-out customers to WhatsApp login for prices', () => {
+    const home = read('src/app/page.tsx');
+    const categoryPage = read('src/app/categories/[slug]/page.tsx');
+    const categoriesRoute = read('src/app/api/categories/route.ts');
+    const categoryRoute = read('src/app/api/categories/[slug]/route.ts');
+
+    expect(home).toContain('CatalogCategory');
+    expect(home).toContain('catalog-category-card');
+    expect(home).toContain('/auth?next=');
+    expect(home).toContain('Prices open after login');
+    expect(categoryPage).toContain('isAuthenticated');
+    expect(categoryPage).toContain('/auth?next=');
+    expect(categoryPage).toContain('PriceDisplay');
+    expect(categoriesRoute).toContain('CatalogCategory');
+    expect(categoryRoute).toContain('requireUser');
+  });
+
+  it('ships recognizable WAHO and Asiacell category assets without unrelated game products', () => {
+    const home = read('src/app/page.tsx');
+    const seeds = read('src/data/catalog-seeds.ts');
+    const migration = read('prisma/migrations/20260822130000_seed_multi_category_catalog/migration.sql');
+
+    expect(existsSync(join(repoRoot, 'public/brand/waho-app-icon.webp'))).toBe(true);
+    expect(existsSync(join(repoRoot, 'public/brand/asiacell-category.svg'))).toBe(true);
+    expect(existsSync(join(repoRoot, 'public/brand/recharge-hero-v3.webp'))).toBe(true);
+    expect(existsSync(join(repoRoot, 'public/brand/recharge-hero-mobile-v3.webp'))).toBe(true);
+    expect(seeds).toContain('mastercardWahoPackages');
+    expect(seeds).toContain('asiacellWahoPackages');
+    expect(migration).toContain("'asiacell'");
+    expect(`${home}\n${seeds}`).not.toMatch(/PUBG|Free Fire|TikTok|Google Play/);
+  });
+
+  it('supports automatic account top-up and manual WhatsApp code delivery in one wizard', () => {
+    const wizard = read('src/app/top-up/[slug]/page.tsx');
+    const orders = read('src/app/orders/page.tsx');
+
+    expect(wizard).toContain('data-v2-checkout-brand');
+    expect(wizard).toContain('v2-wizard-progress');
+    expect(wizard).toContain('data-v2-mobile-wizard-packages');
+    expect(wizard).toContain("game.fulfillmentMode !== 'waho_api'");
+    expect(wizard).toContain("t('Delivery'");
+    expect(wizard).toContain('Delivery through WhatsApp');
+    expect(orders).toContain('getOrderStatusGuidance');
+    expect(orders).toContain('Through WhatsApp');
+    expect(orders).not.toContain("t('Reorder'");
+  });
+
+  it('gives admins real category, banner and fulfillment controls', () => {
+    const admin = read('src/app/admin/page.tsx');
+    const categoryManager = read('src/components/admin/CatalogCategoryManager.tsx');
+
+    expect(admin).toContain('<CatalogCategoryManager');
+    expect(admin).toContain('Storefront category');
+    expect(admin).toContain('Delivery method');
+    expect(admin).toContain('Mobile image');
+    expect(admin).toContain('editingBannerId');
+    expect(admin).toContain('fulfillManualOrder');
+    expect(categoryManager).toContain('Add category');
+    expect(categoryManager).toContain('onToggle');
+  });
+
+  it('keeps the customer shell responsive while the top-up index redirects to categories', () => {
+    for (const file of [
       'src/app/page.tsx',
-      'src/app/top-up/page.tsx',
+      'src/app/categories/[slug]/page.tsx',
       'src/app/top-up/[slug]/page.tsx',
       'src/app/auth/page.tsx',
       'src/app/orders/page.tsx',
@@ -148,52 +140,21 @@ describe('V2 visual system', () => {
       'src/app/promotions/page.tsx',
       'src/app/cart/page.tsx',
       'src/components/info/InfoPage.tsx',
-    ];
-
-    for (const file of customerShellFiles) {
-      expect(read(file), `${file} should use the V2 customer shell`).toContain('v2-page');
+    ]) {
+      expect(read(file), `${file} should use the V2 shell`).toContain('v2-page');
     }
+    expect(read('src/app/top-up/page.tsx')).toContain("redirect('/#categories')");
   });
 
-  it('keeps the checkout visually connected to the homepage', () => {
-    const overview = read('src/app/top-up/page.tsx');
-    const wizard = read('src/app/top-up/[slug]/page.tsx');
-    const orders = read('src/app/orders/page.tsx');
-    const auth = read('src/app/auth/page.tsx');
-
-    expect(overview).toContain('data-v2-amount-overview');
-    expect(overview).toContain('/brand/waho-app-icon.webp');
-    expect(overview).toContain('v2-overview-package');
-    expect(overview).toContain('grid-cols-3');
-    expect(overview).not.toContain('/brand/alwasl-mark.jpg');
-    expect(wizard).toContain('data-v2-wizard');
-    expect(wizard).toContain('v2-wizard-progress');
-    expect(wizard).toContain('data-v2-mobile-wizard-packages');
-    expect(wizard).toContain('grid-cols-3');
-    expect(wizard).toContain('v2-mobile-wizard-package');
-    expect(wizard).toContain('v2-primary-button');
-    expect(wizard).toContain('v2-surface');
-    expect(orders).toContain('/brand/waho-app-icon.webp');
-    expect(orders).not.toContain('/brand/alwasl-mark.jpg');
-    expect(auth).toContain('<Header />');
-  });
-
-  it('keeps the operational admin shell inside the same brand system', () => {
-    const admin = read('src/app/admin/page.tsx');
-    const styles = read('src/app/globals.css');
-
-    expect(admin).toContain('data-v2-admin');
-    expect(admin).toContain('v2-admin-page');
-    expect(styles).toContain('.v2-admin-page');
-    expect(styles).toContain('.v2-admin-page button.bg-emerald-600');
-  });
-
-  it('documents that V2 remains WAHO-only and test-driven', () => {
+  it('documents the managed multi-category scope and its TDD acceptance criteria', () => {
     const plan = read('v2.md');
+    const scope = read('docs/scope-deviations.md');
 
-    expect(plan).toContain('Productfocus: uitsluitend het opwaarderen van WAHO-tegoed');
-    expect(plan).toContain('TDD-aanpak voor de latere uitvoering');
+    expect(plan).toContain('WAHO en Asiacell als eerste categorieen');
     expect(plan).toContain('visuele regressietests');
     expect(plan).toContain('Definition of Done voor V2');
+    expect(scope).toContain('Managed Multi-Category Catalog Scope');
+    expect(scope).toContain('Public package prices require an authenticated customer');
+    expect(scope).toContain('manual code or manual top-up fulfillment');
   });
 });

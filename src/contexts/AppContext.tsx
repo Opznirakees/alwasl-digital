@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import type { Language, User, Country, CountryPriceCurrency, CartItem, Order, WalletTransaction } from '@/types';
 import { resolveOtpPhone } from './auth-flow';
 import { resolveContentValue, type ContentOverrideValue } from '@/server/domain/content-overrides';
@@ -57,6 +57,7 @@ async function fetchAccountData(input: RequestInfo | URL, init?: RequestInit) {
 
 const storageKeys = {
   language: 'alwasl-language',
+  languagePreference: 'alwasl-language-preference',
   country: 'alwasl-country',
   cart: 'alwasl-demo-cart',
 };
@@ -578,7 +579,7 @@ const languageLabels: Record<Language, { short: string; locale: string; htmlLang
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguageState] = useState<Language>('en');
   const [user, setUser] = useState<User | null>(null);
   const [countries, setCountries] = useState<Country[]>([defaultCountry]);
   const [selectedCountry, setSelectedCountryState] = useState<Country>(defaultCountry);
@@ -589,6 +590,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isAccountLoading, setIsAccountLoading] = useState(true);
   const [contentOverrides, setContentOverrides] = useState<Record<string, ContentOverrideValue>>({});
+  const appliedAccountCountryRef = useRef<string | null>(null);
+  const hasExplicitLanguagePreferenceRef = useRef(false);
+
+  const setLanguage = useCallback((nextLanguage: Language) => {
+    hasExplicitLanguagePreferenceRef.current = true;
+    localStorage.setItem(storageKeys.languagePreference, 'explicit');
+    setLanguageState(nextLanguage);
+  }, []);
 
   const refreshAccount = useCallback(async () => {
     setIsAccountLoading(true);
@@ -650,7 +659,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       (localStorage.getItem(storageKeys.language) as Language | null) ||
       (localStorage.getItem('language') as Language | null);
     if (savedLanguage && savedLanguage in languageLabels) {
-      setLanguage(savedLanguage);
+      hasExplicitLanguagePreferenceRef.current = localStorage.getItem(storageKeys.languagePreference) !== 'auto';
+      setLanguageState(savedLanguage);
     }
     setCart(readJson<CartItem[]>(storageKeys.cart, []));
     setIsHydrated(true);
@@ -704,6 +714,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!isHydrated) return;
     void refreshAccount();
   }, [isHydrated, refreshAccount]);
+
+  useEffect(() => {
+    if (!user?.countryId || countries.length === 0) return;
+    const applicationKey = `${user.id}:${user.countryId}`;
+    if (appliedAccountCountryRef.current === applicationKey) return;
+
+    const accountCountry = countries.find((country) => country.id === user.countryId);
+    if (!accountCountry) return;
+    appliedAccountCountryRef.current = applicationKey;
+    setSelectedCountryState(accountCountry);
+    localStorage.setItem(storageKeys.country, accountCountry.id);
+    if (user.suggestedLanguage && !hasExplicitLanguagePreferenceRef.current) {
+      localStorage.setItem(storageKeys.languagePreference, 'auto');
+      setLanguageState(user.suggestedLanguage);
+    }
+  }, [countries, user]);
 
   useEffect(() => {
     if (!isHydrated) return;

@@ -69,6 +69,9 @@ export function Header() {
   };
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
+  const protectedHref = (href: string) => isAuthenticated
+    ? href
+    : `/auth?next=${encodeURIComponent(href)}`;
   const navLinkClass = (href: string) => cn(
     'flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928]',
     isRouteActive(href)
@@ -79,19 +82,19 @@ export function Header() {
   const mobileTabs = [
     { href: '/', label: t('Home', 'الرئيسية', '首页'), icon: Home, active: pathname === '/' },
     {
-      href: '/top-up/waho-top-up',
+      href: protectedHref('/#categories'),
       label: t('Top up', 'اشحن', '充值'),
       icon: Zap,
       active: pathname.startsWith('/top-up'),
     },
     {
-      href: '/orders',
+      href: protectedHref('/orders'),
       label: t('Orders', 'الطلبات', '订单'),
       icon: ReceiptText,
       active: pathname.startsWith('/orders'),
     },
     {
-      href: '/wallet',
+      href: protectedHref('/wallet'),
       label: t('Wallet', 'المحفظة', '钱包'),
       icon: Wallet,
       active: pathname.startsWith('/wallet'),
@@ -122,7 +125,7 @@ export function Header() {
     <>
       <header data-v2-header className="v2-brand-header sticky top-0 z-50 w-full border-b backdrop-blur-xl">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="grid h-[66px] grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-2 lg:flex lg:h-[68px] lg:gap-7">
+          <div className="grid h-[66px] grid-cols-[90px_minmax(0,1fr)_90px] items-center gap-1 sm:grid-cols-[44px_minmax(0,1fr)_auto] sm:gap-2 lg:flex lg:h-[68px] lg:gap-7">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -155,11 +158,11 @@ export function Header() {
                   <Link href="/" aria-current={pathname === '/' ? 'page' : undefined} className={navLinkClass('/')} onClick={closeMobileMenu}>
                     {t('Home', 'الرئيسية', '首页')}
                   </Link>
-                  <Link href="/top-up/waho-top-up" aria-current={pathname.startsWith('/top-up') ? 'page' : undefined} className={navLinkClass('/top-up/waho-top-up')} onClick={closeMobileMenu}>
-                    {t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}
+                  <Link href={protectedHref('/#categories')} aria-current={pathname.startsWith('/categories') || pathname.startsWith('/top-up') ? 'page' : undefined} className={navLinkClass('/top-up/waho-top-up')} onClick={closeMobileMenu}>
+                    {t('Recharge categories', 'فئات الشحن', '充值分类')}
                   </Link>
-                  <Link href="/promotions" aria-current={isRouteActive('/promotions') ? 'page' : undefined} className={navLinkClass('/promotions')} onClick={closeMobileMenu}>
-                    {t('WAHO Offers', 'عروض WAHO', 'WAHO 优惠')}
+                  <Link href={protectedHref('/promotions')} aria-current={isRouteActive('/promotions') ? 'page' : undefined} className={navLinkClass('/promotions')} onClick={closeMobileMenu}>
+                    {t('Offers', 'العروض', '优惠')}
                   </Link>
                   <Link href="/help" aria-current={isRouteActive('/help') ? 'page' : undefined} className={navLinkClass('/help')} onClick={closeMobileMenu}>
                     {t('Help', 'مساعدة', '帮助')}
@@ -174,7 +177,7 @@ export function Header() {
                       </Link>
                     </>
                   )}
-                  <Link href="/settings" aria-current={isRouteActive('/settings') ? 'page' : undefined} className={navLinkClass('/settings')} onClick={closeMobileMenu}>
+                  <Link href={protectedHref('/settings')} aria-current={isRouteActive('/settings') ? 'page' : undefined} className={navLinkClass('/settings')} onClick={closeMobileMenu}>
                     {t('Settings', 'الإعدادات', '设置')}
                   </Link>
                 </nav>
@@ -263,7 +266,7 @@ export function Header() {
                   {t('Al-Wasl Digital', 'الوصل', 'Al-Wasl 数字服务')}
                 </span>
                 <span className="block text-[11px] text-[#b8c5db]">
-                  {t('WAHO top-ups', 'شحن WAHO', 'WAHO 充值')}
+                  {t('Digital recharge', 'شحن رقمي', '数字充值')}
                 </span>
               </span>
             </Link>
@@ -271,7 +274,7 @@ export function Header() {
             <nav aria-label={t('Main navigation', 'التنقل الرئيسي', '主导航')} className="hidden flex-1 items-center justify-center gap-1 lg:flex">
               {[
                 { href: '/', label: t('Home', 'الرئيسية', '首页') },
-                { href: '/promotions', label: t('Offers', 'العروض', '优惠') },
+                { href: protectedHref('/promotions'), label: t('Offers', 'العروض', '优惠') },
                 { href: '/help', label: t('Help', 'مساعدة', '帮助') },
               ].map((item) => (
                 <Link
@@ -289,14 +292,14 @@ export function Header() {
                 </Link>
               ))}
               <Button asChild className="v2-primary-button ms-2">
-                <Link href="/top-up/waho-top-up" aria-current={pathname.startsWith('/top-up') ? 'page' : undefined}>
+                <Link href={protectedHref('/#categories')} aria-current={pathname.startsWith('/top-up') || pathname.startsWith('/categories') ? 'page' : undefined}>
                   <Zap className="h-4 w-4" />
-                  {t('Top up WAHO', 'اشحن WAHO', '充值 WAHO')}
+                  {t('Choose category', 'اختر الفئة', '选择分类')}
                 </Link>
               </Button>
             </nav>
 
-            <div className="flex items-center justify-end gap-0.5 sm:gap-1">
+            <div className="col-start-3 flex items-center justify-end gap-0.5 sm:gap-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

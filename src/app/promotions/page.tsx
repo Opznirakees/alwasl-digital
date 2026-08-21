@@ -95,9 +95,9 @@ export default function PromotionsPage() {
 
   const supportHref = (code: string) => {
     const message = t(
-      `Hello, can you check whether WAHO offer ${code} applies to my top-up?`,
-      `مرحباً، هل يمكنكم التحقق من إمكانية تطبيق عرض WAHO ${code} على الشحن؟`,
-      `您好，请帮我确认 WAHO 优惠 ${code} 是否适用于我的充值。`
+      `Hello, can you check whether offer ${code} applies to my recharge?`,
+      `مرحباً، هل يمكنكم التحقق من إمكانية تطبيق العرض ${code} على الشحن؟`,
+      `您好，请帮我确认优惠 ${code} 是否适用于我的充值。`
     );
     return `https://wa.me/${supportWhatsAppNormalizedNumber}?text=${encodeURIComponent(message)}`;
   };
@@ -113,7 +113,7 @@ export default function PromotionsPage() {
         </Link>
 
         <header className="mt-4 max-w-3xl">
-          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t('WAHO offers', 'عروض WAHO', 'WAHO 优惠')}</p>
+          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t('Recharge offers', 'عروض الشحن', '充值优惠')}</p>
           <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white sm:text-4xl">
             {t('See which top-up offers are available', 'شاهد عروض الشحن المتاحة', '查看可用的充值优惠')}
           </h1>
@@ -141,16 +141,16 @@ export default function PromotionsPage() {
           <div className="mt-8 flex min-h-56 flex-col items-center justify-center rounded-lg border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-zinc-900">
             <TicketPercent className="h-7 w-7 text-blue-700 dark:text-blue-300" />
             <h2 className="mt-3 text-lg font-semibold text-zinc-950 dark:text-white">{t('No active offers right now', 'لا توجد عروض نشطة الآن', '目前没有可用优惠')}</h2>
-            <p className="mt-1 max-w-sm text-sm leading-6 text-zinc-500 dark:text-zinc-400">{t('You can still choose any available WAHO top-up amount.', 'لا يزال بإمكانك اختيار أي مبلغ شحن WAHO متاح.', '您仍可选择任意可用的 WAHO 充值金额。')}</p>
+            <p className="mt-1 max-w-sm text-sm leading-6 text-zinc-500 dark:text-zinc-400">{t('You can still choose any available recharge category and amount.', 'لا يزال بإمكانك اختيار أي فئة ومبلغ شحن متاح.', '您仍可选择任意可用的充值分类和金额。')}</p>
             <Button asChild className="mt-4 bg-blue-600 text-white hover:bg-blue-700">
-              <Link href="/top-up/waho-top-up">
-                {t('Choose an amount', 'اختر المبلغ', '选择金额')}
+              <Link href="/#categories">
+                {t('Choose a category', 'اختر الفئة', '选择分类')}
                 <ArrowRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
             </Button>
           </div>
         ) : (
-          <section className="mt-8 grid gap-4 md:grid-cols-2" aria-label={t('Available WAHO offers', 'عروض WAHO المتاحة', '可用 WAHO 优惠')}>
+          <section className="mt-8 grid gap-4 md:grid-cols-2" aria-label={t('Available recharge offers', 'عروض الشحن المتاحة', '可用充值优惠')}>
             {visiblePromotions.map((promotion) => {
               const state = getPromotionState(promotion.startDate, promotion.endDate, now);
               const applicableProducts = promotion.applicableGames

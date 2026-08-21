@@ -2,156 +2,150 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  ArrowRight,
-  BadgeCheck,
+  ChevronLeft,
+  ChevronRight,
   CircleHelp,
   ReceiptText,
   ShieldCheck,
-  UserRoundCheck,
+  Smartphone,
   WalletCards,
 } from 'lucide-react';
 import type { Banner } from '@/types';
 import { useApp } from '@/contexts/AppContext';
 
 interface HeroBannerProps {
-  banner?: Banner;
+  banners: Banner[];
 }
 
-export function HeroBanner({ banner }: HeroBannerProps) {
-  const { t, dir } = useApp();
+const fallbackBanner: Banner = {
+  id: 'fallback',
+  title: 'Recharge your digital balance',
+  titleAr: 'اشحن رصيدك الرقمي',
+  subtitle: 'Choose a category, log in with WhatsApp, and see the right price for your country.',
+  subtitleAr: 'اختر الفئة وسجل الدخول عبر واتساب وشاهد السعر المناسب لبلدك.',
+  image: '/brand/recharge-hero-v3.webp',
+  mobileImage: '/brand/recharge-hero-mobile-v3.webp',
+  link: '/#categories',
+  startDate: '2026-01-01T00:00:00.000Z',
+  endDate: '2030-01-01T00:00:00.000Z',
+  isActive: true,
+  order: 0,
+};
+
+export function HeroBanner({ banners }: HeroBannerProps) {
+  const { t, dir, isAuthenticated } = useApp();
+  const slides = useMemo(() => banners.length > 0 ? banners : [fallbackBanner], [banners]);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const active = slides[activeIndex] ?? slides[0];
+
+  useEffect(() => {
+    if (activeIndex < slides.length) return;
+    setActiveIndex(0);
+  }, [activeIndex, slides.length]);
+
+  useEffect(() => {
+    if (slides.length < 2) return;
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % slides.length);
+    }, 6500);
+    return () => window.clearInterval(timer);
+  }, [slides.length]);
+
+  const bannerLink = active.link || '/#categories';
+  const requiresLogin = bannerLink.startsWith('/top-up') || bannerLink.startsWith('/categories') || bannerLink.startsWith('/#categories');
+  const primaryHref = requiresLogin && !isAuthenticated
+    ? `/auth?next=${encodeURIComponent(bannerLink)}`
+    : bannerLink;
+
+  const goPrevious = () => setActiveIndex((current) => (current - 1 + slides.length) % slides.length);
+  const goNext = () => setActiveIndex((current) => (current + 1) % slides.length);
   const metrics = [
-    {
-      icon: UserRoundCheck,
-      title: t('Account checked', 'فحص الحساب', '检查账号'),
-      body: t('Name shown before payment', 'يظهر الاسم قبل الدفع', '付款前显示名称'),
-    },
-    {
-      icon: ShieldCheck,
-      title: t('Protected order', 'طلب محمي', '订单保护'),
-      body: t('WhatsApp code to confirm', 'رمز واتساب للتأكيد', '使用 WhatsApp 验证码确认'),
-    },
-    {
-      icon: WalletCards,
-      title: t('Clear price', 'سعر واضح', '价格清晰'),
-      body: t('Total before confirmation', 'الإجمالي قبل التأكيد', '确认前查看总价'),
-    },
-    {
-      icon: ReceiptText,
-      title: t('Order tracking', 'تتبع الطلب', '订单跟踪'),
-      body: t('With your order ID', 'باستخدام رقم الطلب', '使用订单号'),
-    },
+    { icon: Smartphone, title: t('Choose a category', 'اختر الفئة', '选择分类') },
+    { icon: ShieldCheck, title: t('WhatsApp login', 'دخول عبر واتساب', 'WhatsApp 登录') },
+    { icon: WalletCards, title: t('Local prices', 'أسعار محلية', '本地价格') },
+    { icon: ReceiptText, title: t('Track your order', 'تابع طلبك', '跟踪订单') },
   ];
 
   return (
     <section
       data-v2-hero
-      aria-label={banner ? t(banner.title, banner.titleAr, banner.title) : t('WAHO top-up', 'شحن WAHO', 'WAHO 充值')}
-      className="v2-mobile-hero relative min-h-[390px] overflow-hidden border-y border-white/10 bg-[#020817] text-white shadow-[0_28px_90px_rgba(0,0,0,0.35)] sm:min-h-[560px] sm:rounded-lg sm:border lg:min-h-[500px]"
+      aria-roledescription="carousel"
+      aria-label={t('Recharge offers', 'عروض الشحن', '充值优惠')}
+      className="relative min-h-[430px] overflow-hidden border-y border-white/10 bg-[#020817] text-white shadow-[0_28px_90px_rgba(0,0,0,0.35)] sm:min-h-[540px] sm:rounded-lg sm:border lg:min-h-[510px]"
     >
-      <div className={`absolute inset-y-0 ${dir === 'rtl' ? 'left-0' : 'right-0'} w-full sm:w-[72%] lg:w-[60%]`}>
-        <Image
-          src="/brand/leo-waho-agent.jpeg"
-          alt={t('LEO, your WAHO top-up contact', 'LEO، جهة التواصل لشحن WAHO', 'LEO，您的 WAHO 充值联系人')}
-          fill
-          priority
-          className={`object-cover ${dir === 'rtl' ? 'object-[100%_18%]' : 'object-[0%_18%]'} sm:object-center`}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 72vw, 760px"
-        />
+      <div className="absolute inset-0" aria-live="polite">
+        <picture key={active.id}>
+          {active.mobileImage && <source media="(max-width: 639px)" srcSet={active.mobileImage} />}
+          {/* Admin banners may use an external CDN, so a native responsive image keeps the source configurable. */}
+          <img data-visual-required-image src={active.image} alt="" className={`h-full w-full object-cover object-center ${dir === 'rtl' ? '-scale-x-100' : ''}`} />
+        </picture>
       </div>
+      <div className={`absolute inset-0 ${dir === 'rtl' ? 'bg-[linear-gradient(90deg,rgba(2,8,23,0.18),rgba(2,8,23,0.80)_52%,#020817_94%)]' : 'bg-[linear-gradient(90deg,#020817_6%,rgba(2,8,23,0.84)_48%,rgba(2,8,23,0.16))]'}`} />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,8,23,0.05)_36%,#020817_100%)]" />
 
-      <div
-        className={`absolute inset-0 ${
-          dir === 'rtl'
-            ? 'bg-[linear-gradient(90deg,rgba(2,8,23,0.08)_0%,rgba(2,8,23,0.72)_50%,#020817_88%)]'
-            : 'bg-[linear-gradient(90deg,#020817_12%,rgba(2,8,23,0.88)_48%,rgba(2,8,23,0.12)_100%)]'
-        }`}
-      />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,8,23,0.04)_20%,rgba(2,8,23,0.28)_64%,#020817_100%)] sm:bg-[linear-gradient(180deg,rgba(2,8,23,0.02)_28%,rgba(2,8,23,0.18)_62%,#020817_100%)]" />
-
-      <div
-        data-v2-mobile-brandmark
-        aria-hidden="true"
-        className="absolute end-4 top-4 z-20 h-12 w-12 overflow-hidden rounded-lg border border-[#f7b928]/55 bg-[#020817]/78 shadow-[0_10px_30px_rgba(0,0,0,0.3)] backdrop-blur-md sm:hidden"
-      >
-        <Image src="/brand/waho-app-icon.webp" alt="" fill priority className="object-cover" sizes="48px" />
-      </div>
-
-      <div
-        data-v2-brand-corner
-        aria-hidden="true"
-        className="v2-hero-brandmark pointer-events-none absolute right-0 top-0 z-20 hidden h-[158px] w-[180px] md:block lg:h-[198px] lg:w-[224px]"
-      >
+      <div data-v2-brand-corner aria-hidden="true" className="v2-hero-brandmark pointer-events-none absolute right-0 top-0 z-20 hidden h-[168px] w-[192px] md:block lg:h-[198px] lg:w-[224px]">
         <span className="v2-hero-brandmark-accent absolute inset-0" />
         <div className="v2-hero-brandmark-surface absolute right-0 top-0 h-[calc(100%-10px)] w-[calc(100%-10px)]">
           <div className="relative h-full w-full">
-            <Image
-              src="/brand/alwasl-lockup.webp"
-              alt=""
-              fill
-              priority
-              className="object-contain px-5 pb-7 pt-3 lg:px-6 lg:pb-8 lg:pt-4"
-              sizes="(max-width: 1023px) 170px, 214px"
-            />
+            <Image src="/brand/alwasl-lockup.webp" alt="" fill priority className="object-contain px-5 pb-7 pt-3 lg:px-6 lg:pb-8 lg:pt-4" sizes="(max-width: 1023px) 182px, 214px" />
           </div>
         </div>
       </div>
 
-      <div className="relative z-10 flex min-h-[390px] items-end px-5 pb-[94px] pt-14 sm:min-h-[560px] sm:items-center sm:px-10 sm:pb-32 sm:pt-7 lg:min-h-[500px] lg:px-12 lg:pb-28">
-        <div data-v2-mobile-hero-copy className={`max-w-[610px] ${dir === 'rtl' ? 'text-right lg:ms-48' : 'text-left'}`}>
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-[#f7b928]/40 bg-[#071b46]/78 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-md sm:gap-2 sm:px-3 sm:py-1.5 sm:text-xs">
-            <ShieldCheck className="h-4 w-4 text-[#f7b928]" />
-            {t('Fast and clear WAHO top-up', 'شحن WAHO بسرعة ووضوح', '快速清晰地充值 WAHO')}
+      <div className="relative z-10 flex min-h-[430px] items-end px-5 pb-[112px] pt-20 sm:min-h-[540px] sm:items-center sm:px-10 sm:pb-32 sm:pt-8 lg:min-h-[510px] lg:px-12">
+        <div className={`max-w-[630px] text-start ${dir === 'rtl' ? 'md:mr-[190px] lg:mr-[220px]' : ''}`}>
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#9bd8f2]/45 bg-[#071b46]/82 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md">
+            <ShieldCheck className="h-4 w-4 text-[#f6b7cc]" />
+            {t('Secure digital recharge', 'شحن رقمي آمن', '安全数字充值')}
           </div>
-
-          <h1 className="mt-3 max-w-[330px] text-[1.9rem] font-bold leading-[1.06] text-white sm:mt-5 sm:max-w-2xl sm:text-5xl lg:text-5xl xl:text-6xl">
-            {t('Top up your', 'اشحن رصيد', '为您的')}{' '}
-            <span className="text-[#f7b928]">WAHO</span>{' '}
-            {dir !== 'rtl' && t('balance', 'الرصيد', '余额充值')}
+          <h1 className="mt-4 max-w-[560px] text-[2rem] font-bold leading-[1.08] text-white sm:mt-5 sm:text-5xl lg:text-[3.4rem]">
+            {t(active.title, active.titleAr, active.id === 'fallback' ? '充值数字余额' : active.title)}
           </h1>
-          <p className="mt-3 line-clamp-2 max-w-[340px] text-[13px] leading-5 text-white/78 sm:mt-5 sm:line-clamp-none sm:max-w-xl sm:text-lg sm:leading-7">
+          <p className="mt-3 max-w-[560px] text-sm leading-6 text-white/80 sm:mt-5 sm:text-lg sm:leading-7">
             {t(
-              'Choose the balance, check the WAHO account name before payment, then follow the order with your order ID.',
-              'اختر الرصيد وتحقق من اسم حساب WAHO قبل الدفع، ثم تابع الطلب باستخدام رقمه.',
-              '选择余额，付款前核对 WAHO 账号名称，然后使用订单号跟踪订单。'
+              active.subtitle || fallbackBanner.subtitle || '',
+              active.subtitleAr || fallbackBanner.subtitleAr || '',
+              active.id === 'fallback'
+                ? '选择分类，使用 WhatsApp 登录，然后查看适合您所在国家的价格。'
+                : active.subtitle || fallbackBanner.subtitle || ''
             )}
           </p>
-
-          <div className="mt-4 flex gap-3 sm:mt-6 sm:flex-row">
-            <Link data-testid="home-primary-topup" href="/top-up/waho-top-up" className="v2-primary-button min-h-11 flex-1 sm:min-w-44 sm:flex-none">
-              {t('Choose amount', 'اختر المبلغ', '选择金额')}
-              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+          <div className="mt-5 flex flex-wrap gap-3 sm:mt-7">
+            <Link data-testid="home-primary-topup" href={primaryHref} className="v2-primary-button min-h-12 min-w-44">
+              {isAuthenticated ? t('Choose category', 'اختر الفئة', '选择分类') : t('Login to see prices', 'سجل الدخول لرؤية الأسعار', '登录查看价格')}
+              <ChevronRight className="h-4 w-4 rtl:rotate-180" />
             </Link>
-            <Link href="/help" className="v2-secondary-button hidden border-white/22 bg-white/5 text-white hover:bg-white/10 sm:inline-flex sm:min-w-40">
-              <CircleHelp className="h-4 w-4 text-[#f7b928]" />
+            <Link href="/help" className="v2-secondary-button min-h-12 border-white/22 bg-white/5 text-white hover:bg-white/10">
+              <CircleHelp className="h-4 w-4 text-[#9bd8f2]" />
               {t('How it works', 'كيف يعمل', '如何操作')}
             </Link>
           </div>
-
-          <div className="mt-5 hidden max-w-full items-center gap-3 rounded-lg border border-white/12 bg-[#020817]/62 px-3 py-2.5 backdrop-blur-md sm:inline-flex">
-            <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full border-2 border-[#f7b928]">
-              <Image src="/brand/leo-waho-agent.jpeg" alt="" fill className="object-cover object-[52%_28%]" sizes="40px" />
-            </div>
-            <div className="min-w-0">
-              <p className="flex items-center gap-1.5 text-sm font-bold text-white">
-                LEO <BadgeCheck className="h-4 w-4 flex-shrink-0 text-[#f7b928]" />
-              </p>
-              <p className="truncate text-xs text-white/68">
-                {t('Your WAHO top-up contact', 'جهة التواصل لشحن WAHO', '您的 WAHO 充值联系人')}
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 
-      <div className="v2-hero-metrics absolute inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-white/12 bg-[#020817]/92 px-1.5 py-2 backdrop-blur-xl sm:px-7 sm:py-3 lg:px-10">
-        {metrics.map((item) => (
-          <div key={item.title} className="flex min-h-[70px] flex-col items-center justify-center gap-1 border-e border-white/10 px-1 py-1.5 text-center last:border-e-0 sm:min-h-[58px] sm:flex-row sm:justify-start sm:gap-2.5 sm:px-4 sm:py-2 sm:text-start">
-            <item.icon className="h-[18px] w-[18px] flex-shrink-0 text-[#f7b928] sm:h-5 sm:w-5" />
-            <div className="min-w-0">
-              <p className="line-clamp-2 text-[10px] font-bold leading-3.5 text-white sm:text-sm sm:leading-5">{item.title}</p>
-              <p className="hidden text-xs leading-4 text-white/58 sm:block">{item.body}</p>
-            </div>
+      {slides.length > 1 && (
+        <div className="absolute inset-x-4 bottom-[88px] z-30 flex items-center justify-between sm:inset-x-8 sm:bottom-[84px]">
+          <button type="button" onClick={goPrevious} title={t('Previous banner', 'البانر السابق', '上一张横幅')} aria-label={t('Previous banner', 'البانر السابق', '上一张横幅')} className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-[#020817]/72 text-white backdrop-blur-md hover:bg-[#071b46]">
+            <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
+          </button>
+          <div className="flex gap-2" role="tablist" aria-label={t('Choose banner', 'اختر البانر', '选择横幅')}>
+            {slides.map((slide, index) => (
+              <button key={slide.id} type="button" onClick={() => setActiveIndex(index)} aria-label={`${t('Banner', 'بانر', '横幅')} ${index + 1}`} aria-selected={index === activeIndex} role="tab" className={`h-2.5 rounded-full transition-[width,background-color] ${index === activeIndex ? 'w-8 bg-[#f6b7cc]' : 'w-2.5 bg-white/40 hover:bg-white/70'}`} />
+            ))}
+          </div>
+          <button type="button" onClick={goNext} title={t('Next banner', 'البانر التالي', '下一张横幅')} aria-label={t('Next banner', 'البانر التالي', '下一张横幅')} className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-[#020817]/72 text-white backdrop-blur-md hover:bg-[#071b46]">
+            <ChevronRight className="h-5 w-5 rtl:rotate-180" />
+          </button>
+        </div>
+      )}
+
+      <div data-v2-hero-metrics className="absolute inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-white/12 bg-[#020817]/94 px-1 py-2 backdrop-blur-xl sm:px-6 sm:py-3">
+        {metrics.map((item, index) => (
+          <div key={item.title} className="flex min-h-[70px] flex-col items-center justify-center gap-1 border-e border-white/10 px-1 text-center last:border-e-0 sm:min-h-[58px] sm:flex-row sm:gap-2.5 sm:px-4 sm:text-start">
+            <item.icon className={`h-[18px] w-[18px] flex-shrink-0 ${index % 2 ? 'text-[#f6b7cc]' : 'text-[#9bd8f2]'} sm:h-5 sm:w-5`} />
+            <p className="max-w-full break-words text-[9px] font-bold leading-3 text-white sm:text-sm sm:leading-5">{item.title}</p>
           </div>
         ))}
       </div>

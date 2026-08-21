@@ -9,7 +9,7 @@ export default function PrivacyPage() {
       sections={[
         {
           title: { en: 'What we store', ar: 'ما نخزنه', zh: '我们存储什么' },
-          body: { en: 'We may store your phone number, WAHO ID, orders, wallet activity and payment references.', ar: 'قد نخزن رقم هاتفك ومعرف WAHO والطلبات ومعاملات المحفظة ومراجع الدفع.', zh: '我们可能会存储您的手机号码、WAHO ID、订单、钱包记录和付款凭证。' },
+          body: { en: 'We may store your phone number, account references, orders, wallet activity and payment references.', ar: 'قد نخزن رقم هاتفك ومراجع الحساب والطلبات ومعاملات المحفظة ومراجع الدفع.', zh: '我们可能会存储您的手机号码、账号信息、订单、钱包记录和付款凭证。' },
         },
         {
           title: { en: 'Why we need it', ar: 'لماذا نحتاجه', zh: '为什么需要这些信息' },

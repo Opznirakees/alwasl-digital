@@ -14,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { CountryPricingMap } from '@/components/admin/CountryPricingMap';
 import { AccessBlockManager } from '@/components/admin/AccessBlockManager';
 import { ContentManager } from '@/components/admin/ContentManager';
+import { CatalogCategoryManager } from '@/components/admin/CatalogCategoryManager';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { Banner, Country, CustomPricingRule, DashboardStats, ExchangeRate, Game, ManualDeposit, MonitoringDashboard, Order, Promotion, Provider, ProviderBalanceAlert, User, WalletTransaction } from '@/types';
+import type { Banner, CatalogCategory, Country, CustomPricingRule, DashboardStats, ExchangeRate, Game, ManualDeposit, MonitoringDashboard, Order, Promotion, Provider, ProviderBalanceAlert, User, WalletTransaction } from '@/types';
 import { shouldLoadAdminSummary } from './admin-access';
 import {
   LayoutDashboard,
@@ -63,6 +64,7 @@ import {
   Zap,
   Ban,
   FilePenLine,
+  Layers3,
 } from 'lucide-react';
 
 type AdminRoleValue = 'USER' | 'ADMIN' | 'STAFF';
@@ -172,6 +174,7 @@ export default function AdminDashboard() {
   });
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Game[]>([]);
+  const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [providerBalanceAlerts, setProviderBalanceAlerts] = useState<ProviderBalanceAlert[]>([]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
@@ -195,9 +198,13 @@ export default function AdminDashboard() {
   const [pricingDialogOpen, setPricingDialogOpen] = useState(false);
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
   const [bannerDialogOpen, setBannerDialogOpen] = useState(false);
+  const [editingBannerId, setEditingBannerId] = useState<string | null>(null);
   const [monitoringDialogOpen, setMonitoringDialogOpen] = useState(false);
   const [pendingAccessBlockValue, setPendingAccessBlockValue] = useState<string | null>(null);
   const [productDialogOpen, setProductDialogOpen] = useState(false);
+  const [fulfillmentOrder, setFulfillmentOrder] = useState<Order | null>(null);
+  const [fulfillmentCode, setFulfillmentCode] = useState('');
+  const [fulfillmentNote, setFulfillmentNote] = useState('');
   const [topupForm, setTopupForm] = useState({
     productId: 'waho-top-up',
     amount: '10000',
@@ -205,16 +212,25 @@ export default function AdminDashboard() {
     salePrice: '',
     inStock: true,
     isPopular: false,
+    name: '',
+    nameAr: '',
+    unit: 'balance',
+    unitAr: 'رصيد',
   });
   const [productForm, setProductForm] = useState({
     slug: '',
     name: '',
     nameAr: '',
+    nameZh: '',
     description: '',
     descriptionAr: '',
+    descriptionZh: '',
     image: '/brand/alwasl-mark.jpg',
-    banner: '/brand/alwasl-banner.jpg',
+    banner: '/brand/recharge-hero-v3.webp',
     category: 'TOP_UP',
+    catalogCategoryId: 'waho',
+    fulfillmentMode: 'MANUAL_TOPUP',
+    requiresUserId: true,
     publisher: 'Al-Wasl Digital',
     userIdLabel: 'Account ID',
     userIdLabelAr: 'معرف الحساب',
@@ -255,12 +271,14 @@ export default function AdminDashboard() {
     isActive: true,
   });
   const [bannerForm, setBannerForm] = useState({
-    title: 'Fast WAHO top-ups',
-    titleAr: 'شحن WAHO سريع',
-    subtitle: 'Choose a WAHO amount, confirm the account, and complete the top-up securely.',
-    subtitleAr: 'اختر مبلغ WAHO وتحقق من الحساب وأكمل الشحن بأمان.',
-    image: '/brand/alwasl-banner.jpg',
-    link: '/top-up/waho-top-up',
+    title: 'Recharge your digital balance',
+    titleAr: 'اشحن رصيدك الرقمي',
+    subtitle: 'Choose a category and see the right price for your country.',
+    subtitleAr: 'اختر الفئة وشاهد السعر المناسب لبلدك.',
+    image: '/brand/recharge-hero-v3.webp',
+    mobileImage: '',
+    link: '/#categories',
+    gameId: '',
     startDate: '2026-01-01T00:00',
     endDate: '2026-12-31T23:59',
     isActive: true,
@@ -318,6 +336,7 @@ export default function AdminDashboard() {
       setDashboardStats(payload.stats);
       setOrders(payload.orders ?? []);
       setProducts(payload.products ?? []);
+      setCategories(payload.categories ?? []);
       setProviders(payload.providers ?? []);
       setProviderBalanceAlerts(payload.providerBalanceAlerts ?? []);
       setPromotions(payload.promotions ?? []);
@@ -552,12 +571,17 @@ export default function AdminDashboard() {
           slug: productForm.slug,
           name: productForm.name,
           nameAr: productForm.nameAr,
+          nameZh: productForm.nameZh,
           description: productForm.description,
           descriptionAr: productForm.descriptionAr,
+          descriptionZh: productForm.descriptionZh,
           image: productForm.image,
           banner: productForm.banner,
           category: productForm.category,
+          catalogCategoryId: productForm.catalogCategoryId,
+          fulfillmentMode: productForm.fulfillmentMode,
           publisher: productForm.publisher,
+          requiresUserId: productForm.requiresUserId,
           userIdLabel: productForm.userIdLabel,
           userIdLabelAr: productForm.userIdLabelAr,
           userIdPlaceholder: productForm.userIdPlaceholder,
@@ -574,8 +598,10 @@ export default function AdminDashboard() {
         slug: '',
         name: '',
         nameAr: '',
+        nameZh: '',
         description: '',
         descriptionAr: '',
+        descriptionZh: '',
         isActive: false,
       }));
       toast.success(t('Product saved', 'تم حفظ المنتج', '产品已保存'));
@@ -592,7 +618,11 @@ export default function AdminDashboard() {
         method: 'POST',
         body: JSON.stringify({
           productId: product.id,
+          name: topupForm.name || undefined,
+          nameAr: topupForm.nameAr || undefined,
           amount: Number(topupForm.amount),
+          unit: topupForm.unit,
+          unitAr: topupForm.unitAr,
           basePrice: Number(topupForm.basePrice || topupForm.amount),
           salePrice: topupForm.salePrice ? Number(topupForm.salePrice) : null,
           inStock: topupForm.inStock,
@@ -732,16 +762,17 @@ export default function AdminDashboard() {
     event.preventDefault();
 
     await runAdminMutation(async () => {
-      await adminJsonRequest('/api/admin/banners', {
-        method: 'POST',
+      await adminJsonRequest(editingBannerId ? `/api/admin/banners/${editingBannerId}` : '/api/admin/banners', {
+        method: editingBannerId ? 'PATCH' : 'POST',
         body: JSON.stringify({
           title: bannerForm.title,
           titleAr: bannerForm.titleAr,
           subtitle: bannerForm.subtitle,
           subtitleAr: bannerForm.subtitleAr,
           image: bannerForm.image,
+          mobileImage: bannerForm.mobileImage,
           link: bannerForm.link,
-          gameId: 'waho-top-up',
+          gameId: bannerForm.gameId,
           startDate: localDateTimeToIso(bannerForm.startDate),
           endDate: localDateTimeToIso(bannerForm.endDate),
           isActive: bannerForm.isActive,
@@ -749,8 +780,45 @@ export default function AdminDashboard() {
         }),
       });
       setBannerDialogOpen(false);
-      toast.success(t('Banner saved', 'تم حفظ الإعلان', '横幅已保存'));
+      setEditingBannerId(null);
+      toast.success(editingBannerId
+        ? t('Banner updated', 'تم تحديث الإعلان', '横幅已更新')
+        : t('Banner created', 'تم إنشاء الإعلان', '横幅已创建'));
     });
+  }
+
+  function openBannerEditor(banner?: Banner) {
+    if (!banner) {
+      setEditingBannerId(null);
+      setBannerForm((current) => ({
+        ...current,
+        title: '',
+        titleAr: '',
+        subtitle: '',
+        subtitleAr: '',
+        mobileImage: '',
+        gameId: '',
+      }));
+      setBannerDialogOpen(true);
+      return;
+    }
+
+    setEditingBannerId(banner.id);
+    setBannerForm({
+      title: banner.title,
+      titleAr: banner.titleAr,
+      subtitle: banner.subtitle ?? '',
+      subtitleAr: banner.subtitleAr ?? '',
+      image: banner.image,
+      mobileImage: banner.mobileImage ?? '',
+      link: banner.link ?? '',
+      gameId: banner.gameId ?? '',
+      startDate: new Date(banner.startDate).toISOString().slice(0, 16),
+      endDate: new Date(banner.endDate).toISOString().slice(0, 16),
+      isActive: banner.isActive,
+      order: String(banner.order),
+    });
+    setBannerDialogOpen(true);
   }
 
   async function toggleBannerActive(bannerId: string, isActive: boolean) {
@@ -761,6 +829,75 @@ export default function AdminDashboard() {
       });
       toast.success(t('Banner status updated', 'تم تحديث حالة الإعلان', '横幅状态已更新'));
     });
+  }
+
+  async function saveCatalogCategory(
+    categoryId: string | null,
+    payload: {
+      slug?: string;
+      name: string;
+      nameAr: string;
+      nameZh: string;
+      description: string;
+      descriptionAr: string;
+      descriptionZh: string;
+      image: string;
+      accentColor: string;
+      sortOrder: number;
+      isActive: boolean;
+    }
+  ) {
+    let succeeded = false;
+    await runAdminMutation(async () => {
+      await adminJsonRequest(categoryId ? `/api/admin/categories/${categoryId}` : '/api/admin/categories', {
+        method: categoryId ? 'PATCH' : 'POST',
+        body: JSON.stringify(payload),
+      });
+      succeeded = true;
+      toast.success(categoryId
+        ? t('Category updated', 'تم تحديث الفئة', '分类已更新')
+        : t('Category created', 'تم إنشاء الفئة', '分类已创建'));
+    });
+    return succeeded;
+  }
+
+  async function toggleCatalogCategory(category: CatalogCategory, isActive: boolean) {
+    await runAdminMutation(async () => {
+      await adminJsonRequest(`/api/admin/categories/${category.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isActive }),
+      });
+      toast.success(t('Category visibility updated', 'تم تحديث ظهور الفئة', '分类可见性已更新'));
+    });
+  }
+
+  async function fulfillManualOrder(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!fulfillmentOrder) return;
+
+    let succeeded = false;
+    await runAdminMutation(async () => {
+      const payload = await adminJsonRequest<{ order: Order; retried: boolean }>(
+        `/api/admin/orders/${fulfillmentOrder.id}/fulfill`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            code: fulfillmentCode,
+            note: fulfillmentNote,
+          }),
+        }
+      );
+      succeeded = true;
+      toast.success(payload.retried
+        ? t('WhatsApp delivery sent again', 'تمت إعادة الإرسال عبر واتساب', 'WhatsApp 已重新发送')
+        : t('Order completed and customer notified', 'اكتمل الطلب وتم إشعار العميل', '订单已完成并通知客户'));
+    });
+
+    if (succeeded) {
+      setFulfillmentOrder(null);
+      setFulfillmentCode('');
+      setFulfillmentNote('');
+    }
   }
 
   async function updateExchangeRate(event: FormEvent<HTMLFormElement>) {
@@ -1056,6 +1193,34 @@ export default function AdminDashboard() {
     return gamePackage ? t(gamePackage.name, gamePackage.nameAr) : t(order.packageName, order.packageName);
   };
 
+  const hasOrderAccountReference = (order: Order) => (
+    Boolean(order.gameUserId && order.gameUserId !== 'manual-delivery')
+  );
+
+  const getOrderReferenceLabel = (order: Order) => (
+    hasOrderAccountReference(order)
+      ? t('Account ID', 'معرف الحساب', '账号 ID')
+      : t('Delivery', 'التسليم', '交付')
+  );
+
+  const getOrderReferenceValue = (order: Order) => (
+    hasOrderAccountReference(order)
+      ? order.gameUserId
+      : t('Through WhatsApp', 'عبر واتساب', '通过 WhatsApp')
+  );
+
+  const canManuallyFulfill = (order: Order) => (
+    (order.fulfillmentMode === 'manual_code' || order.fulfillmentMode === 'manual_topup') &&
+    order.paymentStatus === 'completed' &&
+    (order.status === 'processing' || order.status === 'completed')
+  );
+
+  const openManualFulfillment = (order: Order) => {
+    setFulfillmentOrder(order);
+    setFulfillmentCode('');
+    setFulfillmentNote(order.fulfillmentNote ?? '');
+  };
+
   const getPaymentMethodLabel = (method: string) => {
     const labels: Record<string, { en: string; ar: string; zh: string }> = {
       wallet: { en: 'Wallet', ar: 'المحفظة', zh: '钱包' },
@@ -1114,12 +1279,13 @@ export default function AdminDashboard() {
   const sidebarItems = [
     { id: 'overview', icon: LayoutDashboard, label: t('Overview', 'نظرة عامة') },
     { id: 'orders', icon: ShoppingCart, label: t('Orders', 'الطلبات') },
+    { id: 'categories', icon: Layers3, label: t('Categories', 'الفئات', '分类') },
     { id: 'products', icon: MessageCircle, label: t('Top-up amounts', 'مبالغ الشحن', '充值金额') },
     { id: 'pricing', icon: DollarSign, label: t('Custom pricing', 'تسعير خاص', '自定义价格') },
     { id: 'users', icon: Users, label: t('Users', 'المستخدمين') },
     { id: 'access', icon: Ban, label: t('Access blocks', 'حظر الوصول', '访问封锁') },
     { id: 'providers', icon: Server, label: t('Providers', 'الموردين') },
-    { id: 'promotions', icon: TicketPercent, label: t('WAHO Offers', 'عروض WAHO') },
+    { id: 'promotions', icon: TicketPercent, label: t('Promotions', 'العروض', '促销') },
     { id: 'banners', icon: Megaphone, label: t('Banners', 'الإعلانات', '横幅') },
     { id: 'content', icon: FilePenLine, label: t('Website text', 'نصوص الموقع', '网站文本') },
     { id: 'currencies', icon: DollarSign, label: t('Currencies', 'العملات', '货币') },
@@ -1397,7 +1563,7 @@ export default function AdminDashboard() {
                 <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
                   <h3 className="text-lg font-bold text-white mb-4">{t('Provider Status', 'حالة الموردين')}</h3>
                   <div className="space-y-4">
-                    {providers.map((provider) => (
+                    {providers.slice(0, 5).map((provider) => (
                       <div key={provider.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div className={`w-2 h-2 rounded-full ${
@@ -1411,6 +1577,19 @@ export default function AdminDashboard() {
                         </Badge>
                       </div>
                     ))}
+                    {providers.length > 5 && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('providers')}
+                        className="text-sm font-semibold text-emerald-300 hover:text-emerald-200"
+                      >
+                        {t(
+                          `View all ${providers.length} providers`,
+                          `عرض جميع الموردين (${providers.length})`,
+                          `查看全部 ${providers.length} 个供应商`
+                        )}
+                      </button>
+                    )}
                   </div>
                 </Card>
               </div>
@@ -1433,7 +1612,7 @@ export default function AdminDashboard() {
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
                       <TableHead className="text-white/50">{t('Order ID', 'رقم الطلب')}</TableHead>
-                      <TableHead className="text-white/50">{t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}</TableHead>
+                      <TableHead className="text-white/50">{t('Product', 'المنتج', '产品')}</TableHead>
                       <TableHead className="text-white/50">{t('Amount', 'المبلغ')}</TableHead>
                       <TableHead className="text-white/50">{t('Status', 'الحالة')}</TableHead>
                       <TableHead className="text-white/50">{t('Date', 'التاريخ')}</TableHead>
@@ -1497,8 +1676,8 @@ export default function AdminDashboard() {
                         </div>
                         <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-white/10 pt-4 text-sm">
                           <div className="min-w-0">
-                            <dt className="text-xs text-white/45">{t('WAHO ID', 'معرف WAHO', 'WAHO ID')}</dt>
-                            <dd className="mt-1 break-all font-medium text-white">{order.gameUserId || '-'}</dd>
+                            <dt className="text-xs text-white/45">{getOrderReferenceLabel(order)}</dt>
+                            <dd className="mt-1 break-all font-medium text-white">{getOrderReferenceValue(order)}</dd>
                           </div>
                           <div>
                             <dt className="text-xs text-white/45">{t('Amount', 'المبلغ', '金额')}</dt>
@@ -1513,6 +1692,21 @@ export default function AdminDashboard() {
                             <dd className="mt-1 text-white/70">{formatDate(order.createdAt)}</dd>
                           </div>
                         </dl>
+                        {canManuallyFulfill(order) && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            onClick={() => openManualFulfillment(order)}
+                            className="mt-4 w-full bg-[#f7b928] text-[#07152e] hover:bg-[#ffd05a]"
+                          >
+                            <Zap className="h-4 w-4" />
+                            {order.status === 'completed'
+                              ? t('Send delivery again', 'إعادة إرسال التسليم', '重新发送交付')
+                              : order.fulfillmentMode === 'manual_code'
+                                ? t('Deliver code', 'تسليم الرمز', '交付代码')
+                                : t('Mark top-up complete', 'إكمال الشحن', '完成充值')}
+                          </Button>
+                        )}
                       </Card>
                     ))}
                   </div>
@@ -1522,13 +1716,14 @@ export default function AdminDashboard() {
                       <TableHeader>
                         <TableRow className="border-white/10">
                           <TableHead className="text-white/50">{t('Order ID', 'رقم الطلب')}</TableHead>
-                          <TableHead className="text-white/50">{t('WAHO Top-Up', 'شحن WAHO', 'WAHO 充值')}</TableHead>
+                          <TableHead className="text-white/50">{t('Product', 'المنتج', '产品')}</TableHead>
                           <TableHead className="text-white/50">{t('Top-up amount', 'مبلغ الشحن', '充值金额')}</TableHead>
-                          <TableHead className="text-white/50">{t('WAHO ID', 'معرف WAHO')}</TableHead>
+                          <TableHead className="text-white/50">{t('Account / delivery', 'الحساب / التسليم', '账号 / 交付')}</TableHead>
                           <TableHead className="text-white/50">{t('Amount', 'المبلغ')}</TableHead>
                           <TableHead className="text-white/50">{t('Payment', 'الدفع')}</TableHead>
                           <TableHead className="text-white/50">{t('Status', 'الحالة')}</TableHead>
                           <TableHead className="text-white/50">{t('Date', 'التاريخ')}</TableHead>
+                          <TableHead className="text-white/50">{t('Action', 'الإجراء', '操作')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1537,7 +1732,7 @@ export default function AdminDashboard() {
                             <TableCell className="font-mono text-sm text-white">{order.id}</TableCell>
                             <TableCell className="text-white">{getOrderGameName(order)}</TableCell>
                             <TableCell className="text-[#f7b928]">{getOrderPackageName(order)}</TableCell>
-                            <TableCell className="text-white/70">{order.gameUserId || '-'}</TableCell>
+                            <TableCell className="text-white/70">{getOrderReferenceValue(order)}</TableCell>
                             <TableCell className="font-medium text-[#f7b928]">
                               {formatCurrency(order.finalPrice)} IQD
                             </TableCell>
@@ -1548,6 +1743,25 @@ export default function AdminDashboard() {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-sm text-white/50">{formatDate(order.createdAt)}</TableCell>
+                            <TableCell>
+                              {canManuallyFulfill(order) ? (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openManualFulfillment(order)}
+                                  className="border-[#f7b928]/35 text-[#f7b928] hover:bg-[#f7b928]/10 hover:text-[#ffd05a]"
+                                >
+                                  {order.status === 'completed'
+                                    ? t('Resend', 'إعادة الإرسال', '重新发送')
+                                    : order.fulfillmentMode === 'manual_code'
+                                      ? t('Deliver code', 'تسليم الرمز', '交付代码')
+                                      : t('Complete', 'إكمال', '完成')}
+                                </Button>
+                              ) : (
+                                <span className="text-xs text-white/30">-</span>
+                              )}
+                            </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -1563,16 +1777,87 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          <Dialog open={Boolean(fulfillmentOrder)} onOpenChange={(open) => {
+            if (!open) {
+              setFulfillmentOrder(null);
+              setFulfillmentCode('');
+              setFulfillmentNote('');
+            }
+          }}>
+            <DialogContent className="border-[#f7b928]/20 bg-[#06152f] text-white">
+              <DialogHeader>
+                <DialogTitle>
+                  {fulfillmentOrder?.fulfillmentMode === 'manual_code'
+                    ? t('Deliver purchased code', 'تسليم الرمز المشترى', '交付购买代码')
+                    : t('Complete manual top-up', 'إكمال الشحن اليدوي', '完成手动充值')}
+                </DialogTitle>
+                <DialogDescription className="text-white/60">
+                  {t(
+                    'The customer receives a WhatsApp confirmation immediately after you complete this order.',
+                    'يتلقى العميل تأكيداً عبر واتساب فور إكمال هذا الطلب.',
+                    '完成订单后，客户会立即收到 WhatsApp 确认。'
+                  )}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={fulfillManualOrder} className="space-y-4">
+                {fulfillmentOrder?.fulfillmentMode === 'manual_code' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="fulfillment-code">{t('Purchased code', 'الرمز المشترى', '购买代码')}</Label>
+                    <Input
+                      id="fulfillment-code"
+                      value={fulfillmentCode}
+                      onChange={(event) => setFulfillmentCode(event.target.value)}
+                      minLength={3}
+                      required
+                      autoComplete="off"
+                      className="border-white/15 bg-white/5 font-mono text-white"
+                    />
+                    <p className="text-xs text-white/45">
+                      {t('The code is encrypted in the database and sent only to this customer.', 'يتم تشفير الرمز في قاعدة البيانات وإرساله لهذا العميل فقط.', '代码在数据库中加密，仅发送给该客户。')}
+                    </p>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <Label htmlFor="fulfillment-note">{t('Internal note', 'ملاحظة داخلية', '内部备注')}</Label>
+                  <Input
+                    id="fulfillment-note"
+                    value={fulfillmentNote}
+                    onChange={(event) => setFulfillmentNote(event.target.value)}
+                    placeholder={t('Optional operator note', 'ملاحظة اختيارية للموظف', '可选操作备注')}
+                    className="border-white/15 bg-white/5 text-white"
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setFulfillmentOrder(null)} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                    {t('Cancel', 'إلغاء', '取消')}
+                  </Button>
+                  <Button type="submit" disabled={isMutating} className="bg-[#f7b928] text-[#07152e] hover:bg-[#ffd05a]">
+                    {isMutating ? t('Sending...', 'جارٍ الإرسال...', '发送中...') : t('Complete and notify', 'إكمال وإشعار', '完成并通知')}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {activeTab === 'categories' && (
+            <CatalogCategoryManager
+              categories={categories}
+              isMutating={isMutating}
+              onSave={saveCatalogCategory}
+              onToggle={toggleCatalogCategory}
+            />
+          )}
+
           {activeTab === 'products' && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">{t('WAHO-first catalog', 'كتالوج يبدأ بـ WAHO', 'WAHO 优先目录')}</h2>
+                  <h2 className="text-2xl font-bold text-white">{t('Products and top-up amounts', 'المنتجات ومبالغ الشحن', '产品和充值金额')}</h2>
                   <p className="mt-1 text-sm text-white/50">
                     {t(
-                      'WAHO stays the active launch product. Add other top-up products here only when their provider, pricing, and support flow are ready.',
-                      'يبقى WAHO منتج الإطلاق النشط. أضف منتجات شحن أخرى هنا فقط عندما يكون المورد والتسعير والدعم جاهزاً.',
-                      'WAHO 仍是当前上线主产品。只有在供应商、价格和支持流程准备好后，才在此添加其他充值产品。'
+                      'Connect each product to a category and choose automatic or manual delivery.',
+                      'اربط كل منتج بفئة واختر التسليم التلقائي أو اليدوي.',
+                      '将每个产品关联到分类，并选择自动或手动交付。'
                     )}
                   </p>
                 </div>
@@ -1596,14 +1881,14 @@ export default function AdminDashboard() {
               </div>
 
               <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
-                <DialogContent className="max-w-2xl border-emerald-800/30 bg-slate-950 text-white">
+                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto border-emerald-800/30 bg-slate-950 text-white">
                   <DialogHeader>
                     <DialogTitle>{t('Add product', 'إضافة منتج', '添加产品')}</DialogTitle>
                     <DialogDescription className="text-white/60">
                       {t(
-                        'New products are inactive by default so WAHO remains the only live customer flow until you enable them.',
-                        'المنتجات الجديدة غير نشطة افتراضياً ليبقى WAHO مسار العملاء المباشر الوحيد حتى تفعّلها.',
-                        '新产品默认未启用，因此在你启用前，WAHO 仍是唯一上线客户流程。'
+                        'New products remain hidden until you have checked their packages and delivery method.',
+                        'تبقى المنتجات الجديدة مخفية حتى تتحقق من الباقات وطريقة التسليم.',
+                        '新产品会保持隐藏，直到你检查套餐和交付方式。'
                       )}
                     </DialogDescription>
                   </DialogHeader>
@@ -1655,6 +1940,35 @@ export default function AdminDashboard() {
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
+                        <Label htmlFor="product-catalog-category">{t('Storefront category', 'فئة واجهة المتجر', '店铺分类')}</Label>
+                        <select
+                          id="product-catalog-category"
+                          value={productForm.catalogCategoryId}
+                          onChange={(event) => setProductForm((current) => ({ ...current, catalogCategoryId: event.target.value }))}
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                          required
+                        >
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>{category.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="product-fulfillment">{t('Delivery method', 'طريقة التسليم', '交付方式')}</Label>
+                        <select
+                          id="product-fulfillment"
+                          value={productForm.fulfillmentMode}
+                          onChange={(event) => setProductForm((current) => ({ ...current, fulfillmentMode: event.target.value }))}
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                        >
+                          <option value="MANUAL_CODE">{t('Manual code by WhatsApp', 'رمز يدوي عبر واتساب', '通过 WhatsApp 手动发码')}</option>
+                          <option value="MANUAL_TOPUP">{t('Manual account top-up', 'شحن حساب يدوي', '手动账号充值')}</option>
+                          <option value="WAHO_API">{t('WAHO API (automatic)', 'واجهة WAHO (تلقائي)', 'WAHO API（自动）')}</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
                         <Label htmlFor="product-description">{t('English description', 'الوصف بالإنجليزية', '英文描述')}</Label>
                         <Input
                           id="product-description"
@@ -1669,6 +1983,26 @@ export default function AdminDashboard() {
                           id="product-description-ar"
                           value={productForm.descriptionAr}
                           onChange={(event) => setProductForm((current) => ({ ...current, descriptionAr: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="product-name-zh">{t('Chinese name', 'الاسم بالصينية', '中文名称')}</Label>
+                        <Input
+                          id="product-name-zh"
+                          value={productForm.nameZh}
+                          onChange={(event) => setProductForm((current) => ({ ...current, nameZh: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="product-description-zh">{t('Chinese description', 'الوصف بالصينية', '中文描述')}</Label>
+                        <Input
+                          id="product-description-zh"
+                          value={productForm.descriptionZh}
+                          onChange={(event) => setProductForm((current) => ({ ...current, descriptionZh: event.target.value }))}
                           className="bg-slate-900 border-emerald-800/30 text-white"
                         />
                       </div>
@@ -1692,6 +2026,17 @@ export default function AdminDashboard() {
                           className="bg-slate-900 border-emerald-800/30 text-white"
                         />
                       </div>
+                    </div>
+                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-slate-900 px-3 py-2">
+                      <div>
+                        <Label htmlFor="product-requires-user-id">{t('Ask for an account ID', 'طلب معرف الحساب', '要求账号 ID')}</Label>
+                        <p className="mt-1 text-xs text-white/40">{t('Turn this off for products delivered as a purchased code.', 'أوقفه للمنتجات التي تُسلّم كرمز مشترى.', '购买代码类产品请关闭此项。')}</p>
+                      </div>
+                      <Switch
+                        id="product-requires-user-id"
+                        checked={productForm.requiresUserId}
+                        onCheckedChange={(checked) => setProductForm((current) => ({ ...current, requiresUserId: checked }))}
+                      />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
@@ -1738,7 +2083,7 @@ export default function AdminDashboard() {
                   <DialogHeader>
                     <DialogTitle>{t('Add top-up amount', 'إضافة مبلغ شحن', '添加充值金额')}</DialogTitle>
                     <DialogDescription className="text-white/60">
-                      {t('Create a recharge amount. WAHO remains selected by default.', 'أنشئ مبلغ شحن. يبقى WAHO محدداً افتراضياً.', '创建充值金额。WAHO 默认选中。')}
+                      {t('Create the balance and customer price for the selected product.', 'أنشئ الرصيد وسعر العميل للمنتج المحدد.', '为所选产品创建余额和客户价格。')}
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={createTopupPackage} className="space-y-4">
@@ -1755,6 +2100,26 @@ export default function AdminDashboard() {
                             <option key={product.id} value={product.id}>{product.name}</option>
                           ))}
                         </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="topup-name">{t('Package name', 'اسم الباقة', '套餐名称')}</Label>
+                        <Input
+                          id="topup-name"
+                          value={topupForm.name}
+                          onChange={(event) => setTopupForm((current) => ({ ...current, name: event.target.value }))}
+                          placeholder={t('Generated when empty', 'يُنشأ تلقائياً عند تركه فارغاً', '留空时自动生成')}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="topup-name-ar">{t('Arabic package name', 'اسم الباقة بالعربية', '阿拉伯语套餐名称')}</Label>
+                        <Input
+                          id="topup-name-ar"
+                          dir="rtl"
+                          value={topupForm.nameAr}
+                          onChange={(event) => setTopupForm((current) => ({ ...current, nameAr: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="topup-amount">{t('Amount', 'المبلغ')}</Label>
@@ -1786,6 +2151,25 @@ export default function AdminDashboard() {
                           min="1"
                           value={topupForm.salePrice}
                           onChange={(event) => setTopupForm((current) => ({ ...current, salePrice: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="topup-unit">{t('Balance unit', 'وحدة الرصيد', '余额单位')}</Label>
+                        <Input
+                          id="topup-unit"
+                          value={topupForm.unit}
+                          onChange={(event) => setTopupForm((current) => ({ ...current, unit: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="topup-unit-ar">{t('Arabic balance unit', 'وحدة الرصيد بالعربية', '阿拉伯语余额单位')}</Label>
+                        <Input
+                          id="topup-unit-ar"
+                          dir="rtl"
+                          value={topupForm.unitAr}
+                          onChange={(event) => setTopupForm((current) => ({ ...current, unitAr: event.target.value }))}
                           className="bg-slate-900 border-emerald-800/30 text-white"
                         />
                       </div>
@@ -2053,7 +2437,7 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell className="text-white/70">{getPricingRuleTarget(rule)}</TableCell>
                         <TableCell className="text-white/70">
-                          {rule.packageName ?? rule.productName ?? t('All WAHO top-ups', 'كل شحن WAHO', '全部 WAHO 充值')}
+                          {rule.packageName ?? rule.productName ?? t('All recharge products', 'كل منتجات الشحن', '全部充值产品')}
                         </TableCell>
                         <TableCell className="font-semibold text-emerald-300">{getPricingRuleValue(rule)}</TableCell>
                         <TableCell>
@@ -2111,7 +2495,7 @@ export default function AdminDashboard() {
                   <DialogHeader>
                     <DialogTitle>{t('Add Provider', 'إضافة مورد')}</DialogTitle>
                     <DialogDescription className="text-white/60">
-                      {t('Add a fulfillment route for WAHO top-ups with its own priority and balance threshold.', 'أضف مسار تنفيذ لشحن WAHO مع أولوية وحد رصيد خاص به.', '添加 WAHO 充值履约路线，并设置优先级和余额阈值。')}
+                      {t('Add a fulfillment route with its own priority and balance threshold.', 'أضف مسار تنفيذ بأولوية وحد رصيد خاص به.', '添加履约路线，并设置其优先级和余额阈值。')}
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={createProviderAccount} className="space-y-4">
@@ -2320,7 +2704,7 @@ export default function AdminDashboard() {
                   <DialogHeader>
                     <DialogTitle>{t('Create Promotion', 'إنشاء عرض')}</DialogTitle>
                     <DialogDescription className="text-white/60">
-                      {t('Create a WAHO top-up offer that can be shown on the offers page.', 'أنشئ عرض شحن WAHO يمكن عرضه في صفحة العروض.', '创建可显示在优惠页的 WAHO 充值优惠。')}
+                      {t('Create a recharge offer that can be shown on the offers page.', 'أنشئ عرض شحن يمكن عرضه في صفحة العروض.', '创建可显示在优惠页的充值优惠。')}
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={createPromotion} className="space-y-4">
@@ -2479,7 +2863,7 @@ export default function AdminDashboard() {
                     {t('Export', 'تصدير', '导出')}
                   </Button>
                   <Button
-                    onClick={() => setBannerDialogOpen(true)}
+                    onClick={() => openBannerEditor()}
                     className="bg-gradient-to-r from-emerald-500 to-teal-600"
                   >
                     <Megaphone className="w-4 h-4 mr-2" />
@@ -2488,12 +2872,17 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <Dialog open={bannerDialogOpen} onOpenChange={setBannerDialogOpen}>
-                <DialogContent className="border-emerald-800/30 bg-slate-950 text-white">
+              <Dialog open={bannerDialogOpen} onOpenChange={(open) => {
+                setBannerDialogOpen(open);
+                if (!open) setEditingBannerId(null);
+              }}>
+                <DialogContent className="max-h-[90vh] overflow-y-auto border-emerald-800/30 bg-slate-950 text-white">
                   <DialogHeader>
-                    <DialogTitle>{t('Create Banner', 'إنشاء إعلان', '创建横幅')}</DialogTitle>
+                    <DialogTitle>{editingBannerId
+                      ? t('Edit banner', 'تعديل الإعلان', '编辑横幅')
+                      : t('Create banner', 'إنشاء إعلان', '创建横幅')}</DialogTitle>
                     <DialogDescription className="text-white/60">
-                      {t('Publish a scheduled WAHO top-up banner on the homepage.', 'انشر إعلان شحن WAHO مجدولاً على الصفحة الرئيسية.', '在首页发布定时 WAHO 充值横幅。')}
+                      {t('Add a homepage slide with separate desktop and mobile artwork.', 'أضف شريحة للصفحة الرئيسية بصور منفصلة للكمبيوتر والهاتف.', '添加首页轮播，并分别设置桌面和手机图片。')}
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={createBanner} className="space-y-4">
@@ -2560,6 +2949,16 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="space-y-2">
+                      <Label htmlFor="banner-mobile-image">{t('Mobile image path', 'مسار صورة الهاتف', '手机图片路径')}</Label>
+                      <Input
+                        id="banner-mobile-image"
+                        value={bannerForm.mobileImage}
+                        onChange={(event) => setBannerForm((current) => ({ ...current, mobileImage: event.target.value }))}
+                        placeholder={t('Optional: desktop image is used when empty', 'اختياري: تستخدم صورة الكمبيوتر عند تركه فارغاً', '可选：留空时使用桌面图片')}
+                        className="bg-slate-900 border-emerald-800/30 text-white"
+                      />
+                    </div>
+                    <div className="space-y-2">
                       <Label htmlFor="banner-link">{t('Link', 'الرابط', '链接')}</Label>
                       <Input
                         id="banner-link"
@@ -2567,6 +2966,20 @@ export default function AdminDashboard() {
                         onChange={(event) => setBannerForm((current) => ({ ...current, link: event.target.value }))}
                         className="bg-slate-900 border-emerald-800/30 text-white"
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="banner-product">{t('Linked product', 'المنتج المرتبط', '关联产品')}</Label>
+                      <select
+                        id="banner-product"
+                        value={bannerForm.gameId}
+                        onChange={(event) => setBannerForm((current) => ({ ...current, gameId: event.target.value }))}
+                        className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                      >
+                        <option value="">{t('No product: use the link only', 'بدون منتج: استخدم الرابط فقط', '无产品：仅使用链接')}</option>
+                        {products.map((product) => (
+                          <option key={product.id} value={product.id}>{product.name}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
@@ -2649,11 +3062,17 @@ export default function AdminDashboard() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Switch
-                            checked={banner.isActive}
-                            disabled={isMutating}
-                            onCheckedChange={(checked) => void toggleBannerActive(banner.id, checked)}
-                          />
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={banner.isActive}
+                              disabled={isMutating}
+                              onCheckedChange={(checked) => void toggleBannerActive(banner.id, checked)}
+                            />
+                            <Button type="button" size="sm" variant="outline" onClick={() => openBannerEditor(banner)} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                              <FilePenLine className="h-3.5 w-3.5" />
+                              {t('Edit', 'تعديل', '编辑')}
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -3607,7 +4026,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab !== 'overview' && activeTab !== 'orders' && activeTab !== 'products' && activeTab !== 'pricing' && activeTab !== 'providers' && activeTab !== 'promotions' && activeTab !== 'banners' && activeTab !== 'currencies' && activeTab !== 'reports' && activeTab !== 'monitoring' && activeTab !== 'users' && activeTab !== 'access' && activeTab !== 'content' && activeTab !== 'wallets' && (
+          {activeTab !== 'overview' && activeTab !== 'orders' && activeTab !== 'categories' && activeTab !== 'products' && activeTab !== 'pricing' && activeTab !== 'providers' && activeTab !== 'promotions' && activeTab !== 'banners' && activeTab !== 'currencies' && activeTab !== 'reports' && activeTab !== 'monitoring' && activeTab !== 'users' && activeTab !== 'access' && activeTab !== 'content' && activeTab !== 'wallets' && (
             <div className="flex flex-col items-center justify-center h-96">
               <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
                 <Activity className="w-10 h-10 text-white/20" />

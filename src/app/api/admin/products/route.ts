@@ -22,6 +22,8 @@ export async function POST(request: NextRequest) {
       select: { id: true },
     });
     if (existing) throw new Error('PRODUCT_EXISTS');
+    const category = await prisma.catalogCategory.findUnique({ where: { id: body.catalogCategoryId } });
+    if (!category) throw new Error('CATEGORY_NOT_FOUND');
 
     const product = await prisma.product.create({
       data: {
@@ -29,11 +31,15 @@ export async function POST(request: NextRequest) {
         slug: body.slug,
         name: body.name,
         nameAr: body.nameAr,
+        nameZh: body.nameZh || '',
         description: body.description,
         descriptionAr: body.descriptionAr,
+        descriptionZh: body.descriptionZh || '',
         image: body.image,
         banner: body.banner || null,
         category: body.category,
+        catalogCategoryId: body.catalogCategoryId,
+        fulfillmentMode: body.fulfillmentMode,
         publisher: body.publisher,
         isActive: body.isActive,
         isPopular: body.isPopular,

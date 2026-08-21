@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { Suspense, use, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -53,6 +52,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
     dir,
     user,
     isAuthenticated,
+    isAccountLoading,
     selectedCountry,
     refreshAccount,
     formatLocalAmount,
@@ -82,6 +82,12 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
 
   useEffect(() => {
+    if (isAccountLoading) return;
+    if (!isAuthenticated) {
+      router.replace(`/auth?next=${encodeURIComponent(`/top-up/${slug}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`)}`);
+      return;
+    }
+
     let active = true;
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), 10000);
@@ -90,7 +96,11 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       setIsLoadingProduct(true);
       setProductError(false);
       try {
-        const response = await fetch(`/api/products/${slug}?country=${selectedCountry.id}`, { signal: controller.signal });
+        const response = await fetch(`/api/products/${slug}?country=${selectedCountry.id}`, { credentials: 'include', signal: controller.signal });
+        if (response.status === 401) {
+          router.replace(`/auth?next=${encodeURIComponent(`/top-up/${slug}`)}`);
+          return;
+        }
         if (!response.ok) throw new Error('PRODUCT_UNAVAILABLE');
         const payload = await response.json();
         if (!payload?.product) throw new Error('PRODUCT_UNAVAILABLE');
@@ -112,7 +122,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       window.clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [selectedCountry.id, slug]);
+  }, [isAccountLoading, isAuthenticated, router, searchParams, selectedCountry.id, slug]);
 
   useEffect(() => {
     let active = true;
@@ -198,7 +208,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
     });
   }, [step]);
 
-  if (isLoadingProduct) {
+  if (isAccountLoading || isLoadingProduct || !isAuthenticated) {
     return (
       <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
         <Header />
@@ -206,12 +216,12 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
           <div role="status" aria-live="polite" className="mx-auto max-w-3xl">
             <div className="mb-5 flex items-center gap-3 text-sm font-medium text-zinc-600 dark:text-zinc-300">
               <Loader2 className="h-5 w-5 animate-spin text-blue-600 motion-reduce:animate-none" />
-              {t('Opening the available WAHO amounts...', 'جارٍ فتح مبالغ WAHO المتاحة...', '正在打开可用的 WAHO 金额...')}
+              {t('Opening the available amounts...', 'جارٍ فتح المبالغ المتاحة...', '正在打开可用金额...')}
             </div>
             <div className="h-16 animate-pulse rounded-lg bg-white dark:bg-zinc-900" />
             <div className="mt-5 h-14 animate-pulse rounded-lg bg-white dark:bg-zinc-900" />
             <div className="mt-5 h-80 animate-pulse rounded-lg bg-white dark:bg-zinc-900" />
-            <span className="sr-only">{t('Loading your WAHO top-up', 'جاري تحميل شحن WAHO', '正在加载 WAHO 充值')}</span>
+            <span className="sr-only">{t('Loading your recharge', 'جارٍ تحميل عملية الشحن', '正在加载充值')}</span>
           </div>
         </main>
       </div>
@@ -228,7 +238,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
               <AlertCircle className="h-6 w-6" />
             </div>
             <h1 className="mt-4 text-2xl font-semibold text-zinc-950 dark:text-white">
-              {t('WAHO top-up is temporarily unavailable', 'شحن WAHO غير متاح مؤقتاً', 'WAHO 充值暂时不可用')}
+              {t('This recharge is temporarily unavailable', 'عملية الشحن غير متاحة مؤقتاً', '该充值暂时不可用')}
             </h1>
             <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
               {t('We could not open the top-up page. Try again in a moment.', 'تعذر فتح صفحة الشحن. حاول مرة أخرى بعد قليل.', '无法打开充值页面，请稍后重试。')}
@@ -238,7 +248,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                 {t('Try again', 'حاول مرة أخرى', '重试')}
               </Button>
               <Button asChild variant="outline">
-                <Link href="/top-up">{t('Back to amounts', 'العودة إلى المبالغ', '返回金额选择')}</Link>
+                <Link href="/#categories">{t('Back to categories', 'العودة إلى الفئات', '返回分类')}</Link>
               </Button>
             </div>
           </section>
@@ -262,6 +272,10 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
   };
 
   const handleVerifyUserId = async () => {
+    if (game.fulfillmentMode !== 'waho_api') {
+      setVerifiedUsername(t('Ready for manual handling', 'جاهز للمعالجة اليدوية', '可进行人工处理'));
+      return;
+    }
     if (!userId.trim()) {
       const message = t('Enter your WAHO ID first', 'أدخل معرف WAHO أولاً', '请先输入 WAHO ID');
       setWahoIdError(message);
@@ -377,7 +391,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
         body: JSON.stringify({
           productSlug: game.slug,
           packageId: selectedPackage.id,
-          wahoId: userId,
+          wahoId: game.requiresUserId ? userId : '',
           zoneId,
           paymentMethod,
           otp: financialOtp,
@@ -454,19 +468,19 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       <Header />
 
       <main className="container mx-auto max-w-6xl px-3 pb-40 pt-3 sm:px-4 sm:pt-8 lg:pb-8">
-        <Link href="/top-up" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--v2-muted)] hover:text-[var(--v2-gold)]">
+        <Link href="/#categories" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--v2-muted)] hover:text-[var(--v2-gold)]">
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-          {t('All amounts', 'كل المبالغ', '全部金额')}
+          {t('All categories', 'كل الفئات', '所有分类')}
         </Link>
 
         <section data-v2-checkout-brand className="v2-surface mt-2 flex items-center gap-2.5 p-2.5 sm:mt-3 sm:gap-3 sm:p-4">
           <div className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-md border border-black/10 bg-white dark:border-white/10 sm:h-12 sm:w-12 sm:rounded-lg">
-            <Image data-visual-required-image src="/brand/waho-app-icon.webp" alt="" fill className="object-cover" sizes="48px" priority />
+            <img data-visual-required-image src={game.image} alt="" className="h-full w-full object-contain" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold text-[var(--v2-gold)]">WAHO</p>
+            <p className="text-xs font-bold text-[var(--v2-gold)]">{t('Digital recharge', 'شحن رقمي', '数字充值')}</p>
             <h1 className="truncate text-base font-semibold text-zinc-950 dark:text-white sm:text-xl">
-              {t('Balance top-up', 'شحن الرصيد', '余额充值')}
+              {language === 'ar' ? game.nameAr : language === 'zh' ? game.nameZh || game.name : game.name}
             </h1>
             <p className="mt-0.5 hidden text-xs text-zinc-500 dark:text-zinc-400 sm:block">
               {t('Choose, check, confirm', 'اختر وتحقق ثم أكد', '选择、检查、确认')}
@@ -474,7 +488,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
           </div>
           <div className="hidden items-center gap-2 text-xs font-medium text-zinc-500 dark:text-zinc-400 sm:flex">
             <ShieldCheck className="h-4 w-4 text-[var(--v2-gold)]" />
-            {t('Account checked before payment', 'فحص الحساب قبل الدفع', '付款前检查账号')}
+            {game.requiresUserId ? t('Account checked before payment', 'فحص الحساب قبل الدفع', '付款前检查账号') : t('Delivery through WhatsApp', 'التسليم عبر واتساب', '通过 WhatsApp 交付')}
           </div>
         </section>
 
@@ -483,7 +497,9 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
             <ol className="grid grid-cols-4 gap-1 sm:gap-2">
               {checkoutSteps.map((item, index) => {
                 const state = getCheckoutStepState(step, item.id);
-                const label = item.label[language];
+                const label = item.id === 'details' && !game.requiresUserId
+                  ? t('Delivery', 'التسليم', '交付')
+                  : item.label[language];
                 const canReturn = state === 'complete';
                 return (
                   <li key={item.id} className="min-w-0">
@@ -527,7 +543,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     {t('Choose your amount', 'اختر المبلغ', '选择金额')}
                   </h2>
                   <p className="mt-1 text-xs leading-5 text-zinc-600 dark:text-zinc-300 sm:mt-2 sm:text-sm sm:leading-6">
-                    {t('This is the balance that will be added to the WAHO account.', 'هذا هو الرصيد الذي سيضاف إلى حساب WAHO.', '此金额将充值到 WAHO 账号。')}
+                    {t('Choose the balance or code value you want to order.', 'اختر قيمة الرصيد أو الرمز الذي تريد طلبه.', '选择您要订购的余额或充值码面值。')}
                   </p>
 
                   {availablePackages.length > 0 ? (
@@ -539,7 +555,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                             key={pkg.id}
                             type="button"
                             aria-pressed={isSelected}
-                            aria-label={`${formatAmount(pkg.amount)} IQD${pkg.isPopular ? `, ${t('Popular', 'الأكثر اختياراً', '热门')}` : ''}`}
+                            aria-label={`${formatAmount(pkg.amount)} ${language === 'ar' ? pkg.unitAr : pkg.unit}${pkg.isPopular ? `, ${t('Popular', 'الأكثر اختياراً', '热门')}` : ''}`}
                             onClick={() => setSelectedPackage(pkg)}
                             className={`v2-wizard-package v2-mobile-wizard-package relative flex min-h-[126px] flex-col justify-between rounded-lg border p-2 text-start transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)] sm:min-h-40 sm:p-4 ${
                               isSelected
@@ -551,8 +567,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                               <span className="block text-[1.05rem] font-semibold leading-none tabular-nums text-zinc-950 dark:text-white sm:text-2xl">{formatAmount(pkg.amount)}</span>
                               <span className="mt-1.5 inline-flex items-center gap-1 text-[9px] font-bold leading-3 text-[var(--v2-gold)] sm:mt-2 sm:whitespace-nowrap sm:text-xs">
                                 <Gem className="h-3 w-3 text-[var(--v2-blue)] sm:h-3.5 sm:w-3.5" />
-                                <span className="sm:hidden">WAHO</span>
-                                <span className="hidden sm:inline">{t('WAHO balance', 'رصيد WAHO', 'WAHO 余额')}</span>
+                                <span>{language === 'ar' ? pkg.unitAr : pkg.unit}</span>
                               </span>
                               {pkg.isPopular && !isSelected && (
                                 <span className="mt-1.5 block w-fit rounded bg-[#ffd33d] px-1.5 py-0.5 text-[8px] font-semibold text-[#071b46] sm:mt-2 sm:rounded-full sm:px-2 sm:py-1 sm:text-[10px]">
@@ -583,7 +598,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     </div>
                   ) : (
                     <div className="mt-5 rounded-lg bg-zinc-100 p-4 text-sm leading-6 text-zinc-600 dark:bg-zinc-950 dark:text-zinc-300">
-                      {t('No WAHO top-up amounts are available right now. Please try again later.', 'لا توجد مبالغ شحن WAHO متاحة حالياً. يرجى المحاولة لاحقاً.', '目前没有可用的 WAHO 充值金额，请稍后重试。')}
+                      {t('No recharge amounts are available right now. Please try again later.', 'لا توجد مبالغ شحن متاحة حالياً. يرجى المحاولة لاحقاً.', '目前没有可用的充值金额，请稍后重试。')}
                     </div>
                   )}
 
@@ -593,7 +608,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     className="v2-primary-button mt-6 hidden w-full lg:flex"
                   >
                     {selectedPackage
-                      ? t('Continue with {{amount}} IQD', 'تابع مع {{amount}} د.ع', '继续充值 {{amount}} IQD').replace('{{amount}}', selectedAmountText)
+                      ? t('Continue with {{amount}}', 'تابع مع {{amount}}', '继续选择 {{amount}}').replace('{{amount}}', selectedAmountText)
                       : t('Choose an amount to continue', 'اختر مبلغاً للمتابعة', '选择金额后继续')}
                     <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                   </Button>
@@ -602,47 +617,48 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
 
               {step === 'details' && (
                 <>
-                  <h2 ref={stepHeadingRef} tabIndex={-1} className="text-2xl font-semibold text-zinc-950 outline-none dark:text-white">
-                    {t('Enter your WAHO ID', 'أدخل معرف WAHO', '输入您的 WAHO ID')}
-                  </h2>
-                  <p id="waho-id-help" className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                    {t('Open your WAHO profile and copy the ID shown there. We check the account name before you pay.', 'افتح ملفك في WAHO وانسخ المعرف الظاهر. نتحقق من اسم الحساب قبل الدفع.', '打开 WAHO 个人资料并复制其中的 ID。付款前会核对账号名称。')}
-                  </p>
-
-                  <div className="mt-6">
-                    <Label htmlFor="waho-id" className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
-                      {t('WAHO ID', 'معرف WAHO', 'WAHO ID')}
-                    </Label>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-                      <Input
-                        id="waho-id"
-                        aria-describedby={wahoIdError ? 'waho-id-help waho-id-error' : 'waho-id-help'}
-                        aria-invalid={Boolean(wahoIdError)}
-                        value={userId}
-                        onChange={(event) => {
-                          setUserId(event.target.value.trimStart());
-                          setVerifiedUsername(null);
-                          setWahoIdError('');
-                        }}
-                        autoComplete="off"
-                        placeholder={t('Example: 984231', 'مثال: 984231', '例如：984231')}
-                        className="v2-input h-12 text-base"
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleVerifyUserId}
-                        disabled={isVerifying || userId.trim().length < 3}
-                        variant="outline"
-                        className="h-12 min-w-28"
-                      >
-                        {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
-                        {t('Check ID', 'تحقق من المعرف', '检查 ID')}
-                      </Button>
-                    </div>
-                    {wahoIdError && (
-                      <p id="waho-id-error" role="alert" className="mt-2 text-sm leading-6 text-red-600 dark:text-red-300">{wahoIdError}</p>
-                    )}
-                  </div>
+                  {game.requiresUserId ? (
+                    <>
+                      <h2 ref={stepHeadingRef} tabIndex={-1} className="text-2xl font-semibold text-zinc-950 outline-none dark:text-white">
+                        {t(game.userIdLabel, game.userIdLabelAr, game.userIdLabel)}
+                      </h2>
+                      <p id="waho-id-help" className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+                        {t('Enter the account ID and check it before payment.', 'أدخل معرف الحساب وتحقق منه قبل الدفع.', '输入账号 ID，并在付款前进行检查。')}
+                      </p>
+                      <div className="mt-6">
+                        <Label htmlFor="waho-id" className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{t(game.userIdLabel, game.userIdLabelAr, game.userIdLabel)}</Label>
+                        <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                          <Input
+                            id="waho-id"
+                            aria-describedby={wahoIdError ? 'waho-id-help waho-id-error' : 'waho-id-help'}
+                            aria-invalid={Boolean(wahoIdError)}
+                            value={userId}
+                            onChange={(event) => {
+                              setUserId(event.target.value.trimStart());
+                              setVerifiedUsername(null);
+                              setWahoIdError('');
+                            }}
+                            autoComplete="off"
+                            placeholder={t(game.userIdPlaceholder, game.userIdPlaceholderAr, game.userIdPlaceholder)}
+                            className="v2-input h-12 text-base"
+                          />
+                          <Button type="button" onClick={handleVerifyUserId} disabled={isVerifying || userId.trim().length < 3} variant="outline" className="h-12 min-w-28">
+                            {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgeCheck className="h-4 w-4" />}
+                            {t('Check ID', 'تحقق من المعرف', '检查 ID')}
+                          </Button>
+                        </div>
+                        {wahoIdError && <p id="waho-id-error" role="alert" className="mt-2 text-sm leading-6 text-red-600 dark:text-red-300">{wahoIdError}</p>}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h2 ref={stepHeadingRef} tabIndex={-1} className="text-2xl font-semibold text-zinc-950 outline-none dark:text-white">{t('WhatsApp delivery', 'التسليم عبر واتساب', 'WhatsApp 交付')}</h2>
+                      <div className="mt-4 flex items-start gap-3 rounded-lg border border-[#9bd8f2]/35 bg-[#9bd8f2]/10 p-4">
+                        <MessageCircle className="mt-0.5 h-5 w-5 flex-none text-[#49b7e5]" />
+                        <div><p className="text-sm font-semibold text-zinc-950 dark:text-white">{t('We use your login number', 'نستخدم رقم تسجيل الدخول', '我们使用您的登录号码')}</p><p className="mt-1 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{t('After payment, the purchased code is checked by the team and sent to you on WhatsApp.', 'بعد الدفع يتحقق الفريق من الرمز المشترى ويرسله إليك عبر واتساب.', '付款后，团队会核对购买的充值码并通过 WhatsApp 发送给您。')}</p></div>
+                      </div>
+                    </>
+                  )}
 
                   {game.zoneIdRequired && (
                     <div className="mt-5">
@@ -694,7 +710,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     {t('Choose how to pay', 'اختر طريقة الدفع', '选择付款方式')}
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                    {t('Select a payment method. Your WAHO top-up starts only after payment is confirmed.', 'اختر طريقة الدفع. يبدأ شحن WAHO فقط بعد تأكيد الدفع.', '请选择付款方式。仅在付款确认后才会开始 WAHO 充值。')}
+                    {t('Select a payment method. Your order starts only after payment is confirmed.', 'اختر طريقة الدفع. يبدأ طلبك فقط بعد تأكيد الدفع.', '请选择付款方式。仅在付款确认后才会处理订单。')}
                   </p>
 
                   <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-5 grid gap-3">
@@ -762,21 +778,24 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     {t('Check everything once more', 'تحقق من كل شيء مرة أخيرة', '请再次核对信息')}
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                    {t('Make sure the amount and WAHO account are correct before you place the order.', 'تأكد من صحة المبلغ وحساب WAHO قبل إرسال الطلب.', '提交订单前，请确认金额和 WAHO 账号正确。')}
+                    {game.requiresUserId
+                      ? t('Make sure the amount and account are correct before you place the order.', 'تأكد من صحة المبلغ والحساب قبل إرسال الطلب.', '提交订单前，请确认金额和账号正确。')
+                      : t('Make sure the amount and WhatsApp delivery number are correct.', 'تأكد من صحة المبلغ ورقم واتساب الخاص بالتسليم.', '请确认金额和 WhatsApp 收货号码正确。')}
                   </p>
 
                   <dl className="mt-5 divide-y divide-black/10 rounded-lg bg-zinc-100 px-4 dark:divide-white/10 dark:bg-zinc-950">
                     <div className="flex items-center justify-between gap-4 py-4">
                       <dt className="text-sm text-zinc-500 dark:text-zinc-400">{t('Amount', 'المبلغ', '金额')}</dt>
-                      <dd className="text-sm font-semibold tabular-nums text-zinc-950 dark:text-white">{selectedAmountText} IQD</dd>
+                      <dd className="text-sm font-semibold tabular-nums text-zinc-950 dark:text-white">{selectedAmountText} {language === 'ar' ? selectedPackage.unitAr : selectedPackage.unit}</dd>
                     </div>
-                    <div className="flex items-center justify-between gap-4 py-4">
-                      <dt className="text-sm text-zinc-500 dark:text-zinc-400">{t('WAHO account', 'حساب WAHO', 'WAHO 账号')}</dt>
-                      <dd className="min-w-0 text-end">
-                        <span className="block truncate text-sm font-semibold text-zinc-950 dark:text-white">{verifiedUsername}</span>
-                        <span className="block truncate text-xs text-zinc-500 dark:text-zinc-400">ID: {userId}</span>
-                      </dd>
-                    </div>
+                    {game.requiresUserId ? (
+                      <div className="flex items-center justify-between gap-4 py-4">
+                        <dt className="text-sm text-zinc-500 dark:text-zinc-400">{t('Account', 'الحساب', '账号')}</dt>
+                        <dd className="min-w-0 text-end"><span className="block truncate text-sm font-semibold text-zinc-950 dark:text-white">{verifiedUsername}</span><span className="block truncate text-xs text-zinc-500 dark:text-zinc-400">ID: {userId}</span></dd>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-4 py-4"><dt className="text-sm text-zinc-500 dark:text-zinc-400">{t('Delivery', 'التسليم', '交付')}</dt><dd className="text-sm font-semibold text-zinc-950 dark:text-white">{t('Your WhatsApp number', 'رقم واتساب الخاص بك', '您的 WhatsApp 号码')}</dd></div>
+                    )}
                     <div className="flex items-center justify-between gap-4 py-4">
                       <dt className="text-sm text-zinc-500 dark:text-zinc-400">{t('Payment', 'الدفع', '付款')}</dt>
                       <dd className="text-sm font-semibold text-zinc-950 dark:text-white">{selectedPayment.name}</dd>
@@ -872,7 +891,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                 <div className="v2-surface-raised mt-6 flex items-center justify-between gap-4 p-3 lg:hidden">
                   <div>
                     <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('Selected', 'المحدد', '已选择')}</p>
-                    <p className="mt-0.5 text-sm font-semibold tabular-nums text-zinc-950 dark:text-white">{selectedAmountText} IQD</p>
+                    <p className="mt-0.5 text-sm font-semibold tabular-nums text-zinc-950 dark:text-white">{selectedAmountText} {language === 'ar' ? selectedPackage.unitAr : selectedPackage.unit}</p>
                   </div>
                   <div className="text-end">
                     <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('Total', 'الإجمالي', '总计')}</p>
@@ -888,11 +907,11 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                 <div className="mt-5">
                   <div className="flex items-center gap-3">
                     <div className="relative h-11 w-11 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10">
-                      <Image src="/brand/waho-app-icon.webp" alt="" fill className="object-cover" sizes="44px" />
+                      <img src={game.image} alt="" className="h-full w-full object-contain" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-zinc-950 dark:text-white">WAHO</p>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">{selectedAmountText} IQD</p>
+                      <p className="text-sm font-semibold text-zinc-950 dark:text-white">{language === 'ar' ? game.nameAr : language === 'zh' ? game.nameZh || game.name : game.name}</p>
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">{selectedAmountText} {language === 'ar' ? selectedPackage.unitAr : selectedPackage.unit}</p>
                     </div>
                   </div>
                   <dl className="mt-5 space-y-3 border-t border-black/10 pt-4 text-sm dark:border-white/10">
@@ -911,7 +930,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                       <dd className="tabular-nums">{formatLocalAmount(total)}</dd>
                     </div>
                   </dl>
-                  {verifiedUsername && (
+                  {game.requiresUserId && verifiedUsername && (
                     <div className="mt-4 rounded-lg bg-[#eaf8ee] p-3 dark:bg-[#34c759]/10">
                       <p className="text-xs text-[#1f8f3a] dark:text-[#52d273]">{t('WAHO account', 'حساب WAHO', 'WAHO 账号')}</p>
                       <p className="mt-1 truncate text-sm font-semibold text-zinc-950 dark:text-white">{verifiedUsername}</p>
@@ -945,7 +964,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
           {step === 'package' && (
             <Button type="button" onClick={() => goToStep('details')} disabled={!selectedPackage} className="v2-primary-button w-full">
               {selectedPackage
-                ? t('Continue with {{amount}} IQD', 'تابع مع {{amount}} د.ع', '继续充值 {{amount}} IQD').replace('{{amount}}', selectedAmountText)
+                ? t('Continue with {{amount}}', 'تابع مع {{amount}}', '继续选择 {{amount}}').replace('{{amount}}', selectedAmountText)
                 : t('Choose an amount to continue', 'اختر مبلغاً للمتابعة', '选择金额后继续')}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </Button>
@@ -995,7 +1014,7 @@ function TopUpDetailFallback() {
       <main className="container mx-auto max-w-5xl px-4 py-8" role="status" aria-live="polite">
         <div className="flex items-center gap-3 text-sm font-medium text-zinc-600 dark:text-zinc-300">
           <Loader2 className="h-5 w-5 animate-spin text-blue-600 motion-reduce:animate-none" />
-          {t('Opening your WAHO top-up...', 'جارٍ فتح شحن WAHO...', '正在打开 WAHO 充值...')}
+          {t('Opening your recharge...', 'جارٍ فتح عملية الشحن...', '正在打开充值...')}
         </div>
         <div className="mt-5 h-16 animate-pulse rounded-lg bg-white motion-reduce:animate-none dark:bg-zinc-900" />
         <div className="mt-5 h-80 animate-pulse rounded-lg bg-white motion-reduce:animate-none dark:bg-zinc-900" />

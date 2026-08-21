@@ -19,15 +19,18 @@ function uniquePhone(projectName: string, workerIndex: number) {
   return `+96478${digits.padStart(9, '0')}`;
 }
 
-async function loadWahoProduct(request: APIRequestContext) {
-  const response = await request.get('/api/products');
+async function loadWahoProduct(request: APIRequestContext, headers: Record<string, string>) {
+  const response = await request.get('/api/products', { headers });
   expect(response.status()).toBe(200);
 
   const payload = (await response.json()) as ProductPayload;
-  expect(payload.products).toHaveLength(1);
+  expect(payload.products.map((item) => item.slug)).toEqual(
+    expect.arrayContaining(['waho-top-up', 'waho-asiacell-code'])
+  );
 
-  const product = payload.products[0];
-  expect(product.slug).toBe('waho-top-up');
+  const product = payload.products.find((item) => item.slug === 'waho-top-up');
+  expect(product).toBeTruthy();
+  if (!product) throw new Error('WAHO product missing');
   expect(product.packages.length).toBeGreaterThan(0);
 
   const firstPackage = product.packages.find((item) => item.inStock);
@@ -60,6 +63,7 @@ async function loginWithOtp(request: APIRequestContext, phone: string) {
     return {
       user: ((await verify.json()) as { user: { id: string; phone: string; role: string } }).user,
       headers: { Cookie: `alwasl_session=${sessionCookie}` },
+      sessionCookie: sessionCookie as string,
     };
   }
 
@@ -67,33 +71,55 @@ async function loginWithOtp(request: APIRequestContext, phone: string) {
 }
 
 test.describe('WAHO production smoke', () => {
-  test('renders the WAHO top-up journey from seeded product data', async ({ page, request }) => {
-    const { product, firstPackage } = await loadWahoProduct(request);
-    const unsupportedProducts = await request.get('/api/products?country=zz');
+  test('renders the protected multi-category journey from seeded product data', async ({ page, request }, testInfo) => {
+    const phone = uniquePhone(`catalog-${testInfo.project.name}`, testInfo.workerIndex);
+    const { headers: authenticatedHeaders, sessionCookie } = await loginWithOtp(request, phone);
+    const { product, firstPackage } = await loadWahoProduct(request, authenticatedHeaders);
+
+    const publicProducts = await request.get('/api/products');
+    expect(publicProducts.status()).toBe(200);
+    const publicProductsPayload = (await publicProducts.json()) as ProductPayload;
+    expect(publicProductsPayload.products.length).toBeGreaterThanOrEqual(2);
+    expect(publicProductsPayload.products.every((item) => item.packages.length === 0)).toBe(true);
+
+    const unsupportedProducts = await request.get('/api/products?country=zz', { headers: authenticatedHeaders });
     expect(unsupportedProducts.status()).toBe(200);
     const unsupportedProductsPayload = (await unsupportedProducts.json()) as ProductPayload;
     expect(unsupportedProductsPayload.products.map((item) => item.slug)).toContain(product.slug);
 
-    const unsupportedProduct = await request.get(`/api/products/${product.slug}?country=zz`);
+    const unsupportedProduct = await request.get(`/api/products/${product.slug}?country=zz`, { headers: authenticatedHeaders });
     expect(unsupportedProduct.status()).toBe(200);
     expect((await unsupportedProduct.json()) as { product: { slug: string } }).toMatchObject({
       product: { slug: product.slug },
     });
 
+    await page.addInitScript(() => {
+      localStorage.setItem('alwasl-language', 'en');
+      localStorage.setItem('language', 'en');
+    });
     await page.goto('/');
-    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Choose amount');
+    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Login to see prices');
+    await page.context().addCookies([{
+      name: 'alwasl_session',
+      value: sessionCookie,
+      url: new URL(page.url()).origin,
+    }]);
+    await page.reload();
+    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Choose category');
 
     await page.goto('/top-up');
-    await expect(page.locator('main')).toContainText('WAHO Top-Up', { timeout: 15_000 });
-    const overviewAmount = new Intl.NumberFormat('en-IQ').format(firstPackage.amount);
-    const startTopUpLink = page.getByRole('link', { name: `Choose ${overviewAmount} IQD` }).first();
+    await expect(page).toHaveURL(/\/#categories$/);
+
+    await page.goto('/categories/waho');
+    await expect(page.getByRole('heading', { level: 1, name: 'WAHO', exact: true })).toBeVisible({ timeout: 15_000 });
+    const startTopUpLink = page.locator(`a[href="/top-up/${product.slug}?amount=${firstPackage.amount}"]`).first();
     await expect(startTopUpLink).toBeVisible({ timeout: 15_000 });
     await startTopUpLink.click();
     await expect(page).toHaveURL(new RegExp(`/top-up/${product.slug}\\?amount=${firstPackage.amount}`));
     await expect(page.getByRole('heading', { name: /Choose your amount/i })).toBeVisible();
 
     await page.goto(`/top-up/${product.slug}`);
-    await expect(page.getByRole('heading', { name: /Balance top-up/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: product.name })).toBeVisible();
     await expect(page.getByRole('heading', { name: /Choose your amount/i })).toBeVisible();
 
     const amount = new Intl.NumberFormat('en-IQ').format(firstPackage.amount);
@@ -133,7 +159,7 @@ test.describe('WAHO production smoke', () => {
     expect(walletTopUp.status()).toBe(428);
     expect(await walletTopUp.json()).toEqual({ error: 'OTP verification is required for this action' });
 
-    const { product, firstPackage } = await loadWahoProduct(request);
+    const { product, firstPackage } = await loadWahoProduct(request, authenticatedHeaders);
     const orderWithoutIdempotencyKey = await request.post('/api/orders', {
       headers: authenticatedHeaders,
       data: {

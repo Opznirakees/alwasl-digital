@@ -76,7 +76,7 @@ export default function ProfilePage() {
       href: '/orders',
       icon: ReceiptText,
       title: t('My orders', 'طلباتي', '我的订单'),
-      description: t('Follow every WAHO top-up.', 'تابع كل عملية شحن WAHO.', '查看每一笔 WAHO 充值。'),
+      description: t('Follow every recharge order.', 'تابع كل طلب شحن.', '查看每一笔充值订单。'),
     },
     {
       href: '/wallet',

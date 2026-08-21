@@ -1,47 +1,42 @@
-# WAHO-First Catalog Scope
+# Managed Multi-Category Catalog Scope
 
-This document records the accepted product strategy for the Al-Wasl Digital application.
+This document records the current product strategy for the Al-Wasl Digital recharge application.
 
 ## Scope Baseline
 
-The PDF baseline describes a broader digital-services platform with multiple games, apps, products, categories, promotions, provider routing, wallet operations, reporting, and admin management.
+The PDF baseline describes a digital-services platform with multiple products, categories, promotions, provider routing, wallet operations, reporting, and admin management.
 
 ## Implemented Product Strategy
 
-The production launch remains focused on WAHO account top-ups, because that is the only customer journey currently intended for public use.
+The production storefront is no longer WAHO-only. It launches with two customer-facing recharge categories:
 
-The application is no longer hardcoded as a WAHO-only technical scope:
+- WAHO MasterCard balance packages, prepared for automatic WAHO API fulfillment.
+- WAHO via Asiacell codes, handled manually and delivered privately through WhatsApp.
 
-- WAHO is the active launch product and remains the first public signal.
-- The database supports multiple product records, categories, countries, packages, pricing rules, banners, promotions, and provider routing.
-- Admin users can create additional top-up products from the catalog section.
-- Newly created products are inactive by default, so WAHO remains the only public flow until an operator explicitly enables another product.
-- Extra products must have provider routing, pricing, support process, translations, and QA completed before production activation.
+The catalog remains controlled by administrators:
+
+- Categories, products, packages, country availability, prices, banners and promotions are database-managed.
+- Admin users can add and edit categories and products without changing source code.
+- A product explicitly selects automatic WAHO API, manual code or manual top-up fulfillment.
+- Newly created products remain inactive by default until pricing, delivery, translations and QA are complete.
+- Public package prices require an authenticated customer and are filtered for the customer's country.
 
 ## Scope Register
 
-| ID | PDF baseline expectation | Implemented approach | Status |
+| ID | Baseline expectation | Implemented approach | Status |
 | --- | --- | --- | --- |
-| SC-001 | Multiple games/apps/products/categories can be offered. | Catalog infrastructure and admin product creation are implemented; WAHO is the active launch product. | Implemented as WAHO-first |
-| SC-002 | Product discovery may include broad game/app browsing. | Public navigation remains WAHO-focused to avoid distracting from the only approved live flow. | Implemented as WAHO-first |
-| SC-003 | Provider/product expansion may support multiple product types. | Provider abstraction and admin catalog controls are extensible; non-WAHO products stay inactive until approved. | Implemented as controlled expansion |
-
-## Acceptance Impact
-
-This is production-ready when:
-
-- WAHO top-up works as the primary customer journey.
-- Admin can add future products without a code change.
-- Unsupported products are not active or purchasable until their provider, pricing, support and translations are ready.
-- Product expansion is recorded as an operational activation decision, not a defect in the launch scope.
+| SC-001 | Multiple products and categories can be offered. | Admin-managed categories and products are live, with WAHO and Asiacell as the initial categories. | Implemented |
+| SC-002 | Product discovery supports clear category selection. | Category metadata is public; prices and ordering require WhatsApp authentication. | Implemented |
+| SC-003 | Products can use different delivery methods. | Automatic WAHO API, manual code and manual top-up modes have separate order behavior. | Implemented |
+| SC-004 | Additional categories can be introduced safely. | New products default to inactive and require an explicit admin activation after operational checks. | Implemented as controlled expansion |
 
 ## Activation Checklist for Additional Products
 
-Before making a non-WAHO product active:
+Before making any additional product active:
 
-- Confirm provider API or manual fulfillment process.
-- Configure provider routing and fallback behavior.
-- Add top-up packages, pricing rules, currency/country availability, and banners if needed.
-- Complete customer-facing copy and translations.
-- Run admin/product/order E2E coverage for the new product.
-- Written approval before production exposure.
+- Confirm its provider API or documented manual fulfillment process.
+- Configure packages, country availability, prices, currencies and exchange rates.
+- Add localized customer copy and a suitable category image.
+- Confirm owner and customer WhatsApp notification behavior.
+- Run admin, order, mobile and RTL end-to-end coverage.
+- Record operational approval before production exposure.

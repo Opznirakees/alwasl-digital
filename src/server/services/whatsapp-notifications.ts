@@ -11,6 +11,7 @@ import {
   type WahaEnv,
 } from '../providers/waha-whatsapp';
 import { getManagedContent } from './content';
+import { supportWhatsAppNumber } from '@/config/contact';
 
 type Fetcher = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
 
@@ -24,6 +25,7 @@ interface SendWhatsAppNotificationInput {
   dedupeKey: string;
   phone: string;
   message: string;
+  storedMessage?: string;
   userId?: string;
   orderId?: string;
   manualDepositId?: string;
@@ -66,6 +68,7 @@ export async function sendWhatsAppNotification(
   options: WhatsAppNotificationOptions = {}
 ) {
   let notification;
+  let created = true;
 
   try {
     notification = await prisma.whatsAppNotification.create({
@@ -80,16 +83,28 @@ export async function sendWhatsAppNotification(
         createdByAdminId: input.createdByAdminId,
         batchId: input.batchId,
         phone: input.phone,
-        message: input.message,
+        message: input.storedMessage ?? input.message,
         metadata: input.metadata,
       },
     });
   } catch (error) {
     if (isUniqueConstraintError(error)) {
-      return { notification: await findNotificationByDedupeKey(input.dedupeKey), created: false };
+      const existing = await findNotificationByDedupeKey(input.dedupeKey);
+      if (!existing || existing.status !== 'FAILED') {
+        return { notification: existing, created: false };
+      }
+      notification = await prisma.whatsAppNotification.update({
+        where: { id: existing.id },
+        data: {
+          status: 'PENDING',
+          message: input.storedMessage ?? input.message,
+          error: null,
+        },
+      });
+      created = false;
+    } else {
+      throw error;
     }
-
-    throw error;
   }
 
   try {
@@ -115,7 +130,7 @@ export async function sendWhatsAppNotification(
       },
     });
 
-    return { notification: sent, created: true };
+    return { notification: sent, created, retried: !created };
   } catch (error) {
     const failed = await prisma.whatsAppNotification.update({
       where: { id: notification.id },
@@ -125,7 +140,7 @@ export async function sendWhatsAppNotification(
       },
     });
 
-    return { notification: failed, created: true };
+    return { notification: failed, created, retried: !created };
   }
 }
 
@@ -144,12 +159,14 @@ export async function notifyOrderCreatedForOrder(orderId: string, options: Whats
       orderId: order.id,
       amount: order.finalPrice,
       currency: order.currency,
+      productName: order.gameName,
       wahoId: order.gameUserId,
     }),
     {
       orderId: order.id,
       amount: formattedAmount,
       wahoId: order.gameUserId,
+      productName: order.gameName,
     }
   );
 
@@ -163,6 +180,73 @@ export async function notifyOrderCreatedForOrder(orderId: string, options: Whats
     metadata: {
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
+    },
+  }, options);
+}
+
+export async function notifyOwnerOrderCreatedForOrder(
+  orderId: string,
+  options: WhatsAppNotificationOptions = {}
+) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { user: { select: { phone: true } } },
+  });
+  if (!order) return null;
+
+  const ownerPhone = process.env.ORDER_NOTIFICATION_PHONE?.trim()
+    || process.env.WAHO_FULFILLMENT_PHONE?.trim()
+    || supportWhatsAppNumber;
+
+  return sendWhatsAppNotification({
+    type: 'OWNER_ORDER_ALERT',
+    dedupeKey: createWhatsAppNotificationDedupeKey('OWNER_ORDER_ALERT', 'order', order.id, ownerPhone),
+    orderId: order.id,
+    phone: ownerPhone,
+    message: createWhatsAppNotificationMessage({
+      type: 'OWNER_ORDER_ALERT',
+      orderId: order.id,
+      productName: order.gameName,
+      customerPhone: order.user.phone,
+      wahoId: order.gameUserId === 'manual-delivery' ? undefined : order.gameUserId,
+      amount: order.finalPrice,
+      currency: order.currency,
+    }),
+    metadata: {
+      fulfillmentMode: order.fulfillmentMode,
+      paymentMethod: order.paymentMethod,
+    },
+  }, options);
+}
+
+export async function notifyManualDeliveryForOrder(
+  orderId: string,
+  deliveryCode: string,
+  options: WhatsAppNotificationOptions = {}
+) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { user: { select: { id: true, phone: true, isBlocked: true } } },
+  });
+  if (!order || order.user.isBlocked || order.status !== 'COMPLETED') return null;
+
+  return sendWhatsAppNotification({
+    type: 'DELIVERY_CODE',
+    // Every explicit admin resend is a separate delivery event. The code itself is never
+    // part of the key or stored in the notification record.
+    dedupeKey: createWhatsAppNotificationDedupeKey('DELIVERY_CODE', 'order', order.id, randomUUID()),
+    userId: order.userId,
+    orderId: order.id,
+    phone: order.user.phone,
+    message: createWhatsAppNotificationMessage({
+      type: 'DELIVERY_CODE',
+      orderId: order.id,
+      productName: order.gameName,
+      deliveryCode,
+    }),
+    storedMessage: `Al-Wasl Digital\nOrder ${order.id} delivery code sent securely.`,
+    metadata: {
+      fulfillmentMode: order.fulfillmentMode,
     },
   }, options);
 }
@@ -275,7 +359,8 @@ export async function notifyTopupSuccessForOrder(orderId: string, options: Whats
       orderId: order.id,
       amount: order.unitPrice,
       currency: order.currency,
-      wahoId: order.gameUserId,
+      productName: order.gameName,
+      wahoId: order.gameUserId === 'manual-delivery' ? undefined : order.gameUserId,
     }),
     metadata: {
       providerId: order.providerId,

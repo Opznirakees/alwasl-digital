@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
@@ -119,7 +118,7 @@ export default function OrdersPage() {
             <Package className="h-7 w-7" />
           </div>
           <h1 className="mt-5 text-2xl font-semibold text-zinc-950 dark:text-white">{t('Log in to see your orders', 'سجل الدخول لرؤية طلباتك', '登录后查看订单')}</h1>
-          <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{t('Your WAHO order IDs and live statuses are kept here.', 'تجد هنا أرقام طلبات WAHO وحالاتها.', '您的 WAHO 订单号和实时状态会显示在这里。')}</p>
+          <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{t('Your order IDs and current delivery statuses are kept here.', 'تجد هنا أرقام طلباتك وحالات التسليم الحالية.', '您的订单号和当前交付状态会显示在这里。')}</p>
           <Button asChild className="mt-5 bg-blue-600 text-white hover:bg-blue-700">
             <Link href="/auth?next=%2Forders">{t('Log in', 'تسجيل الدخول', '登录')}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link>
           </Button>
@@ -140,7 +139,7 @@ export default function OrdersPage() {
         <header className="mt-4">
           <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t('Your activity', 'نشاطك', '您的记录')}</p>
           <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white sm:text-4xl">{t('My orders', 'طلباتي', '我的订单')}</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">{t('See what is happening with every WAHO top-up.', 'تابع ما يحدث في كل عملية شحن WAHO.', '查看每笔 WAHO 充值的进度。')}</p>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">{t('See what is happening with every recharge order.', 'تابع ما يحدث في كل طلب شحن.', '查看每笔充值订单的进度。')}</p>
         </header>
 
         <Tabs value={filter} onValueChange={(value) => setFilter(value as OrderStatus | 'all')} className="mt-6">
@@ -165,19 +164,26 @@ export default function OrdersPage() {
               const product = products.find((item) => item.id === order.gameId);
               const pkg = product?.packages.find((item) => item.id === order.packageId);
               const StatusIcon = statusIcons[order.status];
-              const repeatHref = `/top-up/${product?.slug ?? 'waho-top-up'}${pkg?.amount ? `?amount=${pkg.amount}` : ''}`;
+              const repeatHref = `/top-up/${product?.slug ?? order.gameId}${pkg?.amount ? `?amount=${pkg.amount}` : ''}`;
+              const productName = product
+                ? language === 'ar' ? product.nameAr : language === 'zh' ? product.nameZh || product.name : product.name
+                : order.gameName;
+              const packageLabel = pkg
+                ? `${new Intl.NumberFormat(locale).format(pkg.amount)} ${language === 'ar' ? pkg.unitAr : pkg.unit}`
+                : order.packageName;
+              const hasAccountReference = Boolean(order.gameUserId && order.gameUserId !== 'manual-delivery');
 
               return (
                 <article key={order.id} className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
                   <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
                     <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10">
-                      <Image data-visual-required-image src="/brand/waho-app-icon.webp" alt="" fill className="object-cover" sizes="56px" />
+                      <img data-visual-required-image src={product?.image ?? '/brand/alwasl-mark.jpg'} alt="" className="h-full w-full object-contain p-1" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
-                          <h2 className="font-semibold text-zinc-950 dark:text-white">{t('WAHO balance top-up', 'شحن رصيد WAHO', 'WAHO 余额充值')}</h2>
-                          <p className="mt-1 text-sm font-semibold tabular-nums text-blue-700 dark:text-blue-300">{pkg ? `${new Intl.NumberFormat(locale).format(pkg.amount)} IQD` : order.packageName}</p>
+                          <h2 className="font-semibold text-zinc-950 dark:text-white">{productName}</h2>
+                          <p className="mt-1 text-sm font-semibold tabular-nums text-blue-700 dark:text-blue-300">{packageLabel}</p>
                         </div>
                         <Badge variant="outline" className={`w-fit gap-1.5 ${statusClasses[order.status]}`}>
                           <StatusIcon className={`h-3.5 w-3.5 ${order.status === 'processing' ? 'animate-spin' : ''}`} />
@@ -186,7 +192,7 @@ export default function OrdersPage() {
                       </div>
 
                       <p className="mt-4 rounded-lg bg-zinc-100 p-3 text-sm leading-6 text-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
-                        {getOrderStatusGuidance(order.status, language)}
+                        {getOrderStatusGuidance(order.status, language, order.fulfillmentMode)}
                       </p>
 
                       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
@@ -200,8 +206,8 @@ export default function OrdersPage() {
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs text-zinc-500 dark:text-zinc-400">{t('WAHO ID', 'معرف WAHO', 'WAHO ID')}</dt>
-                          <dd className="mt-1 break-all font-medium text-zinc-950 dark:text-white">{order.gameUserId || '-'}</dd>
+                          <dt className="text-xs text-zinc-500 dark:text-zinc-400">{hasAccountReference ? t('Account ID', 'معرف الحساب', '账号 ID') : t('Delivery', 'التسليم', '交付')}</dt>
+                          <dd className="mt-1 break-all font-medium text-zinc-950 dark:text-white">{hasAccountReference ? order.gameUserId : t('Through WhatsApp', 'عبر واتساب', '通过 WhatsApp')}</dd>
                         </div>
                         <div>
                           <dt className="text-xs text-zinc-500 dark:text-zinc-400">{t('Placed on', 'تاريخ الطلب', '下单时间')}</dt>
@@ -231,8 +237,8 @@ export default function OrdersPage() {
           <section className="mt-5 flex min-h-72 flex-col items-center justify-center rounded-lg border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-zinc-900">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400"><Package className="h-6 w-6" /></div>
             <h2 className="mt-4 text-lg font-semibold text-zinc-950 dark:text-white">{orders.length ? t('No orders with this status', 'لا توجد طلبات بهذه الحالة', '没有此状态的订单') : t('No orders yet', 'لا توجد طلبات بعد', '暂无订单')}</h2>
-            <p className="mt-2 max-w-md text-sm leading-6 text-zinc-600 dark:text-zinc-300">{orders.length ? t('Choose another status above.', 'اختر حالة أخرى أعلاه.', '请在上方选择其他状态。') : t('Your first WAHO top-up will appear here.', 'ستظهر أول عملية شحن WAHO هنا.', '您的第一笔 WAHO 充值会显示在这里。')}</p>
-            {!orders.length && <Button asChild className="mt-5 bg-blue-600 text-white hover:bg-blue-700"><Link href="/top-up/waho-top-up">{t('Start a top-up', 'ابدأ الشحن', '开始充值')}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link></Button>}
+            <p className="mt-2 max-w-md text-sm leading-6 text-zinc-600 dark:text-zinc-300">{orders.length ? t('Choose another status above.', 'اختر حالة أخرى أعلاه.', '请在上方选择其他状态。') : t('Your first recharge order will appear here.', 'سيظهر أول طلب شحن لك هنا.', '您的第一笔充值订单会显示在这里。')}</p>
+            {!orders.length && <Button asChild className="mt-5 bg-blue-600 text-white hover:bg-blue-700"><Link href="/#categories">{t('Choose a category', 'اختر الفئة', '选择分类')}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link></Button>}
           </section>
         )}
       </main>

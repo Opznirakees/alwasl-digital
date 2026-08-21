@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
         subtitle: cleanOptional(body.subtitle),
         subtitleAr: cleanOptional(body.subtitleAr),
         image: body.image,
+        mobileImage: cleanOptional(body.mobileImage),
         link: cleanOptional(body.link),
         productId,
         startDate: new Date(body.startDate),

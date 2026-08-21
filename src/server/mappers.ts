@@ -1,6 +1,7 @@
 import type {
   AdminAuditLog as DbAdminAuditLog,
   Banner as DbBanner,
+  CatalogCategory as DbCatalogCategory,
   Country as DbCountry,
   Currency as DbCurrency,
   CustomPricingRule as DbCustomPricingRule,
@@ -28,6 +29,7 @@ import { resolveCountryPriceCurrencies } from './domain/country-pricing';
 import type {
   AdminAuditLog as AdminAuditLogDto,
   Banner,
+  CatalogCategory,
   Country,
   Currency,
   CustomPricingRule,
@@ -47,6 +49,7 @@ import type {
   WalletTransaction,
   WhatsAppNotification,
 } from '@/types';
+import { suggestedLanguageForCountry } from './domain/account-country';
 
 export type ProductWithPackages = Product & { packages: TopupPackage[] };
 
@@ -136,6 +139,8 @@ export function mapUser(user: DbUser): User {
     blockedReason: user.blockedReason ?? undefined,
     blockedAt: user.blockedAt?.toISOString(),
     blockedByAdminId: user.blockedByAdminId ?? undefined,
+    countryId: user.countryId ?? undefined,
+    suggestedLanguage: suggestedLanguageForCountry(user.countryId),
   };
 }
 
@@ -145,11 +150,15 @@ export function mapProduct(product: ProductWithPackages): Game {
     slug: product.slug,
     name: product.name,
     nameAr: product.nameAr,
+    nameZh: product.nameZh || undefined,
     description: product.description,
     descriptionAr: product.descriptionAr,
+    descriptionZh: product.descriptionZh || undefined,
     image: product.image,
     banner: product.banner ?? undefined,
     category: product.category.toLowerCase() as Game['category'],
+    catalogCategoryId: product.catalogCategoryId ?? undefined,
+    fulfillmentMode: product.fulfillmentMode.toLowerCase() as Game['fulfillmentMode'],
     publisher: product.publisher,
     isPopular: product.isPopular,
     isFeatured: product.isFeatured,
@@ -199,6 +208,9 @@ export function mapOrder(order: DbOrder): Order {
     status: order.status.toLowerCase() as Order['status'],
     paymentMethod: paymentMethodMap[order.paymentMethod],
     paymentStatus: paymentStatusMap[order.paymentStatus],
+    fulfillmentMode: order.fulfillmentMode.toLowerCase() as Order['fulfillmentMode'],
+    fulfillmentNote: order.fulfillmentNote ?? undefined,
+    manualFulfilledAt: order.manualFulfilledAt?.toISOString(),
     providerId: order.providerId ?? undefined,
     providerOrderId: order.providerOrderId ?? undefined,
     customPricingRuleId: order.customPricingRuleId ?? undefined,
@@ -403,12 +415,37 @@ export function mapBanner(banner: DbBanner): Banner {
     subtitle: banner.subtitle ?? undefined,
     subtitleAr: banner.subtitleAr ?? undefined,
     image: banner.image,
+    mobileImage: banner.mobileImage ?? undefined,
     link: banner.link ?? undefined,
     gameId: banner.productId ?? undefined,
     startDate: banner.startDate.toISOString(),
     endDate: banner.endDate.toISOString(),
     isActive: banner.isActive,
     order: banner.sortOrder,
+  };
+}
+
+type CatalogCategoryWithProducts = DbCatalogCategory & {
+  products?: ProductWithPackages[];
+  _count?: { products: number };
+};
+
+export function mapCatalogCategory(category: CatalogCategoryWithProducts): CatalogCategory {
+  return {
+    id: category.id,
+    slug: category.slug,
+    name: category.name,
+    nameAr: category.nameAr,
+    nameZh: category.nameZh,
+    description: category.description,
+    descriptionAr: category.descriptionAr,
+    descriptionZh: category.descriptionZh,
+    image: category.image,
+    accentColor: category.accentColor,
+    sortOrder: category.sortOrder,
+    isActive: category.isActive,
+    productCount: category._count?.products ?? category.products?.length ?? 0,
+    products: category.products?.map(mapProduct),
   };
 }
 

@@ -42,6 +42,10 @@
     --v2-text: #07152e;
     --v2-muted: #53627a;
     --v2-border: #d9e1ec;
+    --v2-pink: #f6b7cc;
+    --v2-sky: #9bd8f2;
+    --v2-mint: #8fe3d2;
+    --v2-lavender: #c4b5fd;
   }
 
   .dark {
@@ -81,6 +85,10 @@
     --v2-text: #ffffff;
     --v2-muted: #b8c5db;
     --v2-border: rgba(255, 255, 255, 0.14);
+    --v2-pink: #f6b7cc;
+    --v2-sky: #9bd8f2;
+    --v2-mint: #8fe3d2;
+    --v2-lavender: #c4b5fd;
   }
 
   * {
@@ -248,7 +256,7 @@
     inset-inline: max(1rem, calc((100vw - 1280px) / 2));
     bottom: -1px;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(247, 185, 40, 0.72), transparent);
+    background: linear-gradient(90deg, transparent, rgba(155, 216, 242, 0.64), rgba(246, 183, 204, 0.72), transparent);
     content: "";
     pointer-events: none;
   }

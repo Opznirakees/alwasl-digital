@@ -1,4 +1,5 @@
 import worldCountries from 'world-countries';
+import { resolveCountryDialCode } from './dial-code';
 
 export interface CountryCatalogItem {
   id: string;
@@ -15,25 +16,28 @@ export interface CountryCatalogItem {
   decimalPlaces: number;
 }
 
-function resolvePhoneCode(country: (typeof worldCountries)[number]) {
-  const root = country.idd.root;
-  if (!root) return '';
-  if (root === '+1') return root;
-  return `${root}${country.idd.suffixes?.[0] ?? ''}`;
-}
-
 function resolveDecimalPlaces(currencyCode: string) {
   if (currencyCode === 'IQD') return 0;
   if (['BHD', 'JOD', 'KWD', 'LYD', 'OMR', 'TND'].includes(currencyCode)) return 3;
   return 2;
 }
 
+const preferredCountryCurrencies: Record<string, string> = {
+  // Palestine commonly prices consumer services in ILS. `world-countries`
+  // lists several circulating currencies and otherwise selects EGP first.
+  PS: 'ILS',
+};
+
 export const countryCatalog: CountryCatalogItem[] = worldCountries
   .flatMap((country) => {
-    const currencyEntry = Object.entries(country.currencies ?? {})[0];
+    const currencies = country.currencies ?? {};
+    const preferredCurrency = preferredCountryCurrencies[country.cca2];
+    const currencyEntry = preferredCurrency && currencies[preferredCurrency]
+      ? [preferredCurrency, currencies[preferredCurrency]] as const
+      : Object.entries(currencies)[0];
     if (!currencyEntry) return [];
     const [currencyCode, currency] = currencyEntry;
-    const phoneCode = resolvePhoneCode(country);
+    const phoneCode = resolveCountryDialCode(country.cca2, country.idd.root, country.idd.suffixes);
     if (!phoneCode) return [];
 
     return [{

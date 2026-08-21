@@ -1523,7 +1523,7 @@ describe('WhatsApp notification rules', () => {
       amount: 25000,
       currency: 'IQD',
       wahoId: 'WAHO-777',
-    })).toContain('WAHO top-up completed');
+    })).toContain('Top-up completed');
 
     expect(createWhatsAppNotificationMessage({
       type: 'TOPUP_FAILURE',
@@ -1789,8 +1789,8 @@ describe('WAHO recharge section copy', () => {
 describe('WAHO storefront visual assets', () => {
   test('uses recharge and brand assets instead of app feature screenshots', () => {
     const wahoProduct = games.find((game) => game.slug === 'waho-top-up');
-    expect(wahoProduct?.image).toBe('/brand/alwasl-mark.jpg');
-    expect(wahoProduct?.banner).toBe('/brand/alwasl-banner.jpg');
+    expect(wahoProduct?.image).toBe('/brand/waho-app-icon.webp');
+    expect(wahoProduct?.banner).toBe('/brand/recharge-hero-v3.webp');
 
     const storefrontImages = [
       wahoProduct?.image,
@@ -1882,9 +1882,9 @@ describe('admin CRUD rules', () => {
     expect(publicBannersRoute).toContain('banners.map(mapBanner)');
     expect(adminSummaryRoute).toContain('prisma.banner.findMany');
     expect(adminSummaryRoute).toContain('banners: banners.map(mapBanner)');
-    expect(homePage).toContain("fetch('/api/banners')");
+    expect(homePage).toContain("fetch('/api/banners',");
     expect(homePage).toContain('setBanners');
-    expect(homePage).toContain('<HeroBanner banner={');
+    expect(homePage).toContain('<HeroBanner banners={banners}');
     expect(adminPage).not.toContain("import { banners");
     expect(adminPage).not.toContain('@/data/mock-data');
   });
@@ -1942,7 +1942,7 @@ describe('admin CRUD rules', () => {
     const countriesRoute = readFileSync(join(repoRoot, 'src/app/api/countries/route.ts'), 'utf8');
     const appContext = readFileSync(join(repoRoot, 'src/contexts/AppContext.tsx'), 'utf8');
     const homePage = readFileSync(join(repoRoot, 'src/app/page.tsx'), 'utf8');
-    const topUpPage = readFileSync(join(repoRoot, 'src/app/top-up/page.tsx'), 'utf8');
+    const categoryPage = readFileSync(join(repoRoot, 'src/app/categories/[slug]/page.tsx'), 'utf8');
     const topUpDetailPage = readFileSync(join(repoRoot, 'src/app/top-up/[slug]/page.tsx'), 'utf8');
     const promotionsPage = readFileSync(join(repoRoot, 'src/app/promotions/page.tsx'), 'utf8');
     const settingsPage = readFileSync(join(repoRoot, 'src/app/settings/page.tsx'), 'utf8');
@@ -1966,10 +1966,10 @@ describe('admin CRUD rules', () => {
     expect(appContext).toContain('const savedCountryId = localStorage.getItem(storageKeys.country)');
     expect(homePage).toContain('selectedCountry.id');
     expect(homePage).toContain('country=${selectedCountry.id}');
-    expect(topUpPage).toContain('selectedCountry.id');
-    expect(topUpPage).toContain('country=${selectedCountry.id}');
-    expect(topUpPage).toContain(') : !wahoTopUp ? (');
-    expect(topUpPage).toContain('WAHO top-up is temporarily unavailable');
+    expect(categoryPage).toContain('selectedCountry.id');
+    expect(categoryPage).toContain('country=${selectedCountry.id}');
+    expect(categoryPage).toContain('isAuthenticated');
+    expect(categoryPage).toContain('/auth?next=');
     expect(topUpDetailPage).toContain('selectedCountry.id');
     expect(topUpDetailPage).toContain('country=${selectedCountry.id}');
     expect(topUpDetailPage).toContain('productError');
@@ -2050,7 +2050,7 @@ describe('admin CRUD rules', () => {
     expect(adminPage).toContain("adminJsonRequest(`/api/admin/promotions/${promotionId}`");
     expect(adminPage).toContain("adminJsonRequest('/api/admin/pricing-rules'");
     expect(adminPage).toContain("adminJsonRequest(`/api/admin/pricing-rules/${ruleId}`");
-    expect(adminPage).toContain("adminJsonRequest('/api/admin/banners'");
+    expect(adminPage).toContain("editingBannerId ? `/api/admin/banners/${editingBannerId}` : '/api/admin/banners'");
     expect(adminPage).toContain("adminJsonRequest(`/api/admin/banners/${bannerId}`");
     expect(adminPage).toContain("adminJsonRequest('/api/admin/exchange-rates'");
     expect(adminPage).toContain("adminJsonRequest(`/api/admin/countries/${countryId}`");
@@ -2459,8 +2459,8 @@ describe('technical ownership rules', () => {
   });
 });
 
-describe('WAHO-first catalog scope rules', () => {
-  test('documents and implements WAHO-first catalog expansion without exposing unsupported products', () => {
+describe('managed multi-category catalog scope rules', () => {
+  test('documents and implements controlled WAHO and Asiacell catalog expansion', () => {
     const repoRoot = join(import.meta.dir, '..');
     const scopeDeviationPath = join(repoRoot, 'docs/scope-deviations.md');
     const deliverables = readFileSync(join(repoRoot, 'docs/contract-deliverables.md'), 'utf8');
@@ -2484,17 +2484,15 @@ describe('WAHO-first catalog scope rules', () => {
     const scopeDeviation = readFileSync(scopeDeviationPath, 'utf8');
 
     for (const snippet of [
-      'WAHO-First Catalog Scope',
-      'multiple games, apps, products, categories',
-      'The production launch remains focused on WAHO account top-ups',
-      'no longer hardcoded as a WAHO-only technical scope',
-      'Newly created products are inactive by default',
+      'Managed Multi-Category Catalog Scope',
+      'WAHO via Asiacell codes',
+      'manual code or manual top-up fulfillment',
+      'Public package prices require an authenticated customer',
       'SC-001',
-      'Multiple games/apps/products/categories can be offered',
-      'Catalog infrastructure and admin product creation are implemented',
-      'Implemented as WAHO-first',
-      'Before making a non-WAHO product active',
-      'Written approval before production exposure',
+      'Admin-managed categories and products are live',
+      'Implemented as controlled expansion',
+      'Before making any additional product active',
+      'Record operational approval before production exposure',
     ]) {
       expect(scopeDeviation).toContain(snippet);
     }
@@ -2505,9 +2503,11 @@ describe('WAHO-first catalog scope rules', () => {
       nameAr: 'شحن محفظة مستقبلية',
       description: 'Future inactive product for catalog expansion.',
       descriptionAr: 'منتج مستقبلي غير نشط لتوسيع الكتالوج.',
+      catalogCategoryId: 'future-wallets',
     });
     expect(parsedProduct).toMatchObject({
       category: 'TOP_UP',
+      fulfillmentMode: 'MANUAL_TOPUP',
       isActive: false,
       countries: ['iq'],
     });
@@ -2520,16 +2520,17 @@ describe('WAHO-first catalog scope rules', () => {
     expect(categoryMigration).toContain("'TOP_UP'");
     expect(adminProductsRoute).toContain('createAdminProductSchema');
     expect(adminProductsRoute).toContain('isActive: body.isActive');
-    expect(adminPage).toContain('WAHO-first catalog');
+    expect(adminPage).toContain('Storefront category');
+    expect(adminPage).toContain('Delivery method');
     expect(adminPage).toContain('setProductDialogOpen(true)');
-    expect(adminPage).toContain('New products are inactive by default');
-    expect(games).toHaveLength(1);
-    expect(games[0].slug).toBe('waho-top-up');
-    expect(deliverables).toContain('WAHO-first catalog scope and expansion policy');
-    expect(deliverables).toContain('Public activation of non-WAHO products before provider routing');
+    expect(adminPage).toContain('New products remain hidden');
+    expect(games).toHaveLength(2);
+    expect(games.map((product) => product.slug)).toEqual(['waho-top-up', 'waho-asiacell-code']);
+    expect(deliverables).toContain('Managed multi-category catalog and expansion policy');
+    expect(deliverables).toContain('Public activation of additional products before fulfillment');
     expect(timeline).toContain('docs/scope-deviations.md');
-    expect(timeline).toContain('WAHO-first top-up launch scope');
-    expect(handover).toContain('Catalog scope record confirms WAHO is the launch focus');
+    expect(timeline).toContain('Managed recharge catalog');
+    expect(handover).toContain('Catalog shows the active WAHO and Asiacell categories');
     expect(readme).toContain('docs/scope-deviations.md');
   });
 });
@@ -2688,6 +2689,7 @@ describe('mappers', () => {
       blockedReason: 'chargeback abuse',
       blockedAt: new Date('2026-06-18T11:30:00Z'),
       blockedByAdminId: 'admin-1',
+      countryId: 'iq',
       registeredAt: new Date('2026-06-18T10:00:00Z'),
       lastLogin: new Date('2026-06-18T11:00:00Z'),
     });

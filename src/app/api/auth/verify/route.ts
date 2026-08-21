@@ -10,6 +10,7 @@ import { assertRateLimit } from '@/server/rate-limit';
 import { normalizePhone, verifyOtpSchema } from '@/server/validation';
 import { getClientIpFromHeaders } from '@/server/domain/access-blocks';
 import { assertRequestAccessAllowed } from '@/server/services/access-blocks';
+import { inferCountryIdFromPhone } from '@/server/domain/account-country';
 
 export const runtime = 'nodejs';
 
@@ -54,17 +55,24 @@ export async function POST(request: NextRequest) {
     }
 
     const now = new Date();
+    const countries = await prisma.country.findMany({
+      where: { isActive: true },
+      select: { id: true, phoneCode: true },
+    });
+    const countryId = inferCountryIdFromPhone(phone, countries);
     const user = await prisma.user.upsert({
       where: { phone },
       update: {
         isVerified: true,
         lastLogin: now,
+        countryId,
       },
       create: {
         phone,
-        name: `WAHO Customer ${phone.slice(-4)}`,
+        name: `Customer ${phone.slice(-4)}`,
         isVerified: true,
         lastLogin: now,
+        countryId,
       },
     });
 

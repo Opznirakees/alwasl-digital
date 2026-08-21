@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import { requireUser } from '@/server/auth';
 import { handleApiError, ok } from '@/server/http';
 import { mapProduct } from '@/server/mappers';
 import { prisma } from '@/server/prisma';
@@ -26,6 +27,7 @@ const publicProductInclude = {
 
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
+    await requireUser();
     const { slug } = await context.params;
     const countryId = normalizeCountryId(request.nextUrl.searchParams.get('country'));
     let product = await prisma.product.findFirst({

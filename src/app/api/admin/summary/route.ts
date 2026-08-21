@@ -5,6 +5,7 @@ import { handleApiError, ok } from '@/server/http';
 import {
   mapAdminAuditLog,
   mapBanner,
+  mapCatalogCategory,
   mapCountry,
   mapCustomPricingRule,
   mapExchangeRate,
@@ -49,6 +50,7 @@ export async function GET(request: NextRequest) {
     const [
       users,
       products,
+      categories,
       orders,
       walletTransactions,
       manualDeposits,
@@ -72,6 +74,10 @@ export async function GET(request: NextRequest) {
       prisma.product.findMany({
         include: { packages: { orderBy: { sortOrder: 'asc' } } },
         orderBy: { createdAt: 'asc' },
+      }),
+      prisma.catalogCategory.findMany({
+        include: { _count: { select: { products: true } } },
+        orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       }),
       prisma.order.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
       prisma.walletTransaction.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
@@ -185,6 +191,7 @@ export async function GET(request: NextRequest) {
       },
       users: users.map(mapUser),
       products: products.map(mapProduct),
+      categories: categories.map(mapCatalogCategory),
       orders: orders.map(mapOrder),
       walletTransactions: walletTransactions.map(mapWalletTransaction),
       manualDeposits: manualDeposits.map(mapManualDeposit),

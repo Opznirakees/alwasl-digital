@@ -17,6 +17,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const admin = await requirePermission('PRODUCT_MANAGE');
     const { id } = await context.params;
     const body = updateAdminProductSchema.parse(await request.json().catch(() => ({})));
+    if (body.catalogCategoryId) {
+      const category = await prisma.catalogCategory.findUnique({ where: { id: body.catalogCategoryId } });
+      if (!category) throw new Error('CATEGORY_NOT_FOUND');
+    }
 
     const product = await prisma.product.update({
       where: { id },

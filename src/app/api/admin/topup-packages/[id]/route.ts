@@ -20,6 +20,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const topupPackage = await prisma.topupPackage.update({
       where: { id },
       data: {
+        name: body.name,
+        nameAr: body.nameAr,
+        amount: body.amount,
+        unit: body.unit,
+        unitAr: body.unitAr,
         basePrice: body.basePrice,
         salePrice: body.salePrice,
         inStock: body.inStock,

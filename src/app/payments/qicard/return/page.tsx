@@ -107,7 +107,7 @@ function QiCardReturnContent() {
       icon: CheckCircle2,
       iconClass: 'text-[#52d273]',
       title: t('Payment confirmed', 'تم تأكيد الدفع', '付款已确认'),
-      description: t('Your WAHO top-up is now being processed. You can follow it in your orders.', 'تتم الآن معالجة شحن WAHO. يمكنك متابعته في طلباتك.', '您的 WAHO 充值正在处理中，可在订单中查看进度。'),
+      description: t('Your recharge order is now being processed. You can follow it in your orders.', 'تتم الآن معالجة طلب الشحن. يمكنك متابعته في طلباتك.', '您的充值订单正在处理中，可在订单中查看进度。'),
     },
     pending: {
       icon: Clock3,
@@ -119,7 +119,7 @@ function QiCardReturnContent() {
       icon: XCircle,
       iconClass: 'text-red-400',
       title: t('Payment was not completed', 'لم يكتمل الدفع', '付款未完成'),
-      description: t('No WAHO top-up was started. You can safely try again.', 'لم تبدأ عملية شحن WAHO. يمكنك المحاولة مرة أخرى بأمان.', 'WAHO 充值尚未开始，您可以安全重试。'),
+      description: t('No recharge was started. You can safely try again.', 'لم تبدأ عملية الشحن. يمكنك المحاولة مرة أخرى بأمان.', '充值尚未开始，您可以安全重试。'),
     },
     error: {
       icon: AlertCircle,

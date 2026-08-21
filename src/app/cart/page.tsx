@@ -24,20 +24,20 @@ export default function CartPage() {
             <Wallet className="h-7 w-7" />
           </div>
           <h1 className="mt-5 text-2xl font-semibold text-zinc-950 dark:text-white">
-            {t('Go directly to WAHO top-up', 'انتقل مباشرة إلى شحن WAHO', '直接前往 WAHO 充值')}
+            {t('Choose what you want to recharge', 'اختر ما تريد شحنه', '选择您要充值的内容')}
           </h1>
           <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-zinc-600 dark:text-zinc-300">
             {t(
-              'Choose the IQD amount, enter the WAHO ID, and continue straight to payment.',
-              'اختر مبلغ الدينار وأدخل معرف WAHO ثم تابع مباشرة إلى الدفع.',
-              '选择 IQD 金额，输入 WAHO ID，然后直接继续付款。'
+              'Choose a category, log in securely and see the amounts available for your country.',
+              'اختر الفئة وسجل الدخول بأمان وشاهد المبالغ المتاحة لبلدك.',
+              '选择分类，安全登录，并查看您所在国家/地区可用的金额。'
             )}
           </p>
 
           <div className="mt-6 grid gap-2 text-left sm:grid-cols-3">
             {[
+              t('Choose category', 'اختر الفئة', '选择分类'),
               t('Select amount', 'اختر المبلغ', '选择金额'),
-              t('Confirm WAHO ID', 'أكد معرف WAHO', '确认 WAHO ID'),
               t('Track order', 'تابع الطلب', '跟踪订单'),
             ].map((item) => (
               <div key={item} className="flex items-center gap-2 rounded-md bg-zinc-50 p-3 text-sm font-medium text-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
@@ -48,8 +48,8 @@ export default function CartPage() {
           </div>
 
           <Button asChild className="mt-7 bg-blue-600 text-white shadow-none hover:bg-blue-700">
-            <Link href="/top-up/waho-top-up">
-              {t('Start top-up', 'ابدأ الشحن', '开始充值')}
+            <Link href="/#categories">
+              {t('View categories', 'عرض الفئات', '查看分类')}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>

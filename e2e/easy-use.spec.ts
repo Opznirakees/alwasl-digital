@@ -9,8 +9,11 @@ const product = {
   nameAr: 'شحن حساب WAHO',
   description: 'Top up a WAHO account balance.',
   descriptionAr: 'اشحن رصيد حساب WAHO.',
-  image: '/brand/alwasl-mark.jpg',
+  descriptionZh: '为 WAHO 账户充值。',
+  image: '/brand/waho-app-icon.webp',
   category: 'top_up',
+  catalogCategoryId: 'waho',
+  fulfillmentMode: 'waho_api',
   publisher: 'Al-Wasl Digital',
   isPopular: true,
   isFeatured: true,
@@ -30,6 +33,63 @@ const product = {
     { id: 'pkg-100000', name: '100,000 IQD WAHO Top-Up', nameAr: 'شحن WAHO 100,000 د.ع', amount: 100000, unit: 'IQD top-up', unitAr: 'شحن د.ع', basePrice: 100000, currency: 'IQD', inStock: true },
   ],
 };
+
+const asiacellProduct = {
+  ...product,
+  id: 'waho-asiacell-code',
+  slug: 'waho-asiacell-code',
+  name: 'Asiacell WAHO Code',
+  nameAr: 'رمز آسيا سيل لتطبيق واهو',
+  nameZh: 'Asiacell WAHO 充值码',
+  description: 'Buy an Asiacell recharge code for WAHO.',
+  descriptionAr: 'اشترِ رمز شحن آسيا سيل لاستخدامه في واهو.',
+  descriptionZh: '购买用于 WAHO 的 Asiacell 充值码。',
+  image: '/brand/asiacell-category.svg',
+  catalogCategoryId: 'asiacell',
+  fulfillmentMode: 'manual_code',
+  requiresUserId: false,
+  userIdLabel: 'WhatsApp number',
+  userIdLabelAr: 'رقم واتساب',
+  userIdPlaceholder: 'Delivered by WhatsApp',
+  userIdPlaceholderAr: 'يتم التسليم عبر واتساب',
+  packages: [
+    { id: 'asia-5000', name: 'Asiacell 5,000 IQD', nameAr: 'آسيا سيل 5,000 د.ع', amount: 28000, unit: '5,000 IQD Asiacell', unitAr: 'آسيا سيل 5,000 د.ع', basePrice: 28000, currency: 'IQD', inStock: true },
+    { id: 'asia-10000', name: 'Asiacell 10,000 IQD', nameAr: 'آسيا سيل 10,000 د.ع', amount: 55000, unit: '10,000 IQD Asiacell', unitAr: 'آسيا سيل 10,000 د.ع', basePrice: 55000, currency: 'IQD', inStock: true, isPopular: true },
+  ],
+};
+
+const catalogCategories = [
+  {
+    id: 'waho',
+    slug: 'waho',
+    name: 'WAHO',
+    nameAr: 'واهو',
+    nameZh: 'WAHO',
+    description: 'Direct WAHO balance top-ups.',
+    descriptionAr: 'شحن مباشر لرصيد واهو.',
+    descriptionZh: 'WAHO 余额直接充值。',
+    image: '/brand/waho-app-icon.webp',
+    accentColor: '#9bd8f2',
+    sortOrder: 0,
+    isActive: true,
+    productCount: 1,
+  },
+  {
+    id: 'asiacell',
+    slug: 'asiacell',
+    name: 'Asiacell',
+    nameAr: 'آسيا سيل',
+    nameZh: 'Asiacell',
+    description: 'Asiacell codes delivered through WhatsApp.',
+    descriptionAr: 'رموز آسيا سيل يتم تسليمها عبر واتساب.',
+    descriptionZh: '通过 WhatsApp 交付 Asiacell 充值码。',
+    image: '/brand/asiacell-category.svg',
+    accentColor: '#f6b7cc',
+    sortOrder: 1,
+    isActive: true,
+    productCount: 1,
+  },
+];
 
 const countries = [
   {
@@ -172,7 +232,8 @@ const order = {
   currency: 'IQD',
   status: 'processing',
   paymentMethod: 'zaincash',
-  paymentStatus: 'paid',
+  paymentStatus: 'completed',
+  fulfillmentMode: 'waho_api',
   createdAt: '2026-07-18T10:00:00.000Z',
   updatedAt: '2026-07-18T10:01:00.000Z',
 };
@@ -205,8 +266,22 @@ async function mockCustomerApi(page: Page, initiallyAuthenticated = false) {
     if (path === '/api/countries') return json({ countries });
     if (path === '/api/content') return json({ overrides: [] });
     if (path === '/api/banners') return json({ banners: [] });
-    if (path === '/api/products') return json({ products: [product] });
-    if (path === '/api/products/waho-top-up') return json({ product });
+    if (path === '/api/categories') return json({ categories: catalogCategories });
+    if (path === '/api/categories/waho') {
+      return authenticated
+        ? json({ category: { ...catalogCategories[0], products: [product] } })
+        : json({ error: 'Authentication required' }, 401);
+    }
+    if (path === '/api/categories/asiacell') {
+      return authenticated
+        ? json({ category: { ...catalogCategories[1], products: [asiacellProduct] } })
+        : json({ error: 'Authentication required' }, 401);
+    }
+    if (path === '/api/products') {
+      const products = [product, asiacellProduct].map((item) => authenticated ? item : { ...item, packages: [] });
+      return json({ pricesVisible: authenticated, products });
+    }
+    if (path === '/api/products/waho-top-up') return authenticated ? json({ product }) : json({ error: 'Authentication required' }, 401);
     if (path === '/api/promotions') return json({ promotions: [] });
     if (path === '/api/payments/methods') return json({
       methods: [
@@ -289,6 +364,7 @@ async function mockAdminApi(page: Page, options: { failSummaryOnce?: boolean } =
           refundRate: 2,
         },
         users: [adminUser, user],
+        categories: catalogCategories,
         products: [product],
         orders: [order],
         walletTransactions: [walletTransaction],
@@ -504,21 +580,25 @@ async function expectAllInsideViewport(page: Page, selector: string) {
 }
 
 test.describe('generation 2 customer experience', () => {
-  test('makes the one WAHO task obvious on a small phone', async ({ page }, testInfo) => {
+  test('makes the protected multi-category journey obvious on a small phone', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await mockCustomerApi(page);
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Top up your WAHO balance' })).toBeVisible();
-    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Choose amount');
-    await expect(page.getByRole('link', { name: 'Choose 10,000 IQD' })).toHaveAttribute('href', /amount=10000/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Recharge your digital balance' })).toBeVisible();
+    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Login to see prices');
+    await expect(page.getByText('Prices open after login')).toBeVisible();
+    const categoryCards = page.getByTestId('catalog-category-card');
+    await expect(categoryCards).toHaveCount(2);
+    await expect(categoryCards.filter({ hasText: 'WAHO' })).toHaveAttribute('href', /\/auth\?next=.*categories.*waho/);
+    await expect(categoryCards.filter({ hasText: 'Asiacell' })).toHaveAttribute('href', /\/auth\?next=.*categories.*asiacell/);
 
     const mobileTabs = page.locator('[data-mobile-tab-bar]');
     await expect(mobileTabs).toBeVisible();
     await expect(mobileTabs.getByRole('link')).toHaveCount(5);
     await expect(mobileTabs.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
 
-    const heroMetrics = await page.locator('.v2-hero-metrics > div').evaluateAll((items) => items.map((item) => {
+    const heroMetrics = await page.locator('[data-v2-hero-metrics] > div').evaluateAll((items) => items.map((item) => {
       const rect = item.getBoundingClientRect();
       return { y: Math.round(rect.y), width: Math.round(rect.width) };
     }));
@@ -526,7 +606,7 @@ test.describe('generation 2 customer experience', () => {
     expect(new Set(heroMetrics.map((item) => item.y)).size).toBe(1);
     expect(heroMetrics.every((item) => item.width >= 88)).toBe(true);
 
-    const processItems = await page.locator('[data-v2-mobile-process-rail] > li').evaluateAll((items) => items.map((item) => {
+    const processItems = await page.locator('[data-v2-process-steps] > li').evaluateAll((items) => items.map((item) => {
       const rect = item.getBoundingClientRect();
       return { y: Math.round(rect.y), width: Math.round(rect.width) };
     }));
@@ -534,20 +614,19 @@ test.describe('generation 2 customer experience', () => {
     expect(new Set(processItems.map((item) => item.y)).size).toBe(1);
     expect(processItems.every((item) => item.width >= 110)).toBe(true);
 
-    const packageCards = await page.getByTestId('home-package-card').evaluateAll((items) => items.slice(0, 3).map((item) => {
+    const categoryCardMetrics = await categoryCards.evaluateAll((items) => items.map((item) => {
       const rect = item.getBoundingClientRect();
       return { y: Math.round(rect.y), width: Math.round(rect.width) };
     }));
-    expect(packageCards).toHaveLength(3);
-    expect(new Set(packageCards.map((item) => item.y)).size).toBe(1);
-    expect(packageCards.every((item) => item.width >= 108)).toBe(true);
+    expect(categoryCardMetrics).toHaveLength(2);
+    expect(categoryCardMetrics.every((item) => item.width >= 300)).toBe(true);
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'home-mobile');
   });
 
   test('keeps the smallest phone compact, tappable and clear to the final footer link', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 844 });
-    await mockCustomerApi(page);
+    await mockCustomerApi(page, true);
     await page.goto('/');
 
     const primaryAction = page.getByTestId('home-primary-topup');
@@ -556,7 +635,7 @@ test.describe('generation 2 customer experience', () => {
 
     const mobileNavigation = page.locator('[data-mobile-tab-bar]');
     await expect(mobileNavigation.getByRole('link')).toHaveCount(5);
-    await expect(mobileNavigation.getByRole('link', { name: 'Login' })).toBeVisible();
+    await expect(mobileNavigation.getByRole('link', { name: 'Account' })).toBeVisible();
     const mobileTabBoxes = await page.locator('[data-mobile-tab-bar] a:visible').evaluateAll((links) => (
       links.map((link) => {
         const rect = link.getBoundingClientRect();
@@ -614,7 +693,7 @@ test.describe('generation 2 customer experience', () => {
 
   test('keeps the selected amount and brings the active WAHO ID form into view', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await mockCustomerApi(page);
+    await mockCustomerApi(page, true);
     await page.goto('/top-up/waho-top-up?amount=10000');
 
     await expect(page.getByRole('navigation', { name: 'Top-up progress' })).toContainText('Amount');
@@ -623,8 +702,8 @@ test.describe('generation 2 customer experience', () => {
     await expect(selectedAmount).toHaveCount(1);
     await expect(selectedAmount).toHaveAttribute('aria-pressed', 'true');
 
-    await page.getByRole('button', { name: 'Continue with 10,000 IQD' }).click();
-    const detailsHeading = page.getByRole('heading', { name: 'Enter your WAHO ID' });
+    await page.getByRole('button', { name: /^Continue with 10,000/ }).click();
+    const detailsHeading = page.getByRole('heading', { name: 'WAHO ID', exact: true });
     await expect(detailsHeading).toBeVisible();
     await expect(detailsHeading).toBeFocused();
     const box = await detailsHeading.boundingBox();
@@ -661,7 +740,7 @@ test.describe('generation 2 customer experience', () => {
     await mockCustomerApi(page, true);
     await page.goto('/top-up/waho-top-up?amount=10000');
 
-    await page.getByRole('button', { name: 'Continue with 10,000 IQD' }).click();
+    await page.getByRole('button', { name: /^Continue with 10,000/ }).click();
     await page.getByRole('textbox', { name: 'WAHO ID', exact: true }).fill('123456789');
     await page.getByRole('button', { name: 'Check ID' }).click();
     await expect(page.getByText('Account found', { exact: true })).toBeVisible();
@@ -693,7 +772,7 @@ test.describe('generation 2 customer experience', () => {
     await mockCustomerApi(page, true);
     await page.goto('/top-up/waho-top-up?amount=10000');
 
-    await page.getByRole('button', { name: /Continue with 10,000 IQD/ }).click();
+    await page.getByRole('button', { name: /^Continue with 10,000/ }).click();
     await page.getByRole('textbox', { name: 'WAHO ID', exact: true }).fill('123456789');
     await page.getByRole('button', { name: 'Check ID' }).click();
     await page.getByRole('button', { name: 'Continue to payment' }).click();
@@ -718,18 +797,18 @@ test.describe('generation 2 customer experience', () => {
 
   test('keeps Chinese, Arabic RTL and dark mode complete', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await mockCustomerApi(page);
+    await mockCustomerApi(page, true);
     await page.goto('/');
 
     await page.getByRole('button', { name: 'Change language' }).click();
     await page.getByRole('menuitem', { name: '中文' }).click();
-    await expect(page.getByRole('heading', { level: 1, name: '为您的 WAHO 余额充值' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: '充值数字余额' })).toBeVisible();
     await captureVisual(page, testInfo.project.name, 'home-chinese-dark-mobile');
 
     await page.getByRole('button', { name: '切换语言' }).click();
     await page.getByRole('menuitem', { name: 'العربية' }).click();
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page.getByRole('heading', { level: 1, name: 'اشحن رصيد WAHO' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'اشحن رصيدك الرقمي' })).toBeVisible();
 
     await expect(page.locator('html')).toHaveClass(/dark/);
     await expect(page.getByRole('button', { name: 'التبديل إلى الوضع الفاتح' })).toHaveCount(0);
@@ -746,18 +825,18 @@ test.describe('generation 2 customer experience', () => {
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1, name: 'اشحن رصيد WAHO' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'اشحن رصيدك الرقمي' })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'home-arabic-dark-desktop');
   });
 
   test('uses wide screens for overview without stretching the main task', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await mockCustomerApi(page);
+    await mockCustomerApi(page, true);
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Top up your WAHO balance' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Choose 10,000 IQD' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Recharge your digital balance' })).toBeVisible();
+    await expect(page.getByTestId('catalog-category-card')).toHaveCount(2);
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'home-desktop');
 
@@ -797,7 +876,7 @@ test.describe('generation 2 customer experience', () => {
     test.setTimeout(60_000);
     test.skip(testInfo.project.name !== 'chromium', 'The customer route matrix only needs one browser project.');
     await page.setViewportSize({ width: 390, height: 844 });
-    await mockCustomerApi(page);
+    await mockCustomerApi(page, true);
 
     const routes = [
       { path: '/', name: 'home' },
@@ -827,7 +906,7 @@ test.describe('generation 2 customer experience', () => {
 
   test('has no horizontal overflow at all required acceptance widths', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== 'chromium', 'The responsive width matrix only needs one browser project.');
-    await mockCustomerApi(page);
+    await mockCustomerApi(page, true);
 
     for (const width of [320, 360, 390, 430, 768, 1024, 1440]) {
       await page.setViewportSize({ width, height: width < 768 ? 844 : 900 });
@@ -888,12 +967,13 @@ test.describe('generation 2 customer experience', () => {
     await expect(page.getByText('Total Revenue')).toBeVisible();
 
     const sections = [
-      ['Top-up amounts', 'WAHO-first catalog'],
+      ['Categories', 'Catalog categories'],
+      ['Top-up amounts', 'Products and top-up amounts'],
       ['Custom pricing', 'Custom pricing'],
       ['Users', 'Users'],
       ['Access blocks', 'Access blocks'],
       ['Providers', 'Delivery Partners'],
-      ['WAHO Offers', 'Promotions'],
+      ['Promotions', 'Promotions'],
       ['Banners', 'Banners'],
       ['Website text', 'Website text'],
       ['Currencies', 'Currency & exchange rates'],

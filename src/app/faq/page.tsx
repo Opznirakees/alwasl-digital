@@ -5,12 +5,12 @@ export default function FaqPage() {
     <InfoPage
       eyebrow={{ en: 'Common questions', ar: 'الأسئلة الشائعة', zh: '常见问题' }}
       title={{ en: 'Answers you may need before topping up.', ar: 'إجابات قد تحتاجها قبل الشحن.', zh: '充值前可能需要的答案。' }}
-      subtitle={{ en: 'Check your WAHO ID and amount carefully. We show the account again before payment.', ar: 'تحقق من معرف WAHO والمبلغ بعناية. سنعرض الحساب مرة أخرى قبل الدفع.', zh: '请仔细核对 WAHO ID 和金额。付款前会再次显示账号。' }}
-      actions={[{ label: { en: 'Choose an amount', ar: 'اختر المبلغ', zh: '选择金额' }, href: '/top-up/waho-top-up' }]}
+      subtitle={{ en: 'Check the selected amount and delivery details carefully before you pay.', ar: 'تحقق من المبلغ المختار وبيانات التسليم بعناية قبل الدفع.', zh: '付款前请仔细核对所选金额和交付信息。' }}
+      actions={[{ label: { en: 'Choose a category', ar: 'اختر الفئة', zh: '选择分类' }, href: '/#categories' }]}
       sections={[
         {
           title: { en: 'What do I need?', ar: 'ماذا أحتاج؟', zh: '需要准备什么？' },
-          body: { en: 'You need the WAHO ID, a top-up amount and a phone that can receive the WhatsApp code.', ar: 'تحتاج إلى معرف WAHO ومبلغ الشحن وهاتف يستقبل رمز واتساب.', zh: '您需要 WAHO ID、充值金额以及可接收 WhatsApp 验证码的手机。' },
+          body: { en: 'You need a recharge amount and a phone that can receive the WhatsApp code. Some products also ask for an account ID.', ar: 'تحتاج إلى مبلغ شحن وهاتف يستقبل رمز واتساب. بعض المنتجات تطلب أيضاً معرف الحساب.', zh: '您需要充值金额和可接收 WhatsApp 验证码的手机。部分产品还需要账号 ID。' },
         },
         {
           title: { en: 'Where is my order?', ar: 'أين طلبي؟', zh: '在哪里查看订单？' },

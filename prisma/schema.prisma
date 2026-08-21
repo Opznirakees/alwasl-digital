@@ -65,6 +65,12 @@ enum ProductCategory {
   VOUCHER
 }
 
+enum ProductFulfillmentMode {
+  WAHO_API
+  MANUAL_CODE
+  MANUAL_TOPUP
+}
+
 enum OrderStatus {
   PENDING
   PROCESSING
@@ -171,9 +177,11 @@ enum ProviderBalanceAlertStatus {
 
 enum WhatsAppNotificationType {
   ORDER_CREATED
+  OWNER_ORDER_ALERT
   PAYMENT_RECEIVED
   TOPUP_SUCCESS
   TOPUP_FAILURE
+  DELIVERY_CODE
   ACCOUNT_BLOCKED
   MARKETING
 }
@@ -249,6 +257,8 @@ model User {
   blockedByAdminId             String?
   blockedByAdmin               User?                  @relation("UserBlockedByAdmin", fields: [blockedByAdminId], references: [id], onDelete: SetNull)
   blockedUsers                 User[]                 @relation("UserBlockedByAdmin")
+  countryId                    String?
+  country                      Country?               @relation(fields: [countryId], references: [id], onDelete: SetNull)
   registeredAt                 DateTime               @default(now())
   lastLogin                    DateTime?
   orders                       Order[]
@@ -272,6 +282,7 @@ model User {
   /// Staff role constraints are enforced in migration 20260620180000_add_staff_roles_permissions.
   @@index([role, staffRole])
   @@index([isBlocked, phone])
+  @@index([countryId])
   @@map("users")
 }
 
@@ -308,25 +319,30 @@ model Session {
 }
 
 model Product {
-  id                  String              @id
-  slug                String              @unique
+  id                  String                 @id
+  slug                String                 @unique
   name                String
   nameAr              String
+  nameZh              String                 @default("")
   description         String
   descriptionAr       String
+  descriptionZh       String                 @default("")
   image               String
   banner              String?
-  category            ProductCategory     @default(TOP_UP)
+  category            ProductCategory        @default(TOP_UP)
+  catalogCategoryId   String?
+  catalogCategory     CatalogCategory?       @relation(fields: [catalogCategoryId], references: [id], onDelete: SetNull)
+  fulfillmentMode     ProductFulfillmentMode @default(WAHO_API)
   publisher           String
-  isPopular           Boolean             @default(false)
-  isFeatured          Boolean             @default(false)
-  isActive            Boolean             @default(true)
-  requiresUserId      Boolean             @default(true)
+  isPopular           Boolean                @default(false)
+  isFeatured          Boolean                @default(false)
+  isActive            Boolean                @default(true)
+  requiresUserId      Boolean                @default(true)
   userIdLabel         String
   userIdLabelAr       String
   userIdPlaceholder   String
   userIdPlaceholderAr String
-  zoneIdRequired      Boolean             @default(false)
+  zoneIdRequired      Boolean                @default(false)
   zoneIdLabel         String?
   zoneIdLabelAr       String?
   countries           String[]
@@ -334,10 +350,32 @@ model Product {
   orders              Order[]
   banners             Banner[]
   customPricingRules  CustomPricingRule[]
-  createdAt           DateTime            @default(now())
-  updatedAt           DateTime            @updatedAt
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
 
+  @@index([catalogCategoryId, isActive])
   @@map("products")
+}
+
+model CatalogCategory {
+  id            String    @id
+  slug          String    @unique
+  name          String
+  nameAr        String
+  nameZh        String    @default("")
+  description   String
+  descriptionAr String
+  descriptionZh String    @default("")
+  image         String
+  accentColor   String    @default("#9bd8f2")
+  sortOrder     Int       @default(0)
+  isActive      Boolean   @default(true)
+  products      Product[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@map("catalog_categories")
 }
 
 model TopupPackage {
@@ -366,50 +404,56 @@ model TopupPackage {
 }
 
 model Order {
-  id                     String                 @id
-  userId                 String
-  user                   User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
-  productId              String
-  product                Product                @relation(fields: [productId], references: [id], onDelete: Restrict)
-  packageId              String
-  package                TopupPackage           @relation(fields: [packageId], references: [id], onDelete: Restrict)
-  gameName               String
-  packageName            String
-  gameUserId             String
-  gameUsername           String?
-  zoneId                 String?
-  quantity               Int                    @default(1)
-  unitPrice              Int
-  totalPrice             Int
-  discount               Int                    @default(0)
-  finalPrice             Int
-  currency               String                 @default("IQD")
-  status                 OrderStatus            @default(PENDING)
-  paymentMethod          PaymentMethod
-  paymentStatus          PaymentStatus          @default(PENDING)
-  providerId             String?
-  providerOrderId        String?
-  customPricingRuleId    String?
-  customPricingRule      CustomPricingRule?     @relation(fields: [customPricingRuleId], references: [id], onDelete: SetNull)
-  pricingSnapshot        Json?
-  idempotencyKey         String?
-  idempotencyFingerprint String?
-  paymentAttempts        PaymentAttempt[]
-  paymentRefunds         PaymentRefund[]
-  providerRequests       ProviderRequest[]
-  providerRetryJobs      ProviderRetryJob[]
-  walletTransactions     WalletTransaction[]
-  whatsappNotifications  WhatsAppNotification[]
-  createdAt              DateTime               @default(now())
-  updatedAt              DateTime               @updatedAt
-  completedAt            DateTime?
-  refundedAt             DateTime?
-  refundReason           String?
+  id                       String                 @id
+  userId                   String
+  user                     User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
+  productId                String
+  product                  Product                @relation(fields: [productId], references: [id], onDelete: Restrict)
+  packageId                String
+  package                  TopupPackage           @relation(fields: [packageId], references: [id], onDelete: Restrict)
+  gameName                 String
+  packageName              String
+  gameUserId               String
+  gameUsername             String?
+  zoneId                   String?
+  quantity                 Int                    @default(1)
+  unitPrice                Int
+  totalPrice               Int
+  discount                 Int                    @default(0)
+  finalPrice               Int
+  currency                 String                 @default("IQD")
+  status                   OrderStatus            @default(PENDING)
+  paymentMethod            PaymentMethod
+  paymentStatus            PaymentStatus          @default(PENDING)
+  fulfillmentMode          ProductFulfillmentMode @default(WAHO_API)
+  fulfillmentCodeEncrypted String?
+  fulfillmentNote          String?
+  fulfilledByAdminId       String?
+  manualFulfilledAt        DateTime?
+  providerId               String?
+  providerOrderId          String?
+  customPricingRuleId      String?
+  customPricingRule        CustomPricingRule?     @relation(fields: [customPricingRuleId], references: [id], onDelete: SetNull)
+  pricingSnapshot          Json?
+  idempotencyKey           String?
+  idempotencyFingerprint   String?
+  paymentAttempts          PaymentAttempt[]
+  paymentRefunds           PaymentRefund[]
+  providerRequests         ProviderRequest[]
+  providerRetryJobs        ProviderRetryJob[]
+  walletTransactions       WalletTransaction[]
+  whatsappNotifications    WhatsAppNotification[]
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  completedAt              DateTime?
+  refundedAt               DateTime?
+  refundReason             String?
 
   @@unique([userId, idempotencyKey])
   /// Financial CHECK constraints are enforced in migration 20260619122500_add_financial_check_constraints.
   @@index([userId, createdAt])
   @@index([status, paymentStatus])
+  @@index([fulfillmentMode, status, paymentStatus])
   @@index([customPricingRuleId])
   @@map("orders")
 }
@@ -750,21 +794,22 @@ model Promotion {
 }
 
 model Banner {
-  id         String   @id @default(cuid())
-  title      String
-  titleAr    String
-  subtitle   String?
-  subtitleAr String?
-  image      String
-  link       String?
-  productId  String?
-  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
-  startDate  DateTime
-  endDate    DateTime
-  isActive   Boolean  @default(true)
-  sortOrder  Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id          String   @id @default(cuid())
+  title       String
+  titleAr     String
+  subtitle    String?
+  subtitleAr  String?
+  image       String
+  mobileImage String?
+  link        String?
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   /// Banner CHECK constraints are enforced in migration 20260620130000_add_banner_management.
   @@index([isActive, startDate, endDate, sortOrder])
@@ -799,6 +844,7 @@ model Country {
   phoneCode            String
   currencyCode         String
   currency             Currency             @relation(fields: [currencyCode], references: [code], onDelete: Restrict)
+  users                User[]
   primaryPriceCurrency PrimaryPriceCurrency @default(LOCAL)
   showPricesInIqd      Boolean              @default(true)
   showPricesInUsd      Boolean              @default(false)

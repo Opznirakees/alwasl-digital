@@ -16,10 +16,12 @@ import {
 import { scheduleProviderRetryJob } from './provider-retry-jobs';
 import {
   notifyOrderCreatedForOrder,
+  notifyOwnerOrderCreatedForOrder,
   notifyPaymentReceivedForOrder,
   notifyTopupFailureForOrder,
   notifyTopupSuccessForOrder,
 } from './whatsapp-notifications';
+import { isManualFulfillmentMode } from '../domain/fulfillment';
 import type { PaymentMethod } from '@/types';
 
 interface CreateOrderInput {
@@ -130,13 +132,25 @@ export async function createPendingOrder(
   });
 
   if (!product) throw new Error('NOT_FOUND');
+  if (user.countryId && !product.countries.includes(user.countryId)) {
+    throw new Error('PRODUCT_NOT_AVAILABLE_IN_COUNTRY');
+  }
 
   const pkg = product.packages.find((item) => item.id === input.packageId && item.inStock);
   if (!pkg) throw new Error('Top-up amount is unavailable');
 
-  const providerSelection = await getWahoVerificationProvider(input.productSlug);
-  const account = await providerSelection.provider.verifyWahoAccount(input.wahoId);
-  if (!account.valid) throw new Error('Invalid WAHO account');
+  let account: { valid: boolean; wahoId: string; username?: string };
+  if (product.fulfillmentMode === 'WAHO_API') {
+    if (input.wahoId.trim().length < 3) throw new Error('Invalid WAHO account');
+    const providerSelection = await getWahoVerificationProvider(input.productSlug);
+    account = await providerSelection.provider.verifyWahoAccount(input.wahoId);
+    if (!account.valid) throw new Error('Invalid WAHO account');
+  } else {
+    account = {
+      valid: true,
+      wahoId: input.wahoId.trim() || 'manual-delivery',
+    };
+  }
 
   const membership = resolveMembershipForSpend(user.totalSpent);
   const now = new Date();
@@ -203,6 +217,7 @@ export async function createPendingOrder(
         status: 'PENDING',
         paymentMethod,
         paymentStatus: 'PENDING',
+        fulfillmentMode: product.fulfillmentMode,
         idempotencyKey: idempotency.key,
         idempotencyFingerprint: idempotency.fingerprint,
         paymentAttempts: {
@@ -220,7 +235,10 @@ export async function createPendingOrder(
       },
     });
 
-    await safeWhatsAppNotification(() => notifyOrderCreatedForOrder(order.id));
+    await Promise.all([
+      safeWhatsAppNotification(() => notifyOrderCreatedForOrder(order.id)),
+      safeWhatsAppNotification(() => notifyOwnerOrderCreatedForOrder(order.id)),
+    ]);
     return { order, replayed: false };
   } catch (error) {
     if (isUniqueConstraintError(error)) {
@@ -706,6 +724,10 @@ export async function fulfillPaidOrder(orderId: string): Promise<OrderMutationRe
   if (!claimed) throw new Error('NOT_FOUND');
   if (claimed.status !== 'PROCESSING' || claimed.paymentStatus !== 'COMPLETED') {
     return { order: claimed, replayed: true };
+  }
+
+  if (isManualFulfillmentMode(claimed.fulfillmentMode)) {
+    return { order: claimed, replayed: false };
   }
 
   const providerInput = createWahoTopupInput(claimed);

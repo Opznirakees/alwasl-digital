@@ -29,7 +29,7 @@ export const sensitiveOtpRequestSchema = z.object({
 export const createOrderSchema = z.object({
   productSlug: z.string().min(1),
   packageId: z.string().min(1),
-  wahoId: z.string().trim().min(3).max(80),
+  wahoId: z.string().trim().max(80).default(''),
   zoneId: z.string().trim().max(80).optional().or(z.literal('')),
   paymentMethod: z.enum(['wallet', 'zaincash', 'asiahawala', 'card', 'usdt', 'qicard']),
   otp: otpCodeSchema.optional(),
@@ -95,11 +95,15 @@ export const createAdminProductSchema = z.object({
   slug: productSlugSchema,
   name: z.string().trim().min(2).max(120),
   nameAr: z.string().trim().min(2).max(120),
+  nameZh: z.string().trim().max(120).optional().or(z.literal('')),
   description: z.string().trim().min(10).max(500),
   descriptionAr: z.string().trim().min(10).max(500),
+  descriptionZh: z.string().trim().max(500).optional().or(z.literal('')),
   image: z.string().trim().min(1).max(240).default('/brand/alwasl-mark.jpg'),
   banner: z.string().trim().max(240).optional().or(z.literal('')),
   category: z.enum(['TOP_UP', 'APP', 'GAME', 'SOCIAL_MEDIA', 'VOUCHER']).default('TOP_UP'),
+  catalogCategoryId: z.string().trim().min(1).max(80),
+  fulfillmentMode: z.enum(['WAHO_API', 'MANUAL_CODE', 'MANUAL_TOPUP']).default('MANUAL_TOPUP'),
   publisher: z.string().trim().min(2).max(120).default('Al-Wasl Digital'),
   isActive: z.boolean().default(false),
   isPopular: z.boolean().default(false),
@@ -116,9 +120,30 @@ export const createAdminProductSchema = z.object({
 });
 
 export const updateAdminProductSchema = z.object({
+  name: z.string().trim().min(2).max(120).optional(),
+  nameAr: z.string().trim().min(2).max(120).optional(),
+  nameZh: z.string().trim().max(120).optional(),
+  description: z.string().trim().min(10).max(500).optional(),
+  descriptionAr: z.string().trim().min(10).max(500).optional(),
+  descriptionZh: z.string().trim().max(500).optional(),
+  image: z.string().trim().min(1).max(500).optional(),
+  banner: z.string().trim().max(500).nullable().optional(),
+  category: z.enum(['TOP_UP', 'APP', 'GAME', 'SOCIAL_MEDIA', 'VOUCHER']).optional(),
+  catalogCategoryId: z.string().trim().min(1).max(80).nullable().optional(),
+  fulfillmentMode: z.enum(['WAHO_API', 'MANUAL_CODE', 'MANUAL_TOPUP']).optional(),
+  publisher: z.string().trim().min(2).max(120).optional(),
   isActive: z.boolean().optional(),
   isPopular: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
+  requiresUserId: z.boolean().optional(),
+  userIdLabel: z.string().trim().min(2).max(80).optional(),
+  userIdLabelAr: z.string().trim().min(2).max(80).optional(),
+  userIdPlaceholder: z.string().trim().min(2).max(120).optional(),
+  userIdPlaceholderAr: z.string().trim().min(2).max(120).optional(),
+  zoneIdRequired: z.boolean().optional(),
+  zoneIdLabel: z.string().trim().max(80).nullable().optional(),
+  zoneIdLabelAr: z.string().trim().max(80).nullable().optional(),
+  countries: z.array(z.string().trim().min(2).max(8)).min(1).optional(),
 }).refine((payload) => Object.keys(payload).length > 0, {
   message: 'At least one product field is required',
 });
@@ -139,6 +164,11 @@ export const createAdminTopupPackageSchema = z.object({
 });
 
 export const updateAdminTopupPackageSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  nameAr: z.string().trim().min(1).max(120).optional(),
+  amount: z.coerce.number().int().min(1).max(1_000_000_000).optional(),
+  unit: z.string().trim().min(1).max(40).optional(),
+  unitAr: z.string().trim().min(1).max(40).optional(),
   basePrice: z.coerce.number().int().min(1).max(1_000_000_000).optional(),
   salePrice: z.coerce.number().int().min(1).max(1_000_000_000).nullable().optional(),
   inStock: z.boolean().optional(),
@@ -280,7 +310,8 @@ export const createAdminBannerSchema = z.object({
   titleAr: z.string().trim().min(2).max(120),
   subtitle: z.string().trim().max(240).optional().or(z.literal('')),
   subtitleAr: z.string().trim().max(240).optional().or(z.literal('')),
-  image: z.string().trim().min(1).max(240),
+  image: z.string().trim().min(1).max(500),
+  mobileImage: z.string().trim().max(500).optional().or(z.literal('')),
   link: z.string().trim().max(240).optional().or(z.literal('')),
   gameId: z.string().trim().min(1).max(120).optional().or(z.literal('')),
   startDate: z.string().datetime(),
@@ -297,7 +328,8 @@ export const updateAdminBannerSchema = z.object({
   titleAr: z.string().trim().min(2).max(120).optional(),
   subtitle: z.string().trim().max(240).optional().or(z.literal('')),
   subtitleAr: z.string().trim().max(240).optional().or(z.literal('')),
-  image: z.string().trim().min(1).max(240).optional(),
+  image: z.string().trim().min(1).max(500).optional(),
+  mobileImage: z.string().trim().max(500).optional().or(z.literal('')),
   link: z.string().trim().max(240).optional().or(z.literal('')),
   gameId: z.string().trim().min(1).max(120).optional().or(z.literal('')),
   startDate: z.string().datetime().optional(),
@@ -308,6 +340,33 @@ export const updateAdminBannerSchema = z.object({
   message: 'At least one banner field is required',
 });
 
+const categorySlugSchema = z.string().trim().min(2).max(80).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+const accentColorSchema = z.string().trim().regex(/^#[0-9A-Fa-f]{6}$/);
+
+export const createAdminCategorySchema = z.object({
+  slug: categorySlugSchema,
+  name: z.string().trim().min(2).max(120),
+  nameAr: z.string().trim().min(2).max(120),
+  nameZh: z.string().trim().max(120).default(''),
+  description: z.string().trim().min(5).max(500),
+  descriptionAr: z.string().trim().min(5).max(500),
+  descriptionZh: z.string().trim().max(500).default(''),
+  image: z.string().trim().min(1).max(500),
+  accentColor: accentColorSchema.default('#9bd8f2'),
+  sortOrder: z.coerce.number().int().min(0).max(100_000).default(0),
+  isActive: z.boolean().default(true),
+});
+
+export const updateAdminCategorySchema = createAdminCategorySchema.partial().refine(
+  (payload) => Object.keys(payload).length > 0,
+  { message: 'At least one category field is required' }
+);
+
+export const fulfillManualOrderSchema = z.object({
+  code: z.string().trim().min(3).max(500).optional().or(z.literal('')),
+  note: z.string().trim().max(500).optional().or(z.literal('')),
+});
+
 export const currencyCodeSchema = z.string().trim().regex(/^[A-Z]{3,8}$/);
 
 export const updateAdminCountrySchema = z.object({
@@ -315,7 +374,7 @@ export const updateAdminCountrySchema = z.object({
   nameAr: z.string().trim().min(2).max(120).optional(),
   nameZh: z.string().trim().min(1).max(120).optional(),
   flag: z.string().trim().min(1).max(16).optional(),
-  phoneCode: z.string().trim().regex(/^\+[1-9][0-9]{0,5}$/).optional(),
+  phoneCode: z.string().trim().regex(/^\+[1-9][0-9]{0,8}$/).optional(),
   currencyCode: currencyCodeSchema.optional(),
   primaryPriceCurrency: z.enum(['IQD', 'USD', 'LOCAL']).optional(),
   showPricesInIqd: z.boolean().optional(),

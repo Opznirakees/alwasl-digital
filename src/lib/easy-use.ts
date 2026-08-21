@@ -88,6 +88,41 @@ const orderStatusGuidance: Record<OrderStatus, Record<Language, string>> = {
   },
 };
 
-export function getOrderStatusGuidance(status: OrderStatus, language: Language) {
-  return orderStatusGuidance[status][language];
+const manualCodeStatusGuidance: Partial<Record<OrderStatus, Record<Language, string>>> = {
+  processing: {
+    en: 'The team is preparing your purchased code for private WhatsApp delivery.',
+    ar: 'يجهز الفريق الرمز المشترى لإرساله إليك بشكل خاص عبر واتساب.',
+    zh: '团队正在准备您购买的代码，并将通过 WhatsApp 私密发送。',
+  },
+  completed: {
+    en: 'Your purchased code was delivered through WhatsApp.',
+    ar: 'تم إرسال الرمز المشترى إليك عبر واتساب.',
+    zh: '您购买的代码已通过 WhatsApp 发送。',
+  },
+};
+
+const manualTopupStatusGuidance: Partial<Record<OrderStatus, Record<Language, string>>> = {
+  processing: {
+    en: 'The team is applying this top-up and will confirm it through WhatsApp.',
+    ar: 'ينفذ الفريق هذا الشحن وسيؤكده لك عبر واتساب.',
+    zh: '团队正在处理此次充值，并将通过 WhatsApp 确认。',
+  },
+  completed: {
+    en: 'The team completed this top-up and sent a WhatsApp confirmation.',
+    ar: 'أكمل الفريق هذا الشحن وأرسل تأكيداً عبر واتساب.',
+    zh: '团队已完成此次充值，并发送了 WhatsApp 确认。',
+  },
+};
+
+export function getOrderStatusGuidance(
+  status: OrderStatus,
+  language: Language,
+  fulfillmentMode: 'waho_api' | 'manual_code' | 'manual_topup' = 'waho_api'
+) {
+  const manualGuidance = fulfillmentMode === 'manual_code'
+    ? manualCodeStatusGuidance[status]
+    : fulfillmentMode === 'manual_topup'
+      ? manualTopupStatusGuidance[status]
+      : undefined;
+  return (manualGuidance ?? orderStatusGuidance[status])[language];
 }

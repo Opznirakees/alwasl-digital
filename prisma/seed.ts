@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { banners, countries, demoUser, games, promotions } from '../src/data/mock-data';
+import { asiacellWahoPackages, mastercardWahoPackages } from '../src/data/catalog-seeds';
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({
@@ -11,22 +12,25 @@ const prisma = new PrismaClient({
 async function main() {
   const adminPhone = process.env.SEED_ADMIN_PHONE ?? demoUser.phone;
   const product = games[0];
-  const currencySeeds = [
-    { code: 'IQD', name: 'Iraqi Dinar', symbol: 'د.ع', decimalPlaces: 0 },
-    { code: 'USD', name: 'US Dollar', symbol: '$', decimalPlaces: 2 },
-    { code: 'SAR', name: 'Saudi Riyal', symbol: 'ر.س', decimalPlaces: 2 },
-    { code: 'AED', name: 'UAE Dirham', symbol: 'د.إ', decimalPlaces: 2 },
-    { code: 'EGP', name: 'Egyptian Pound', symbol: 'ج.م', decimalPlaces: 2 },
-    { code: 'JOD', name: 'Jordanian Dinar', symbol: 'د.أ', decimalPlaces: 3 },
-    { code: 'KWD', name: 'Kuwaiti Dinar', symbol: 'د.ك', decimalPlaces: 3 },
-  ];
+  const allCountryIds = countries.map((country) => country.id);
+  const currencySeeds = [...new Map([
+    ['USD', { code: 'USD', name: 'US Dollar', symbol: '$', decimalPlaces: 2 }],
+    ...countries.map((country) => [country.currency, {
+      code: country.currency,
+      name: country.currencyName ?? country.currency,
+      symbol: country.currencySymbol,
+      decimalPlaces: country.decimalPlaces ?? 2,
+    }] as const),
+  ]).values()];
   const manualExchangeRates = [
     { baseCurrencyCode: 'IQD', quoteCurrencyCode: 'USD', rate: 0.000763 },
-    { baseCurrencyCode: 'IQD', quoteCurrencyCode: 'SAR', rate: 0.00275 },
-    { baseCurrencyCode: 'IQD', quoteCurrencyCode: 'AED', rate: 0.00280 },
-    { baseCurrencyCode: 'IQD', quoteCurrencyCode: 'EGP', rate: 0.03650 },
-    { baseCurrencyCode: 'IQD', quoteCurrencyCode: 'JOD', rate: 0.00054 },
-    { baseCurrencyCode: 'IQD', quoteCurrencyCode: 'KWD', rate: 0.00023 },
+    ...countries
+      .filter((country) => country.currency !== 'IQD' && Number(country.exchangeRate) > 0)
+      .map((country) => ({
+        baseCurrencyCode: 'IQD',
+        quoteCurrencyCode: country.currency,
+        rate: Number(country.exchangeRate),
+      })),
   ];
   const providerInitialBalance = Number.parseInt(process.env.WAHO_PROVIDER_INITIAL_BALANCE ?? '100000000', 10);
   const providerLowBalanceThreshold = Number.parseInt(process.env.WAHO_PROVIDER_LOW_BALANCE_THRESHOLD ?? '10000000', 10);
@@ -102,19 +106,81 @@ async function main() {
       update: {
         rate: rate.rate,
         isActive: true,
-        source: 'manual',
-        note: 'Seeded manual exchange rate',
+        source: 'manual-seed-2026-08-21',
+        note: 'Admin-editable initial IQD conversion rate',
       },
       create: {
         baseCurrencyCode: rate.baseCurrencyCode,
         quoteCurrencyCode: rate.quoteCurrencyCode,
         rate: rate.rate,
         isActive: true,
-        source: 'manual',
-        note: 'Seeded manual exchange rate',
+        source: 'manual-seed-2026-08-21',
+        note: 'Admin-editable initial IQD conversion rate',
       },
     });
   }
+
+  await prisma.catalogCategory.upsert({
+    where: { id: 'waho' },
+    update: {
+      slug: 'waho',
+      name: 'WAHO',
+      nameAr: 'واهو',
+      nameZh: 'WAHO',
+      description: 'Choose a WAHO recharge route after secure WhatsApp login.',
+      descriptionAr: 'اختر طريقة شحن واهو بعد تسجيل الدخول الآمن عبر واتساب.',
+      descriptionZh: '通过 WhatsApp 安全登录后选择 WAHO 充值方式。',
+      image: '/brand/waho-app-icon.webp',
+      accentColor: '#9bd8f2',
+      sortOrder: 10,
+      isActive: true,
+    },
+    create: {
+      id: 'waho',
+      slug: 'waho',
+      name: 'WAHO',
+      nameAr: 'واهو',
+      nameZh: 'WAHO',
+      description: 'Choose a WAHO recharge route after secure WhatsApp login.',
+      descriptionAr: 'اختر طريقة شحن واهو بعد تسجيل الدخول الآمن عبر واتساب.',
+      descriptionZh: '通过 WhatsApp 安全登录后选择 WAHO 充值方式。',
+      image: '/brand/waho-app-icon.webp',
+      accentColor: '#9bd8f2',
+      sortOrder: 10,
+      isActive: true,
+    },
+  });
+
+  await prisma.catalogCategory.upsert({
+    where: { id: 'asiacell' },
+    update: {
+      slug: 'asiacell',
+      name: 'Asiacell',
+      nameAr: 'آسياسيل',
+      nameZh: 'Asiacell',
+      description: 'Order a WAHO recharge code with the Asiacell price list.',
+      descriptionAr: 'اطلب رمز شحن واهو وفق قائمة أسعار آسياسيل.',
+      descriptionZh: '按 Asiacell 价目表订购 WAHO 充值码。',
+      image: '/brand/asiacell-category.svg',
+      accentColor: '#f6b7cc',
+      sortOrder: 20,
+      isActive: true,
+    },
+    create: {
+      id: 'asiacell',
+      slug: 'asiacell',
+      name: 'Asiacell',
+      nameAr: 'آسياسيل',
+      nameZh: 'Asiacell',
+      description: 'Order a WAHO recharge code with the Asiacell price list.',
+      descriptionAr: 'اطلب رمز شحن واهو وفق قائمة أسعار آسياسيل.',
+      descriptionZh: '按 Asiacell 价目表订购 WAHO 充值码。',
+      image: '/brand/asiacell-category.svg',
+      accentColor: '#f6b7cc',
+      sortOrder: 20,
+      isActive: true,
+    },
+  });
 
   await prisma.user.upsert({
     where: { phone: adminPhone },
@@ -146,13 +212,17 @@ async function main() {
     where: { id: product.id },
     update: {
       slug: product.slug,
-      name: product.name,
-      nameAr: product.nameAr,
-      description: product.description,
-      descriptionAr: product.descriptionAr,
+      name: 'WAHO MasterCard Recharge',
+      nameAr: 'شحن واهو - ماستر كارد',
+      nameZh: 'WAHO MasterCard 充值',
+      description: 'Recharge WAHO balance using the MasterCard price list.',
+      descriptionAr: 'اشحن رصيد واهو وفق قائمة أسعار ماستر كارد.',
+      descriptionZh: '按 MasterCard 价目表充值 WAHO 余额。',
       image: product.image,
       banner: product.banner,
       category: 'TOP_UP',
+      catalogCategoryId: 'waho',
+      fulfillmentMode: 'WAHO_API',
       publisher: product.publisher,
       isPopular: product.isPopular,
       isFeatured: product.isFeatured,
@@ -165,18 +235,22 @@ async function main() {
       zoneIdRequired: product.zoneIdRequired,
       zoneIdLabel: product.zoneIdLabel,
       zoneIdLabelAr: product.zoneIdLabelAr,
-      countries: product.countries,
+      countries: allCountryIds,
     },
     create: {
       id: product.id,
       slug: product.slug,
-      name: product.name,
-      nameAr: product.nameAr,
-      description: product.description,
-      descriptionAr: product.descriptionAr,
+      name: 'WAHO MasterCard Recharge',
+      nameAr: 'شحن واهو - ماستر كارد',
+      nameZh: 'WAHO MasterCard 充值',
+      description: 'Recharge WAHO balance using the MasterCard price list.',
+      descriptionAr: 'اشحن رصيد واهو وفق قائمة أسعار ماستر كارد.',
+      descriptionZh: '按 MasterCard 价目表充值 WAHO 余额。',
       image: product.image,
       banner: product.banner,
       category: 'TOP_UP',
+      catalogCategoryId: 'waho',
+      fulfillmentMode: 'WAHO_API',
       publisher: product.publisher,
       isPopular: product.isPopular,
       isFeatured: product.isFeatured,
@@ -189,44 +263,149 @@ async function main() {
       zoneIdRequired: product.zoneIdRequired,
       zoneIdLabel: product.zoneIdLabel,
       zoneIdLabelAr: product.zoneIdLabelAr,
-      countries: product.countries,
+      countries: allCountryIds,
     },
   });
 
-  for (const [index, pkg] of product.packages.entries()) {
+  const mastercardPackageIds: string[] = [];
+  for (const [index, pkg] of mastercardWahoPackages.entries()) {
+    const id = `waho-mastercard-${pkg.balance}`;
+    mastercardPackageIds.push(id);
     await prisma.topupPackage.upsert({
-      where: { id: pkg.id },
+      where: { id },
       update: {
         productId: product.id,
-        name: pkg.name,
-        nameAr: pkg.nameAr,
-        amount: pkg.amount,
-        unit: pkg.unit,
-        unitAr: pkg.unitAr,
-        basePrice: pkg.basePrice,
-        salePrice: pkg.salePrice,
-        currency: pkg.currency,
-        inStock: pkg.inStock,
-        isPopular: pkg.isPopular ?? false,
+        name: `${pkg.balance.toLocaleString('en-IQ')} WAHO balance`,
+        nameAr: `${pkg.balance.toLocaleString('en-IQ')} رصيد واهو`,
+        amount: pkg.balance,
+        unit: 'WAHO balance',
+        unitAr: 'رصيد واهو',
+        basePrice: pkg.priceIqd,
+        salePrice: null,
+        currency: 'IQD',
+        inStock: true,
+        isPopular: pkg.priceIqd === 25_000,
         sortOrder: index,
       },
       create: {
-        id: pkg.id,
+        id,
         productId: product.id,
-        name: pkg.name,
-        nameAr: pkg.nameAr,
-        amount: pkg.amount,
-        unit: pkg.unit,
-        unitAr: pkg.unitAr,
-        basePrice: pkg.basePrice,
-        salePrice: pkg.salePrice,
-        currency: pkg.currency,
-        inStock: pkg.inStock,
-        isPopular: pkg.isPopular ?? false,
+        name: `${pkg.balance.toLocaleString('en-IQ')} WAHO balance`,
+        nameAr: `${pkg.balance.toLocaleString('en-IQ')} رصيد واهو`,
+        amount: pkg.balance,
+        unit: 'WAHO balance',
+        unitAr: 'رصيد واهو',
+        basePrice: pkg.priceIqd,
+        currency: 'IQD',
+        inStock: true,
+        isPopular: pkg.priceIqd === 25_000,
         sortOrder: index,
       },
     });
   }
+
+  await prisma.topupPackage.updateMany({
+    where: { productId: product.id, id: { notIn: mastercardPackageIds } },
+    data: { inStock: false },
+  });
+
+  const asiacellProductId = 'waho-asiacell-code';
+  await prisma.product.upsert({
+    where: { id: asiacellProductId },
+    update: {
+      slug: asiacellProductId,
+      name: 'WAHO via Asiacell',
+      nameAr: 'واهو عبر آسياسيل',
+      nameZh: '通过 Asiacell 充值 WAHO',
+      description: 'Buy a manually delivered WAHO recharge code using the Asiacell price list.',
+      descriptionAr: 'اشترِ رمز شحن واهو يتم تسليمه يدوياً وفق أسعار آسياسيل.',
+      descriptionZh: '按 Asiacell 价目表购买人工交付的 WAHO 充值码。',
+      image: '/brand/asiacell-category.svg',
+      banner: '/brand/recharge-hero-v3.webp',
+      category: 'TOP_UP',
+      catalogCategoryId: 'asiacell',
+      fulfillmentMode: 'MANUAL_CODE',
+      publisher: 'Al-Wasl Digital',
+      isPopular: true,
+      isFeatured: true,
+      isActive: true,
+      requiresUserId: false,
+      userIdLabel: 'Delivery',
+      userIdLabelAr: 'التسليم',
+      userIdPlaceholder: 'Delivered by WhatsApp',
+      userIdPlaceholderAr: 'يتم التسليم عبر واتساب',
+      zoneIdRequired: false,
+      countries: allCountryIds,
+    },
+    create: {
+      id: asiacellProductId,
+      slug: asiacellProductId,
+      name: 'WAHO via Asiacell',
+      nameAr: 'واهو عبر آسياسيل',
+      nameZh: '通过 Asiacell 充值 WAHO',
+      description: 'Buy a manually delivered WAHO recharge code using the Asiacell price list.',
+      descriptionAr: 'اشترِ رمز شحن واهو يتم تسليمه يدوياً وفق أسعار آسياسيل.',
+      descriptionZh: '按 Asiacell 价目表购买人工交付的 WAHO 充值码。',
+      image: '/brand/asiacell-category.svg',
+      banner: '/brand/recharge-hero-v3.webp',
+      category: 'TOP_UP',
+      catalogCategoryId: 'asiacell',
+      fulfillmentMode: 'MANUAL_CODE',
+      publisher: 'Al-Wasl Digital',
+      isPopular: true,
+      isFeatured: true,
+      isActive: true,
+      requiresUserId: false,
+      userIdLabel: 'Delivery',
+      userIdLabelAr: 'التسليم',
+      userIdPlaceholder: 'Delivered by WhatsApp',
+      userIdPlaceholderAr: 'يتم التسليم عبر واتساب',
+      zoneIdRequired: false,
+      countries: allCountryIds,
+    },
+  });
+
+  const asiacellPackageIds: string[] = [];
+  for (const [index, pkg] of asiacellWahoPackages.entries()) {
+    const id = `waho-asiacell-${pkg.balance}`;
+    asiacellPackageIds.push(id);
+    await prisma.topupPackage.upsert({
+      where: { id },
+      update: {
+        productId: asiacellProductId,
+        name: `${pkg.balance.toLocaleString('en-IQ')} WAHO balance code`,
+        nameAr: `رمز رصيد واهو ${pkg.balance.toLocaleString('en-IQ')}`,
+        amount: pkg.balance,
+        unit: 'WAHO balance code',
+        unitAr: 'رمز رصيد واهو',
+        basePrice: pkg.priceIqd,
+        salePrice: null,
+        currency: 'IQD',
+        inStock: true,
+        isPopular: pkg.priceIqd === 15_000,
+        sortOrder: index,
+      },
+      create: {
+        id,
+        productId: asiacellProductId,
+        name: `${pkg.balance.toLocaleString('en-IQ')} WAHO balance code`,
+        nameAr: `رمز رصيد واهو ${pkg.balance.toLocaleString('en-IQ')}`,
+        amount: pkg.balance,
+        unit: 'WAHO balance code',
+        unitAr: 'رمز رصيد واهو',
+        basePrice: pkg.priceIqd,
+        currency: 'IQD',
+        inStock: true,
+        isPopular: pkg.priceIqd === 15_000,
+        sortOrder: index,
+      },
+    });
+  }
+
+  await prisma.topupPackage.updateMany({
+    where: { productId: asiacellProductId, id: { notIn: asiacellPackageIds } },
+    data: { inStock: false },
+  });
 
   for (const promotion of promotions) {
     await prisma.promotion.upsert({
@@ -270,8 +449,9 @@ async function main() {
         subtitle: banner.subtitle,
         subtitleAr: banner.subtitleAr,
         image: banner.image,
+        mobileImage: banner.mobileImage,
         link: banner.link,
-        productId: banner.gameId ?? product.id,
+        productId: banner.gameId ?? null,
         startDate: new Date(banner.startDate),
         endDate: new Date(banner.endDate),
         isActive: banner.isActive,
@@ -284,8 +464,9 @@ async function main() {
         subtitle: banner.subtitle,
         subtitleAr: banner.subtitleAr,
         image: banner.image,
+        mobileImage: banner.mobileImage,
         link: banner.link,
-        productId: banner.gameId ?? product.id,
+        productId: banner.gameId ?? null,
         startDate: new Date(banner.startDate),
         endDate: new Date(banner.endDate),
         isActive: banner.isActive,

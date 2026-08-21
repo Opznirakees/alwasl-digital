@@ -44,6 +44,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         subtitle: cleanOptional(body.subtitle),
         subtitleAr: cleanOptional(body.subtitleAr),
         image: body.image,
+        mobileImage: cleanOptional(body.mobileImage),
         link: cleanOptional(body.link),
         productId,
         startDate: body.startDate ? new Date(body.startDate) : undefined,

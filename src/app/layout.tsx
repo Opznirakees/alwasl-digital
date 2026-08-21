@@ -22,8 +22,8 @@ const notoKufiArabic = Noto_Kufi_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "Al-Wasl Digital Services | Fast WAHO Top-ups",
-  description: "Fast WAHO account top-ups with clear amounts, secure payment steps, order tracking, and support.",
+  title: "Al-Wasl Digital | Digital Recharge",
+  description: "Choose a recharge category, see prices for your country, pay securely, and track every order.",
 };
 
 export default function RootLayout({

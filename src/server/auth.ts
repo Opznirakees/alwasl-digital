@@ -74,6 +74,12 @@ export async function getCurrentUser(): Promise<User | null> {
   return session?.user ?? null;
 }
 
+export async function getOptionalUser() {
+  const user = await getCurrentUser();
+  await assertUserNotBlocked(user);
+  return user;
+}
+
 export async function assertPhoneNotBlocked(phone: string) {
   const normalizedPhone = phone.startsWith('+') ? phone : `+${phone.replace(/\D/g, '')}`;
   const user = await prisma.user.findFirst({

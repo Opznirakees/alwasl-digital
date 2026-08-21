@@ -1,4 +1,5 @@
 import rawCountries from 'world-countries';
+import { resolveCountryDialCode } from './dial-code';
 
 interface WorldCountry {
   cca2: string;
@@ -41,15 +42,9 @@ export interface PhoneCountry {
   searchText: string;
 }
 
-function normalizePhoneCode(root?: string, suffixes?: string[]) {
-  const suffix = suffixes?.find((value) => value !== undefined) ?? '';
-  const code = `${root ?? ''}${suffix}`.replace(/\D/g, '');
-  return code ? `+${code}` : null;
-}
-
 export const phoneCountries: PhoneCountry[] = (rawCountries as WorldCountry[])
   .map((country) => {
-    const phoneCode = normalizePhoneCode(country.idd?.root, country.idd?.suffixes);
+    const phoneCode = resolveCountryDialCode(country.cca2, country.idd?.root, country.idd?.suffixes);
     if (!phoneCode) return null;
 
     const nameAr = country.translations?.ara?.common ?? country.name.common;

@@ -20,6 +20,8 @@ export interface User {
   blockedReason?: string;
   blockedAt?: string;
   blockedByAdminId?: string;
+  countryId?: string;
+  suggestedLanguage?: 'en' | 'ar' | 'zh';
 }
 
 export type UserRole = 'user' | 'admin' | 'staff';
@@ -114,11 +116,15 @@ export interface Game {
   slug: string;
   name: string;
   nameAr: string;
+  nameZh?: string;
   description: string;
   descriptionAr: string;
+  descriptionZh?: string;
   image: string;
   banner?: string;
   category: GameCategory;
+  catalogCategoryId?: string;
+  fulfillmentMode: ProductFulfillmentMode;
   publisher: string;
   isPopular: boolean;
   isFeatured: boolean;
@@ -133,6 +139,25 @@ export interface Game {
   zoneIdLabelAr?: string;
   countries: string[];
   packages: GamePackage[];
+}
+
+export type ProductFulfillmentMode = 'waho_api' | 'manual_code' | 'manual_topup';
+
+export interface CatalogCategory {
+  id: string;
+  slug: string;
+  name: string;
+  nameAr: string;
+  nameZh: string;
+  description: string;
+  descriptionAr: string;
+  descriptionZh: string;
+  image: string;
+  accentColor: string;
+  sortOrder: number;
+  isActive: boolean;
+  productCount: number;
+  products?: Game[];
 }
 
 export type GameCategory = 'top_up' | 'app' | 'game' | 'mobile_game' | 'pc_game' | 'console' | 'gift_card' | 'streaming' | 'social_media' | 'voucher';
@@ -196,6 +221,10 @@ export interface Order {
   status: OrderStatus;
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
+  fulfillmentMode: ProductFulfillmentMode;
+  fulfillmentNote?: string;
+  manualFulfilledAt?: string;
+  deliveryStatus?: 'pending' | 'sent' | 'failed';
   providerId?: string;
   providerOrderId?: string;
   customPricingRuleId?: string;
@@ -292,7 +321,7 @@ export interface ManualDeposit {
   updatedAt: string;
 }
 
-export type WhatsAppNotificationType = 'payment_received' | 'topup_success' | 'topup_failure' | 'marketing';
+export type WhatsAppNotificationType = 'order_created' | 'owner_order_alert' | 'payment_received' | 'topup_success' | 'topup_failure' | 'delivery_code' | 'account_blocked' | 'marketing';
 export type WhatsAppNotificationStatus = 'pending' | 'sent' | 'failed';
 
 export interface WhatsAppNotification {
@@ -323,6 +352,7 @@ export interface Banner {
   subtitle?: string;
   subtitleAr?: string;
   image: string;
+  mobileImage?: string;
   link?: string;
   gameId?: string;
   startDate: string;
