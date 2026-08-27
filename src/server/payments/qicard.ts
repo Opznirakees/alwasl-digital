@@ -93,6 +93,23 @@ export function buildQiCardCallbackUrls(appBaseUrl: string, orderId: string) {
   };
 }
 
+export function getPublicRequestOrigin(requestUrl: string, headers: Pick<Headers, 'get'>) {
+  const fallbackOrigin = new URL(requestUrl).origin;
+  const forwardedHost = headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+  const requestHost = headers.get('host')?.split(',')[0]?.trim();
+  const forwardedProtocol = headers.get('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase();
+  const fallbackProtocol = new URL(requestUrl).protocol.replace(':', '');
+  const protocol = forwardedProtocol || fallbackProtocol;
+  const host = forwardedHost || requestHost;
+
+  if (!host || !['http', 'https'].includes(protocol)) return fallbackOrigin;
+  try {
+    return new URL(`${protocol}://${host}`).origin;
+  } catch {
+    return fallbackOrigin;
+  }
+}
+
 export function getQiCardWebhookReadiness(env: QiCardEnvironment = process.env) {
   let webhookUrl: string | undefined;
   try {

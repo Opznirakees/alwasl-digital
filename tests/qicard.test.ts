@@ -8,6 +8,7 @@ import {
   buildQiCardWebhookSigningString,
   classifyQiCardPayment,
   getQiCardWebhookReadiness,
+  getPublicRequestOrigin,
   isQiCardCheckoutEnabled,
   resolveQiCardConfig,
   verifyQiCardWebhookSignature,
@@ -106,6 +107,19 @@ describe('QiCard configuration', () => {
     });
     expect(JSON.stringify(readiness)).not.toContain('merchant-password');
     expect(JSON.stringify(readiness)).not.toContain('237984');
+  });
+
+  test('uses the public proxy origin instead of DigitalOcean internal localhost', () => {
+    const origin = getPublicRequestOrigin(
+      'http://localhost:3000/api/webhooks/qicard',
+      new Headers({
+        host: 'localhost:3000',
+        'x-forwarded-host': 'alwasl-digital-b8ngg.ondigitalocean.app',
+        'x-forwarded-proto': 'https',
+      }),
+    );
+
+    expect(origin).toBe('https://alwasl-digital-b8ngg.ondigitalocean.app');
   });
 });
 

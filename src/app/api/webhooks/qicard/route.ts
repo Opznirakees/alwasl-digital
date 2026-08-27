@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { handleApiError, ok } from '@/server/http';
-import { getQiCardWebhookReadiness } from '@/server/payments/qicard';
+import { getPublicRequestOrigin, getQiCardWebhookReadiness } from '@/server/payments/qicard';
 import { processQiCardWebhook } from '@/server/services/qicard-payments';
 
 export const runtime = 'nodejs';
@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: NextRequest) {
   const readiness = getQiCardWebhookReadiness({
     ...process.env,
-    APP_BASE_URL: process.env.APP_BASE_URL || request.nextUrl.origin,
+    APP_BASE_URL: process.env.APP_BASE_URL || getPublicRequestOrigin(request.url, request.headers),
   });
   return ok(readiness, { headers: { 'Cache-Control': 'no-store' } });
 }
