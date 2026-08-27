@@ -88,7 +88,9 @@ export default function HomePage() {
   });
   const categoryHref = (category: CatalogCategory) => {
     const target = `/categories/${category.slug}`;
-    return isAuthenticated ? target : `/auth?next=${encodeURIComponent(target)}`;
+    return isAuthenticated || category.priceVisibility === 'PUBLIC'
+      ? target
+      : `/auth?next=${encodeURIComponent(target)}`;
   };
 
   const steps = [
@@ -100,7 +102,7 @@ export default function HomePage() {
     {
       icon: LockKeyhole,
       title: t('Login with WhatsApp', 'سجل الدخول عبر واتساب', '使用 WhatsApp 登录'),
-      body: t('A secure code opens prices for your country.', 'يفتح الرمز الآمن أسعار بلدك.', '安全验证码会显示您所在国家的价格。'),
+      body: t('A secure code confirms who is placing the order.', 'يؤكد الرمز الآمن هوية صاحب الطلب.', '安全验证码用于确认下单者身份。'),
     },
     {
       icon: ReceiptText,
@@ -153,13 +155,13 @@ export default function HomePage() {
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-[#b8c5db] sm:text-base">
                   {isAuthenticated
                     ? t('Choose a category to see the available balances and your local prices.', 'اختر فئة لرؤية الأرصدة المتاحة وأسعارك المحلية.', '选择分类以查看可用余额和本地价格。')
-                    : t('Choose a category, then log in to see prices for your country.', 'اختر فئة ثم سجل الدخول لرؤية أسعار بلدك.', '选择分类，然后登录查看您所在国家的价格。')}
+                    : t('Public prices open immediately. Protected categories ask you to log in first.', 'تظهر الأسعار العامة فوراً، وتطلب الفئات المحمية تسجيل الدخول أولاً.', '公开价格会立即显示，受保护分类会先要求登录。')}
                 </p>
               </div>
               {!isAccountLoading && !isAuthenticated && (
                 <div className="inline-flex max-w-max items-center gap-2 rounded-md border border-[#f6b7cc]/35 bg-[#f6b7cc]/10 px-3 py-2 text-xs font-semibold text-[#ffd7e4]">
                   <LockKeyhole className="h-4 w-4" />
-                  {t('Prices open after login', 'تظهر الأسعار بعد الدخول', '登录后显示价格')}
+                  {t('Some prices require login', 'بعض الأسعار تتطلب تسجيل الدخول', '部分价格需要登录')}
                 </div>
               )}
             </div>
@@ -189,7 +191,9 @@ export default function HomePage() {
                         <span className="mt-3 text-xl font-bold text-white sm:text-2xl">{content.name}</span>
                         <span className="mt-2 line-clamp-3 text-xs leading-5 text-[#b8c5db] sm:text-sm">{content.description}</span>
                         <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-[var(--category-accent)]">
-                          {isAuthenticated ? t('View balances', 'عرض الأرصدة', '查看余额') : t('Login and view', 'سجل الدخول واعرض', '登录并查看')}
+                          {isAuthenticated || category.priceVisibility === 'PUBLIC'
+                            ? t('View prices', 'عرض الأسعار', '查看价格')
+                            : t('Login and view', 'سجل الدخول واعرض', '登录并查看')}
                           <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                         </span>
                       </span>

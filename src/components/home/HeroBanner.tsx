@@ -23,8 +23,8 @@ const fallbackBanner: Banner = {
   id: 'fallback',
   title: 'Recharge your digital balance',
   titleAr: 'اشحن رصيدك الرقمي',
-  subtitle: 'Choose a category, log in with WhatsApp, and see the right price for your country.',
-  subtitleAr: 'اختر الفئة وسجل الدخول عبر واتساب وشاهد السعر المناسب لبلدك.',
+  subtitle: 'Choose a category, compare available prices, and log in with WhatsApp to order.',
+  subtitleAr: 'اختر الفئة وقارن الأسعار المتاحة ثم سجل الدخول عبر واتساب للطلب.',
   image: '/brand/recharge-hero-v3.webp',
   mobileImage: '/brand/recharge-hero-mobile-v3.webp',
   link: '/#categories',
@@ -54,7 +54,7 @@ export function HeroBanner({ banners }: HeroBannerProps) {
   }, [slides.length]);
 
   const bannerLink = active.link || '/#categories';
-  const requiresLogin = bannerLink.startsWith('/top-up') || bannerLink.startsWith('/categories') || bannerLink.startsWith('/#categories');
+  const requiresLogin = bannerLink.startsWith('/top-up') || bannerLink.startsWith('/categories');
   const primaryHref = requiresLogin && !isAuthenticated
     ? `/auth?next=${encodeURIComponent(bannerLink)}`
     : bannerLink;
@@ -114,7 +114,7 @@ export function HeroBanner({ banners }: HeroBannerProps) {
           </p>
           <div className="mt-5 flex flex-wrap gap-3 sm:mt-7">
             <Link data-testid="home-primary-topup" href={primaryHref} className="v2-primary-button min-h-12 min-w-44">
-              {isAuthenticated ? t('Choose category', 'اختر الفئة', '选择分类') : t('Login to see prices', 'سجل الدخول لرؤية الأسعار', '登录查看价格')}
+              {t('Choose category', 'اختر الفئة', '选择分类')}
               <ChevronRight className="h-4 w-4 rtl:rotate-180" />
             </Link>
             <Link href="/help" className="v2-secondary-button min-h-12 border-white/22 bg-white/5 text-white hover:bg-white/10">

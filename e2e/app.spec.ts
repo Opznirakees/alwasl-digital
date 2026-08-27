@@ -98,7 +98,7 @@ test.describe('WAHO production smoke', () => {
       localStorage.setItem('language', 'en');
     });
     await page.goto('/');
-    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Login to see prices');
+    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Choose category');
     await page.context().addCookies([{
       name: 'alwasl_session',
       value: sessionCookie,

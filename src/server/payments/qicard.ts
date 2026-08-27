@@ -81,6 +81,41 @@ export interface RefundQiCardPaymentInput {
   message?: string;
 }
 
+export function buildQiCardCallbackUrls(appBaseUrl: string, orderId: string) {
+  const normalizedBaseUrl = parseHttpsUrl(appBaseUrl, true);
+  const finishPaymentUrl = new URL('/payments/qicard/return', `${normalizedBaseUrl}/`);
+  finishPaymentUrl.searchParams.set('orderId', orderId);
+  const notificationUrl = new URL('/api/webhooks/qicard', `${normalizedBaseUrl}/`);
+
+  return {
+    finishPaymentUrl: finishPaymentUrl.toString(),
+    notificationUrl: notificationUrl.toString(),
+  };
+}
+
+export function getQiCardWebhookReadiness(env: QiCardEnvironment = process.env) {
+  let webhookUrl: string | undefined;
+  try {
+    if (env.APP_BASE_URL) {
+      webhookUrl = buildQiCardCallbackUrls(env.APP_BASE_URL, 'readiness').notificationUrl;
+    }
+    const config = resolveQiCardConfig(env);
+    return {
+      provider: 'qicard' as const,
+      configured: isQiCardWebhookEnabled(env),
+      environment: config.environment,
+      webhookUrl: buildQiCardCallbackUrls(config.appBaseUrl, 'readiness').notificationUrl,
+    };
+  } catch {
+    return {
+      provider: 'qicard' as const,
+      configured: false,
+      environment: 'unconfigured' as const,
+      ...(webhookUrl ? { webhookUrl } : {}),
+    };
+  }
+}
+
 function normalizePem(value: string | undefined) {
   const normalized = value?.trim().replace(/\\n/g, '\n');
   return normalized || undefined;

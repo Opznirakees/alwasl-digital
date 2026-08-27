@@ -72,6 +72,7 @@ const catalogCategories = [
     accentColor: '#9bd8f2',
     sortOrder: 0,
     isActive: true,
+    priceVisibility: 'AUTHENTICATED',
     productCount: 1,
   },
   {
@@ -87,6 +88,7 @@ const catalogCategories = [
     accentColor: '#f6b7cc',
     sortOrder: 1,
     isActive: true,
+    priceVisibility: 'PUBLIC',
     productCount: 1,
   },
 ];
@@ -273,9 +275,7 @@ async function mockCustomerApi(page: Page, initiallyAuthenticated = false) {
         : json({ error: 'Authentication required' }, 401);
     }
     if (path === '/api/categories/asiacell') {
-      return authenticated
-        ? json({ category: { ...catalogCategories[1], products: [asiacellProduct] } })
-        : json({ error: 'Authentication required' }, 401);
+      return json({ category: { ...catalogCategories[1], products: [asiacellProduct] } });
     }
     if (path === '/api/products') {
       const products = [product, asiacellProduct].map((item) => authenticated ? item : { ...item, packages: [] });
@@ -580,18 +580,30 @@ async function expectAllInsideViewport(page: Page, selector: string) {
 }
 
 test.describe('generation 2 customer experience', () => {
+  test('shows public Asiacell prices before login but protects the actual order', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await mockCustomerApi(page);
+    await page.goto('/categories/asiacell');
+
+    await expect(page.getByRole('heading', { level: 1, name: 'Asiacell' })).toBeVisible();
+    await expect(page.getByText('28,000').first()).toBeVisible();
+    const orderLink = page.getByRole('link', { name: /Login to order/ }).first();
+    await expect(orderLink).toHaveAttribute('href', /\/auth\?next=.*top-up.*waho-asiacell-code/);
+    await expectNoHorizontalOverflow(page);
+  });
+
   test('makes the protected multi-category journey obvious on a small phone', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await mockCustomerApi(page);
     await page.goto('/');
 
     await expect(page.getByRole('heading', { level: 1, name: 'Recharge your digital balance' })).toBeVisible();
-    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Login to see prices');
-    await expect(page.getByText('Prices open after login')).toBeVisible();
+    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Choose category');
+    await expect(page.getByText('Some prices require login')).toBeVisible();
     const categoryCards = page.getByTestId('catalog-category-card');
     await expect(categoryCards).toHaveCount(2);
     await expect(categoryCards.filter({ hasText: 'WAHO' })).toHaveAttribute('href', /\/auth\?next=.*categories.*waho/);
-    await expect(categoryCards.filter({ hasText: 'Asiacell' })).toHaveAttribute('href', /\/auth\?next=.*categories.*asiacell/);
+    await expect(categoryCards.filter({ hasText: 'Asiacell' })).toHaveAttribute('href', '/categories/asiacell');
 
     const mobileTabs = page.locator('[data-mobile-tab-bar]');
     await expect(mobileTabs).toBeVisible();
@@ -1046,7 +1058,9 @@ test.describe('generation 2 customer experience', () => {
     const contentDialog = page.getByRole('dialog', { name: 'Edit website text' });
     await contentDialog.getByLabel('English').fill('Select your balance');
     await contentDialog.getByRole('button', { name: 'Save text' }).click();
-    await expect(page.getByText('Select your balance')).toBeVisible();
+    await expect(
+      page.getByLabel('Editable website texts').getByText('Select your balance', { exact: true }),
+    ).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'admin-content-mobile');
   });

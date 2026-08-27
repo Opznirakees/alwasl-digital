@@ -107,6 +107,9 @@ export interface ExchangeRate {
   source: string;
   note?: string;
   updatedByAdminId?: string;
+  effectiveFrom: string;
+  effectiveUntil?: string;
+  createdAt: string;
   updatedAt: string;
 }
 
@@ -156,6 +159,7 @@ export interface CatalogCategory {
   accentColor: string;
   sortOrder: number;
   isActive: boolean;
+  priceVisibility: 'PUBLIC' | 'AUTHENTICATED';
   productCount: number;
   products?: Game[];
 }

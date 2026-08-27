@@ -1916,18 +1916,20 @@ describe('admin CRUD rules', () => {
     expect(migration).toContain('exchange_rates_baseCurrencyCode_quoteCurrencyCode_key');
     expect(seed).toContain('prisma.currency.upsert');
     expect(seed).toContain('prisma.country.upsert');
-    expect(seed).toContain('prisma.exchangeRate.upsert');
+    expect(seed).toContain('prisma.exchangeRate.findFirst');
+    expect(seed).toContain('prisma.exchangeRate.create');
     expect(mapper).toContain('mapCountry');
     expect(mapper).toContain('mapExchangeRate');
     expect(validation).toContain('updateAdminCountrySchema');
     expect(validation).toContain('createAdminExchangeRateSchema');
     expect(publicCountriesRoute).toContain('prisma.country.findMany');
     expect(publicCountriesRoute).toContain('prisma.exchangeRate.findMany');
-    expect(publicCountriesRoute).toContain('baseCurrencyCode: BASE_CURRENCY');
+    expect(publicCountriesRoute).toContain('resolveExchangeRateQuotes');
     expect(adminSummaryRoute).toContain('prisma.country.findMany');
     expect(adminSummaryRoute).toContain('prisma.exchangeRate.findMany');
-    expect(adminSummaryRoute).toContain('countries: countries.map');
-    expect(adminSummaryRoute).toContain('exchangeRates: exchangeRates.map(mapExchangeRate)');
+    expect(adminSummaryRoute).toContain('resolveExchangeRateQuotes');
+    expect(adminSummaryRoute).toContain('[...exchangeRates, ...currentExchangeRates]');
+    expect(adminSummaryRoute).toContain('.values()].map(mapExchangeRate)');
     expect(appContext).toContain("fetch('/api/countries')");
     expect(appContext).toContain('countries,');
     expect(appContext).not.toContain("import { countries } from '@/data/mock-data'");
@@ -1996,7 +1998,7 @@ describe('admin CRUD rules', () => {
       ['src/app/api/admin/banners/route.ts', ['export async function POST', 'createAdminBannerSchema', 'prisma.banner.create', "action: 'admin.banner.create'"]],
       ['src/app/api/admin/banners/[id]/route.ts', ['export async function PATCH', 'updateAdminBannerSchema', 'prisma.banner.update', "action: 'admin.banner.update'"]],
       ['src/app/api/admin/countries/[id]/route.ts', ['export async function PATCH', 'updateAdminCountrySchema', 'prisma.country.update', "action: 'admin.country.update'"]],
-      ['src/app/api/admin/exchange-rates/route.ts', ['export async function POST', 'createAdminExchangeRateSchema', 'prisma.exchangeRate.upsert', "action: 'admin.exchange_rate.upsert'"]],
+      ['src/app/api/admin/exchange-rates/route.ts', ['export async function POST', 'createAdminExchangeRateSchema', 'tx.exchangeRate.upsert', "action: 'admin.exchange_rate.set'"]],
       ['src/app/api/admin/users/[id]/account-type/route.ts', ['export async function PATCH', 'adminUserAccountTypeSchema', 'prisma.user.update', "action: 'admin.user.account_type.update'"]],
       ['src/app/api/admin/users/[id]/permissions/route.ts', ['export async function PATCH', 'adminUserPermissionsSchema', 'prisma.user.update', "action: 'admin.user.permissions.update'"]],
       ['src/app/api/admin/manual-deposits/[id]/route.ts', ['export async function PATCH', 'reviewManualDepositSchema', 'reviewManualDeposit', "action: 'admin.manual_deposit.review'"]],

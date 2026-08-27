@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { use, useEffect, useState, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, ArrowLeft, ArrowRight, Gem, Loader2, LockKeyhole } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, Gem, Globe2, Loader2, LockKeyhole } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { PriceDisplay } from '@/components/pricing/PriceDisplay';
 import { Button } from '@/components/ui/button';
@@ -25,10 +25,6 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   useEffect(() => {
     if (isAccountLoading) return;
-    if (!isAuthenticated) {
-      router.replace(`/auth?next=${encodeURIComponent(`/categories/${slug}`)}`);
-      return;
-    }
 
     let active = true;
     const controller = new AbortController();
@@ -64,7 +60,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
       window.clearTimeout(timeout);
       controller.abort();
     };
-  }, [isAccountLoading, isAuthenticated, router, selectedCountry.id, slug]);
+  }, [isAccountLoading, router, selectedCountry.id, slug]);
 
   const name = category
     ? language === 'ar' ? category.nameAr : language === 'zh' ? category.nameZh || category.name : category.name
@@ -73,7 +69,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
     ? language === 'ar' ? category.descriptionAr : language === 'zh' ? category.descriptionZh || category.description : category.description
     : '';
 
-  if (isAccountLoading || (!isAuthenticated && isLoading)) {
+  if (isAccountLoading) {
     return (
       <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}><Header /><main className="mx-auto flex min-h-[60vh] max-w-5xl items-center justify-center px-4"><div role="status" className="flex items-center gap-3 text-sm text-[#b8c5db]"><Loader2 className="h-5 w-5 animate-spin text-[#9bd8f2] motion-reduce:animate-none" />{t('Checking your account...', 'جارٍ التحقق من حسابك...', '正在检查您的账号...')}</div></main></div>
     );
@@ -98,7 +94,10 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           <>
             <header className="mt-3 grid min-h-[180px] gap-5 overflow-hidden rounded-lg border border-white/12 bg-[#07152e] p-5 sm:grid-cols-[1fr_180px] sm:items-center sm:p-8" style={{ borderTopColor: category.accentColor, borderTopWidth: 4 }}>
               <div>
-                <div className="inline-flex items-center gap-2 rounded-md px-2.5 py-1 text-xs font-bold text-[#07152e]" style={{ backgroundColor: category.accentColor }}><LockKeyhole className="h-3.5 w-3.5" />{t('Prices for {{country}}', 'أسعار {{country}}', '{{country}} 的价格').replace('{{country}}', language === 'ar' ? selectedCountry.nameAr : language === 'zh' ? selectedCountry.nameZh : selectedCountry.name)}</div>
+                <div className="inline-flex items-center gap-2 rounded-md px-2.5 py-1 text-xs font-bold text-[#07152e]" style={{ backgroundColor: category.accentColor }}>
+                  {category.priceVisibility === 'PUBLIC' ? <Globe2 className="h-3.5 w-3.5" /> : <LockKeyhole className="h-3.5 w-3.5" />}
+                  {t('Prices for {{country}}', 'أسعار {{country}}', '{{country}} 的价格').replace('{{country}}', language === 'ar' ? selectedCountry.nameAr : language === 'zh' ? selectedCountry.nameZh : selectedCountry.name)}
+                </div>
                 <h1 className="mt-3 text-3xl font-bold text-white sm:text-4xl">{name}</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-[#b8c5db] sm:text-base">{description}</p>
               </div>
@@ -117,13 +116,16 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                     </div>
                     <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                       {product.packages.filter((pkg) => pkg.inStock).map((pkg) => (
-                        <Link key={pkg.id} href={`/top-up/${product.slug}?amount=${pkg.amount}`} className={`group flex min-h-[188px] flex-col rounded-lg border bg-[#07152e] p-3 text-start transition-colors hover:border-[var(--category-accent)] hover:bg-[#0a2148] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-accent)] ${pkg.isPopular ? 'border-[var(--category-accent)]' : 'border-white/12'}`} style={{ '--category-accent': category.accentColor } as CSSProperties}>
+                        <Link key={pkg.id} href={isAuthenticated
+                          ? `/top-up/${product.slug}?amount=${pkg.amount}`
+                          : `/auth?next=${encodeURIComponent(`/top-up/${product.slug}?amount=${pkg.amount}`)}`
+                        } className={`group flex min-h-[188px] flex-col rounded-lg border bg-[#07152e] p-3 text-start transition-colors hover:border-[var(--category-accent)] hover:bg-[#0a2148] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-accent)] ${pkg.isPopular ? 'border-[var(--category-accent)]' : 'border-white/12'}`} style={{ '--category-accent': category.accentColor } as CSSProperties}>
                           {pkg.isPopular && <span className="mb-2 max-w-max rounded bg-[var(--category-accent)] px-2 py-1 text-[9px] font-bold text-[#07152e]">{t('Popular', 'الأكثر اختياراً', '热门')}</span>}
                           <span className="text-xl font-bold tabular-nums text-white">{new Intl.NumberFormat(locale).format(pkg.amount)}</span>
                           <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#b8c5db]"><Gem className="h-3.5 w-3.5 text-[#9bd8f2]" />{language === 'ar' ? pkg.unitAr : pkg.unit}</span>
                           <span className="mt-4 text-[10px] text-[#b8c5db]">{t('You pay', 'تدفع', '您支付')}</span>
                           <PriceDisplay amountIqd={pkg.salePrice || pkg.basePrice} compact primaryClassName="mt-1 text-sm font-bold text-[#f7b928]" secondaryClassName="text-[#dbe5f6]" />
-                          <span className="mt-auto flex min-h-10 items-center justify-center gap-1.5 rounded-md bg-[var(--category-accent)] px-2 text-xs font-bold text-[#07152e]">{t('Choose', 'اختر', '选择')}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></span>
+                          <span className="mt-auto flex min-h-10 items-center justify-center gap-1.5 rounded-md bg-[var(--category-accent)] px-2 text-xs font-bold text-[#07152e]">{isAuthenticated ? t('Choose', 'اختر', '选择') : t('Login to order', 'سجل الدخول للطلب', '登录下单')}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></span>
                         </Link>
                       ))}
                     </div>

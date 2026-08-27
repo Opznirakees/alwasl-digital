@@ -3,6 +3,7 @@ import { Prisma, type Order, type User } from '@prisma/client';
 import { prisma } from '../prisma';
 import {
   QiCardClient,
+  buildQiCardCallbackUrls,
   classifyQiCardPayment,
   createQiCardClient,
   parseQiCardPaymentPayload,
@@ -150,13 +151,14 @@ export async function createQiCardCheckout(
 
   let payment: QiCardPayment;
   try {
+    const callbackUrls = buildQiCardCallbackUrls(config.appBaseUrl, order.id);
     payment = await client.createPayment({
       requestId,
       amount: attempt.amount,
       currency: attempt.currency,
       locale: safeLocale(input.locale),
-      finishPaymentUrl: `${config.appBaseUrl}/payments/qicard/return?orderId=${encodeURIComponent(order.id)}`,
-      notificationUrl: `${config.appBaseUrl}/api/webhooks/qicard`,
+      finishPaymentUrl: callbackUrls.finishPaymentUrl,
+      notificationUrl: callbackUrls.notificationUrl,
       customerInfo: {
         phone: order.user.phone,
         accountId: order.user.id,

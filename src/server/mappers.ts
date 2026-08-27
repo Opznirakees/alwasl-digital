@@ -444,12 +444,22 @@ export function mapCatalogCategory(category: CatalogCategoryWithProducts): Catal
     accentColor: category.accentColor,
     sortOrder: category.sortOrder,
     isActive: category.isActive,
+    priceVisibility: category.priceVisibility,
     productCount: category._count?.products ?? category.products?.length ?? 0,
     products: category.products?.map(mapProduct),
   };
 }
 
 export type CountryWithCurrency = DbCountry & { currency: DbCurrency };
+
+interface CountryExchangeRate {
+  baseCurrencyCode: string;
+  quoteCurrencyCode: string;
+  rate: unknown;
+  isActive: boolean;
+  effectiveFrom?: Date;
+  updatedAt: Date;
+}
 
 export function mapCurrency(currency: DbCurrency): Currency {
   return {
@@ -463,9 +473,9 @@ export function mapCurrency(currency: DbCurrency): Currency {
 
 export function mapCountry(
   country: CountryWithCurrency,
-  exchangeRate?: DbExchangeRate | null,
+  exchangeRate?: CountryExchangeRate | null,
   baseCurrency = 'IQD',
-  allExchangeRates: DbExchangeRate[] = exchangeRate ? [exchangeRate] : []
+  allExchangeRates: CountryExchangeRate[] = exchangeRate ? [exchangeRate] : []
 ): Country {
   const rate = country.currencyCode === baseCurrency ? 1 : Number(exchangeRate?.rate ?? 0);
   const ratesByQuote = new Map(
@@ -512,7 +522,7 @@ export function mapCountry(
     decimalPlaces: country.currency.decimalPlaces,
     exchangeRate: rate,
     exchangeRateBase: baseCurrency,
-    exchangeRateUpdatedAt: exchangeRate?.updatedAt.toISOString(),
+    exchangeRateUpdatedAt: (exchangeRate?.effectiveFrom ?? exchangeRate?.updatedAt)?.toISOString(),
     primaryPriceCurrency: country.primaryPriceCurrency,
     showPricesInIqd: country.showPricesInIqd,
     showPricesInUsd: country.showPricesInUsd,
@@ -532,6 +542,9 @@ export function mapExchangeRate(rate: DbExchangeRate): ExchangeRate {
     source: rate.source,
     note: rate.note ?? undefined,
     updatedByAdminId: rate.updatedByAdminId ?? undefined,
+    effectiveFrom: rate.effectiveFrom.toISOString(),
+    effectiveUntil: rate.effectiveUntil?.toISOString(),
+    createdAt: rate.createdAt.toISOString(),
     updatedAt: rate.updatedAt.toISOString(),
   };
 }

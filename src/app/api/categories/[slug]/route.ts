@@ -13,7 +13,6 @@ interface RouteContext {
 
 export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    await requireUser();
     const { slug } = await context.params;
     const countryId = request.nextUrl.searchParams.get('country')?.trim().toLowerCase() || undefined;
     const category = await prisma.catalogCategory.findFirst({
@@ -36,6 +35,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     });
 
     if (!category) throw new Error('NOT_FOUND');
+    if (category.priceVisibility === 'AUTHENTICATED') await requireUser();
     return ok({ category: mapCatalogCategory(category) }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     return handleApiError(error);

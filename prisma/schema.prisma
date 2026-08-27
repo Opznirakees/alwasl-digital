@@ -236,6 +236,11 @@ enum PrimaryPriceCurrency {
   LOCAL
 }
 
+enum CategoryPriceVisibility {
+  PUBLIC
+  AUTHENTICATED
+}
+
 model User {
   id                           String                 @id @default(cuid())
   phone                        String                 @unique
@@ -358,21 +363,22 @@ model Product {
 }
 
 model CatalogCategory {
-  id            String    @id
-  slug          String    @unique
-  name          String
-  nameAr        String
-  nameZh        String    @default("")
-  description   String
-  descriptionAr String
-  descriptionZh String    @default("")
-  image         String
-  accentColor   String    @default("#9bd8f2")
-  sortOrder     Int       @default(0)
-  isActive      Boolean   @default(true)
-  products      Product[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id              String                  @id
+  slug            String                  @unique
+  name            String
+  nameAr          String
+  nameZh          String                  @default("")
+  description     String
+  descriptionAr   String
+  descriptionZh   String                  @default("")
+  image           String
+  accentColor     String                  @default("#9bd8f2")
+  sortOrder       Int                     @default(0)
+  isActive        Boolean                 @default(true)
+  priceVisibility CategoryPriceVisibility @default(AUTHENTICATED)
+  products        Product[]
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
 
   @@index([isActive, sortOrder])
   @@map("catalog_categories")
@@ -870,12 +876,15 @@ model ExchangeRate {
   note              String?
   updatedByAdminId  String?
   updatedByAdmin    User?    @relation("ExchangeRateUpdatedBy", fields: [updatedByAdminId], references: [id], onDelete: SetNull)
+  effectiveFrom     DateTime @default(now())
+  effectiveUntil    DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   /// Exchange rate CHECK constraints are enforced in migration 20260620140000_add_currency_exchange_management.
-  @@unique([baseCurrencyCode, quoteCurrencyCode])
   @@index([isActive, baseCurrencyCode, quoteCurrencyCode])
+  @@unique([baseCurrencyCode, quoteCurrencyCode, effectiveFrom])
+  @@index([isActive, effectiveFrom, effectiveUntil])
   @@index([updatedByAdminId, updatedAt])
   @@map("exchange_rates")
 }

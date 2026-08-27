@@ -9,6 +9,10 @@ import {
   assertCountryPrimaryRate,
   assertCountryPricePolicy,
 } from '@/server/domain/country-pricing';
+import {
+  resolveExchangeRate,
+  resolveExchangeRateQuotes,
+} from '@/server/domain/exchange-rates';
 
 export const runtime = 'nodejs';
 
@@ -28,23 +32,24 @@ export async function POST(request: NextRequest) {
     const requiredRateCode = body.primaryPriceCurrency === 'LOCAL'
       ? body.currencyCode
       : body.primaryPriceCurrency;
+    const now = new Date();
+    const exchangeRateHistory = await prisma.exchangeRate.findMany({
+      where: {
+        isActive: true,
+        effectiveFrom: { lte: now },
+        OR: [{ effectiveUntil: null }, { effectiveUntil: { gt: now } }],
+      },
+    });
     const primaryRate = requiredRateCode === BASE_CURRENCY
-      ? null
-      : await prisma.exchangeRate.findUnique({
-          where: {
-            baseCurrencyCode_quoteCurrencyCode: {
-              baseCurrencyCode: BASE_CURRENCY,
-              quoteCurrencyCode: requiredRateCode,
-            },
-          },
-        });
+      ? 1
+      : resolveExchangeRate(BASE_CURRENCY, requiredRateCode, exchangeRateHistory);
     assertCountryPrimaryRate({
       localCurrencyCode: body.currencyCode,
       primaryPriceCurrency: body.primaryPriceCurrency,
       showPricesInIqd: body.showPricesInIqd,
       showPricesInUsd: body.showPricesInUsd,
       showPricesInLocal: body.showPricesInLocal,
-    }, primaryRate?.isActive ? { [requiredRateCode]: Number(primaryRate.rate) } : {});
+    }, primaryRate ? { [requiredRateCode]: primaryRate } : {});
 
     const country = await prisma.$transaction(async (tx) => {
       await tx.currency.upsert({
@@ -98,13 +103,11 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    const exchangeRates = await prisma.exchangeRate.findMany({
-      where: {
-        baseCurrencyCode: BASE_CURRENCY,
-        quoteCurrencyCode: { in: [country.currencyCode, 'USD'] },
-        isActive: true,
-      },
-    });
+    const exchangeRates = resolveExchangeRateQuotes(
+      BASE_CURRENCY,
+      [country.currencyCode, 'USD'],
+      exchangeRateHistory,
+    );
     const localRate = exchangeRates.find((rate) => rate.quoteCurrencyCode === country.currencyCode);
 
     await recordAdminAuditLog({

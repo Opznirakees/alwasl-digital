@@ -96,28 +96,26 @@ async function main() {
   }
 
   for (const rate of manualExchangeRates) {
-    await prisma.exchangeRate.upsert({
+    const existingRate = await prisma.exchangeRate.findFirst({
       where: {
-        baseCurrencyCode_quoteCurrencyCode: {
-          baseCurrencyCode: rate.baseCurrencyCode,
-          quoteCurrencyCode: rate.quoteCurrencyCode,
-        },
-      },
-      update: {
-        rate: rate.rate,
-        isActive: true,
-        source: 'manual-seed-2026-08-21',
-        note: 'Admin-editable initial IQD conversion rate',
-      },
-      create: {
         baseCurrencyCode: rate.baseCurrencyCode,
         quoteCurrencyCode: rate.quoteCurrencyCode,
-        rate: rate.rate,
-        isActive: true,
-        source: 'manual-seed-2026-08-21',
-        note: 'Admin-editable initial IQD conversion rate',
       },
+      select: { id: true },
     });
+    if (!existingRate) {
+      await prisma.exchangeRate.create({
+        data: {
+          baseCurrencyCode: rate.baseCurrencyCode,
+          quoteCurrencyCode: rate.quoteCurrencyCode,
+          rate: rate.rate,
+          isActive: true,
+          source: 'manual-seed-2026-08-21',
+          note: 'Admin-editable initial IQD conversion rate',
+          effectiveFrom: new Date('2026-08-21T00:00:00.000Z'),
+        },
+      });
+    }
   }
 
   await prisma.catalogCategory.upsert({
@@ -134,6 +132,7 @@ async function main() {
       accentColor: '#9bd8f2',
       sortOrder: 10,
       isActive: true,
+      priceVisibility: 'AUTHENTICATED',
     },
     create: {
       id: 'waho',
@@ -148,6 +147,7 @@ async function main() {
       accentColor: '#9bd8f2',
       sortOrder: 10,
       isActive: true,
+      priceVisibility: 'AUTHENTICATED',
     },
   });
 
@@ -165,6 +165,7 @@ async function main() {
       accentColor: '#f6b7cc',
       sortOrder: 20,
       isActive: true,
+      priceVisibility: 'PUBLIC',
     },
     create: {
       id: 'asiacell',
@@ -179,6 +180,7 @@ async function main() {
       accentColor: '#f6b7cc',
       sortOrder: 20,
       isActive: true,
+      priceVisibility: 'PUBLIC',
     },
   });
 

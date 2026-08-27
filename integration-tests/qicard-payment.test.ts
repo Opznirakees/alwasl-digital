@@ -4,6 +4,7 @@ import type { Order, PaymentAttempt, User } from '@prisma/client';
 import { prisma } from '@/server/prisma';
 import { buildQiCardWebhookSigningString, type QiCardPayment, type QiCardRefund } from '@/server/payments/qicard';
 import {
+  cancelQiCardOrder,
   createQiCardCheckout,
   processQiCardWebhook,
   refreshQiCardOrder,
@@ -177,6 +178,26 @@ describe('QiCard database payment flow', () => {
     expect(storedUser.totalSpent).toBe(order.finalPrice);
     expect(storedOrder.paymentStatus).toBe('COMPLETED');
     expect(storedAttempt.status).toBe('COMPLETED');
+  });
+
+  test('cancels a pending QiCard payment without charging or fulfilling the order', async () => {
+    const initialSpend = (await prisma.user.findUniqueOrThrow({ where: { id: user.id } })).totalSpent;
+    const { order, attempt } = await createOrder();
+    const payment = paymentFor(attempt, 'CREATED');
+
+    const cancelled = await cancelQiCardOrder(user, order.id, {
+      client: gateway(payment),
+      env,
+    });
+    const [storedAttempt, storedUser] = await Promise.all([
+      prisma.paymentAttempt.findUniqueOrThrow({ where: { id: attempt.id } }),
+      prisma.user.findUniqueOrThrow({ where: { id: user.id } }),
+    ]);
+
+    expect(cancelled.status).toBe('CANCELLED');
+    expect(cancelled.paymentStatus).toBe('FAILED');
+    expect(storedAttempt.status).toBe('FAILED');
+    expect(storedUser.totalSpent).toBe(initialSpend);
   });
 
   test('deduplicates signed webhooks and rejects an invalid signature without settlement', async () => {

@@ -355,6 +355,7 @@ export const createAdminCategorySchema = z.object({
   accentColor: accentColorSchema.default('#9bd8f2'),
   sortOrder: z.coerce.number().int().min(0).max(100_000).default(0),
   isActive: z.boolean().default(true),
+  priceVisibility: z.enum(['PUBLIC', 'AUTHENTICATED']).default('AUTHENTICATED'),
 });
 
 export const updateAdminCategorySchema = createAdminCategorySchema.partial().refine(
@@ -463,6 +464,7 @@ export const createAdminExchangeRateSchema = z.object({
   quoteCurrencyCode: currencyCodeSchema,
   rate: z.coerce.number().positive().max(1_000_000),
   isActive: z.boolean().default(true),
+  effectiveFrom: z.string().datetime().optional(),
   note: z.string().trim().max(240).optional().or(z.literal('')),
 }).refine((payload) => payload.baseCurrencyCode !== payload.quoteCurrencyCode, {
   message: 'Exchange rate currencies must be different',

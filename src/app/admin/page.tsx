@@ -71,6 +71,13 @@ type AdminRoleValue = 'USER' | 'ADMIN' | 'STAFF';
 type StaffRoleValue = 'OWNER' | 'OPERATIONS' | 'SUPPORT' | 'FINANCE' | 'MARKETING' | 'VIEWER';
 type ReportPeriod = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
+function currentMinuteForInput() {
+  const now = new Date();
+  now.setSeconds(0, 0);
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 16);
+}
+
 interface AdminReportBucket {
   key: string;
   label: string;
@@ -285,9 +292,10 @@ export default function AdminDashboard() {
     order: '1',
   });
   const [exchangeRateForm, setExchangeRateForm] = useState({
-    baseCurrencyCode: 'IQD',
-    quoteCurrencyCode: 'SAR',
-    rate: '0.00275',
+    baseCurrencyCode: 'USD',
+    quoteCurrencyCode: 'IQD',
+    rate: '1310',
+    effectiveFrom: currentMinuteForInput(),
     note: '',
     isActive: true,
   });
@@ -845,6 +853,7 @@ export default function AdminDashboard() {
       accentColor: string;
       sortOrder: number;
       isActive: boolean;
+      priceVisibility: 'PUBLIC' | 'AUTHENTICATED';
     }
   ) {
     let succeeded = false;
@@ -910,10 +919,15 @@ export default function AdminDashboard() {
           baseCurrencyCode: exchangeRateForm.baseCurrencyCode,
           quoteCurrencyCode: exchangeRateForm.quoteCurrencyCode,
           rate: Number(exchangeRateForm.rate),
+          effectiveFrom: new Date(exchangeRateForm.effectiveFrom).toISOString(),
           isActive: exchangeRateForm.isActive,
           note: exchangeRateForm.note,
         }),
       });
+      setExchangeRateForm((current) => ({
+        ...current,
+        effectiveFrom: currentMinuteForInput(),
+      }));
       toast.success(t('Exchange rate updated', 'تم تحديث سعر الصرف', '汇率已更新'));
     });
   }
@@ -1268,12 +1282,20 @@ export default function AdminDashboard() {
     return Array.from(options.values()).sort((a, b) => a.code.localeCompare(b.code));
   }, [countries, exchangeRates]);
 
-  const getExchangeRateForCurrency = (currencyCode: string) => {
-    if (currencyCode === 'IQD') return 1;
-    return exchangeRates.find((rate) => (
-      rate.baseCurrencyCode === 'IQD' &&
-      rate.quoteCurrencyCode === currencyCode
-    ))?.rate ?? 0;
+  const getManagedExchangeRate = (baseCurrencyCode: string, quoteCurrencyCode: string) => {
+    if (baseCurrencyCode === quoteCurrencyCode) return 1;
+    const now = Date.now();
+    const current = exchangeRates
+      .filter((rate) => {
+        const starts = new Date(rate.effectiveFrom).getTime();
+        const ends = rate.effectiveUntil ? new Date(rate.effectiveUntil).getTime() : Number.POSITIVE_INFINITY;
+        const samePair = (rate.baseCurrencyCode === baseCurrencyCode && rate.quoteCurrencyCode === quoteCurrencyCode)
+          || (rate.baseCurrencyCode === quoteCurrencyCode && rate.quoteCurrencyCode === baseCurrencyCode);
+        return samePair && rate.isActive && starts <= now && ends > now;
+      })
+      .sort((left, right) => new Date(right.effectiveFrom).getTime() - new Date(left.effectiveFrom).getTime())[0];
+    if (!current) return 0;
+    return current.baseCurrencyCode === baseCurrencyCode ? current.rate : 1 / current.rate;
   };
 
   const sidebarItems = [
@@ -3104,25 +3126,33 @@ export default function AdminDashboard() {
               />
 
               <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
-                <form onSubmit={updateExchangeRate} className="grid gap-4 lg:grid-cols-[0.7fr_0.7fr_0.9fr_1.2fr_auto] lg:items-end">
+                <div className="mb-5">
+                  <h3 className="text-lg font-bold text-white">{t('Set a new exchange rate', 'تعيين سعر صرف جديد', '设置新汇率')}</h3>
+                  <p className="mt-1 text-sm text-white/50">{t('The new rate applies to every price from the selected minute until a newer rate starts.', 'يُطبق السعر الجديد على جميع الأسعار من الدقيقة المحددة حتى يبدأ سعر أحدث.', '新汇率从所选分钟起应用于所有价格，直到更新的汇率生效。')}</p>
+                </div>
+                <form onSubmit={updateExchangeRate} className="grid gap-4 md:grid-cols-2 xl:grid-cols-[0.75fr_0.75fr_0.8fr_1fr_1.1fr_auto] xl:items-end">
                   <div className="space-y-2">
                     <Label htmlFor="rate-base" className="text-white/70">{t('Base', 'الأساس', '基础货币')}</Label>
-                    <Input
+                    <select
                       id="rate-base"
                       value={exchangeRateForm.baseCurrencyCode}
-                      onChange={(event) => setExchangeRateForm((current) => ({ ...current, baseCurrencyCode: event.target.value.toUpperCase() }))}
-                      className="bg-slate-900 border-emerald-800/30 text-white"
-                    />
+                      onChange={(event) => setExchangeRateForm((current) => ({ ...current, baseCurrencyCode: event.target.value }))}
+                      className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                    >
+                      {currencyOptions.filter((currency) => currency.code !== exchangeRateForm.quoteCurrencyCode).map((currency) => (
+                        <option key={currency.code} value={currency.code}>{currency.code} - {currency.name}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="rate-quote" className="text-white/70">{t('Local currency', 'العملة المحلية', '本地货币')}</Label>
+                    <Label htmlFor="rate-quote" className="text-white/70">{t('Quote', 'عملة التسعير', '计价货币')}</Label>
                     <select
                       id="rate-quote"
                       value={exchangeRateForm.quoteCurrencyCode}
                       onChange={(event) => setExchangeRateForm((current) => ({
                         ...current,
                         quoteCurrencyCode: event.target.value,
-                        rate: String(getExchangeRateForCurrency(event.target.value) || current.rate),
+                        rate: String(getManagedExchangeRate(current.baseCurrencyCode, event.target.value) || current.rate),
                       }))}
                       className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
                     >
@@ -3144,6 +3174,19 @@ export default function AdminDashboard() {
                       onChange={(event) => setExchangeRateForm((current) => ({ ...current, rate: event.target.value }))}
                       className="bg-slate-900 border-emerald-800/30 text-white"
                     />
+                    <p className="text-[11px] text-white/40">1 {exchangeRateForm.baseCurrencyCode} = {exchangeRateForm.rate || '0'} {exchangeRateForm.quoteCurrencyCode}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="rate-effective-from" className="text-white/70">{t('Valid from', 'صالح من', '生效时间')}</Label>
+                    <Input
+                      id="rate-effective-from"
+                      type="datetime-local"
+                      step="60"
+                      value={exchangeRateForm.effectiveFrom}
+                      onChange={(event) => setExchangeRateForm((current) => ({ ...current, effectiveFrom: event.target.value }))}
+                      required
+                      className="bg-slate-900 border-emerald-800/30 text-white"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="rate-note" className="text-white/70">{t('Note', 'ملاحظة', '备注')}</Label>
@@ -3155,7 +3198,7 @@ export default function AdminDashboard() {
                     />
                   </div>
                   <Button type="submit" disabled={isMutating} className="bg-emerald-600 hover:bg-emerald-500">
-                    {t('Update rate', 'تحديث السعر', '更新汇率')}
+                    {t('Activate rate', 'تفعيل السعر', '启用汇率')}
                   </Button>
                 </form>
               </Card>
@@ -3185,9 +3228,7 @@ export default function AdminDashboard() {
                             {country.currency} <span className="text-white/40">({country.currencySymbol})</span>
                           </TableCell>
                           <TableCell className="text-emerald-400">
-                            {new Intl.NumberFormat('en-US', { maximumFractionDigits: 8 }).format(
-                              getExchangeRateForCurrency(country.currency) || country.exchangeRate || 0
-                            )}
+                            {new Intl.NumberFormat('en-US', { maximumFractionDigits: 8 }).format(country.exchangeRate || 0)}
                           </TableCell>
                           <TableCell>
                             <Switch
@@ -3203,25 +3244,38 @@ export default function AdminDashboard() {
                 </Card>
 
                 <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
-                  <h3 className="mb-4 text-lg font-bold text-white">{t('Manual rates', 'أسعار الصرف اليدوية', '手动汇率')}</h3>
+                  <h3 className="mb-1 text-lg font-bold text-white">{t('Exchange-rate history', 'سجل أسعار الصرف', '汇率历史')}</h3>
+                  <p className="mb-4 text-xs leading-5 text-white/45">{t('Every change is kept for audit and historical order checks.', 'يتم الاحتفاظ بكل تغيير للتدقيق ومراجعة الطلبات السابقة.', '每次变更都会保留，用于审计和历史订单核对。')}</p>
                   <div className="space-y-3">
-                    {exchangeRates.map((rate) => (
+                    {exchangeRates.map((rate) => {
+                      const now = Date.now();
+                      const starts = new Date(rate.effectiveFrom).getTime();
+                      const ends = rate.effectiveUntil ? new Date(rate.effectiveUntil).getTime() : Number.POSITIVE_INFINITY;
+                      const status = !rate.isActive ? 'inactive' : starts > now ? 'scheduled' : ends <= now ? 'expired' : 'current';
+                      return (
                       <div key={rate.id} className="rounded-lg border border-emerald-800/20 bg-slate-950/50 p-4">
                         <div className="flex items-center justify-between gap-3">
                           <p className="font-mono text-sm font-semibold text-white">
                             {rate.baseCurrencyCode} → {rate.quoteCurrencyCode}
                           </p>
-                          <Badge variant="outline" className={rate.isActive ? getStatusColor('completed') : getStatusColor('failed')}>
-                            {rate.isActive ? t('Active', 'نشط', '启用') : t('Inactive', 'غير نشط', '停用')}
+                          <Badge variant="outline" className={status === 'current' ? getStatusColor('completed') : status === 'scheduled' ? getStatusColor('processing') : getStatusColor('failed')}>
+                            {status === 'current'
+                              ? t('Current', 'الحالي', '当前')
+                              : status === 'scheduled'
+                                ? t('Scheduled', 'مجدول', '已计划')
+                                : status === 'expired'
+                                  ? t('Expired', 'منتهي', '已过期')
+                                  : t('Inactive', 'غير نشط', '停用')}
                           </Badge>
                         </div>
                         <p className="mt-2 text-2xl font-bold text-emerald-400">
                           {new Intl.NumberFormat('en-US', { maximumFractionDigits: 8 }).format(rate.rate)}
                         </p>
-                        <p className="mt-1 text-xs text-white/40">{formatDate(rate.updatedAt)}</p>
+                        <p className="mt-1 text-xs text-white/50">{t('From', 'من', '从')} {formatDate(rate.effectiveFrom)}</p>
+                        {rate.effectiveUntil && <p className="mt-1 text-xs text-white/40">{t('Until', 'حتى', '至')} {formatDate(rate.effectiveUntil)}</p>}
                         {rate.note && <p className="mt-2 text-xs text-white/50">{rate.note}</p>}
                       </div>
-                    ))}
+                    );})}
                   </div>
                 </Card>
               </div>

@@ -19,6 +19,10 @@ import {
 } from '../src/server/domain/fulfillment';
 import { createWhatsAppNotificationMessage } from '../src/server/domain/whatsapp-notifications';
 import { getOrderStatusGuidance } from '../src/lib/easy-use';
+import {
+  floorToMinute,
+  resolveExchangeRate,
+} from '../src/server/domain/exchange-rates';
 
 const repoRoot = join(import.meta.dir, '..');
 
@@ -50,6 +54,10 @@ describe('multi-category catalog', () => {
       join(repoRoot, 'prisma/migrations/20260822120000_add_catalog_categories_manual_fulfillment/migration.sql'),
       'utf8'
     );
+    const prerequisiteMigration = readFileSync(
+      join(repoRoot, 'prisma/migrations/20260822125000_ensure_waho_product_for_catalog/migration.sql'),
+      'utf8'
+    );
 
     expect(schema).toContain('model CatalogCategory');
     expect(schema).toContain('enum ProductFulfillmentMode');
@@ -57,17 +65,89 @@ describe('multi-category catalog', () => {
     expect(schema).toContain('fulfillmentCodeEncrypted');
     expect(migration).toContain('CREATE TABLE "catalog_categories"');
     expect(migration).toContain('"fulfillmentMode"');
+    expect(prerequisiteMigration).toContain("'waho-top-up'");
+    expect(prerequisiteMigration).toContain('ON CONFLICT DO NOTHING');
   });
 
-  test('keeps package prices behind authentication while category metadata stays public', () => {
+  test('lets each category decide whether prices are public or require authentication', () => {
     const productsRoute = readFileSync(join(repoRoot, 'src/app/api/products/route.ts'), 'utf8');
     const productRoute = readFileSync(join(repoRoot, 'src/app/api/products/[slug]/route.ts'), 'utf8');
     const categoryRoute = readFileSync(join(repoRoot, 'src/app/api/categories/[slug]/route.ts'), 'utf8');
+    const schema = readFileSync(join(repoRoot, 'prisma/schema.prisma'), 'utf8');
+    const migration = readFileSync(
+      join(repoRoot, 'prisma/migrations/20260827120000_add_category_price_visibility_and_exchange_rate_history/migration.sql'),
+      'utf8'
+    );
 
     expect(productsRoute).toContain('getOptionalUser');
     expect(productsRoute).toContain('packages: authenticated');
     expect(productRoute).toContain('requireUser');
+    expect(schema).toContain('enum CategoryPriceVisibility');
+    expect(schema).toContain('priceVisibility CategoryPriceVisibility');
+    expect(categoryRoute).toContain("priceVisibility === 'AUTHENTICATED'");
     expect(categoryRoute).toContain('requireUser');
+    expect(migration).toContain("SET \"priceVisibility\" = 'PUBLIC'");
+    expect(migration).toContain("WHERE \"slug\" = 'asiacell'");
+    expect(migration).toContain("CURRENT_TIMESTAMP AT TIME ZONE 'UTC'");
+    expect(schema).toContain('@@unique([baseCurrencyCode, quoteCurrencyCode, effectiveFrom])');
+    expect(migration).toContain('CREATE UNIQUE INDEX "exchange_rates_baseCurrencyCode_quoteCurrencyCode_effectiveFrom_key"');
+  });
+});
+
+describe('minute-effective exchange-rate history', () => {
+  const oldRate = {
+    id: 'old-usd-iqd',
+    baseCurrencyCode: 'USD',
+    quoteCurrencyCode: 'IQD',
+    rate: 1_300,
+    isActive: true,
+    effectiveFrom: new Date('2026-08-27T08:00:00.000Z'),
+    effectiveUntil: new Date('2026-08-27T10:15:00.000Z'),
+  };
+  const newRate = {
+    id: 'new-usd-iqd',
+    baseCurrencyCode: 'USD',
+    quoteCurrencyCode: 'IQD',
+    rate: 1_310,
+    isActive: true,
+    effectiveFrom: new Date('2026-08-27T10:15:00.000Z'),
+    effectiveUntil: null,
+  };
+
+  test('normalizes an admin timestamp to the start of its minute', () => {
+    expect(floorToMinute(new Date('2026-08-27T10:15:49.923Z')).toISOString()).toBe(
+      '2026-08-27T10:15:00.000Z'
+    );
+  });
+
+  test('switches every price at the exact minute a new rate becomes valid', () => {
+    expect(resolveExchangeRate('USD', 'IQD', [oldRate, newRate], new Date('2026-08-27T10:14:59.999Z'))).toBe(1_300);
+    expect(resolveExchangeRate('USD', 'IQD', [oldRate, newRate], new Date('2026-08-27T10:15:00.000Z'))).toBe(1_310);
+    expect(resolveExchangeRate('IQD', 'USD', [oldRate, newRate], new Date('2026-08-27T10:15:00.000Z'))).toBeCloseTo(1 / 1_310, 10);
+  });
+
+  test('supports later currencies through a managed cross-rate graph', () => {
+    const rates = [newRate, {
+      id: 'usd-aed',
+      baseCurrencyCode: 'USD',
+      quoteCurrencyCode: 'AED',
+      rate: 3.6725,
+      isActive: true,
+      effectiveFrom: new Date('2026-08-27T09:00:00.000Z'),
+      effectiveUntil: null,
+    }];
+
+    expect(resolveExchangeRate('IQD', 'AED', rates, new Date('2026-08-27T11:00:00.000Z'))).toBeCloseTo(3.6725 / 1_310, 10);
+  });
+
+  test('keeps every current country rate even when the admin history is paged', () => {
+    const summaryRoute = readFileSync(join(repoRoot, 'src/app/api/admin/summary/route.ts'), 'utf8');
+    const countriesRoute = readFileSync(join(repoRoot, 'src/app/api/countries/route.ts'), 'utf8');
+
+    expect(summaryRoute).toContain('currentExchangeRates');
+    expect(summaryRoute).toContain('[...exchangeRates, ...currentExchangeRates]');
+    expect(countriesRoute).toContain('effectiveFrom: { lte: now }');
+    expect(countriesRoute).toContain('{ effectiveUntil: { gt: now } }');
   });
 });
 

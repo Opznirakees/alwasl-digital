@@ -66,7 +66,7 @@ describe('V2 multi-category visual system', () => {
     expect(home).toContain('supportWhatsAppHref');
   });
 
-  it('shows public category metadata but sends logged-out customers to WhatsApp login for prices', () => {
+  it('lets admins expose public category prices while protecting every order behind login', () => {
     const home = read('src/app/page.tsx');
     const categoryPage = read('src/app/categories/[slug]/page.tsx');
     const categoriesRoute = read('src/app/api/categories/route.ts');
@@ -75,11 +75,13 @@ describe('V2 multi-category visual system', () => {
     expect(home).toContain('CatalogCategory');
     expect(home).toContain('catalog-category-card');
     expect(home).toContain('/auth?next=');
-    expect(home).toContain('Prices open after login');
+    expect(home).toContain("category.priceVisibility === 'PUBLIC'");
+    expect(home).toContain('Some prices require login');
     expect(categoryPage).toContain('isAuthenticated');
     expect(categoryPage).toContain('/auth?next=');
     expect(categoryPage).toContain('PriceDisplay');
     expect(categoriesRoute).toContain('CatalogCategory');
+    expect(categoryRoute).toContain("priceVisibility === 'AUTHENTICATED'");
     expect(categoryRoute).toContain('requireUser');
   });
 

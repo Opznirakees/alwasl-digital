@@ -20,6 +20,7 @@ import {
   mapWhatsAppNotification,
 } from '@/server/mappers';
 import { prisma } from '@/server/prisma';
+import { resolveExchangeRateQuotes } from '@/server/domain/exchange-rates';
 
 export const runtime = 'nodejs';
 const BASE_CURRENCY = 'IQD';
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
         manualDepositsTake: 100,
         bannersTake: 100,
         countriesTake: 100,
-        exchangeRatesTake: 100,
+        exchangeRatesTake: 250,
         customPricingRulesTake: 200,
         providerRequestsTake: 100,
         whatsappNotificationsTake: 100,
@@ -47,6 +48,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    const currentRateTime = new Date();
     const [
       users,
       products,
@@ -60,6 +62,7 @@ export async function GET(request: NextRequest) {
       banners,
       countries,
       exchangeRates,
+      currentExchangeRates,
       customPricingRules,
       providerRequests,
       whatsappNotifications,
@@ -125,8 +128,18 @@ export async function GET(request: NextRequest) {
         take: 100,
       }),
       prisma.exchangeRate.findMany({
-        orderBy: [{ baseCurrencyCode: 'asc' }, { quoteCurrencyCode: 'asc' }],
-        take: 100,
+        orderBy: [{ effectiveFrom: 'desc' }, { createdAt: 'desc' }],
+        take: 250,
+      }),
+      prisma.exchangeRate.findMany({
+        where: {
+          isActive: true,
+          effectiveFrom: { lte: currentRateTime },
+          OR: [
+            { effectiveUntil: null },
+            { effectiveUntil: { gt: currentRateTime } },
+          ],
+        },
       }),
       prisma.customPricingRule.findMany({
         include: {
@@ -199,14 +212,23 @@ export async function GET(request: NextRequest) {
       providerBalanceAlerts: providerBalanceAlerts.map(mapProviderBalanceAlert),
       promotions: promotions.map(mapPromotion),
       banners: banners.map(mapBanner),
-      countries: countries.map((country) => {
-        const exchangeRate = exchangeRates.find((rate) => (
-          rate.baseCurrencyCode === BASE_CURRENCY &&
-          rate.quoteCurrencyCode === country.currencyCode
+      countries: (() => {
+        const currentRates = resolveExchangeRateQuotes(
+          BASE_CURRENCY,
+          [...new Set([...countries.map((country) => country.currencyCode), 'USD'])],
+          currentExchangeRates,
+        );
+        const ratesByQuote = new Map(currentRates.map((rate) => [rate.quoteCurrencyCode, rate]));
+        return countries.map((country) => mapCountry(
+          country,
+          ratesByQuote.get(country.currencyCode),
+          BASE_CURRENCY,
+          currentRates,
         ));
-        return mapCountry(country, exchangeRate, BASE_CURRENCY, exchangeRates);
-      }),
-      exchangeRates: exchangeRates.map(mapExchangeRate),
+      })(),
+      exchangeRates: [...new Map(
+        [...exchangeRates, ...currentExchangeRates].map((rate) => [rate.id, rate])
+      ).values()].map(mapExchangeRate),
       customPricingRules: customPricingRules.map(mapCustomPricingRule),
       providerRequests,
       whatsappNotifications: whatsappNotifications.map(mapWhatsAppNotification),

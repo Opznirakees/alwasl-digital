@@ -9,6 +9,10 @@ import {
   assertCountryPrimaryRate,
   assertCountryPricePolicy,
 } from '@/server/domain/country-pricing';
+import {
+  resolveExchangeRate,
+  resolveExchangeRateQuotes,
+} from '@/server/domain/exchange-rates';
 
 export const runtime = 'nodejs';
 
@@ -38,19 +42,20 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const requiredRateCode = mergedPolicy.primaryPriceCurrency === 'LOCAL'
       ? mergedPolicy.localCurrencyCode
       : mergedPolicy.primaryPriceCurrency;
+    const now = new Date();
+    const exchangeRateHistory = await prisma.exchangeRate.findMany({
+      where: {
+        isActive: true,
+        effectiveFrom: { lte: now },
+        OR: [{ effectiveUntil: null }, { effectiveUntil: { gt: now } }],
+      },
+    });
     const primaryRate = requiredRateCode === BASE_CURRENCY
-      ? null
-      : await prisma.exchangeRate.findUnique({
-          where: {
-            baseCurrencyCode_quoteCurrencyCode: {
-              baseCurrencyCode: BASE_CURRENCY,
-              quoteCurrencyCode: requiredRateCode,
-            },
-          },
-        });
+      ? 1
+      : resolveExchangeRate(BASE_CURRENCY, requiredRateCode, exchangeRateHistory);
     assertCountryPrimaryRate(
       mergedPolicy,
-      primaryRate?.isActive ? { [requiredRateCode]: Number(primaryRate.rate) } : {}
+      primaryRate ? { [requiredRateCode]: primaryRate } : {}
     );
 
     if (body.currencyCode) {
@@ -75,16 +80,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       },
       include: { currency: true },
     });
-    const exchangeRate = country.currencyCode === BASE_CURRENCY
-      ? null
-      : await prisma.exchangeRate.findUnique({
-          where: {
-            baseCurrencyCode_quoteCurrencyCode: {
-              baseCurrencyCode: BASE_CURRENCY,
-              quoteCurrencyCode: country.currencyCode,
-            },
-          },
-        });
+    const exchangeRates = resolveExchangeRateQuotes(
+      BASE_CURRENCY,
+      [country.currencyCode, 'USD'],
+      exchangeRateHistory,
+    );
+    const exchangeRate = exchangeRates.find((rate) => rate.quoteCurrencyCode === country.currencyCode);
 
     await recordAdminAuditLog({
       admin,
@@ -93,14 +94,6 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       entityType: 'country',
       entityId: country.id,
       metadata: body,
-    });
-
-    const exchangeRates = await prisma.exchangeRate.findMany({
-      where: {
-        baseCurrencyCode: BASE_CURRENCY,
-        quoteCurrencyCode: { in: [country.currencyCode, 'USD'] },
-        isActive: true,
-      },
     });
 
     return ok({ country: mapCountry(country, exchangeRate, BASE_CURRENCY, exchangeRates) });

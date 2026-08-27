@@ -4,8 +4,10 @@ import { generateKeyPairSync, sign } from 'node:crypto';
 import { join } from 'node:path';
 import {
   QiCardClient,
+  buildQiCardCallbackUrls,
   buildQiCardWebhookSigningString,
   classifyQiCardPayment,
+  getQiCardWebhookReadiness,
   isQiCardCheckoutEnabled,
   resolveQiCardConfig,
   verifyQiCardWebhookSignature,
@@ -77,6 +79,34 @@ describe('QiCard configuration', () => {
     expect(config.webhookPublicKey).toContain('\nabc\n');
     expect(config.baseUrl).toBe('https://uat-sandbox-3ds-api.qi.iq/api/v1');
   });
+
+  test('builds the exact production URLs sent in every create-payment request', () => {
+    expect(buildQiCardCallbackUrls(
+      'https://alwasl-digital-b8ngg.ondigitalocean.app',
+      'QI order/42'
+    )).toEqual({
+      finishPaymentUrl: 'https://alwasl-digital-b8ngg.ondigitalocean.app/payments/qicard/return?orderId=QI+order%2F42',
+      notificationUrl: 'https://alwasl-digital-b8ngg.ondigitalocean.app/api/webhooks/qicard',
+    });
+  });
+
+  test('reports webhook readiness without returning merchant secrets', () => {
+    const readiness = getQiCardWebhookReadiness({
+      ...completeEnv,
+      NODE_ENV: 'production',
+      QICARD_BASE_URL: 'https://merchant-api.qi.example/api/v1',
+      APP_BASE_URL: 'https://alwasl-digital-b8ngg.ondigitalocean.app',
+    });
+
+    expect(readiness).toEqual({
+      provider: 'qicard',
+      configured: true,
+      environment: 'production',
+      webhookUrl: 'https://alwasl-digital-b8ngg.ondigitalocean.app/api/webhooks/qicard',
+    });
+    expect(JSON.stringify(readiness)).not.toContain('merchant-password');
+    expect(JSON.stringify(readiness)).not.toContain('237984');
+  });
 });
 
 describe('QiCard application contract', () => {
@@ -118,6 +148,8 @@ describe('QiCard application contract', () => {
     expect(statusRoute).toContain('requireUser');
     expect(cancelRoute).toContain('requireUser');
     expect(webhookRoute).toContain('processQiCardWebhook');
+    expect(webhookRoute).toContain('getQiCardWebhookReadiness');
+    expect(webhookRoute).toContain('export async function GET');
     expect(webhookRoute).not.toContain('requireUser');
   });
 });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
-import { ImageIcon, Pencil, Plus } from 'lucide-react';
+import { Globe2, ImageIcon, LockKeyhole, Pencil, Plus } from 'lucide-react';
 import type { CatalogCategory } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -22,6 +22,7 @@ interface CategoryPayload {
   accentColor: string;
   sortOrder: number;
   isActive: boolean;
+  priceVisibility: 'PUBLIC' | 'AUTHENTICATED';
 }
 
 interface CatalogCategoryManagerProps {
@@ -43,6 +44,7 @@ const emptyForm = {
   accentColor: '#9bd8f2',
   sortOrder: '0',
   isActive: true,
+  priceVisibility: 'AUTHENTICATED' as 'PUBLIC' | 'AUTHENTICATED',
 };
 
 const swatches = ['#9bd8f2', '#f6b7cc', '#8fe3d2', '#c4b5fd', '#f7b928', '#ef6a72'];
@@ -79,6 +81,7 @@ export function CatalogCategoryManager({ categories, isMutating, onSave, onToggl
       accentColor: category.accentColor,
       sortOrder: String(category.sortOrder),
       isActive: category.isActive,
+      priceVisibility: category.priceVisibility,
     });
     setOpen(true);
   };
@@ -97,6 +100,7 @@ export function CatalogCategoryManager({ categories, isMutating, onSave, onToggl
       accentColor: form.accentColor,
       sortOrder: Number(form.sortOrder),
       isActive: form.isActive,
+      priceVisibility: form.priceVisibility,
     });
     if (saved) setOpen(false);
   };
@@ -114,7 +118,7 @@ export function CatalogCategoryManager({ categories, isMutating, onSave, onToggl
             <div className="h-1" style={{ backgroundColor: category.accentColor }} />
             <div className="flex gap-4 p-4">
               <span className="h-20 w-20 flex-none overflow-hidden rounded-lg border border-white/10 bg-white/5 p-2"><img src={category.image} alt="" className="h-full w-full object-contain" /></span>
-              <div className="min-w-0 flex-1"><h3 className="truncate font-bold text-white">{category.name}</h3><p dir="rtl" className="mt-1 truncate text-xs text-white/65">{category.nameAr}</p><p className="mt-2 text-xs text-white/45">{category.productCount} {t('products', 'منتجات', '个产品')}</p></div>
+              <div className="min-w-0 flex-1"><h3 className="truncate font-bold text-white">{category.name}</h3><p dir="rtl" className="mt-1 truncate text-xs text-white/65">{category.nameAr}</p><p className="mt-2 text-xs text-white/45">{category.productCount} {t('products', 'منتجات', '个产品')}</p><span className={`mt-2 inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] font-semibold ${category.priceVisibility === 'PUBLIC' ? 'bg-[#8fe3d2]/15 text-[#8fe3d2]' : 'bg-[#f6b7cc]/15 text-[#ffd7e4]'}`}>{category.priceVisibility === 'PUBLIC' ? <Globe2 className="h-3 w-3" /> : <LockKeyhole className="h-3 w-3" />}{category.priceVisibility === 'PUBLIC' ? t('Prices public', 'الأسعار عامة', '价格公开') : t('Login for prices', 'الدخول للأسعار', '登录看价格')}</span></div>
             </div>
             <div className="flex items-center justify-between border-t border-white/10 px-4 py-3">
               <label className="flex items-center gap-2 text-xs font-semibold text-white/65"><Switch checked={category.isActive} disabled={isMutating} onCheckedChange={(checked) => void onToggle(category, checked)} />{category.isActive ? t('Visible', 'ظاهر', '可见') : t('Hidden', 'مخفي', '隐藏')}</label>
@@ -139,6 +143,14 @@ export function CatalogCategoryManager({ categories, isMutating, onSave, onToggl
             <div className="sm:col-span-2"><Label htmlFor="category-image">{t('Image URL or path', 'رابط أو مسار الصورة', '图片 URL 或路径')}</Label><Input id="category-image" value={form.image} onChange={(event) => setForm((current) => ({ ...current, image: event.target.value }))} required className="mt-1.5" /></div>
             <div><Label>{t('Accent color', 'لون التمييز', '强调色')}</Label><div className="mt-2 flex flex-wrap gap-2">{swatches.map((color) => <button key={color} type="button" title={color} aria-label={color} aria-pressed={form.accentColor === color} onClick={() => setForm((current) => ({ ...current, accentColor: color }))} className={`h-9 w-9 rounded-md border-2 ${form.accentColor === color ? 'border-zinc-950 ring-2 ring-zinc-400' : 'border-transparent'}`} style={{ backgroundColor: color }} />)}<Input aria-label={t('Custom accent color', 'لون تمييز مخصص', '自定义强调色')} type="color" value={form.accentColor} onChange={(event) => setForm((current) => ({ ...current, accentColor: event.target.value }))} className="h-9 w-12 p-1" /></div></div>
             <div><Label htmlFor="category-order">{t('Display order', 'ترتيب العرض', '显示顺序')}</Label><Input id="category-order" type="number" min="0" value={form.sortOrder} onChange={(event) => setForm((current) => ({ ...current, sortOrder: event.target.value }))} className="mt-1.5" /></div>
+            <div>
+              <Label htmlFor="category-price-visibility">{t('Who can see prices?', 'من يمكنه رؤية الأسعار؟', '谁可以查看价格？')}</Label>
+              <select id="category-price-visibility" value={form.priceVisibility} onChange={(event) => setForm((current) => ({ ...current, priceVisibility: event.target.value as 'PUBLIC' | 'AUTHENTICATED' }))} className="mt-1.5 h-10 w-full rounded-md border bg-background px-3 text-sm">
+                <option value="PUBLIC">{t('Everyone (public)', 'الجميع (عام)', '所有人（公开）')}</option>
+                <option value="AUTHENTICATED">{t('Logged-in customers only', 'العملاء المسجلون فقط', '仅限已登录客户')}</option>
+              </select>
+              <p className="mt-1.5 text-xs text-muted-foreground">{t('Ordering always requires login, even when prices are public.', 'الطلب يتطلب تسجيل الدخول دائماً حتى لو كانت الأسعار عامة.', '即使价格公开，下单仍需登录。')}</p>
+            </div>
             <label className="flex items-center gap-3 sm:col-span-2"><Switch checked={form.isActive} onCheckedChange={(checked) => setForm((current) => ({ ...current, isActive: checked }))} />{t('Visible to customers', 'ظاهر للعملاء', '对客户可见')}</label>
             <DialogFooter className="sm:col-span-2"><Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('Cancel', 'إلغاء', '取消')}</Button><Button type="submit" disabled={isMutating}>{t('Save category', 'حفظ الفئة', '保存分类')}</Button></DialogFooter>
           </form>

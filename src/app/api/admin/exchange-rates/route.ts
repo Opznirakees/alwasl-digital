@@ -5,6 +5,7 @@ import { handleApiError, ok } from '@/server/http';
 import { mapExchangeRate } from '@/server/mappers';
 import { prisma } from '@/server/prisma';
 import { createAdminExchangeRateSchema } from '@/server/validation';
+import { floorToMinute } from '@/server/domain/exchange-rates';
 
 export const runtime = 'nodejs';
 
@@ -23,35 +24,87 @@ export async function POST(request: NextRequest) {
     });
     if (currencies.length !== 2) throw new Error('NOT_FOUND');
 
-    const exchangeRate = await prisma.exchangeRate.upsert({
-      where: {
-        baseCurrencyCode_quoteCurrencyCode: {
+    const effectiveFrom = floorToMinute(body.effectiveFrom ? new Date(body.effectiveFrom) : new Date());
+    const pairWhere = {
+      OR: [
+        {
           baseCurrencyCode: body.baseCurrencyCode,
           quoteCurrencyCode: body.quoteCurrencyCode,
         },
-      },
-      update: {
+        {
+          baseCurrencyCode: body.quoteCurrencyCode,
+          quoteCurrencyCode: body.baseCurrencyCode,
+        },
+      ],
+    };
+
+    const exchangeRate = await prisma.$transaction(async (tx) => {
+      const nextRate = await tx.exchangeRate.findFirst({
+        where: {
+          ...pairWhere,
+          isActive: true,
+          effectiveFrom: { gt: effectiveFrom },
+        },
+        orderBy: { effectiveFrom: 'asc' },
+      });
+      if (body.isActive) {
+        await tx.exchangeRate.updateMany({
+          where: {
+            AND: [
+              pairWhere,
+              { isActive: true },
+              { effectiveFrom: { lt: effectiveFrom } },
+              {
+                OR: [
+                  { effectiveUntil: null },
+                  { effectiveUntil: { gt: effectiveFrom } },
+                ],
+              },
+            ],
+          },
+          data: { effectiveUntil: effectiveFrom },
+        });
+        await tx.exchangeRate.updateMany({
+          where: {
+            baseCurrencyCode: body.quoteCurrencyCode,
+            quoteCurrencyCode: body.baseCurrencyCode,
+            effectiveFrom,
+            isActive: true,
+          },
+          data: { isActive: false },
+        });
+      }
+
+      const data = {
         rate: body.rate,
         isActive: body.isActive,
         source: 'manual',
         note: cleanOptional(body.note),
         updatedByAdminId: admin.id,
-      },
-      create: {
-        baseCurrencyCode: body.baseCurrencyCode,
-        quoteCurrencyCode: body.quoteCurrencyCode,
-        rate: body.rate,
-        isActive: body.isActive,
-        source: 'manual',
-        note: cleanOptional(body.note),
-        updatedByAdminId: admin.id,
-      },
+        effectiveUntil: body.isActive ? nextRate?.effectiveFrom ?? null : null,
+      };
+      return tx.exchangeRate.upsert({
+        where: {
+          baseCurrencyCode_quoteCurrencyCode_effectiveFrom: {
+            baseCurrencyCode: body.baseCurrencyCode,
+            quoteCurrencyCode: body.quoteCurrencyCode,
+            effectiveFrom,
+          },
+        },
+        update: data,
+        create: {
+          baseCurrencyCode: body.baseCurrencyCode,
+          quoteCurrencyCode: body.quoteCurrencyCode,
+          effectiveFrom,
+          ...data,
+        },
+      });
     });
 
     await recordAdminAuditLog({
       admin,
       request,
-      action: 'admin.exchange_rate.upsert',
+      action: 'admin.exchange_rate.set',
       entityType: 'exchange_rate',
       entityId: exchangeRate.id,
       metadata: {
@@ -59,6 +112,8 @@ export async function POST(request: NextRequest) {
         quoteCurrencyCode: exchangeRate.quoteCurrencyCode,
         rate: Number(exchangeRate.rate),
         isActive: exchangeRate.isActive,
+        effectiveFrom: exchangeRate.effectiveFrom.toISOString(),
+        effectiveUntil: exchangeRate.effectiveUntil?.toISOString(),
       },
     });
 

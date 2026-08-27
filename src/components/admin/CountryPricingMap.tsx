@@ -247,11 +247,21 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
     form.showPricesInLocal ? selectedCatalogCountry?.currencyCode : null,
   ].filter((code): code is string => Boolean(code));
   const uniqueRequestedCurrencyCodes = [...new Set(requestedCurrencyCodes)];
-  const rateByCurrency = new Map(
-    exchangeRates
-      .filter((rate) => rate.baseCurrencyCode === 'IQD' && rate.isActive)
-      .map((rate) => [rate.quoteCurrencyCode, rate.rate])
-  );
+  const now = Date.now();
+  const rateByCurrency = new Map<string, number>([['IQD', 1]]);
+  for (const code of uniqueRequestedCurrencyCodes) {
+    if (code === 'IQD') continue;
+    const current = exchangeRates
+      .filter((rate) => {
+        const starts = new Date(rate.effectiveFrom).getTime();
+        const ends = rate.effectiveUntil ? new Date(rate.effectiveUntil).getTime() : Number.POSITIVE_INFINITY;
+        const samePair = (rate.baseCurrencyCode === 'IQD' && rate.quoteCurrencyCode === code)
+          || (rate.baseCurrencyCode === code && rate.quoteCurrencyCode === 'IQD');
+        return samePair && rate.isActive && starts <= now && ends > now;
+      })
+      .sort((left, right) => new Date(right.effectiveFrom).getTime() - new Date(left.effectiveFrom).getTime())[0];
+    if (current) rateByCurrency.set(code, current.baseCurrencyCode === 'IQD' ? current.rate : 1 / current.rate);
+  }
   const selectedCountryRate = selectedCountry?.exchangeRate ?? 0;
   if (selectedCountry?.currency && selectedCountryRate > 0) {
     rateByCurrency.set(selectedCountry.currency, selectedCountryRate);
