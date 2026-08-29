@@ -242,7 +242,7 @@ export interface Order {
 
 export type OrderStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'cancelled';
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
-export type PaymentMethod = 'wallet' | 'zaincash' | 'asiahawala' | 'card' | 'usdt' | 'qicard';
+export type PaymentMethod = 'wallet' | 'zaincash' | 'asiahawala' | 'card' | 'usdt' | 'qicard' | 'cash';
 
 // Provider Types
 export interface Provider {
@@ -353,8 +353,10 @@ export interface Banner {
   id: string;
   title: string;
   titleAr: string;
+  titleZh: string;
   subtitle?: string;
   subtitleAr?: string;
+  subtitleZh?: string;
   image: string;
   mobileImage?: string;
   link?: string;

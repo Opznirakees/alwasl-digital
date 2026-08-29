@@ -17,6 +17,8 @@ export { activeMembershipLevelIds, levelDiscounts, levelLabels, membershipLevels
 
 const wahoTopUpMark = '/brand/waho-app-icon.webp';
 const wahoTopUpBanner = '/brand/recharge-hero-v3.webp';
+// Exact mirror of https://www.asiacell.com/assets/ac-logo.svg for reliable storefront rendering.
+const officialAsiacellLogo = '/brands/asiacell-official.svg';
 
 // Countries and currencies are production-managed after this complete Arab-region seed.
 export const countries: Country[] = allCountrySeeds;
@@ -66,7 +68,7 @@ export const games: Game[] = [
     nameAr: 'شحن واهو آسيا سيل',
     description: 'Buy an Asiacell recharge code for your WAHO balance.',
     descriptionAr: 'اشترِ رمز شحن آسيا سيل لاستخدامه في رصيد واهو.',
-    image: '/brand/asiacell-category.svg',
+    image: officialAsiacellLogo,
     category: 'voucher',
     catalogCategoryId: 'asiacell',
     fulfillmentMode: 'manual_code',
@@ -323,25 +325,61 @@ export const walletTransactions: WalletTransaction[] = [
 // Banners
 export const banners: Banner[] = [
   {
+    id: 'campaign-waho-fast-blue',
+    title: 'Al-Wasl Digital for WAHO Top-Ups',
+    titleAr: 'الوصل الرقمي لشحن تطبيق واهو',
+    titleZh: 'Al-Wasl 数字服务 · WAHO 充值',
+    subtitle: 'Fast top-ups. Secure payment. Registered company.',
+    subtitleAr: 'شحن سريع، دفع محمي، وشركة مسجلة.',
+    subtitleZh: '快速充值，安全支付，正规注册企业。',
+    image: '/banners/waho-fast-blue.jpeg',
+    mobileImage: '/banners/waho-fast-blue.jpeg',
+    link: '/categories/waho',
+    startDate: '2026-08-29T00:00:00Z',
+    endDate: '2032-12-31T23:59:59Z',
+    isActive: true,
+    order: 0,
+  },
+  {
+    id: 'campaign-waho-offers-red',
+    title: 'Promotional WAHO top-up offers',
+    titleAr: 'خصومات ترويجية لشحن تطبيق واهو',
+    titleZh: 'WAHO 充值优惠',
+    subtitle: 'Save on selected WAHO top-ups with fast, protected payment.',
+    subtitleAr: 'وفّر على شحنات واهو المختارة مع دفع سريع ومحمي.',
+    subtitleZh: '精选 WAHO 充值享优惠，付款快捷且安全。',
+    image: '/banners/waho-offers-red.jpeg',
+    mobileImage: '/banners/waho-offers-red.jpeg',
+    link: '/categories/waho',
+    startDate: '2026-08-29T00:00:00Z',
+    endDate: '2032-12-31T23:59:59Z',
+    isActive: true,
+    order: 1,
+  },
+  {
     id: 'banner-1',
     title: 'Recharge in a few clear steps',
     titleAr: 'اشحن بخطوات واضحة وسريعة',
+    titleZh: '几步即可轻松充值',
     subtitle: 'Choose WAHO or Asiacell, compare available prices, and log in with WhatsApp to order.',
     subtitleAr: 'اختر واهو أو آسيا سيل وقارن الأسعار المتاحة ثم سجل الدخول عبر واتساب للطلب.',
+    subtitleZh: '选择 WAHO 或 Asiacell，比较可用价格，然后通过 WhatsApp 登录下单。',
     image: wahoTopUpBanner,
     mobileImage: '/brand/recharge-hero-mobile-v3.webp',
     link: '/#categories',
     startDate: '2026-05-20T00:00:00Z',
     endDate: '2030-12-31T23:59:59Z',
     isActive: true,
-    order: 1,
+    order: 10,
   },
   {
     id: 'banner-2',
     title: 'Confirm before you pay',
     titleAr: 'تأكد قبل الدفع',
+    titleZh: '付款前请先确认',
     subtitle: 'Check the WAHO account details first so every top-up goes to the right account.',
     subtitleAr: 'تحقق من بيانات حساب WAHO أولاً ليصل كل شحن إلى الحساب الصحيح.',
+    subtitleZh: '请先核对 WAHO 账号信息，确保充值进入正确账号。',
     image: wahoTopUpMark,
     gameId: 'waho-top-up',
     startDate: '2026-05-15T00:00:00Z',
@@ -353,8 +391,10 @@ export const banners: Banner[] = [
     id: 'banner-3',
     title: 'Track every WAHO top-up',
     titleAr: 'تابع كل عملية شحن WAHO',
+    titleZh: '跟踪每笔 WAHO 充值',
     subtitle: 'Follow pending, processing, completed, failed, and refunded statuses from one place.',
     subtitleAr: 'تابع حالات الانتظار والمعالجة والاكتمال والفشل والاسترداد من مكان واحد.',
+    subtitleZh: '在一个页面查看待处理、处理中、已完成、失败和退款状态。',
     image: wahoTopUpMark,
     gameId: 'waho-top-up',
     startDate: '2026-05-01T00:00:00Z',

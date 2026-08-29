@@ -17,6 +17,7 @@ export function assertFakePaymentEndpointEnabled(env: PaymentEnv = process.env) 
 }
 
 export function isOrderPaymentMethodEnabled(method: PaymentMethod, env: PaymentEnv = process.env) {
+  if (method === 'cash') return true;
   if (method === 'wallet') return true;
   if (method === 'qicard') return isQiCardCheckoutEnabled(env);
   return isFakePaymentEnabled(env);

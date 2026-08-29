@@ -7,8 +7,8 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
+  Banknote,
   BadgeCheck,
-  CreditCard,
   Check,
   CheckCircle2,
   Gem,
@@ -16,7 +16,6 @@ import {
   LockKeyhole,
   MessageCircle,
   ShieldCheck,
-  Wallet,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Header } from '@/components/layout/Header';
@@ -25,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { PriceDisplay } from '@/components/pricing/PriceDisplay';
+import { supportWhatsAppHref, supportWhatsAppNumber } from '@/config/contact';
 import { useApp } from '@/contexts/AppContext';
 import {
   checkoutSteps,
@@ -67,9 +67,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
   const [zoneId, setZoneId] = useState('');
   const [verifiedUsername, setVerifiedUsername] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('wallet');
-  const [qiCardEnabled, setQiCardEnabled] = useState(false);
-  const [qiCardEnvironment, setQiCardEnvironment] = useState<'sandbox' | 'production' | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [financialOtp, setFinancialOtp] = useState('');
   const [otpRequested, setOtpRequested] = useState(false);
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
@@ -125,35 +123,6 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
   }, [isAccountLoading, isAuthenticated, router, searchParams, selectedCountry.id, slug]);
 
   useEffect(() => {
-    let active = true;
-    const controller = new AbortController();
-
-    async function loadPaymentMethods() {
-      try {
-        const response = await fetch('/api/payments/methods', { signal: controller.signal });
-        if (!response.ok) return;
-        const payload = await response.json();
-        const qiCard = payload.methods?.find((method: { id?: string }) => method.id === 'qicard');
-        if (active) {
-          setQiCardEnabled(Boolean(qiCard?.enabled));
-          setQiCardEnvironment(qiCard?.environment === 'sandbox' ? 'sandbox' : qiCard?.environment === 'production' ? 'production' : null);
-        }
-      } catch {
-        if (active) {
-          setQiCardEnabled(false);
-          setQiCardEnvironment(null);
-        }
-      }
-    }
-
-    void loadPaymentMethods();
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, []);
-
-  useEffect(() => {
     if (!game) return;
     const packageId = getInitialPackageId(game.packages, searchParams.get('amount'));
     if (packageId) {
@@ -176,7 +145,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
 
       setUserId(pendingCheckout.userId?.slice(0, 80) ?? '');
       setZoneId(pendingCheckout.zoneId?.slice(0, 80) ?? '');
-      if (pendingCheckout.paymentMethod === 'wallet' || pendingCheckout.paymentMethod === 'qicard') {
+      if (pendingCheckout.paymentMethod === 'cash') {
         setPaymentMethod(pendingCheckout.paymentMethod);
       }
       shouldFocusStepRef.current = true;
@@ -299,7 +268,6 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
 
       setVerifiedUsername(payload.account.username);
       setWahoIdError('');
-      toast.success(t('WAHO account found', 'تم العثور على حساب WAHO', '已找到 WAHO 账号'));
     } catch {
       const message = t('We could not find this WAHO ID. Check it and try again.', 'لم نتمكن من العثور على معرف WAHO. تحقق منه وحاول مرة أخرى.', '找不到此 WAHO ID，请检查后重试。');
       setVerifiedUsername(null);
@@ -355,7 +323,6 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       if (!response.ok) throw new Error(payload?.error || 'OTP_REQUEST_FAILED');
       if (payload?.debugOtp) setFinancialOtp(payload.debugOtp);
       setOtpRequested(true);
-      toast.success(t('WhatsApp code sent', 'تم إرسال رمز واتساب', 'WhatsApp 验证码已发送'));
     } catch {
       toast.error(t('The code could not be sent. Try again.', 'تعذر إرسال الرمز. حاول مرة أخرى.', '验证码发送失败，请重试。'));
     } finally {
@@ -369,10 +336,6 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       return;
     }
     if (!selectedPackage) return;
-    if (paymentMethod === 'wallet' && user && user.walletBalance < total) {
-      toast.error(t('Add enough wallet balance before placing the order.', 'أضف رصيداً كافياً إلى المحفظة قبل إرسال الطلب.', '提交订单前，请先充值足够的钱包余额。'));
-      return;
-    }
     if (!/^\d{6}$/.test(financialOtp)) {
       toast.error(t('Enter the 6-digit WhatsApp code', 'أدخل رمز واتساب المكون من 6 أرقام', '请输入 6 位 WhatsApp 验证码'));
       return;
@@ -400,26 +363,6 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       const orderPayload = await orderResponse.json();
       if (!orderResponse.ok) throw new Error(orderPayload.error || 'ORDER_CREATION_FAILED');
 
-      if (paymentMethod === 'qicard') {
-        const checkoutResponse = await fetch('/api/payments/qicard/create', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            orderId: orderPayload.order.id,
-            locale: language === 'ar' ? 'ar_IQ' : 'en_US',
-          }),
-        });
-        const checkoutPayload = await checkoutResponse.json();
-        if (!checkoutResponse.ok || !checkoutPayload.checkoutUrl) {
-          throw new Error(checkoutPayload.error || 'QICARD_CHECKOUT_FAILED');
-        }
-
-        orderIdempotencyKeyRef.current = null;
-        window.location.assign(checkoutPayload.checkoutUrl);
-        return;
-      }
-
       await refreshAccount();
       orderIdempotencyKeyRef.current = null;
       setFinancialOtp('');
@@ -438,25 +381,16 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
 
   const paymentMethods = [
     {
-      id: 'wallet',
-      name: t('Wallet', 'المحفظة', '钱包'),
-      description: !user
-        ? t('Log in to use your wallet', 'سجل الدخول لاستخدام المحفظة', '登录后使用钱包')
-        : user.walletBalance < total
-          ? t('You need {{amount}} in your wallet', 'تحتاج إلى {{amount}} في محفظتك', '钱包需要有 {{amount}}').replace('{{amount}}', formatLocalAmount(total))
-          : t('Available: {{amount}}', 'المتاح: {{amount}}', '可用余额：{{amount}}').replace('{{amount}}', formatLocalAmount(user.walletBalance)),
-      icon: Wallet,
-      disabled: Boolean(user && user.walletBalance < total),
-    },
-    ...(qiCardEnabled ? [{
-      id: 'qicard',
-      name: 'QiCard',
-      description: qiCardEnvironment === 'sandbox'
-        ? t('Secure card checkout in test mode', 'دفع آمن بالبطاقة في وضع الاختبار', '测试模式下的安全银行卡付款')
-        : t('Pay securely with your QiCard or bank card', 'ادفع بأمان باستخدام QiCard أو البطاقة المصرفية', '使用 QiCard 或银行卡安全付款'),
-      icon: CreditCard,
+      id: 'cash',
+      name: t('Cash payment', 'الدفع نقداً', '现金支付'),
+      description: t(
+        'Place your order, then arrange the cash payment with our team on WhatsApp.',
+        'أرسل طلبك، ثم نسّق الدفع نقداً مع فريقنا عبر واتساب.',
+        '提交订单后，请通过 WhatsApp 与客服安排现金付款。'
+      ),
+      icon: Banknote,
       disabled: false,
-    }] : []),
+    },
   ];
 
   const selectedPayment = paymentMethods.find((item) => item.id === paymentMethod) ?? paymentMethods[0];
@@ -707,10 +641,10 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
               {step === 'payment' && (
                 <>
                   <h2 ref={stepHeadingRef} tabIndex={-1} className="text-2xl font-semibold text-zinc-950 outline-none dark:text-white">
-                    {t('Choose how to pay', 'اختر طريقة الدفع', '选择付款方式')}
+                    {t('Cash payment', 'الدفع نقداً', '现金支付')}
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                    {t('Select a payment method. Your order starts only after payment is confirmed.', 'اختر طريقة الدفع. يبدأ طلبك فقط بعد تأكيد الدفع.', '请选择付款方式。仅在付款确认后才会处理订单。')}
+                    {t('Cash is currently available. We start your order after our team confirms receipt.', 'الدفع النقدي متاح حالياً. نبدأ طلبك بعد أن يؤكد فريقنا الاستلام.', '目前支持现金付款。客服确认收款后，我们会开始处理订单。')}
                   </p>
 
                   <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-5 grid gap-3">
@@ -742,22 +676,19 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     })}
                   </RadioGroup>
 
-                  {paymentMethod === 'wallet' && user && user.walletBalance < total && (
-                    <div role="alert" className="mt-4 rounded-lg border border-amber-400/30 bg-amber-400/10 p-4">
-                      <p className="text-sm font-semibold text-amber-200">
-                        {t('Your wallet needs more balance', 'تحتاج محفظتك إلى رصيد إضافي', '您的钱包余额不足')}
-                      </p>
-                      <p className="mt-1 text-xs leading-5 text-zinc-300">
-                        {t('Add balance first, then return here to finish this top-up.', 'أضف رصيداً أولاً، ثم عد إلى هنا لإكمال الشحن.', '请先充值钱包余额，然后返回此处完成充值。')}
-                      </p>
-                      <Button asChild variant="outline" className="mt-3 border-amber-300/40 text-amber-200 hover:bg-amber-300/10 hover:text-amber-100">
-                        <Link href="/wallet">
-                          <Wallet className="h-4 w-4" />
-                          {t('Add wallet balance', 'أضف رصيداً للمحفظة', '充值钱包余额')}
-                        </Link>
-                      </Button>
-                    </div>
-                  )}
+                  <a
+                    href={supportWhatsAppHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex min-h-14 items-center gap-3 rounded-lg border border-[#52d273]/25 bg-[#52d273]/10 p-3 text-start transition-colors hover:bg-[#52d273]/15"
+                  >
+                    <MessageCircle className="h-5 w-5 flex-shrink-0 text-[#52d273]" />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-zinc-950 dark:text-white">{t('Arrange cash payment on WhatsApp', 'نسّق الدفع النقدي عبر واتساب', '通过 WhatsApp 安排现金付款')}</span>
+                      <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-300">{supportWhatsAppNumber}</span>
+                    </span>
+                    <ArrowRight className="ms-auto h-4 w-4 flex-shrink-0 text-[#52d273] rtl:rotate-180" />
+                  </a>
 
                   <div className="mt-6 hidden grid-cols-[auto_minmax(0,1fr)] gap-3 lg:grid">
                     <Button type="button" variant="outline" onClick={() => goToStep('details')}>
@@ -851,13 +782,19 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                           inputMode="numeric"
                           autoComplete="one-time-code"
                           placeholder="000000"
-                          className="v2-input h-12 text-center text-lg font-semibold tracking-[0.25em] tabular-nums"
+                          className="v2-input h-12 text-center text-lg font-semibold tabular-nums"
                         />
                         <Button type="button" variant="outline" onClick={handleRequestOrderOtp} disabled={isRequestingOtp} className="h-12">
                           {isRequestingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
                           {otpRequested ? t('Send again', 'أرسل مرة أخرى', '重新发送') : t('Send code', 'أرسل الرمز', '发送验证码')}
                         </Button>
                       </div>
+                      {otpRequested && (
+                        <p role="status" className="mt-3 flex items-center gap-1.5 text-xs font-medium text-[#1f8f3a] dark:text-[#52d273]">
+                          <CheckCircle2 className="h-4 w-4" />
+                          {t('Code sent to your WhatsApp number', 'تم إرسال الرمز إلى رقم واتساب الخاص بك', '验证码已发送到您的 WhatsApp 号码')}
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -878,9 +815,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                         <ShieldCheck className="h-4 w-4" />
                       )}
                       {isAuthenticated
-                        ? paymentMethod === 'qicard'
-                          ? t('Continue to secure payment', 'تابع إلى الدفع الآمن', '继续安全付款')
-                          : t('Confirm and place order', 'أكد وأرسل الطلب', '确认并提交订单')
+                        ? t('Place cash order', 'إرسال طلب الدفع النقدي', '提交现金订单')
                         : t('Log in to continue', 'سجل الدخول للمتابعة', '登录后继续')}
                     </Button>
                   </div>
@@ -993,9 +928,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
             >
               {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
               {isAuthenticated
-                ? paymentMethod === 'qicard'
-                  ? t('Continue to secure payment', 'تابع إلى الدفع الآمن', '继续安全付款')
-                  : t('Confirm and place order', 'أكد وأرسل الطلب', '确认并提交订单')
+                ? t('Place cash order', 'إرسال طلب الدفع النقدي', '提交现金订单')
                 : t('Log in to continue', 'سجل الدخول للمتابعة', '登录后继续')}
             </Button>
           )}

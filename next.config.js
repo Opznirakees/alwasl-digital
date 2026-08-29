@@ -57,6 +57,12 @@ const securityHeaders = [
 const nextConfig = {
   poweredByHeader: false,
   allowedDevOrigins: ["*.preview.same-app.com"],
+  webpack(config) {
+    if (process.env.NEXT_DISABLE_WEBPACK_CACHE === 'true') {
+      config.cache = false;
+    }
+    return config;
+  },
   images: {
     unoptimized: true,
     domains: [

@@ -42,10 +42,11 @@
     --v2-text: #07152e;
     --v2-muted: #53627a;
     --v2-border: #d9e1ec;
-    --v2-pink: #f6b7cc;
-    --v2-sky: #9bd8f2;
-    --v2-mint: #8fe3d2;
-    --v2-lavender: #c4b5fd;
+    --v2-pink: #ff8fb8;
+    --v2-sky: #70d5ff;
+    --v2-mint: #75dfc8;
+    --v2-lavender: #a78bfa;
+    --v2-red: #ff5f7f;
   }
 
   .dark {
@@ -74,8 +75,8 @@
     --chart-4: 240 5% 66%;
     --chart-5: 4 86% 64%;
     --v2-canvas: #020817;
-    --v2-surface: #06152f;
-    --v2-surface-raised: #0a2148;
+    --v2-surface: #0b1020;
+    --v2-surface-raised: #141a2d;
     --v2-navy: #020817;
     --v2-navy-soft: #06152f;
     --v2-navy-raised: #0a2148;
@@ -85,10 +86,11 @@
     --v2-text: #ffffff;
     --v2-muted: #b8c5db;
     --v2-border: rgba(255, 255, 255, 0.14);
-    --v2-pink: #f6b7cc;
-    --v2-sky: #9bd8f2;
-    --v2-mint: #8fe3d2;
-    --v2-lavender: #c4b5fd;
+    --v2-pink: #ff98bc;
+    --v2-sky: #70dcff;
+    --v2-mint: #75dfc8;
+    --v2-lavender: #ad95ff;
+    --v2-red: #ff5f7f;
   }
 
   * {
@@ -179,6 +181,28 @@
 
   .v2-primary-button:hover {
     background: var(--v2-gold-hover);
+  }
+
+  .v2-primary-button-blue {
+    border-color: rgba(255, 255, 255, 0.18);
+    background: var(--v2-sky);
+    color: #03111c;
+    box-shadow: 0 10px 28px rgba(70, 205, 255, 0.2);
+  }
+
+  .v2-primary-button-blue:hover {
+    background: #a4ebff;
+  }
+
+  .v2-primary-button-red {
+    border-color: rgba(255, 255, 255, 0.18);
+    background: var(--v2-red);
+    color: #180208;
+    box-shadow: 0 10px 28px rgba(255, 67, 111, 0.2);
+  }
+
+  .v2-primary-button-red:hover {
+    background: #ff91ad;
   }
 
   .v2-primary-button:focus-visible {

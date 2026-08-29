@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useEffect, useState, type CSSProperties } from 'react';
 import {
   ArrowRight,
+  Banknote,
   BadgeCheck,
   Headphones,
   Loader2,
@@ -106,8 +107,8 @@ export default function HomePage() {
     },
     {
       icon: ReceiptText,
-      title: t('Choose and order', 'اختر واطلب', '选择并下单'),
-      body: t('Check the amount and follow the order status.', 'تحقق من المبلغ وتابع حالة الطلب.', '确认金额并跟踪订单状态。'),
+      title: t('Place your cash order', 'أرسل طلب الدفع النقدي', '提交现金订单'),
+      body: t('Check the amount, place the order, and arrange cash payment.', 'تحقق من المبلغ وأرسل الطلب ثم نسّق الدفع النقدي.', '确认金额并提交订单，然后安排现金付款。'),
     },
   ];
 
@@ -126,7 +127,7 @@ export default function HomePage() {
           <HeroBanner banners={banners} />
         </div>
 
-        <section className="border-y border-[#d9e1ec] bg-white text-[#07152e]" aria-labelledby="steps-heading">
+        <section className="border-y border-[#e4e5ef] bg-[#fbfbfe] text-[#07152e]" aria-labelledby="steps-heading">
           <div className="mx-auto max-w-[1280px] px-3 py-5 sm:px-4 sm:py-7 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:items-center lg:gap-7">
             <div className="text-center sm:text-start">
               <p className="text-xs font-bold text-[#94610b]">{t('Simple from the first tap', 'بسيط من أول ضغطة', '从第一次点击就很简单')}</p>
@@ -134,8 +135,8 @@ export default function HomePage() {
             </div>
             <ol data-v2-process-steps className="mt-4 grid grid-cols-3 gap-2 sm:gap-3 lg:mt-0">
               {steps.map((step, index) => (
-                <li key={step.title} className="flex min-h-[92px] flex-col items-center justify-center border border-[#dce3ee] bg-[#f8fafc] px-2 py-3 text-center sm:min-h-[112px] sm:flex-row sm:justify-start sm:gap-3 sm:px-4 sm:text-start">
-                  <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-md text-[#07152e] ${index === 0 ? 'bg-[#9bd8f2]' : index === 1 ? 'bg-[#f6b7cc]' : 'bg-[#8fe3d2]'}`}><step.icon className="h-4 w-4" /></span>
+                <li key={step.title} className="flex min-h-[92px] flex-col items-center justify-center border border-[#e2e4ee] bg-white px-2 py-3 text-center shadow-[0_8px_24px_rgba(21,24,45,0.06)] sm:min-h-[112px] sm:flex-row sm:justify-start sm:gap-3 sm:px-4 sm:text-start">
+                  <span className={`flex h-9 w-9 flex-none items-center justify-center rounded-md text-[#07152e] ${index === 0 ? 'bg-[#70d5ff]' : index === 1 ? 'bg-[#ff9cbd]' : 'bg-[#75dfc8]'}`}><step.icon className="h-4 w-4" /></span>
                   <div className="min-w-0">
                     <p className="mt-1 text-[11px] font-bold leading-4 sm:mt-0 sm:text-sm">{step.title}</p>
                     <p className="mt-1 hidden text-xs leading-5 text-[#58677d] sm:block">{step.body}</p>
@@ -146,7 +147,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="categories" className="scroll-mt-20 bg-[#020817] py-9 text-white sm:py-14" aria-labelledby="categories-heading">
+        <section id="categories" className="scroll-mt-20 bg-[linear-gradient(180deg,#03040b_0%,#080a14_100%)] py-9 text-white sm:py-14" aria-labelledby="categories-heading">
           <div className="mx-auto max-w-[1280px] px-3 sm:px-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -158,12 +159,18 @@ export default function HomePage() {
                     : t('Public prices open immediately. Protected categories ask you to log in first.', 'تظهر الأسعار العامة فوراً، وتطلب الفئات المحمية تسجيل الدخول أولاً.', '公开价格会立即显示，受保护分类会先要求登录。')}
                 </p>
               </div>
-              {!isAccountLoading && !isAuthenticated && (
-                <div className="inline-flex max-w-max items-center gap-2 rounded-md border border-[#f6b7cc]/35 bg-[#f6b7cc]/10 px-3 py-2 text-xs font-semibold text-[#ffd7e4]">
-                  <LockKeyhole className="h-4 w-4" />
-                  {t('Some prices require login', 'بعض الأسعار تتطلب تسجيل الدخول', '部分价格需要登录')}
+              <div className="flex flex-wrap gap-2">
+                <div className="inline-flex max-w-max items-center gap-2 rounded-md border border-[#75dfc8]/30 bg-[#75dfc8]/10 px-3 py-2 text-xs font-semibold text-[#a7f0df]">
+                  <Banknote className="h-4 w-4" />
+                  {t('Cash payment is currently available', 'الدفع النقدي متاح حالياً', '目前支持现金付款')}
                 </div>
-              )}
+                {!isAccountLoading && !isAuthenticated && (
+                  <div className="inline-flex max-w-max items-center gap-2 rounded-md border border-[#ff98bc]/30 bg-[#ff98bc]/10 px-3 py-2 text-xs font-semibold text-[#ffd0df]">
+                    <LockKeyhole className="h-4 w-4" />
+                    {t('Some prices require login', 'بعض الأسعار تتطلب تسجيل الدخول', '部分价格需要登录')}
+                  </div>
+                )}
+              </div>
             </div>
 
             {isLoading ? (
@@ -175,15 +182,19 @@ export default function HomePage() {
               <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {categories.map((category, index) => {
                   const content = localizedCategory(category);
+                  const isAsiacell = category.slug === 'asiacell';
+                  const panelColor = isAsiacell ? '#21070d' : category.slug === 'waho' ? '#07162f' : '#15102b';
+                  const fallbackAccent = isAsiacell ? '#ff6f91' : index % 2 ? '#ff98bc' : '#70dcff';
                   return (
                     <Link
                       key={category.id}
                       href={categoryHref(category)}
                       data-testid="catalog-category-card"
-                      className="group relative grid min-h-[220px] grid-cols-[minmax(0,1fr)_112px] overflow-hidden rounded-lg border border-white/12 bg-[#07152e] p-5 shadow-[0_18px_44px_rgba(0,0,0,0.26)] transition-transform hover:-translate-y-1 hover:border-[var(--category-accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-accent)] sm:grid-cols-[minmax(0,1fr)_150px]"
-                      style={{ '--category-accent': category.accentColor || (index % 2 ? '#f6b7cc' : '#9bd8f2') } as CSSProperties}
+                      className="group relative grid min-h-[232px] grid-cols-[minmax(0,1fr)_112px] overflow-hidden rounded-lg border border-white/12 bg-[var(--category-panel)] p-5 shadow-[0_20px_52px_rgba(0,0,0,0.34)] transition-[transform,border-color,box-shadow] hover:-translate-y-1 hover:border-[var(--category-accent)] hover:shadow-[0_24px_60px_rgba(0,0,0,0.44)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--category-accent)] sm:grid-cols-[minmax(0,1fr)_160px]"
+                      style={{ '--category-accent': category.accentColor || fallbackAccent, '--category-panel': panelColor } as CSSProperties}
                     >
                       <span className="absolute inset-x-0 top-0 h-1 bg-[var(--category-accent)]" />
+                      <span className="pointer-events-none absolute inset-x-0 bottom-0 h-20 bg-[linear-gradient(0deg,color-mix(in_srgb,var(--category-accent)_12%,transparent),transparent)]" />
                       <span className="relative z-10 flex min-w-0 flex-col items-start justify-center text-start">
                         <span className="inline-flex rounded-md bg-[var(--category-accent)] px-2 py-1 text-[10px] font-bold text-[#07152e]">
                           {t('{{count}} service', '{{count}} خدمة', '{{count}} 项服务').replace('{{count}}', String(category.productCount))}
@@ -197,9 +208,9 @@ export default function HomePage() {
                           <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                         </span>
                       </span>
-                      <span className="relative self-center overflow-hidden rounded-lg border border-white/10 bg-white/5 p-2" style={{ aspectRatio: '1 / 1' }}>
+                      <span className={`relative self-center overflow-hidden rounded-lg border p-3 shadow-[0_16px_34px_rgba(0,0,0,0.28)] ${isAsiacell ? 'border-white/20 bg-white' : 'border-white/10 bg-white/[0.06]'}`} style={{ aspectRatio: '1 / 1' }}>
                         {/* Category images are configured by admins and may live on a managed CDN. */}
-                        <img src={category.image} alt="" className="h-full w-full object-contain" />
+                        <img src={category.image} alt="" className={`h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.04] ${isAsiacell ? 'p-1' : ''}`} />
                       </span>
                     </Link>
                   );

@@ -612,6 +612,7 @@ describe('fake payment rules', () => {
   });
 
   test('only exposes a production checkout method that has a complete server-side payment path', () => {
+    expect(isOrderPaymentMethodEnabled('cash', { NODE_ENV: 'production' })).toBe(true);
     expect(isOrderPaymentMethodEnabled('wallet', { NODE_ENV: 'production' })).toBe(true);
     expect(isOrderPaymentMethodEnabled('zaincash', { NODE_ENV: 'production', ENABLE_FAKE_PAYMENTS: 'true' })).toBe(false);
     expect(isOrderPaymentMethodEnabled('asiahawala', { NODE_ENV: 'production', ENABLE_FAKE_PAYMENTS: 'true' })).toBe(false);
@@ -619,7 +620,7 @@ describe('fake payment rules', () => {
     expect(isOrderPaymentMethodEnabled('zaincash', { NODE_ENV: 'development', ENABLE_FAKE_PAYMENTS: 'true' })).toBe(true);
   });
 
-  test('settles wallet orders through the protected order endpoint and keeps unfinished methods out of the UI', () => {
+  test('keeps the protected wallet settlement path while exposing only cash in the customer UI', () => {
     const repoRoot = join(import.meta.dir, '..');
     const ordersRoute = readFileSync(join(repoRoot, 'src/app/api/orders/route.ts'), 'utf8');
     const orderService = readFileSync(join(repoRoot, 'src/server/services/orders.ts'), 'utf8');
@@ -629,11 +630,12 @@ describe('fake payment rules', () => {
     expect(ordersRoute).toContain('confirmWalletPayment');
     expect(orderService).toContain('export async function confirmWalletPayment');
     expect(orderService).toContain("idempotency, 'wallet'");
-    expect(topUpPage).toContain("id: 'wallet'");
+    expect(topUpPage).toContain("id: 'cash'");
+    expect(topUpPage).not.toContain("id: 'wallet'");
     expect(topUpPage).not.toContain("id: 'zaincash'");
     expect(topUpPage).not.toContain("id: 'asiahawala'");
     expect(topUpPage).not.toContain("id: 'card'");
-    expect(topUpPage).toContain('href="/wallet"');
+    expect(topUpPage).toContain('supportWhatsAppHref');
   });
 
   test('marks successful completed provider responses as completed', () => {
@@ -1251,7 +1253,7 @@ describe('WAHA direct WhatsApp provider', () => {
     expect(normalizeWhatsAppPhone('0612345678')).toBe('31612345678');
     expect(normalizeWhatsAppPhone('+31612345678')).toBe('31612345678');
     expect(normalizeWhatsAppPhone('0031621393391')).toBe('31621393391');
-    expect(normalizeWhatsAppPhone(supportWhatsAppNumber)).toBe('9647822255851');
+    expect(normalizeWhatsAppPhone(supportWhatsAppNumber)).toBe('9647842222556');
     expect(normalizeWhatsAppPhone('07868426969')).toBe('9647868426969');
     expect(normalizeWhatsAppPhone('+96407868426969')).toBe('9647868426969');
     expect(normalizeWhatsAppPhone('+310612345678')).toBe('31612345678');
@@ -2613,7 +2615,7 @@ describe('customer-facing copy quality', () => {
     const envExample = readFileSync(join(repoRoot, '.env.example'), 'utf8');
 
     expect(contactConfig).toContain(`supportWhatsAppNumber = '${supportWhatsAppNumber}'`);
-    expect(supportWhatsAppHref).toBe('https://wa.me/9647822255851');
+    expect(supportWhatsAppHref).toBe('https://wa.me/9647842222556');
     expect(homePage).toContain('supportWhatsAppHref');
     expect(contactPage).toContain('supportWhatsAppHref');
     expect(homePage).not.toContain('https://wa.me/9647812345678');

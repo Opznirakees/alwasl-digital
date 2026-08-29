@@ -2,6 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 const port = process.env.PORT ?? '3000';
 const baseURL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${port}`;
+const localBrowser = process.env.PLAYWRIGHT_USE_SYSTEM_CHROME === 'true'
+  ? { channel: 'chrome' as const }
+  : {};
 
 export default defineConfig({
   testDir: './e2e',
@@ -16,7 +19,7 @@ export default defineConfig({
     baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    video: process.env.PLAYWRIGHT_USE_SYSTEM_CHROME === 'true' ? 'off' : 'retain-on-failure',
   },
   webServer: process.env.E2E_BASE_URL
     ? undefined
@@ -37,11 +40,11 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], ...localBrowser },
     },
     {
       name: 'mobile-chromium',
-      use: { ...devices['Pixel 5'] },
+      use: { ...devices['Pixel 5'], ...localBrowser },
     },
   ],
 });

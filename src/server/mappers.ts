@@ -79,6 +79,7 @@ const paymentMethodMap: Record<DbPaymentMethod, PaymentMethod> = {
   CARD: 'card',
   USDT: 'usdt',
   QICARD: 'qicard',
+  CASH: 'cash',
 };
 
 const paymentStatusMap: Record<DbPaymentStatus, PaymentStatus> = {
@@ -110,6 +111,7 @@ export function toDbPaymentMethod(method: PaymentMethod): DbPaymentMethod {
     card: 'CARD',
     usdt: 'USDT',
     qicard: 'QICARD',
+    cash: 'CASH',
   };
 
   return values[method];
@@ -412,8 +414,10 @@ export function mapBanner(banner: DbBanner): Banner {
     id: banner.id,
     title: banner.title,
     titleAr: banner.titleAr,
+    titleZh: banner.titleZh,
     subtitle: banner.subtitle ?? undefined,
     subtitleAr: banner.subtitleAr ?? undefined,
+    subtitleZh: banner.subtitleZh ?? undefined,
     image: banner.image,
     mobileImage: banner.mobileImage ?? undefined,
     link: banner.link ?? undefined,

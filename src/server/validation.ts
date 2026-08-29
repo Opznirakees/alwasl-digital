@@ -31,7 +31,7 @@ export const createOrderSchema = z.object({
   packageId: z.string().min(1),
   wahoId: z.string().trim().max(80).default(''),
   zoneId: z.string().trim().max(80).optional().or(z.literal('')),
-  paymentMethod: z.enum(['wallet', 'zaincash', 'asiahawala', 'card', 'usdt', 'qicard']),
+  paymentMethod: z.enum(['wallet', 'zaincash', 'asiahawala', 'card', 'usdt', 'qicard', 'cash']),
   otp: otpCodeSchema.optional(),
 });
 
@@ -308,8 +308,10 @@ export const updateAdminPromotionSchema = z.object({
 export const createAdminBannerSchema = z.object({
   title: z.string().trim().min(2).max(120),
   titleAr: z.string().trim().min(2).max(120),
+  titleZh: z.string().trim().min(2).max(120),
   subtitle: z.string().trim().max(240).optional().or(z.literal('')),
   subtitleAr: z.string().trim().max(240).optional().or(z.literal('')),
+  subtitleZh: z.string().trim().max(240).optional().or(z.literal('')),
   image: z.string().trim().min(1).max(500),
   mobileImage: z.string().trim().max(500).optional().or(z.literal('')),
   link: z.string().trim().max(240).optional().or(z.literal('')),
@@ -326,8 +328,10 @@ export const createAdminBannerSchema = z.object({
 export const updateAdminBannerSchema = z.object({
   title: z.string().trim().min(2).max(120).optional(),
   titleAr: z.string().trim().min(2).max(120).optional(),
+  titleZh: z.string().trim().min(2).max(120).optional(),
   subtitle: z.string().trim().max(240).optional().or(z.literal('')),
   subtitleAr: z.string().trim().max(240).optional().or(z.literal('')),
+  subtitleZh: z.string().trim().max(240).optional().or(z.literal('')),
   image: z.string().trim().min(1).max(500).optional(),
   mobileImage: z.string().trim().max(500).optional().or(z.literal('')),
   link: z.string().trim().max(240).optional().or(z.literal('')),

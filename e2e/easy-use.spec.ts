@@ -44,7 +44,7 @@ const asiacellProduct = {
   description: 'Buy an Asiacell recharge code for WAHO.',
   descriptionAr: 'اشترِ رمز شحن آسيا سيل لاستخدامه في واهو.',
   descriptionZh: '购买用于 WAHO 的 Asiacell 充值码。',
-  image: '/brand/asiacell-category.svg',
+  image: '/brands/asiacell-official.svg',
   catalogCategoryId: 'asiacell',
   fulfillmentMode: 'manual_code',
   requiresUserId: false,
@@ -84,12 +84,47 @@ const catalogCategories = [
     description: 'Asiacell codes delivered through WhatsApp.',
     descriptionAr: 'رموز آسيا سيل يتم تسليمها عبر واتساب.',
     descriptionZh: '通过 WhatsApp 交付 Asiacell 充值码。',
-    image: '/brand/asiacell-category.svg',
+    image: '/brands/asiacell-official.svg',
     accentColor: '#f6b7cc',
     sortOrder: 1,
     isActive: true,
     priceVisibility: 'PUBLIC',
     productCount: 1,
+  },
+];
+
+const campaignBanners = [
+  {
+    id: 'campaign-waho-fast-blue',
+    title: 'Al-Wasl Digital for WAHO Top-Ups',
+    titleAr: 'الوصل الرقمي لشحن تطبيق واهو',
+    titleZh: 'Al-Wasl 数字服务 · WAHO 充值',
+    subtitle: 'Fast top-ups. Secure payment. Registered company.',
+    subtitleAr: 'شحن سريع، دفع محمي، وشركة مسجلة.',
+    subtitleZh: '快速充值，安全支付，正规注册企业。',
+    image: '/banners/waho-fast-blue.jpeg',
+    mobileImage: '/banners/waho-fast-blue.jpeg',
+    link: '/categories/waho',
+    startDate: '2026-08-29T00:00:00.000Z',
+    endDate: '2032-12-31T23:59:59.000Z',
+    isActive: true,
+    order: 0,
+  },
+  {
+    id: 'campaign-waho-offers-red',
+    title: 'Promotional WAHO top-up offers',
+    titleAr: 'خصومات ترويجية لشحن تطبيق واهو',
+    titleZh: 'WAHO 充值优惠',
+    subtitle: 'Save on selected WAHO top-ups with fast, protected payment.',
+    subtitleAr: 'وفّر على شحنات واهو المختارة مع دفع سريع ومحمي.',
+    subtitleZh: '精选 WAHO 充值享优惠，付款快捷且安全。',
+    image: '/banners/waho-offers-red.jpeg',
+    mobileImage: '/banners/waho-offers-red.jpeg',
+    link: '/categories/waho',
+    startDate: '2026-08-29T00:00:00.000Z',
+    endDate: '2032-12-31T23:59:59.000Z',
+    isActive: true,
+    order: 1,
   },
 ];
 
@@ -232,9 +267,9 @@ const order = {
   discount: 0,
   finalPrice: 10000,
   currency: 'IQD',
-  status: 'processing',
-  paymentMethod: 'zaincash',
-  paymentStatus: 'completed',
+  status: 'pending',
+  paymentMethod: 'cash',
+  paymentStatus: 'pending',
   fulfillmentMode: 'waho_api',
   createdAt: '2026-07-18T10:00:00.000Z',
   updatedAt: '2026-07-18T10:01:00.000Z',
@@ -267,7 +302,7 @@ async function mockCustomerApi(page: Page, initiallyAuthenticated = false) {
 
     if (path === '/api/countries') return json({ countries });
     if (path === '/api/content') return json({ overrides: [] });
-    if (path === '/api/banners') return json({ banners: [] });
+    if (path === '/api/banners') return json({ banners: campaignBanners });
     if (path === '/api/categories') return json({ categories: catalogCategories });
     if (path === '/api/categories/waho') {
       return authenticated
@@ -283,12 +318,7 @@ async function mockCustomerApi(page: Page, initiallyAuthenticated = false) {
     }
     if (path === '/api/products/waho-top-up') return authenticated ? json({ product }) : json({ error: 'Authentication required' }, 401);
     if (path === '/api/promotions') return json({ promotions: [] });
-    if (path === '/api/payments/methods') return json({
-      methods: [
-        { id: 'wallet', enabled: true },
-        { id: 'qicard', enabled: true, environment: 'sandbox' },
-      ],
-    });
+    if (path === '/api/payments/methods') return json({ methods: [{ id: 'cash', enabled: true }] });
     if (path === '/api/auth/me') return json({ user: authenticated ? user : null });
     if (path === '/api/orders' && method === 'POST') return json({ order }, 201);
     if (path === '/api/orders') return json({ orders: authenticated ? [order] : [] });
@@ -597,8 +627,8 @@ test.describe('generation 2 customer experience', () => {
     await mockCustomerApi(page);
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Recharge your digital balance' })).toBeVisible();
-    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Choose category');
+    await expect(page.getByRole('heading', { level: 1, name: 'Al-Wasl Digital for WAHO Top-Ups' })).toBeVisible();
+    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('View recharge options');
     await expect(page.getByText('Some prices require login')).toBeVisible();
     const categoryCards = page.getByTestId('catalog-category-card');
     await expect(categoryCards).toHaveCount(2);
@@ -758,8 +788,9 @@ test.describe('generation 2 customer experience', () => {
     await expect(page.getByText('Account found', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Continue to payment' }).click();
 
-    await expect(page.getByRole('heading', { name: 'Choose how to pay' })).toBeFocused();
-    await expect(page.getByText('Available: 100,000 د.ع')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Cash payment' })).toBeFocused();
+    await expect(page.getByRole('radio', { name: /Cash payment/ })).toBeChecked();
+    await expect(page.getByText('07842222556')).toBeVisible();
     await page.getByRole('button', { name: 'Review order' }).click();
 
     await expect(page.getByRole('heading', { name: 'Check everything once more' })).toBeFocused();
@@ -767,17 +798,17 @@ test.describe('generation 2 customer experience', () => {
     await expect(page.getByText('10,000 IQD').first()).toBeVisible();
     await page.getByRole('button', { name: 'Send code' }).click();
     await expect(page.getByLabel('6-digit verification code')).toHaveValue('123456');
-    await expect(page.getByRole('button', { name: 'Confirm and place order' })).toBeEnabled();
-    await expect(page.getByRole('button', { name: 'Confirm and place order' })).toBeInViewport();
+    await expect(page.getByRole('button', { name: 'Place cash order' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: 'Place cash order' })).toBeInViewport();
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'wizard-confirm-mobile');
 
-    await page.getByRole('button', { name: 'Confirm and place order' }).click();
+    await page.getByRole('button', { name: 'Place cash order' }).click();
     await expect(page).toHaveURL(/\/orders$/);
     await expect(page.getByText('WAHO-2026-000042')).toBeVisible();
   });
 
-  test('completes the QiCard handoff and confirms payment from the status API', async ({ page }, testInfo) => {
+  test('shows only cash checkout and opens the correct WhatsApp contact', async ({ page }, testInfo) => {
     await page.setViewportSize(testInfo.project.name === 'mobile-chromium'
       ? { width: 390, height: 844 }
       : { width: 1280, height: 900 });
@@ -789,22 +820,24 @@ test.describe('generation 2 customer experience', () => {
     await page.getByRole('button', { name: 'Check ID' }).click();
     await page.getByRole('button', { name: 'Continue to payment' }).click();
 
-    const qiCard = page.getByRole('radio', { name: /QiCard/ });
-    await expect(qiCard).toBeVisible();
-    await qiCard.click();
-    await expect(page.getByText('Secure card checkout in test mode')).toBeVisible();
+    await expect(page.getByRole('radio', { name: /Cash payment/ })).toBeChecked();
+    await expect(page.getByRole('radio', { name: /QiCard/ })).toHaveCount(0);
+    await expect(page.getByRole('radio', { name: /Wallet/ })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Arrange cash payment on WhatsApp/ })).toHaveAttribute(
+      'href',
+      'https://wa.me/9647842222556'
+    );
+    await captureVisual(page, testInfo.project.name, 'cash-payment-step');
     await page.getByRole('button', { name: 'Review order' }).click();
-    await expect(page.getByText('QiCard', { exact: true })).toBeVisible();
+    await expect(page.getByText('Cash payment', { exact: true }).last()).toBeVisible();
 
     await page.getByRole('button', { name: 'Send code' }).click();
     await expect(page.getByLabel('6-digit verification code')).toHaveValue('123456');
-    await page.getByRole('button', { name: 'Continue to secure payment' }).click();
-
-    await expect(page).toHaveURL(new RegExp(`/payments/qicard/return\\?orderId=${order.id}$`));
-    await expect(page.getByRole('heading', { name: 'Payment confirmed' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'View my orders' })).toBeVisible();
+    await captureVisual(page, testInfo.project.name, 'cash-confirmation-step');
+    await page.getByRole('button', { name: 'Place cash order' }).click();
+    await expect(page).toHaveURL(/\/orders$/);
     await expectNoHorizontalOverflow(page);
-    await captureVisual(page, testInfo.project.name, 'qicard-return');
+    await captureVisual(page, testInfo.project.name, 'cash-order-placed');
   });
 
   test('keeps Chinese, Arabic RTL and dark mode complete', async ({ page }, testInfo) => {
@@ -814,13 +847,17 @@ test.describe('generation 2 customer experience', () => {
 
     await page.getByRole('button', { name: 'Change language' }).click();
     await page.getByRole('menuitem', { name: '中文' }).click();
-    await expect(page.getByRole('heading', { level: 1, name: '充值数字余额' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Al-Wasl 数字服务 · WAHO 充值' })).toBeVisible();
+    await expect(page.locator('[data-campaign-visual]')).toBeVisible();
     await captureVisual(page, testInfo.project.name, 'home-chinese-dark-mobile');
 
     await page.getByRole('button', { name: '切换语言' }).click();
     await page.getByRole('menuitem', { name: 'العربية' }).click();
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page.getByRole('heading', { level: 1, name: 'اشحن رصيدك الرقمي' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'الوصل الرقمي لشحن تطبيق واهو' })).toBeVisible();
+    const campaignVisualBox = await page.locator('[data-campaign-visual]').boundingBox();
+    expect(campaignVisualBox?.height ?? 0).toBeGreaterThanOrEqual(200);
+    expect(campaignVisualBox?.y ?? 1000).toBeLessThan(300);
 
     await expect(page.locator('html')).toHaveClass(/dark/);
     await expect(page.getByRole('button', { name: 'التبديل إلى الوضع الفاتح' })).toHaveCount(0);
@@ -837,7 +874,7 @@ test.describe('generation 2 customer experience', () => {
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1, name: 'اشحن رصيدك الرقمي' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'الوصل الرقمي لشحن تطبيق واهو' })).toBeVisible();
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'home-arabic-dark-desktop');
   });
@@ -847,7 +884,7 @@ test.describe('generation 2 customer experience', () => {
     await mockCustomerApi(page, true);
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Recharge your digital balance' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Al-Wasl Digital for WAHO Top-Ups' })).toBeVisible();
     await expect(page.getByTestId('catalog-category-card')).toHaveCount(2);
     await expectNoHorizontalOverflow(page);
     await captureVisual(page, testInfo.project.name, 'home-desktop');

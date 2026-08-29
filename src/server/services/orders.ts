@@ -7,6 +7,7 @@ import { assertMatchingIdempotencyFingerprint } from '../idempotency';
 import { toDbPaymentMethod } from '../mappers';
 import { resolveMembershipForSpend } from '@/lib/membership';
 import { type WahoTopupInput } from '../providers/waho';
+import { hasPermission } from '../permissions';
 import {
   createWahoTopupWithFailover,
   getWahoVerificationProvider,
@@ -255,10 +256,16 @@ interface ConfirmFakePaymentInput {
   success: boolean;
 }
 
-type PaymentConfirmationMode = 'fake' | 'wallet';
+type PaymentConfirmationMode = 'fake' | 'wallet' | 'cash';
+
+function paymentReferencePrefix(mode: PaymentConfirmationMode) {
+  if (mode === 'wallet') return 'WALLET';
+  if (mode === 'cash') return 'CASH';
+  return 'FAKE';
+}
 
 function canAccessOrder(user: User, orderUserId: string) {
-  return user.role === 'ADMIN' || user.id === orderUserId;
+  return user.id === orderUserId || hasPermission(user, 'ORDER_MANAGE');
 }
 
 interface RefundProviderRequestInput {
@@ -564,6 +571,9 @@ async function confirmPayment(
   if (mode === 'wallet' && existing.paymentMethod !== 'WALLET') {
     throw new Error('PAYMENT_METHOD_UNAVAILABLE');
   }
+  if (mode === 'cash' && existing.paymentMethod !== 'CASH') {
+    throw new Error('PAYMENT_METHOD_UNAVAILABLE');
+  }
 
   const existingAttempt = await replayPaymentFromIdempotency(existing.id, idempotency);
   if (existingAttempt) return existingAttempt;
@@ -622,7 +632,7 @@ async function confirmPayment(
           where: { id: attempt.id },
           data: {
             status: 'COMPLETED',
-            providerRef: `${mode === 'wallet' ? 'WALLET' : 'FAKE'}-PAID-${order.id}`,
+            providerRef: `${paymentReferencePrefix(mode)}-PAID-${order.id}`,
             metadata: { mode, state: 'replayed_completed_order' },
           },
         });
@@ -695,7 +705,7 @@ async function confirmPayment(
         data: {
           method: order.paymentMethod as DbPaymentMethod,
           status: 'COMPLETED',
-          providerRef: `${mode === 'wallet' ? 'WALLET' : 'FAKE'}-PAID-${order.id}`,
+          providerRef: `${paymentReferencePrefix(mode)}-PAID-${order.id}`,
           metadata: { mode, state: 'paid' },
         },
       });
@@ -822,4 +832,12 @@ export async function confirmWalletPayment(
   idempotency: IdempotencyInput
 ): Promise<OrderMutationResult> {
   return confirmPayment(user, { ...input, success: true }, idempotency, 'wallet');
+}
+
+export async function confirmCashPayment(
+  user: User,
+  input: { orderId: string },
+  idempotency: IdempotencyInput
+): Promise<OrderMutationResult> {
+  return confirmPayment(user, { ...input, success: true }, idempotency, 'cash');
 }

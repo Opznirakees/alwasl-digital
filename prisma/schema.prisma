@@ -94,6 +94,7 @@ enum PaymentMethod {
   CARD
   USDT
   QICARD
+  CASH
 }
 
 enum PaymentWebhookProcessingStatus {
@@ -803,8 +804,10 @@ model Banner {
   id          String   @id @default(cuid())
   title       String
   titleAr     String
+  titleZh     String   @default("")
   subtitle    String?
   subtitleAr  String?
+  subtitleZh  String?
   image       String
   mobileImage String?
   link        String?

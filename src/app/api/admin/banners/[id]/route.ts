@@ -41,8 +41,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       data: {
         title: body.title,
         titleAr: body.titleAr,
+        titleZh: body.titleZh,
         subtitle: cleanOptional(body.subtitle),
         subtitleAr: cleanOptional(body.subtitleAr),
+        subtitleZh: cleanOptional(body.subtitleZh),
         image: body.image,
         mobileImage: cleanOptional(body.mobileImage),
         link: cleanOptional(body.link),

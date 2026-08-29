@@ -96,6 +96,7 @@ export default function OrdersPage() {
     card: t('Bank card', 'بطاقة مصرفية', '银行卡'),
     usdt: 'USDT',
     qicard: 'QiCard',
+    cash: t('Cash', 'نقداً', '现金'),
   })[method] ?? method;
 
   const copyOrderId = async (orderId: string) => {

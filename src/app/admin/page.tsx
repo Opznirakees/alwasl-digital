@@ -37,6 +37,7 @@ import {
   LayoutDashboard,
   Users,
   ShoppingCart,
+  Banknote,
   Wallet,
   TrendingUp,
   DollarSign,
@@ -280,8 +281,10 @@ export default function AdminDashboard() {
   const [bannerForm, setBannerForm] = useState({
     title: 'Recharge your digital balance',
     titleAr: 'اشحن رصيدك الرقمي',
+    titleZh: '为数字余额充值',
     subtitle: 'Choose a category and see the right price for your country.',
     subtitleAr: 'اختر الفئة وشاهد السعر المناسب لبلدك.',
+    subtitleZh: '选择分类，查看适合您所在国家的价格。',
     image: '/brand/recharge-hero-v3.webp',
     mobileImage: '',
     link: '/#categories',
@@ -775,8 +778,10 @@ export default function AdminDashboard() {
         body: JSON.stringify({
           title: bannerForm.title,
           titleAr: bannerForm.titleAr,
+          titleZh: bannerForm.titleZh,
           subtitle: bannerForm.subtitle,
           subtitleAr: bannerForm.subtitleAr,
+          subtitleZh: bannerForm.subtitleZh,
           image: bannerForm.image,
           mobileImage: bannerForm.mobileImage,
           link: bannerForm.link,
@@ -802,8 +807,10 @@ export default function AdminDashboard() {
         ...current,
         title: '',
         titleAr: '',
+        titleZh: '',
         subtitle: '',
         subtitleAr: '',
+        subtitleZh: '',
         mobileImage: '',
         gameId: '',
       }));
@@ -815,8 +822,10 @@ export default function AdminDashboard() {
     setBannerForm({
       title: banner.title,
       titleAr: banner.titleAr,
+      titleZh: banner.titleZh,
       subtitle: banner.subtitle ?? '',
       subtitleAr: banner.subtitleAr ?? '',
+      subtitleZh: banner.subtitleZh ?? '',
       image: banner.image,
       mobileImage: banner.mobileImage ?? '',
       link: banner.link ?? '',
@@ -907,6 +916,16 @@ export default function AdminDashboard() {
       setFulfillmentCode('');
       setFulfillmentNote('');
     }
+  }
+
+  async function confirmCashOrder(orderId: string) {
+    await runAdminMutation(async () => {
+      await adminJsonRequest(`/api/admin/orders/${orderId}/cash-payment`, {
+        method: 'POST',
+        headers: { 'Idempotency-Key': globalThis.crypto.randomUUID() },
+      });
+      toast.success(t('Cash receipt confirmed', 'تم تأكيد استلام المبلغ النقدي', '现金收款已确认'));
+    });
   }
 
   async function updateExchangeRate(event: FormEvent<HTMLFormElement>) {
@@ -1229,6 +1248,12 @@ export default function AdminDashboard() {
     (order.status === 'processing' || order.status === 'completed')
   );
 
+  const canConfirmCashPayment = (order: Order) => (
+    order.paymentMethod === 'cash' &&
+    order.paymentStatus === 'pending' &&
+    order.status === 'pending'
+  );
+
   const openManualFulfillment = (order: Order) => {
     setFulfillmentOrder(order);
     setFulfillmentCode('');
@@ -1243,6 +1268,7 @@ export default function AdminDashboard() {
       card: { en: 'Bank card', ar: 'بطاقة مصرفية', zh: '银行卡' },
       usdt: { en: 'USDT', ar: 'USDT', zh: 'USDT' },
       qicard: { en: 'QiCard', ar: 'QiCard', zh: 'QiCard' },
+      cash: { en: 'Cash', ar: 'نقداً', zh: '现金' },
     };
     const label = labels[method];
     return label ? t(label.en, label.ar, label.zh) : method;
@@ -1714,6 +1740,18 @@ export default function AdminDashboard() {
                             <dd className="mt-1 text-white/70">{formatDate(order.createdAt)}</dd>
                           </div>
                         </dl>
+                        {canConfirmCashPayment(order) && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={isMutating}
+                            onClick={() => void confirmCashOrder(order.id)}
+                            className="mt-4 w-full bg-[#52d273] text-[#04131f] hover:bg-[#77e294]"
+                          >
+                            <Banknote className="h-4 w-4" />
+                            {t('Confirm cash received', 'تأكيد استلام النقد', '确认收到现金')}
+                          </Button>
+                        )}
                         {canManuallyFulfill(order) && (
                           <Button
                             type="button"
@@ -1766,7 +1804,18 @@ export default function AdminDashboard() {
                             </TableCell>
                             <TableCell className="text-sm text-white/50">{formatDate(order.createdAt)}</TableCell>
                             <TableCell>
-                              {canManuallyFulfill(order) ? (
+                              {canConfirmCashPayment(order) ? (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={isMutating}
+                                  onClick={() => void confirmCashOrder(order.id)}
+                                  className="bg-[#52d273] text-[#04131f] hover:bg-[#77e294]"
+                                >
+                                  <Banknote className="h-4 w-4" />
+                                  {t('Confirm cash', 'تأكيد النقد', '确认现金')}
+                                </Button>
+                              ) : canManuallyFulfill(order) ? (
                                 <Button
                                   type="button"
                                   size="sm"
@@ -1915,7 +1964,7 @@ export default function AdminDashboard() {
                     </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={createProduct} className="space-y-4">
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-4 lg:grid-cols-3">
                       <div className="space-y-2">
                         <Label htmlFor="product-slug">{t('Slug', 'المعرف', '短链接')}</Label>
                         <Input
@@ -2927,8 +2976,17 @@ export default function AdminDashboard() {
                           className="bg-slate-900 border-emerald-800/30 text-white"
                         />
                       </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="banner-title-zh">{t('Chinese title', 'العنوان الصيني', '中文标题')}</Label>
+                        <Input
+                          id="banner-title-zh"
+                          value={bannerForm.titleZh}
+                          onChange={(event) => setBannerForm((current) => ({ ...current, titleZh: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid gap-4 lg:grid-cols-3">
                       <div className="space-y-2">
                         <Label htmlFor="banner-subtitle">{t('Subtitle', 'الوصف المختصر', '副标题')}</Label>
                         <Input
@@ -2944,6 +3002,15 @@ export default function AdminDashboard() {
                           id="banner-subtitle-ar"
                           value={bannerForm.subtitleAr}
                           onChange={(event) => setBannerForm((current) => ({ ...current, subtitleAr: event.target.value }))}
+                          className="bg-slate-900 border-emerald-800/30 text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="banner-subtitle-zh">{t('Chinese subtitle', 'الوصف الصيني', '中文副标题')}</Label>
+                        <Input
+                          id="banner-subtitle-zh"
+                          value={bannerForm.subtitleZh}
+                          onChange={(event) => setBannerForm((current) => ({ ...current, subtitleZh: event.target.value }))}
                           className="bg-slate-900 border-emerald-800/30 text-white"
                         />
                       </div>
@@ -3063,10 +3130,10 @@ export default function AdminDashboard() {
                               <img src={banner.image} alt={banner.title} className="h-full w-full object-cover" />
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate font-semibold text-white">{t(banner.title, banner.titleAr, banner.title)}</p>
+                              <p className="truncate font-semibold text-white">{t(banner.title, banner.titleAr, banner.titleZh)}</p>
                               {banner.subtitle && (
                                 <p className="mt-1 max-w-xs truncate text-xs text-white/50">
-                                  {t(banner.subtitle, banner.subtitleAr ?? banner.subtitle, banner.subtitle)}
+                                  {t(banner.subtitle, banner.subtitleAr ?? banner.subtitle, banner.subtitleZh ?? banner.subtitle)}
                                 </p>
                               )}
                             </div>

@@ -1,3 +1,3 @@
-export const supportWhatsAppNumber = '009647822255851';
-export const supportWhatsAppNormalizedNumber = '9647822255851';
+export const supportWhatsAppNumber = '07842222556';
+export const supportWhatsAppNormalizedNumber = '9647842222556';
 export const supportWhatsAppHref = `https://wa.me/${supportWhatsAppNormalizedNumber}`;

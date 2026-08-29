@@ -21,10 +21,10 @@ describe('V2 multi-category visual system', () => {
       expect(styles).toContain(token);
     }
     expect(styles).toContain('#020817');
-    expect(styles).toContain('#f6b7cc');
-    expect(styles).toContain('#9bd8f2');
-    expect(styles).toContain('#8fe3d2');
-    expect(styles).toContain('#c4b5fd');
+    expect(styles).toContain('#ff8fb8');
+    expect(styles).toContain('#70d5ff');
+    expect(styles).toContain('#75dfc8');
+    expect(styles).toContain('#a78bfa');
   });
 
   it('uses a branded responsive header with protected mobile destinations', () => {
