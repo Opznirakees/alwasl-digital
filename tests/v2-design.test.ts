@@ -81,6 +81,15 @@ describe('V2 multi-category visual system', () => {
     expect(bannerRoute).toContain('isActive: true');
   });
 
+  it('keeps campaign artwork crisp without washing out its edge', () => {
+    const hero = read('src/components/home/HeroBanner.tsx');
+
+    expect(hero).toContain('data-campaign-edge="crisp"');
+    expect(hero).toContain('lg:object-contain');
+    expect(hero).not.toContain('rgba(255,255,255,0.94)_40%');
+    expect(hero).not.toContain('transparent_58%,#ffffff_100%');
+  });
+
   it('keeps LEO out of the hero and exposes only a subtle footer contact', () => {
     const hero = read('src/components/home/HeroBanner.tsx');
     const home = read('src/app/page.tsx');

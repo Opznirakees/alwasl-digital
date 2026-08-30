@@ -90,16 +90,18 @@ export function HeroBanner({ banners }: HeroBannerProps) {
       className={`relative min-h-[610px] overflow-hidden border-y border-[#d9e1ec] bg-white text-[#07152e] shadow-[0_24px_70px_rgba(28,55,92,0.14)] sm:min-h-[560px] sm:rounded-lg sm:border lg:min-h-[520px] ${isRedCampaign ? 'selection:bg-[#ff5f8f]/25' : 'selection:bg-[#62d9ff]/30'}`}
     >
       {isCampaignBanner ? (
-        <div dir="ltr" className="absolute inset-0 grid grid-rows-[220px_minmax(0,1fr)] lg:grid-cols-[46%_54%] lg:grid-rows-1">
-          <div data-campaign-visual className="relative overflow-hidden bg-[#eaf1f8]">
+        <div dir="ltr" className="absolute inset-0 grid grid-rows-[220px_minmax(0,1fr)] lg:grid-cols-[50%_50%] lg:grid-rows-1">
+          <div
+            data-campaign-visual
+            data-campaign-edge="crisp"
+            className="relative overflow-hidden border-b border-[#d9e1ec] bg-[#10162f] lg:border-b-0 lg:border-e"
+          >
             <img
               data-visual-required-image
               src={imageSource}
               alt=""
-              className="h-full w-auto min-w-full object-cover object-left"
+              className="h-full w-full object-cover object-center lg:object-contain"
             />
-            <div className="absolute inset-y-0 right-0 w-[64%] bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.94)_40%,#ffffff_82%)] lg:w-[48%]" />
-            <div className={`absolute inset-0 bg-[linear-gradient(180deg,transparent_48%,#ffffff_100%)] lg:bg-[linear-gradient(90deg,transparent_58%,#ffffff_100%)] ${isRedCampaign ? 'shadow-[inset_0_0_70px_rgba(255,95,127,0.10)]' : 'shadow-[inset_0_0_70px_rgba(112,213,255,0.14)]'}`} />
           </div>
 
           <div

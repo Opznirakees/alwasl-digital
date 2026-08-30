@@ -849,7 +849,13 @@ test.describe('generation 2 customer experience', () => {
     await page.getByRole('menuitem', { name: '中文' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Al-Wasl 数字服务 · WAHO 充值' })).toBeVisible();
     await expect(page.locator('[data-campaign-visual]')).toBeVisible();
+    await expect(page.locator('[data-campaign-visual]')).toHaveAttribute('data-campaign-edge', 'crisp');
     await captureVisual(page, testInfo.project.name, 'home-chinese-light-mobile');
+
+    await page.getByRole('tab', { name: '横幅 2' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'WAHO 充值优惠' })).toBeVisible();
+    await captureVisual(page, testInfo.project.name, 'home-chinese-red-crisp-mobile');
+    await page.getByRole('tab', { name: '横幅 1' }).click();
 
     await page.getByRole('button', { name: '切换语言' }).click();
     await page.getByRole('menuitem', { name: 'العربية' }).click();
