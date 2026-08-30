@@ -6,6 +6,7 @@ import {
   buildQiCardCallbackUrls,
   classifyQiCardPayment,
   createQiCardClient,
+  isQiCardWebhookEnabled,
   parseQiCardPaymentPayload,
   resolveQiCardConfig,
   verifyQiCardWebhookSignature,
@@ -49,6 +50,18 @@ function resolveDependencies(dependencies: QiCardDependencies = {}) {
   return {
     config,
     client: dependencies.client ?? createQiCardClient(env),
+  };
+}
+
+function resolveWebhookDependencies(dependencies: QiCardDependencies = {}) {
+  const env = dependencies.env ?? process.env;
+  if (!isQiCardWebhookEnabled(env)) throw new Error('QICARD_WEBHOOK_NOT_CONFIGURED');
+  const config = resolveQiCardConfig(env);
+  return {
+    config,
+    // Checkout can be disabled while callbacks for already-created payments
+    // still need to be authenticated and reconciled.
+    client: dependencies.client ?? new QiCardClient(config),
   };
 }
 
@@ -338,9 +351,11 @@ export async function processQiCardWebhook(
   if (Buffer.byteLength(input.rawBody, 'utf8') > MAX_WEBHOOK_BODY_BYTES) {
     throw new Error('QICARD_WEBHOOK_TOO_LARGE');
   }
-  const { client, config } = resolveDependencies(dependencies);
+  const { client, config } = resolveWebhookDependencies(dependencies);
   if (!config.webhookPublicKey) throw new Error('QICARD_WEBHOOK_NOT_CONFIGURED');
-  if (!input.terminalId || input.terminalId !== config.terminalId) {
+  // QiCard documents X-Signature as the webhook authentication header. Some
+  // environments also send X-Terminal-Id; validate it when present.
+  if (input.terminalId && input.terminalId !== config.terminalId) {
     throw new Error('QICARD_WEBHOOK_TERMINAL_INVALID');
   }
 
@@ -387,6 +402,20 @@ export async function processQiCardWebhook(
   }
   if (event.processingStatus === 'PROCESSED') {
     return { replayed: true };
+  }
+
+  // QiCard may send signed onboarding probes that were not created by this
+  // application. Acknowledge those without querying Qi or mutating an order.
+  if (!attempt) {
+    await prisma.paymentWebhookEvent.update({
+      where: { id: event.id },
+      data: {
+        processingStatus: 'PROCESSED',
+        processedAt: new Date(),
+        error: 'QICARD_PAYMENT_NOT_FOUND',
+      },
+    });
+    return { replayed: false, ignored: true };
   }
 
   try {

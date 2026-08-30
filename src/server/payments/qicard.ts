@@ -204,12 +204,17 @@ export function isQiCardCheckoutEnabled(env: QiCardEnvironment = process.env) {
 }
 
 export function isQiCardWebhookEnabled(env: QiCardEnvironment = process.env) {
-  if (!isQiCardCheckoutEnabled(env)) return false;
   try {
-    return isRsaPublicKey(resolveQiCardConfig(env).webhookPublicKey);
+    const config = resolveQiCardConfig(env);
+    if (env.NODE_ENV === 'production' && config.environment === 'sandbox') return false;
+    return isRsaPublicKey(config.webhookPublicKey);
   } catch {
     return false;
   }
+}
+
+export function shouldAcknowledgeQiCardWebhookWhileDisabled(env: QiCardEnvironment = process.env) {
+  return env.QICARD_ENABLED !== 'true' && !isQiCardWebhookEnabled(env);
 }
 
 function assertIdentifier(value: string) {

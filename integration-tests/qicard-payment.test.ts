@@ -206,9 +206,9 @@ describe('QiCard database payment flow', () => {
     const rawBody = JSON.stringify(paid);
     const signature = sign('RSA-SHA256', Buffer.from(buildQiCardWebhookSigningString(paid)), privateKey).toString('base64');
 
-    const first = await processQiCardWebhook({ rawBody, signature, terminalId: env.QICARD_TERMINAL_ID }, {
+    const first = await processQiCardWebhook({ rawBody, signature, terminalId: null }, {
       client: gateway(paid),
-      env,
+      env: { ...env, QICARD_ENABLED: 'false' },
     });
     const replay = await processQiCardWebhook({ rawBody, signature, terminalId: env.QICARD_TERMINAL_ID }, {
       client: gateway(paid),
@@ -241,6 +241,39 @@ describe('QiCard database payment flow', () => {
     expect(recovered.replayed).toBe(false);
     expect((await prisma.order.findUniqueOrThrow({ where: { id: invalid.order.id } })).paymentStatus).toBe('COMPLETED');
     expect(await prisma.paymentWebhookEvent.count({ where: { paymentAttemptId: invalid.attempt.id } })).toBe(2);
+  });
+
+  test('acknowledges a signed QiCard onboarding notification without changing an order', async () => {
+    const payment = {
+      requestId: randomUUID(),
+      paymentId: randomUUID(),
+      status: 'SUCCESS',
+      canceled: false,
+      amount: 1_000,
+      currency: 'IQD',
+      creationDate: '2026-08-30T12:00:00',
+    };
+    const rawBody = JSON.stringify(payment);
+    const signature = sign(
+      'RSA-SHA256',
+      Buffer.from(buildQiCardWebhookSigningString(payment)),
+      privateKey,
+    ).toString('base64');
+
+    const result = await processQiCardWebhook({ rawBody, signature, terminalId: null }, {
+      client: gateway(payment),
+      env: { ...env, QICARD_ENABLED: 'false' },
+    });
+
+    expect(result).toEqual({ replayed: false, ignored: true });
+    expect(await prisma.paymentWebhookEvent.findFirstOrThrow({
+      where: { providerPaymentId: payment.paymentId },
+    })).toMatchObject({
+      signatureValid: true,
+      processingStatus: 'PROCESSED',
+      paymentAttemptId: null,
+      error: 'QICARD_PAYMENT_NOT_FOUND',
+    });
   });
 
   test('refunds to QiCard without increasing the internal wallet balance', async () => {

@@ -2,6 +2,8 @@ import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { generateKeyPairSync, sign } from 'node:crypto';
 import { join } from 'node:path';
+import { NextRequest } from 'next/server';
+import { POST as handleQiCardWebhook } from '../src/app/api/webhooks/qicard/route';
 import {
   QiCardClient,
   buildQiCardCallbackUrls,
@@ -10,7 +12,9 @@ import {
   getQiCardWebhookReadiness,
   getPublicRequestOrigin,
   isQiCardCheckoutEnabled,
+  isQiCardWebhookEnabled,
   resolveQiCardConfig,
+  shouldAcknowledgeQiCardWebhookWhileDisabled,
   verifyQiCardWebhookSignature,
   type QiCardPayment,
 } from '../src/server/payments/qicard';
@@ -107,6 +111,32 @@ describe('QiCard configuration', () => {
     });
     expect(JSON.stringify(readiness)).not.toContain('merchant-password');
     expect(JSON.stringify(readiness)).not.toContain('237984');
+  });
+
+  test('keeps a configured webhook active while customer checkout is disabled', () => {
+    const webhookOnlyEnv = {
+      ...completeEnv,
+      NODE_ENV: 'production',
+      QICARD_ENABLED: 'false',
+      QICARD_BASE_URL: 'https://merchant-api.qi.example/api/v1',
+      APP_BASE_URL: 'https://alwasl-digital-b8ngg.ondigitalocean.app',
+    };
+
+    expect(isQiCardCheckoutEnabled(webhookOnlyEnv)).toBe(false);
+    expect(isQiCardWebhookEnabled(webhookOnlyEnv)).toBe(true);
+    expect(getQiCardWebhookReadiness(webhookOnlyEnv)).toMatchObject({
+      configured: true,
+      environment: 'production',
+    });
+  });
+
+  test('acknowledges without side effects only when checkout and webhook processing are both disabled', () => {
+    expect(shouldAcknowledgeQiCardWebhookWhileDisabled({ QICARD_ENABLED: 'false' })).toBe(true);
+    expect(shouldAcknowledgeQiCardWebhookWhileDisabled({ QICARD_ENABLED: 'true' })).toBe(false);
+    expect(shouldAcknowledgeQiCardWebhookWhileDisabled({
+      ...completeEnv,
+      QICARD_ENABLED: 'false',
+    })).toBe(false);
   });
 
   test('uses the public proxy origin instead of DigitalOcean internal localhost', () => {
@@ -242,6 +272,32 @@ describe('QiCard REST client', () => {
 });
 
 describe('QiCard webhook verification and status mapping', () => {
+  test('returns 200 without side effects for a well-formed notification while QiCard is disabled', async () => {
+    const previousEnabled = process.env.QICARD_ENABLED;
+    const previousPublicKey = process.env.QICARD_WEBHOOK_PUBLIC_KEY;
+    process.env.QICARD_ENABLED = 'false';
+    delete process.env.QICARD_WEBHOOK_PUBLIC_KEY;
+
+    try {
+      const response = await handleQiCardWebhook(new NextRequest('https://merchant.example/api/webhooks/qicard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...createdPayment,
+          formUrl: undefined,
+        }),
+      }));
+
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ received: true, replayed: false, ignored: true });
+    } finally {
+      if (previousEnabled === undefined) delete process.env.QICARD_ENABLED;
+      else process.env.QICARD_ENABLED = previousEnabled;
+      if (previousPublicKey === undefined) delete process.env.QICARD_WEBHOOK_PUBLIC_KEY;
+      else process.env.QICARD_WEBHOOK_PUBLIC_KEY = previousPublicKey;
+    }
+  });
+
   test('reconstructs the official IQD signing string and verifies RSA-SHA256', () => {
     const payload: QiCardPayment = {
       ...createdPayment,
