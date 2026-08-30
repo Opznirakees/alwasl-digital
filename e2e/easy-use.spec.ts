@@ -840,7 +840,7 @@ test.describe('generation 2 customer experience', () => {
     await captureVisual(page, testInfo.project.name, 'cash-order-placed');
   });
 
-  test('keeps Chinese, Arabic RTL and dark mode complete', async ({ page }, testInfo) => {
+  test('keeps Chinese, Arabic RTL and the light theme complete', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await mockCustomerApi(page, true);
     await page.goto('/');
@@ -849,7 +849,7 @@ test.describe('generation 2 customer experience', () => {
     await page.getByRole('menuitem', { name: '中文' }).click();
     await expect(page.getByRole('heading', { level: 1, name: 'Al-Wasl 数字服务 · WAHO 充值' })).toBeVisible();
     await expect(page.locator('[data-campaign-visual]')).toBeVisible();
-    await captureVisual(page, testInfo.project.name, 'home-chinese-dark-mobile');
+    await captureVisual(page, testInfo.project.name, 'home-chinese-light-mobile');
 
     await page.getByRole('button', { name: '切换语言' }).click();
     await page.getByRole('menuitem', { name: 'العربية' }).click();
@@ -859,24 +859,26 @@ test.describe('generation 2 customer experience', () => {
     expect(campaignVisualBox?.height ?? 0).toBeGreaterThanOrEqual(200);
     expect(campaignVisualBox?.y ?? 1000).toBeLessThan(300);
 
-    await expect(page.locator('html')).toHaveClass(/dark/);
+    await expect(page.locator('html')).toHaveClass(/light/);
+    await expect(page.locator('html')).not.toHaveClass(/dark/);
     await expect(page.getByRole('button', { name: 'التبديل إلى الوضع الفاتح' })).toHaveCount(0);
     await expectNoHorizontalOverflow(page);
-    await captureVisual(page, testInfo.project.name, 'home-arabic-dark-mobile');
+    await captureVisual(page, testInfo.project.name, 'home-arabic-light-mobile');
 
     await page.goto('/top-up/waho-top-up?amount=10000');
     await expect(page.getByRole('heading', { name: 'اختر المبلغ' })).toBeVisible();
     await expect(page.getByRole('navigation', { name: 'تقدم عملية الشحن' }).getByRole('listitem')).toHaveCount(4);
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-    await expect(page.locator('html')).toHaveClass(/dark/);
+    await expect(page.locator('html')).toHaveClass(/light/);
+    await expect(page.locator('html')).not.toHaveClass(/dark/);
     await expectNoHorizontalOverflow(page);
-    await captureVisual(page, testInfo.project.name, 'wizard-arabic-dark-mobile');
+    await captureVisual(page, testInfo.project.name, 'wizard-arabic-light-mobile');
 
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1, name: 'الوصل الرقمي لشحن تطبيق واهو' })).toBeVisible();
     await expectNoHorizontalOverflow(page);
-    await captureVisual(page, testInfo.project.name, 'home-arabic-dark-desktop');
+    await captureVisual(page, testInfo.project.name, 'home-arabic-light-desktop');
   });
 
   test('uses wide screens for overview without stretching the main task', async ({ page }, testInfo) => {

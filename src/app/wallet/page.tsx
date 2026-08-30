@@ -169,13 +169,13 @@ export default function WalletPage() {
 
         <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0 space-y-5">
-            <section className="rounded-lg bg-[#071b46] p-6 text-white sm:p-8">
+            <section className="rounded-lg border border-[#cfe2f5] bg-[linear-gradient(135deg,#eaf8ff_0%,#f6fbff_52%,#fff4f8_100%)] p-6 text-[#07152e] shadow-[0_18px_46px_rgba(28,55,92,0.10)] sm:p-8">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-blue-100/75">{t('Available balance', 'الرصيد المتاح', '可用余额')}</p>
-                  <p className="mt-2 break-words text-3xl font-semibold tabular-nums text-white sm:text-4xl">{formatLocalAmount(user.walletBalance)}</p>
+                  <p className="text-sm font-medium text-[#53627a]">{t('Available balance', 'الرصيد المتاح', '可用余额')}</p>
+                  <p className="mt-2 break-words text-3xl font-semibold tabular-nums text-[#07152e] sm:text-4xl">{formatLocalAmount(user.walletBalance)}</p>
                 </div>
-                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 text-[#ffd33d]"><Wallet className="h-6 w-6" /></span>
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-white text-[#1769d2] shadow-[0_8px_20px_rgba(28,55,92,0.10)]"><Wallet className="h-6 w-6" /></span>
               </div>
 
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -185,16 +185,16 @@ export default function WalletPage() {
                     {t('Add wallet balance', 'أضف رصيداً للمحفظة', '充值钱包余额')}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="grid max-h-[calc(100dvh-1.5rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden border-white/10 bg-[#06152f] p-0 text-white sm:max-h-[90vh] sm:max-w-lg">
+                <DialogContent className="grid max-h-[calc(100dvh-1.5rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden border-[#d9e1ec] bg-white p-0 text-[#07152e] sm:max-h-[90vh] sm:max-w-lg">
                   <DialogHeader className="px-5 pb-4 pe-14 pt-5 sm:px-6 sm:pb-5 sm:pt-6">
-                    <DialogTitle className="text-white">{t('Add wallet balance', 'أضف رصيداً للمحفظة', '充值钱包余额')}</DialogTitle>
-                    <DialogDescription className="text-[#b8c5db]">
+                    <DialogTitle className="text-[#07152e]">{t('Add wallet balance', 'أضف رصيداً للمحفظة', '充值钱包余额')}</DialogTitle>
+                    <DialogDescription className="text-[#53627a]">
                       {t(walletTopUpDialogCopy.description.en, walletTopUpDialogCopy.description.ar, walletTopUpDialogCopy.description.zh)}
                     </DialogDescription>
                   </DialogHeader>
 
                   <div className="min-h-0 overflow-y-auto px-5 pb-5 sm:px-6">
-                    <div className="rounded-lg border border-white/10 bg-[#0a2148] p-4 text-sm leading-6 text-[#dce6f5]">
+                    <div className="rounded-lg border border-[#cfe2f5] bg-[#eef8ff] p-4 text-sm leading-6 text-[#34445c]">
                       <ol className="space-y-1">
                         <li>{t('1. Make the payment with your chosen method.', '1. نفذ الدفع بالطريقة المختارة.', '1. 使用所选方式付款。')}</li>
                         <li>{t('2. Enter the transaction ID shown on the payment receipt.', '2. أدخل رقم المعاملة الظاهر في إيصال الدفع.', '2. 输入付款凭证上显示的交易 ID。')}</li>
@@ -205,10 +205,10 @@ export default function WalletPage() {
                     <div className="mt-5 space-y-5">
                     <div>
                       <Label htmlFor="wallet-amount" className="font-semibold text-zinc-800 dark:text-zinc-200">{t('Amount in IQD', 'المبلغ بالدينار', 'IQD 金额')}</Label>
-                      <Input id="wallet-amount" type="number" inputMode="numeric" min={5000} value={topUpAmount} onChange={(event) => setTopUpAmount(event.target.value)} placeholder="5000" className="mt-2 h-12 border-white/15 bg-[#020817] text-lg font-semibold text-white tabular-nums" />
+                      <Input id="wallet-amount" type="number" inputMode="numeric" min={5000} value={topUpAmount} onChange={(event) => setTopUpAmount(event.target.value)} placeholder="5000" className="mt-2 h-12 border-[#d9e1ec] bg-[#f7faff] text-lg font-semibold text-[#07152e] tabular-nums" />
                       <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                         {quickAmounts.map((amount) => (
-                          <button key={amount} type="button" aria-pressed={topUpAmount === String(amount)} onClick={() => setTopUpAmount(String(amount))} className={`min-h-11 rounded-md border px-2 text-xs font-semibold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928] ${topUpAmount === String(amount) ? 'border-[#f7b928] bg-[#f7b928] text-[#07152e]' : 'border-white/15 text-[#dce6f5] hover:border-[#f7b928] hover:bg-white/5'}`}>
+                          <button key={amount} type="button" aria-pressed={topUpAmount === String(amount)} onClick={() => setTopUpAmount(String(amount))} className={`min-h-11 rounded-md border px-2 text-xs font-semibold tabular-nums focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928] ${topUpAmount === String(amount) ? 'border-[#f7b928] bg-[#f7b928] text-[#07152e]' : 'border-[#d9e1ec] bg-white text-[#53627a] hover:border-[#f7b928] hover:bg-[#fff8dd]'}`}>
                             {new Intl.NumberFormat(locale).format(amount)}
                           </button>
                         ))}
@@ -223,7 +223,7 @@ export default function WalletPage() {
                           { id: 'asiahawala', name: 'AsiaHawala' },
                           { id: 'card', name: t('Bank card', 'بطاقة مصرفية', '银行卡') },
                         ].map((method) => (
-                          <label key={method.id} className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-lg border p-3 ${paymentMethod === method.id ? 'border-[#f7b928] bg-[#f7b928]/10' : 'border-white/15'}`}>
+                          <label key={method.id} className={`flex min-h-14 cursor-pointer items-center gap-3 rounded-lg border p-3 ${paymentMethod === method.id ? 'border-[#f7b928] bg-[#fff8dd]' : 'border-[#d9e1ec] bg-white'}`}>
                             <RadioGroupItem value={method.id} className="border-[#f7b928] text-[#f7b928]" />
                             <CreditCard className="h-4 w-4 text-[#f7b928]" />
                             <span className="font-medium text-zinc-950 dark:text-white">{method.name}</span>
@@ -234,13 +234,13 @@ export default function WalletPage() {
 
                     <div>
                       <Label htmlFor="wallet-transaction" className="font-semibold text-zinc-800 dark:text-zinc-200">{t('Payment transaction ID', 'رقم معاملة الدفع', '付款交易 ID')}</Label>
-                      <Input id="wallet-transaction" value={transactionId} onChange={(event) => setTransactionId(event.target.value)} placeholder="ZC-123456789" autoComplete="off" className="mt-2 h-12 border-white/15 bg-[#020817] text-white" />
+                      <Input id="wallet-transaction" value={transactionId} onChange={(event) => setTransactionId(event.target.value)} placeholder="ZC-123456789" autoComplete="off" className="mt-2 h-12 border-[#d9e1ec] bg-[#f7faff] text-[#07152e]" />
                     </div>
 
                     <div>
                       <Label htmlFor="wallet-otp" className="font-semibold text-zinc-800 dark:text-zinc-200">{t('WhatsApp verification code', 'رمز تحقق واتساب', 'WhatsApp 验证码')}</Label>
                       <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
-                        <Input id="wallet-otp" value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" className="h-12 border-white/15 bg-[#020817] text-center font-semibold text-white tracking-[0.2em] tabular-nums" />
+                        <Input id="wallet-otp" value={otp} onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" placeholder="000000" className="h-12 border-[#d9e1ec] bg-[#f7faff] text-center font-semibold text-[#07152e] tracking-[0.2em] tabular-nums" />
                         <Button type="button" variant="outline" disabled={isRequestingOtp} onClick={() => void requestWalletOtp()} className="h-12">
                           {isRequestingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : <MessageCircle className="h-4 w-4" />}
                           {t('Send code', 'أرسل الرمز', '发送验证码')}
@@ -251,7 +251,7 @@ export default function WalletPage() {
                     </div>
                   </div>
 
-                  <div className="border-t border-white/10 bg-[#06152f] p-4 sm:px-6">
+                  <div className="border-t border-[#d9e1ec] bg-[#f7faff] p-4 sm:px-6">
                     <Button type="button" onClick={() => void handleTopUp()} disabled={isLoading || !topUpAmount || !transactionId || otp.length !== 6} className="v2-primary-button w-full">
                       {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                       {t('Send deposit for review', 'أرسل الإيداع للمراجعة', '提交充值审核')}

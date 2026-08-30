@@ -32,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className="light" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${notoKufiArabic.variable} bg-background font-sans text-foreground antialiased`}
       >

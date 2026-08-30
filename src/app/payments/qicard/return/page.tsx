@@ -105,7 +105,7 @@ function QiCardReturnContent() {
     },
     paid: {
       icon: CheckCircle2,
-      iconClass: 'text-[#52d273]',
+      iconClass: 'text-emerald-600',
       title: t('Payment confirmed', 'تم تأكيد الدفع', '付款已确认'),
       description: t('Your recharge order is now being processed. You can follow it in your orders.', 'تتم الآن معالجة طلب الشحن. يمكنك متابعته في طلباتك.', '您的充值订单正在处理中，可在订单中查看进度。'),
     },
@@ -117,13 +117,13 @@ function QiCardReturnContent() {
     },
     failed: {
       icon: XCircle,
-      iconClass: 'text-red-400',
+      iconClass: 'text-red-600',
       title: t('Payment was not completed', 'لم يكتمل الدفع', '付款未完成'),
       description: t('No recharge was started. You can safely try again.', 'لم تبدأ عملية الشحن. يمكنك المحاولة مرة أخرى بأمان.', '充值尚未开始，您可以安全重试。'),
     },
     error: {
       icon: AlertCircle,
-      iconClass: 'text-amber-300',
+      iconClass: 'text-amber-700',
       title: t('We could not check the payment yet', 'تعذر التحقق من الدفع الآن', '暂时无法检查付款'),
       description: t('Your order is saved. Try checking again or view it in your orders.', 'تم حفظ طلبك. حاول التحقق مرة أخرى أو شاهده في طلباتك.', '您的订单已保存。请重试或在订单中查看。'),
     },
@@ -141,10 +141,10 @@ function QiCardReturnContent() {
           <p className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase text-[var(--v2-gold)]">
             <ShieldCheck className="h-4 w-4" /> QiCard
           </p>
-          <h1 className="mt-3 text-2xl font-semibold text-white sm:text-3xl">{presentation.title}</h1>
-          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-zinc-300">{presentation.description}</p>
+          <h1 className="mt-3 text-2xl font-semibold text-[#07152e] sm:text-3xl">{presentation.title}</h1>
+          <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-[#53627a]">{presentation.description}</p>
           {order && (
-            <p className="mt-5 break-all rounded-lg bg-black/20 px-4 py-3 font-mono text-xs text-zinc-300">
+            <p className="mt-5 break-all rounded-lg border border-[#d9e1ec] bg-[#f7faff] px-4 py-3 font-mono text-xs text-[#53627a]">
               {t('Order', 'الطلب', '订单')}: {order.id}
             </p>
           )}
@@ -171,7 +171,7 @@ function QiCardReturnContent() {
               type="button"
               onClick={() => void cancelPayment()}
               disabled={isCancelling}
-              className="mt-5 min-h-11 text-sm font-semibold text-zinc-400 underline-offset-4 hover:text-white hover:underline disabled:opacity-50"
+              className="mt-5 min-h-11 text-sm font-semibold text-[#53627a] underline-offset-4 hover:text-[#07152e] hover:underline disabled:opacity-50"
             >
               {isCancelling ? t('Cancelling...', 'جارٍ الإلغاء...', '正在取消...') : t('Cancel this payment', 'إلغاء هذا الدفع', '取消此付款')}
             </button>

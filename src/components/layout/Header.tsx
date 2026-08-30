@@ -76,7 +76,7 @@ export function Header() {
     'flex min-h-11 items-center rounded-md px-3 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928]',
     isRouteActive(href)
       ? 'bg-[#f7b928] text-[#07152e]'
-      : 'text-white/75 hover:bg-white/10 hover:text-white'
+      : 'text-[#53627a] hover:bg-[#eef4fa] hover:text-[#07152e]'
   );
 
   const mobileTabs = [
@@ -132,20 +132,20 @@ export function Header() {
                   aria-label={t('Open menu', 'افتح القائمة', '打开菜单')}
                   variant="ghost"
                   size="icon"
-                  className="text-white hover:bg-white/10 hover:text-white lg:hidden"
+                  className="text-[#07152e] hover:bg-[#eef4fa] hover:text-[#07152e] lg:hidden"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
               <SheetContent
                 side={dir === 'rtl' ? 'right' : 'left'}
-                className="w-[calc(100vw-1.5rem)] max-w-sm overflow-y-auto border-white/10 bg-[#020817] p-5 text-white"
+                className="w-[calc(100vw-1.5rem)] max-w-sm overflow-y-auto border-[#d9e1ec] bg-white p-5 text-[#07152e]"
               >
                 <SheetHeader className={dir === 'rtl' ? 'text-right' : 'text-left'}>
-                  <SheetTitle className="text-white">
+                  <SheetTitle className="text-[#07152e]">
                     {t('Menu', 'القائمة', '菜单')}
                   </SheetTitle>
-                  <SheetDescription className="text-[#b8c5db]">
+                  <SheetDescription className="text-[#53627a]">
                     {t(
                       mobileMenuSheetCopy.description.en,
                       mobileMenuSheetCopy.description.ar,
@@ -182,10 +182,10 @@ export function Header() {
                   </Link>
                 </nav>
 
-                <section className="mt-7 border-t border-white/10 pt-6">
+                <section className="mt-7 border-t border-[#d9e1ec] pt-6">
                   <div className="mb-3 flex items-center gap-2">
                     <Globe className="h-4 w-4 text-[#f7b928]" />
-                    <h2 className="text-sm font-semibold text-white">
+                    <h2 className="text-sm font-semibold text-[#07152e]">
                       {t('Language', 'اللغة', '语言')}
                     </h2>
                   </div>
@@ -197,7 +197,7 @@ export function Header() {
                         size="sm"
                         variant={language === option.id ? 'default' : 'outline'}
                         onClick={() => setLanguage(option.id)}
-                        className={language === option.id ? 'bg-[#f7b928] text-[#07152e] hover:bg-[#ffd05a]' : 'border-white/15 bg-white/5 text-white hover:bg-white/10'}
+                        className={language === option.id ? 'bg-[#f7b928] text-[#07152e] hover:bg-[#ffd05a]' : 'border-[#d9e1ec] bg-white text-[#07152e] hover:bg-[#eef4fa]'}
                       >
                         {option.label}
                       </Button>
@@ -205,9 +205,9 @@ export function Header() {
                   </div>
                 </section>
 
-                <div className="mt-7 border-t border-white/10 pt-6">
+                <div className="mt-7 border-t border-[#d9e1ec] pt-6">
                   {isAccountLoading ? (
-                    <div className="flex min-h-12 items-center gap-3 rounded-lg bg-white/5 px-4 text-sm text-[#b8c5db]" role="status">
+                    <div className="flex min-h-12 items-center gap-3 rounded-lg bg-[#eef4fa] px-4 text-sm text-[#53627a]" role="status">
                       <Loader2 className="h-4 w-4 animate-spin text-[#f7b928] motion-reduce:animate-none" />
                       {t('Checking account...', 'جارٍ التحقق من الحساب...', '正在检查账号...')}
                     </div>
@@ -225,7 +225,7 @@ export function Header() {
                           closeMobileMenu();
                         }}
                         variant="outline"
-                        className="w-full justify-start border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10"
+                        className="w-full justify-start border-red-200 text-red-600 hover:bg-red-50"
                       >
                         <LogOut className="h-4 w-4" />
                         {t('Logout', 'تسجيل الخروج', '退出登录')}
@@ -243,7 +243,7 @@ export function Header() {
             </Sheet>
 
             <Link data-v2-mobile-brand href="/" className="mx-auto flex min-h-11 min-w-0 items-center gap-2 lg:mx-0" aria-label={t('Al-Wasl Digital home', 'الرئيسية للوصول الرقمي', 'Al-Wasl 数字服务首页')}>
-              <span className="relative h-12 w-[68px] flex-shrink-0 overflow-hidden rounded-md border border-[#f7b928]/25 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.22)] sm:h-11 sm:w-11 sm:rounded-lg sm:border-white/20">
+              <span className="relative h-12 w-[68px] flex-shrink-0 overflow-hidden rounded-md border border-[#f7b928]/35 bg-white shadow-[0_8px_24px_rgba(28,55,92,0.14)] sm:h-11 sm:w-11 sm:rounded-lg sm:border-[#d9e1ec]">
                 <Image
                   src="/brand/alwasl-lockup.webp"
                   alt=""
@@ -262,10 +262,10 @@ export function Header() {
                 />
               </span>
               <span className="hidden min-w-0 sm:block">
-                <span className="block truncate text-sm font-semibold text-white">
+                <span className="block truncate text-sm font-semibold text-[#07152e]">
                   {t('Al-Wasl Digital', 'الوصل', 'Al-Wasl 数字服务')}
                 </span>
-                <span className="block text-[11px] text-[#b8c5db]">
+                <span className="block text-[11px] text-[#53627a]">
                   {t('Digital recharge', 'شحن رقمي', '数字充值')}
                 </span>
               </span>
@@ -284,8 +284,8 @@ export function Header() {
                   className={cn(
                     'relative flex min-h-11 items-center rounded-md px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928]',
                     isRouteActive(item.href)
-                      ? 'text-[#f7b928] after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:bg-[#f7b928]'
-                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                      ? 'text-[#9b6800] after:absolute after:inset-x-4 after:bottom-0 after:h-0.5 after:bg-[#f7b928]'
+                      : 'text-[#53627a] hover:bg-[#eef4fa] hover:text-[#07152e]'
                   )}
                 >
                   {item.label}
@@ -306,11 +306,11 @@ export function Header() {
                     aria-label={t('Change language', 'تغيير اللغة', '切换语言')}
                     variant="ghost"
                     size="sm"
-                    className="h-11 w-11 gap-0 px-0 text-white/80 hover:bg-white/10 hover:text-white sm:w-auto sm:gap-1 sm:px-3"
+                    className="h-11 w-11 gap-0 px-0 text-[#53627a] hover:bg-[#eef4fa] hover:text-[#07152e] sm:w-auto sm:gap-1 sm:px-3"
                   >
                     <Globe className="h-4 w-4 text-[#f7b928]" />
                     <span className="sr-only sm:not-sr-only sm:text-xs sm:font-medium">{activeLanguage.short}</span>
-                    <ChevronDown className="hidden h-3 w-3 text-white/45 sm:block" />
+                    <ChevronDown className="hidden h-3 w-3 text-[#7b8798] sm:block" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -318,7 +318,7 @@ export function Header() {
                     <DropdownMenuItem
                       key={option.id}
                       onClick={() => setLanguage(option.id)}
-                      className={language === option.id ? 'bg-[#f7b928]/15 text-[#9b6800] dark:text-[#f7b928]' : ''}
+                      className={language === option.id ? 'bg-[#f7b928]/15 text-[#815600]' : ''}
                     >
                       {option.label}
                     </DropdownMenuItem>
@@ -333,8 +333,8 @@ export function Header() {
               ) : isAuthenticated ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button aria-label={t('Open account menu', 'افتح قائمة الحساب', '打开账号菜单')} variant="ghost" size="icon" className="text-white hover:bg-white/10">
-                      <Avatar className="h-8 w-8 border border-white/15">
+                    <Button aria-label={t('Open account menu', 'افتح قائمة الحساب', '打开账号菜单')} variant="ghost" size="icon" className="text-[#07152e] hover:bg-[#eef4fa]">
+                      <Avatar className="h-8 w-8 border border-[#d9e1ec]">
                         <AvatarImage src={user?.avatar} alt={user?.name} />
                         <AvatarFallback className="bg-[#f7b928] text-xs font-semibold text-[#07152e]">
                           {user?.name?.charAt(0) || 'U'}
@@ -345,8 +345,8 @@ export function Header() {
                   <DropdownMenuContent align="end" className="w-64">
                     <div className="px-3 py-3">
                       <p className="truncate text-sm font-semibold">{user?.name}</p>
-                      <p className="mt-0.5 truncate text-xs text-zinc-500 dark:text-zinc-400">{user?.phone}</p>
-                      <p className="mt-2 text-xs font-semibold text-blue-700 dark:text-blue-300">
+                      <p className="mt-0.5 truncate text-xs text-zinc-500">{user?.phone}</p>
+                      <p className="mt-2 text-xs font-semibold text-blue-700">
                         {t('Wallet', 'المحفظة', '钱包')}: {formatLocalAmount(user?.walletBalance || 0)}
                       </p>
                     </div>
@@ -364,7 +364,7 @@ export function Header() {
                       <Link href="/settings"><Settings className="h-4 w-4" />{t('Settings', 'الإعدادات', '设置')}</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={logout} className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:text-red-300 dark:focus:bg-red-500/10">
+                    <DropdownMenuItem onClick={logout} className="text-red-600 focus:bg-red-50 focus:text-red-600">
                       <LogOut className="h-4 w-4" />
                       {t('Logout', 'تسجيل الخروج', '退出登录')}
                     </DropdownMenuItem>
@@ -394,8 +394,8 @@ export function Header() {
               className={cn(
                 'relative flex min-h-[66px] flex-col items-center justify-center gap-1 rounded-md px-1 text-[10px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#f7b928]',
                 item.active
-                  ? 'text-[#f7b928] after:absolute after:inset-x-5 after:top-0 after:h-0.5 after:bg-[#f7b928]'
-                  : 'text-white/55 hover:text-white'
+                  ? 'text-[#9b6800] after:absolute after:inset-x-5 after:top-0 after:h-0.5 after:bg-[#f7b928]'
+                  : 'text-[#6b778a] hover:text-[#07152e]'
               )}
             >
               <item.icon className="h-5 w-5" />

@@ -663,7 +663,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                           }`}
                         >
                           <RadioGroupItem value={method.id} disabled={method.disabled} className="border-[var(--v2-gold)] text-[var(--v2-gold)]" />
-                          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--v2-navy)] text-[var(--v2-gold)]">
+                          <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-[#eaf1f8] text-[#1769d2]">
                             <method.icon className="h-5 w-5" />
                           </span>
                           <span className="min-w-0 flex-1">
@@ -882,7 +882,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-[calc(68px+env(safe-area-inset-bottom))] z-[55] border-t border-white/10 bg-[#020817]/96 p-3 shadow-[0_-14px_36px_rgba(0,0,0,0.28)] backdrop-blur-xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-[calc(68px+env(safe-area-inset-bottom))] z-[55] border-t border-[#d9e1ec] bg-white/95 p-3 shadow-[0_-14px_36px_rgba(28,55,92,0.12)] backdrop-blur-xl lg:hidden">
         <div className={`mx-auto grid max-w-xl gap-3 ${step === 'package' ? 'grid-cols-1' : 'grid-cols-[48px_minmax(0,1fr)]'}`}>
           {step !== 'package' && (
             <Button
@@ -890,7 +890,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
               variant="outline"
               aria-label={t('Back to previous step', 'العودة إلى الخطوة السابقة', '返回上一步')}
               onClick={() => goToStep(step === 'details' ? 'package' : step === 'payment' ? 'details' : 'payment')}
-              className="h-12 border-white/15 bg-white/5 px-0 text-white hover:bg-white/10 hover:text-white"
+              className="h-12 border-[#d9e1ec] bg-white px-0 text-[#07152e] hover:bg-[#eef4fa] hover:text-[#07152e]"
             >
               <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
             </Button>

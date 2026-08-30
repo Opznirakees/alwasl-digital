@@ -293,18 +293,18 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
   return (
     <section
       aria-labelledby="country-pricing-title"
-      className="overflow-hidden rounded-lg border border-[#f7b928]/20 bg-[#071832]/80"
+      className="overflow-hidden rounded-lg border border-[#f7b928]/20 bg-white/80"
     >
-      <div className="border-b border-white/10 px-4 py-4 sm:px-5">
+      <div className="border-b border-[#d9e1ec] px-4 py-4 sm:px-5">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 flex-none items-center justify-center rounded-md bg-[#f7b928]/10 text-[#f7b928]">
+          <span className="flex h-10 w-10 flex-none items-center justify-center rounded-md bg-[#f7b928]/10 text-[#94610b]">
             <Globe2 className="h-5 w-5" />
           </span>
           <div>
-            <h3 id="country-pricing-title" className="font-semibold text-white">
+            <h3 id="country-pricing-title" className="font-semibold text-[#07152e]">
               {t('Price display by country', 'عرض الأسعار حسب البلد', '按国家显示价格')}
             </h3>
-            <p className="mt-1 text-sm leading-5 text-white/55">
+            <p className="mt-1 text-sm leading-5 text-[#53627a]">
               {t(
                 'Select a country and decide whether customers see IQD, USD, local currency, or a combination.',
                 'اختر بلداً وحدد ما إذا كان العملاء يرون الدينار العراقي أو الدولار أو العملة المحلية أو مزيجاً منها.',
@@ -316,10 +316,10 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
       </div>
 
       <div className="grid min-w-0 lg:grid-cols-[minmax(0,1.35fr)_minmax(19rem,0.65fr)]">
-        <div className="min-w-0 border-b border-white/10 p-4 lg:border-b-0 lg:border-e">
-          <div className="relative aspect-[16/8.5] min-h-56 overflow-hidden rounded-md border border-white/10 bg-[#020b1c]">
+        <div className="min-w-0 border-b border-[#d9e1ec] p-4 lg:border-b-0 lg:border-e">
+          <div className="relative aspect-[16/8.5] min-h-56 overflow-hidden rounded-md border border-[#d9e1ec] bg-white">
             {isLoading ? (
-              <div className="flex h-full items-center justify-center text-sm text-white/60">
+              <div className="flex h-full items-center justify-center text-sm text-[#53627a]">
                 <Loader2 className="me-2 h-4 w-4 animate-spin" />
                 {t('Loading countries...', 'جارٍ تحميل البلدان...', '正在加载国家...')}
               </div>
@@ -343,8 +343,8 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
                         : configured?.isActive
                           ? '#2764c7'
                           : configured
-                            ? '#52617a'
-                            : '#172943';
+                            ? '#9aa8bb'
+                            : '#dce4ee';
 
                       return (
                         <Geography
@@ -370,9 +370,9 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
                             }
                           }}
                           style={{
-                            default: { fill, stroke: '#071327', strokeWidth: 0.55, outline: 'none' },
-                            hover: { fill: catalogCountry ? '#ffd05a' : fill, stroke: '#071327', strokeWidth: 0.55, outline: 'none' },
-                            pressed: { fill: '#e6a818', stroke: '#071327', strokeWidth: 0.55, outline: 'none' },
+                            default: { fill, stroke: '#ffffff', strokeWidth: 0.8, outline: 'none' },
+                            hover: { fill: catalogCountry ? '#ffd05a' : fill, stroke: '#ffffff', strokeWidth: 0.8, outline: 'none' },
+                            pressed: { fill: '#e6a818', stroke: '#ffffff', strokeWidth: 0.8, outline: 'none' },
                           }}
                         />
                       );
@@ -381,23 +381,23 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
                 </ZoomableGroup>
               </ComposableMap>
             )}
-            <div className="pointer-events-none absolute bottom-2 start-2 flex flex-wrap gap-2 text-[10px] text-white/65">
-              <span className="rounded bg-black/45 px-2 py-1"><i className="me-1 inline-block h-2 w-2 rounded-sm bg-[#2764c7]" />{t('Configured', 'مُعد', '已配置')}</span>
-              <span className="rounded bg-black/45 px-2 py-1"><i className="me-1 inline-block h-2 w-2 rounded-sm bg-[#172943]" />{t('Not configured', 'غير مُعد', '未配置')}</span>
+            <div className="pointer-events-none absolute bottom-2 start-2 flex flex-wrap gap-2 text-[10px] text-[#53627a]">
+              <span className="rounded border border-[#d9e1ec] bg-white/90 px-2 py-1 shadow-sm"><i className="me-1 inline-block h-2 w-2 rounded-sm bg-[#2764c7]" />{t('Configured', 'مُعد', '已配置')}</span>
+              <span className="rounded border border-[#d9e1ec] bg-white/90 px-2 py-1 shadow-sm"><i className="me-1 inline-block h-2 w-2 rounded-sm bg-[#dce4ee]" />{t('Not configured', 'غير مُعد', '未配置')}</span>
             </div>
           </div>
 
           <div className="relative mt-3">
-            <Search className="pointer-events-none absolute start-3 top-3 h-4 w-4 text-white/35" />
+            <Search className="pointer-events-none absolute start-3 top-3 h-4 w-4 text-[#7b8798]" />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t('Search country or currency', 'ابحث عن بلد أو عملة', '搜索国家或货币')}
-              className="border-white/10 bg-[#020b1c] ps-9 text-white placeholder:text-white/30"
+              className="border-[#d9e1ec] bg-white ps-9 text-[#07152e] placeholder:text-[#7b8798]"
             />
           </div>
           {query && (
-            <div className="mt-2 grid max-h-44 gap-1 overflow-y-auto rounded-md border border-white/10 bg-[#020b1c] p-1 sm:grid-cols-2">
+            <div className="mt-2 grid max-h-44 gap-1 overflow-y-auto rounded-md border border-[#d9e1ec] bg-white p-1 sm:grid-cols-2">
               {filteredCatalog.map((country) => (
                 <button
                   key={country.code}
@@ -405,8 +405,8 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
                   onClick={() => selectCountry(country.code)}
                   className={`flex min-h-11 items-center gap-2 rounded px-3 text-start text-sm ${
                     country.code === selectedCode
-                      ? 'bg-[#f7b928]/15 text-[#ffd05a]'
-                      : 'text-white/70 hover:bg-white/5 hover:text-white'
+                      ? 'bg-[#f7b928]/15 text-[#815600]'
+                      : 'text-[#34445c] hover:bg-[#f7faff] hover:text-[#07152e]'
                   }`}
                 >
                   <span className="text-lg" aria-hidden>{country.flag}</span>
@@ -424,27 +424,27 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
               <div className="flex items-center gap-3">
                 <span className="text-3xl" aria-hidden>{selectedCatalogCountry.flag}</span>
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-white">
+                  <p className="truncate font-semibold text-[#07152e]">
                     {t(selectedCatalogCountry.name, selectedCatalogCountry.nameAr, selectedCatalogCountry.nameZh)}
                   </p>
-                  <p className="text-xs text-white/45">
+                  <p className="text-xs text-[#6b778a]">
                     {selectedCatalogCountry.currencyCode} · {selectedCatalogCountry.phoneCode}
                   </p>
                 </div>
               </div>
 
               <fieldset className="space-y-3">
-                <legend className="mb-2 text-xs font-semibold uppercase text-white/45">
+                <legend className="mb-2 text-xs font-semibold uppercase text-[#6b778a]">
                   {t('Visible prices', 'الأسعار الظاهرة', '显示的价格')}
                 </legend>
                 {priceToggleOptions.map(({ field, code, label }) => (
                   <Label
                     key={field}
-                    className="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-md border border-white/10 bg-white/[0.025] px-3 text-white/80"
+                    className="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-md border border-[#d9e1ec] bg-white px-3 text-[#34445c]"
                   >
                     <span>
                       <span className="block text-sm font-medium">{label}</span>
-                      <span className="text-xs text-white/40">{code}</span>
+                      <span className="text-xs text-[#6b778a]">{code}</span>
                     </span>
                     <Switch
                       checked={form[field]}
@@ -455,7 +455,7 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
               </fieldset>
 
               <div className="space-y-2">
-                <Label htmlFor="primary-country-currency" className="text-xs font-semibold uppercase text-white/45">
+                <Label htmlFor="primary-country-currency" className="text-xs font-semibold uppercase text-[#6b778a]">
                   {t('Primary price', 'السعر الأساسي', '主要价格')}
                 </Label>
                 <select
@@ -465,7 +465,7 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
                     ...current,
                     primaryPriceCurrency: event.target.value as PricingForm['primaryPriceCurrency'],
                   }))}
-                  className="h-11 w-full rounded-md border border-white/10 bg-[#020b1c] px-3 text-sm text-white"
+                  className="h-11 w-full rounded-md border border-[#d9e1ec] bg-white px-3 text-sm text-[#07152e]"
                 >
                   {form.showPricesInLocal && !localCurrencyIsManaged && <option value="LOCAL">{selectedCatalogCountry.currencyCode}</option>}
                   {form.showPricesInIqd && <option value="IQD">IQD</option>}
@@ -474,15 +474,15 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
               </div>
 
               {previewCurrencies.length > 0 && (
-                <div className="rounded-md border border-[#f7b928]/20 bg-[#020b1c] p-3">
-                  <p className="text-xs font-semibold uppercase text-white/45">
+                <div className="rounded-md border border-[#f7b928]/20 bg-white p-3">
+                  <p className="text-xs font-semibold uppercase text-[#6b778a]">
                     {t('Example for 10,000 IQD', 'مثال على 10,000 دينار عراقي', '10,000 IQD 示例')}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
                     {previewCurrencies.map((currency, index) => (
                       <span
                         key={currency.code}
-                        className={index === 0 ? 'text-base font-semibold text-white' : 'text-xs text-white/55'}
+                        className={index === 0 ? 'text-base font-semibold text-[#07152e]' : 'text-xs text-[#53627a]'}
                       >
                         {index > 0 && '≈ '}
                         {new Intl.NumberFormat(undefined, {
@@ -495,7 +495,7 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
                 </div>
               )}
 
-              <Label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-md border border-white/10 px-3 text-sm text-white/80">
+              <Label className="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-md border border-[#d9e1ec] px-3 text-sm text-[#34445c]">
                 <span>{t('Country available to customers', 'البلد متاح للعملاء', '向客户开放该国家')}</span>
                 <Switch
                   checked={form.isActive}
@@ -504,7 +504,7 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
               </Label>
 
               {missingCurrencyCodes.length > 0 && (
-                <p role="status" className="rounded-md border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs leading-5 text-amber-100">
+                <p role="status" className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
                   {t(
                     'Add an IQD exchange rate for {{currencies}} before customers can see it.',
                     'أضف سعر صرف من IQD إلى {{currencies}} قبل عرضه للعملاء.',
@@ -513,7 +513,7 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
                 </p>
               )}
               {visibleCurrencyCodes.length > 0 && (
-                <p className="flex items-center gap-2 text-xs text-emerald-300">
+                <p className="flex items-center gap-2 text-xs text-emerald-700">
                   <MapPin className="h-3.5 w-3.5" />
                   {t(
                     'Currently available: {{currencies}}',
@@ -527,7 +527,7 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
                 type="button"
                 onClick={() => void saveCountry()}
                 disabled={isSaving}
-                className="h-11 w-full bg-[#f7b928] font-semibold text-[#06152f] hover:bg-[#ffd05a]"
+                className="h-11 w-full bg-[#f7b928] font-semibold text-[#07152e] hover:bg-[#ffd05a]"
               >
                 {isSaving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
                 {selectedCountry
@@ -536,8 +536,8 @@ export function CountryPricingMap({ countries, exchangeRates, onChanged, t }: Co
               </Button>
             </div>
           ) : (
-            <div className="flex min-h-64 flex-col items-center justify-center text-center text-white/50">
-              <Globe2 className="mb-3 h-8 w-8 text-[#f7b928]/60" />
+            <div className="flex min-h-64 flex-col items-center justify-center text-center text-[#53627a]">
+              <Globe2 className="mb-3 h-8 w-8 text-[#94610b]/60" />
               <p className="text-sm">{t('Choose a country on the map.', 'اختر بلداً على الخريطة.', '请在地图上选择国家。')}</p>
             </div>
           )}

@@ -6,8 +6,10 @@ const repoRoot = join(import.meta.dir, '..');
 const read = (path: string) => readFileSync(join(repoRoot, path), 'utf8');
 
 describe('V2 multi-category visual system', () => {
-  it('keeps the dark brand base and adds the requested pastel accent palette', () => {
+  it('uses one light brand system with the requested pastel accent palette', () => {
     const styles = read('src/app/globals.css');
+    const layout = read('src/app/layout.tsx');
+    const toaster = read('src/components/ui/sonner.tsx');
 
     for (const token of [
       '--v2-canvas',
@@ -20,11 +22,34 @@ describe('V2 multi-category visual system', () => {
     ]) {
       expect(styles).toContain(token);
     }
-    expect(styles).toContain('#020817');
+    expect(styles).toContain('--v2-canvas: #f4f7fb');
+    expect(styles).toContain('--v2-surface: #ffffff');
     expect(styles).toContain('#ff8fb8');
     expect(styles).toContain('#70d5ff');
     expect(styles).toContain('#75dfc8');
     expect(styles).toContain('#a78bfa');
+    expect(layout).toContain('<html lang="en" className="light"');
+    expect(layout).not.toContain('className="dark"');
+    expect(toaster).toContain('theme="light"');
+  });
+
+  it('keeps the storefront, checkout and admin shells free of the old dark canvas', () => {
+    const lightShellFiles = [
+      'src/app/page.tsx',
+      'src/app/categories/[slug]/page.tsx',
+      'src/app/top-up/[slug]/page.tsx',
+      'src/components/home/HeroBanner.tsx',
+      'src/components/layout/Header.tsx',
+      'src/app/wallet/page.tsx',
+      'src/app/payments/qicard/return/page.tsx',
+      'src/app/admin/page.tsx',
+      'src/components/admin/ContentManager.tsx',
+    ];
+
+    for (const file of lightShellFiles) {
+      const source = read(file);
+      expect(source, `${file} should not paint the old dark canvas`).not.toMatch(/bg-\[#(?:020817|020b1c|03040b|06152f|07152e|071832|081a38|0a2148)\]/i);
+    }
   });
 
   it('uses a branded responsive header with protected mobile destinations', () => {

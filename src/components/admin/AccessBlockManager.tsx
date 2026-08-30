@@ -251,8 +251,8 @@ export function AccessBlockManager({
     <div className="space-y-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-white">{t('Access blocks', 'حظر الوصول', '访问封锁')}</h2>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-white/55">
+          <h2 className="text-2xl font-bold text-[#07152e]">{t('Access blocks', 'حظر الوصول', '访问封锁')}</h2>
+          <p className="mt-1 max-w-2xl text-sm leading-6 text-[#53627a]">
             {t(
               'Block a WhatsApp number, WAHO ID, or IP address. Every change is recorded.',
               'احظر رقم واتساب أو معرف WAHO أو عنوان IP. يتم تسجيل كل تغيير.',
@@ -263,7 +263,7 @@ export function AccessBlockManager({
         <Button
           type="button"
           onClick={() => setDialogOpen(true)}
-          className="h-11 bg-[#f7b928] font-semibold text-[#06152f] hover:bg-[#ffd05a]"
+          className="h-11 bg-[#f7b928] font-semibold text-[#07152e] hover:bg-[#ffd05a]"
         >
           <Plus className="me-2 h-4 w-4" />
           {t('Add block', 'إضافة حظر', '添加封锁')}
@@ -271,35 +271,35 @@ export function AccessBlockManager({
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="rounded-lg border border-white/10 bg-[#071832]/80 p-4">
-          <p className="text-xs uppercase text-white/45">{t('Active blocks', 'الحظر النشط', '有效封锁')}</p>
-          <p className="mt-2 text-2xl font-bold tabular-nums text-white">{activeBlocks.length}</p>
+        <div className="rounded-lg border border-[#d9e1ec] bg-white/80 p-4">
+          <p className="text-xs uppercase text-[#6b778a]">{t('Active blocks', 'الحظر النشط', '有效封锁')}</p>
+          <p className="mt-2 text-2xl font-bold tabular-nums text-[#07152e]">{activeBlocks.length}</p>
         </div>
-        <div className="rounded-lg border border-white/10 bg-[#071832]/80 p-4">
-          <p className="text-xs uppercase text-white/45">{t('WhatsApp blocks', 'حظر واتساب', 'WhatsApp 封锁')}</p>
-          <p className="mt-2 text-2xl font-bold tabular-nums text-white">{activeBlocks.filter((block) => block.type === 'WHATSAPP').length}</p>
+        <div className="rounded-lg border border-[#d9e1ec] bg-white/80 p-4">
+          <p className="text-xs uppercase text-[#6b778a]">{t('WhatsApp blocks', 'حظر واتساب', 'WhatsApp 封锁')}</p>
+          <p className="mt-2 text-2xl font-bold tabular-nums text-[#07152e]">{activeBlocks.filter((block) => block.type === 'WHATSAPP').length}</p>
         </div>
-        <div className="rounded-lg border border-white/10 bg-[#071832]/80 p-4">
-          <p className="text-xs uppercase text-white/45">{t('Messages sent', 'الرسائل المرسلة', '已发送消息')}</p>
-          <p className="mt-2 text-2xl font-bold tabular-nums text-white">{blocks.filter((block) => block.notificationStatus === 'SENT').length}</p>
+        <div className="rounded-lg border border-[#d9e1ec] bg-white/80 p-4">
+          <p className="text-xs uppercase text-[#6b778a]">{t('Messages sent', 'الرسائل المرسلة', '已发送消息')}</p>
+          <p className="mt-2 text-2xl font-bold tabular-nums text-[#07152e]">{blocks.filter((block) => block.notificationStatus === 'SENT').length}</p>
         </div>
       </div>
 
-      <div className="grid gap-3 rounded-lg border border-white/10 bg-[#071832]/80 p-4 md:grid-cols-[minmax(0,1fr)_12rem_12rem]">
+      <div className="grid gap-3 rounded-lg border border-[#d9e1ec] bg-white/80 p-4 md:grid-cols-[minmax(0,1fr)_12rem_12rem]">
         <div className="relative">
-          <Search className="pointer-events-none absolute start-3 top-3 h-4 w-4 text-white/35" />
+          <Search className="pointer-events-none absolute start-3 top-3 h-4 w-4 text-[#7b8798]" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t('Search blocks or reasons', 'ابحث في الحظر أو الأسباب', '搜索封锁或原因')}
-            className="border-white/10 bg-[#020b1c] ps-9 text-white"
+            className="border-[#d9e1ec] bg-white ps-9 text-[#07152e]"
           />
         </div>
         <select
           aria-label={t('Filter by block type', 'تصفية حسب نوع الحظر', '按封锁类型筛选')}
           value={typeFilter}
           onChange={(event) => setTypeFilter(event.target.value as 'ALL' | BlockType)}
-          className="h-10 rounded-md border border-white/10 bg-[#020b1c] px-3 text-sm text-white"
+          className="h-10 rounded-md border border-[#d9e1ec] bg-white px-3 text-sm text-[#07152e]"
         >
           <option value="ALL">{t('All block types', 'كل أنواع الحظر', '所有封锁类型')}</option>
           {typeOptions.map((option) => (
@@ -310,7 +310,7 @@ export function AccessBlockManager({
           aria-label={t('Filter by block status', 'تصفية حسب حالة الحظر', '按封锁状态筛选')}
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
-          className="h-10 rounded-md border border-white/10 bg-[#020b1c] px-3 text-sm text-white"
+          className="h-10 rounded-md border border-[#d9e1ec] bg-white px-3 text-sm text-[#07152e]"
         >
           <option value="ALL">{t('All statuses', 'كل الحالات', '所有状态')}</option>
           <option value="ACTIVE">{t('Blocked', 'محظور', '已封锁')}</option>
@@ -318,28 +318,28 @@ export function AccessBlockManager({
         </select>
       </div>
 
-      <section aria-label={t('Block list', 'قائمة الحظر', '封锁列表')} className="overflow-hidden rounded-lg border border-white/10 bg-[#071832]/70">
+      <section aria-label={t('Block list', 'قائمة الحظر', '封锁列表')} className="overflow-hidden rounded-lg border border-[#d9e1ec] bg-white/70">
         {isLoading ? (
-          <div className="flex min-h-40 items-center justify-center text-sm text-white/55">
+          <div className="flex min-h-40 items-center justify-center text-sm text-[#53627a]">
             <Loader2 className="me-2 h-4 w-4 animate-spin" />
             {t('Loading blocks...', 'جارٍ تحميل الحظر...', '正在加载封锁...')}
           </div>
         ) : filteredBlocks.length === 0 ? (
           <div className="flex min-h-48 flex-col items-center justify-center px-5 text-center">
             <ShieldCheck className="h-9 w-9 text-emerald-400" />
-            <p className="mt-3 font-semibold text-white">
+            <p className="mt-3 font-semibold text-[#07152e]">
               {blocks.length === 0
                 ? t('No one is blocked', 'لا يوجد أي حظر', '当前没有封锁')
                 : t('No matching blocks', 'لا يوجد حظر مطابق', '没有匹配的封锁')}
             </p>
-            <p className="mt-1 text-sm text-white/45">
+            <p className="mt-1 text-sm text-[#6b778a]">
               {blocks.length === 0
                 ? t('New blocks will appear here.', 'سيظهر الحظر الجديد هنا.', '新封锁会显示在这里。')
                 : t('Change the search or filters.', 'غيّر البحث أو عوامل التصفية.', '请更改搜索词或筛选条件。')}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-white/10">
+          <div className="divide-y divide-[#d9e1ec]">
             {filteredBlocks.map((block) => {
               const option = typeOptions.find((item) => item.type === block.type) ?? typeOptions[0];
               const Icon = option.icon;
@@ -347,35 +347,35 @@ export function AccessBlockManager({
                 <article key={block.id} className="grid gap-4 p-4 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_auto] md:items-center">
                   <div className="flex min-w-0 items-start gap-3">
                     <span className={`mt-0.5 flex h-10 w-10 flex-none items-center justify-center rounded-md ${
-                      block.isActive ? 'bg-rose-500/12 text-rose-300' : 'bg-white/5 text-white/40'
+                      block.isActive ? 'bg-rose-50 text-rose-700' : 'bg-[#f7faff] text-[#6b778a]'
                     }`}>
                       <Icon className="h-5 w-5" />
                     </span>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-mono text-sm font-semibold text-white">{block.maskedValue}</p>
-                        <Badge className={block.isActive ? 'bg-rose-500/15 text-rose-200' : 'bg-white/10 text-white/55'}>
+                        <p className="font-mono text-sm font-semibold text-[#07152e]">{block.maskedValue}</p>
+                        <Badge className={block.isActive ? 'bg-rose-100 text-rose-700' : 'bg-[#eaf1f8] text-[#53627a]'}>
                           {block.isActive ? t('Blocked', 'محظور', '已封锁') : t('Restored', 'مستعاد', '已恢复')}
                         </Badge>
                       </div>
-                      <p className="mt-1 text-xs text-white/45">{t(option.title.en, option.title.ar, option.title.zh)}</p>
-                      {block.user?.name && <p className="mt-1 truncate text-xs text-white/55">{block.user.name}</p>}
+                      <p className="mt-1 text-xs text-[#6b778a]">{t(option.title.en, option.title.ar, option.title.zh)}</p>
+                      {block.user?.name && <p className="mt-1 truncate text-xs text-[#53627a]">{block.user.name}</p>}
                     </div>
                   </div>
 
                   <div className="min-w-0">
-                    <p className="text-sm leading-5 text-white/75">{block.reason}</p>
-                    <p className="mt-1 flex items-center gap-1.5 text-xs text-white/40">
+                    <p className="text-sm leading-5 text-[#34445c]">{block.reason}</p>
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-[#6b778a]">
                       <Clock3 className="h-3.5 w-3.5" />
                       {formatDate(block.expiresAt)}
                     </p>
                     {block.notificationRequested && (
                       <p className={`mt-1 text-xs ${
                         block.notificationStatus === 'SENT'
-                          ? 'text-emerald-300'
+                          ? 'text-emerald-700'
                           : block.notificationStatus === 'FAILED'
-                            ? 'text-rose-300'
-                            : 'text-amber-200'
+                            ? 'text-rose-700'
+                            : 'text-amber-700'
                       }`}>
                         {block.notificationStatus === 'SENT'
                           ? t('WhatsApp reason sent', 'تم إرسال السبب عبر واتساب', '已通过 WhatsApp 发送原因')
@@ -394,7 +394,7 @@ export function AccessBlockManager({
                         size="sm"
                         disabled={isSaving}
                         onClick={() => void retryNotification(block)}
-                        className="border-white/15 text-white hover:bg-white/10 hover:text-white"
+                        className="border-[#d9e1ec] text-[#07152e] hover:bg-[#eaf1f8] hover:text-[#07152e]"
                       >
                         <RefreshCw className="me-1.5 h-3.5 w-3.5" />
                         {t('Send again', 'إرسال مرة أخرى', '重新发送')}
@@ -407,8 +407,8 @@ export function AccessBlockManager({
                       disabled={isSaving}
                       onClick={() => void updateBlock(block, !block.isActive)}
                       className={block.isActive
-                        ? 'border-emerald-400/25 text-emerald-300 hover:bg-emerald-400/10 hover:text-emerald-200'
-                        : 'border-rose-400/25 text-rose-300 hover:bg-rose-400/10 hover:text-rose-200'}
+                        ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800'
+                        : 'border-rose-300 text-rose-700 hover:bg-rose-50 hover:text-rose-800'}
                     >
                       {block.isActive ? <ShieldOff className="me-1.5 h-3.5 w-3.5" /> : <Ban className="me-1.5 h-3.5 w-3.5" />}
                       {block.isActive
@@ -427,10 +427,10 @@ export function AccessBlockManager({
         setDialogOpen(open);
         if (!open) resetForm();
       }}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto border-white/10 bg-[#071832] text-white sm:max-w-xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto border-[#d9e1ec] bg-white text-[#07152e] sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>{t('Block access', 'حظر الوصول', '封锁访问')}</DialogTitle>
-            <DialogDescription className="text-white/55">
+            <DialogDescription className="text-[#53627a]">
               {t(
                 'Choose what to block and explain the reason clearly.',
                 'اختر ما تريد حظره واشرح السبب بوضوح.',
@@ -456,13 +456,13 @@ export function AccessBlockManager({
                       aria-pressed={type === option.type}
                       className={`min-h-24 rounded-md border p-3 text-start ${
                         type === option.type
-                          ? 'border-[#f7b928] bg-[#f7b928]/10 text-white'
-                          : 'border-white/10 bg-white/[0.025] text-white/65 hover:border-white/20'
+                          ? 'border-[#f7b928] bg-[#f7b928]/10 text-[#07152e]'
+                          : 'border-[#d9e1ec] bg-white text-[#53627a] hover:border-[#9fb1c8] hover:bg-[#f7faff]'
                       }`}
                     >
-                      <Icon className="h-5 w-5 text-[#f7b928]" />
+                      <Icon className="h-5 w-5 text-[#94610b]" />
                       <span className="mt-2 block text-xs font-semibold">{t(option.title.en, option.title.ar, option.title.zh)}</span>
-                      <span className="mt-1 block text-[10px] leading-4 text-white/45">{t(option.description.en, option.description.ar, option.description.zh)}</span>
+                      <span className="mt-1 block text-[10px] leading-4 text-[#6b778a]">{t(option.description.en, option.description.ar, option.description.zh)}</span>
                     </button>
                   );
                 })}
@@ -481,7 +481,7 @@ export function AccessBlockManager({
                 onChange={(event) => setValue(event.target.value)}
                 placeholder={type === 'WHATSAPP' ? '+31612345678' : type === 'WAHO_ID' ? 'WAHO-12345' : '203.0.113.10'}
                 autoComplete="off"
-                className="border-white/10 bg-[#020b1c] text-white"
+                className="border-[#d9e1ec] bg-white text-[#07152e]"
               />
             </div>
 
@@ -494,9 +494,9 @@ export function AccessBlockManager({
                 rows={3}
                 maxLength={500}
                 placeholder={t('Explain briefly why access is blocked', 'اشرح باختصار سبب حظر الوصول', '简要说明封锁原因')}
-                className="w-full resize-y rounded-md border border-white/10 bg-[#020b1c] px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-[#f7b928]"
+                className="w-full resize-y rounded-md border border-[#d9e1ec] bg-white px-3 py-2 text-sm text-[#07152e] outline-none focus:ring-2 focus:ring-[#f7b928]"
               />
-              <p className="text-end text-xs text-white/35">{reason.length}/500</p>
+              <p className="text-end text-xs text-[#7b8798]">{reason.length}/500</p>
             </div>
 
             <div className="space-y-2">
@@ -506,7 +506,7 @@ export function AccessBlockManager({
                 type="datetime-local"
                 value={expiresAt}
                 onChange={(event) => setExpiresAt(event.target.value)}
-                className="border-white/10 bg-[#020b1c] text-white"
+                className="border-[#d9e1ec] bg-white text-[#07152e]"
               />
             </div>
 
@@ -514,7 +514,7 @@ export function AccessBlockManager({
               <Label className="flex min-h-14 cursor-pointer items-center justify-between gap-4 rounded-md border border-[#25d366]/20 bg-[#25d366]/8 px-4">
                 <span>
                   <span className="block text-sm font-semibold">{t('Send reason on WhatsApp', 'إرسال السبب عبر واتساب', '通过 WhatsApp 发送原因')}</span>
-                  <span className="mt-1 block text-xs text-white/45">{t('The block remains active if delivery fails.', 'يبقى الحظر نشطاً إذا فشل الإرسال.', '即使发送失败，封锁仍然有效。')}</span>
+                  <span className="mt-1 block text-xs text-[#6b778a]">{t('The block remains active if delivery fails.', 'يبقى الحظر نشطاً إذا فشل الإرسال.', '即使发送失败，封锁仍然有效。')}</span>
                 </span>
                 <Switch checked={notifyByWhatsApp} onCheckedChange={setNotifyByWhatsApp} />
               </Label>
@@ -522,14 +522,14 @@ export function AccessBlockManager({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="border-white/15 text-white">
+            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="border-[#d9e1ec] text-[#07152e]">
               {t('Cancel', 'إلغاء', '取消')}
             </Button>
             <Button
               type="button"
               onClick={() => void createBlock()}
               disabled={isSaving || value.trim().length < 2 || reason.trim().length < 3}
-              className="bg-rose-500 font-semibold text-white hover:bg-rose-400"
+              className="bg-rose-600 font-semibold text-white hover:bg-rose-700"
             >
               {isSaving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               {t('Block access', 'حظر الوصول', '封锁访问')}

@@ -108,25 +108,25 @@ export function CatalogCategoryManager({ categories, isMutating, onSave, onToggl
   return (
     <section>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div><h2 className="text-2xl font-bold text-white">{t('Catalog categories', 'فئات الكتالوج', '目录分类')}</h2><p className="mt-1 text-sm text-white/55">{t('Manage the categories customers see before choosing a recharge.', 'أدر الفئات التي يراها العملاء قبل اختيار الشحن.', '管理客户选择充值前看到的分类。')}</p></div>
+        <div><h2 className="text-2xl font-bold text-[#07152e]">{t('Catalog categories', 'فئات الكتالوج', '目录分类')}</h2><p className="mt-1 text-sm text-[#53627a]">{t('Manage the categories customers see before choosing a recharge.', 'أدر الفئات التي يراها العملاء قبل اختيار الشحن.', '管理客户选择充值前看到的分类。')}</p></div>
         <Button type="button" onClick={openCreate} className="bg-[#f7b928] text-[#07152e] hover:bg-[#ffd05a]"><Plus className="h-4 w-4" />{t('Add category', 'إضافة فئة', '添加分类')}</Button>
       </div>
 
       <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {categories.map((category) => (
-          <article key={category.id} className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.04]">
+          <article key={category.id} className="overflow-hidden rounded-lg border border-[#d9e1ec] bg-white shadow-[0_10px_28px_rgba(28,55,92,0.06)]">
             <div className="h-1" style={{ backgroundColor: category.accentColor }} />
             <div className="flex gap-4 p-4">
-              <span className="h-20 w-20 flex-none overflow-hidden rounded-lg border border-white/10 bg-white/5 p-2"><img src={category.image} alt="" className="h-full w-full object-contain" /></span>
-              <div className="min-w-0 flex-1"><h3 className="truncate font-bold text-white">{category.name}</h3><p dir="rtl" className="mt-1 truncate text-xs text-white/65">{category.nameAr}</p><p className="mt-2 text-xs text-white/45">{category.productCount} {t('products', 'منتجات', '个产品')}</p><span className={`mt-2 inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] font-semibold ${category.priceVisibility === 'PUBLIC' ? 'bg-[#8fe3d2]/15 text-[#8fe3d2]' : 'bg-[#f6b7cc]/15 text-[#ffd7e4]'}`}>{category.priceVisibility === 'PUBLIC' ? <Globe2 className="h-3 w-3" /> : <LockKeyhole className="h-3 w-3" />}{category.priceVisibility === 'PUBLIC' ? t('Prices public', 'الأسعار عامة', '价格公开') : t('Login for prices', 'الدخول للأسعار', '登录看价格')}</span></div>
+              <span className="h-20 w-20 flex-none overflow-hidden rounded-lg border border-[#d9e1ec] bg-[#f7faff] p-2"><img src={category.image} alt="" className="h-full w-full object-contain" /></span>
+              <div className="min-w-0 flex-1"><h3 className="truncate font-bold text-[#07152e]">{category.name}</h3><p dir="rtl" className="mt-1 truncate text-xs text-[#53627a]">{category.nameAr}</p><p className="mt-2 text-xs text-[#6b778a]">{category.productCount} {t('products', 'منتجات', '个产品')}</p><span className={`mt-2 inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] font-semibold ${category.priceVisibility === 'PUBLIC' ? 'bg-[#8fe3d2]/15 text-[#8fe3d2]' : 'bg-[#f6b7cc]/15 text-[#ffd7e4]'}`}>{category.priceVisibility === 'PUBLIC' ? <Globe2 className="h-3 w-3" /> : <LockKeyhole className="h-3 w-3" />}{category.priceVisibility === 'PUBLIC' ? t('Prices public', 'الأسعار عامة', '价格公开') : t('Login for prices', 'الدخول للأسعار', '登录看价格')}</span></div>
             </div>
-            <div className="flex items-center justify-between border-t border-white/10 px-4 py-3">
-              <label className="flex items-center gap-2 text-xs font-semibold text-white/65"><Switch checked={category.isActive} disabled={isMutating} onCheckedChange={(checked) => void onToggle(category, checked)} />{category.isActive ? t('Visible', 'ظاهر', '可见') : t('Hidden', 'مخفي', '隐藏')}</label>
-              <Button type="button" size="sm" variant="outline" onClick={() => openEdit(category)} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"><Pencil className="h-3.5 w-3.5" />{t('Edit', 'تعديل', '编辑')}</Button>
+            <div className="flex items-center justify-between border-t border-[#d9e1ec] px-4 py-3">
+              <label className="flex items-center gap-2 text-xs font-semibold text-[#53627a]"><Switch checked={category.isActive} disabled={isMutating} onCheckedChange={(checked) => void onToggle(category, checked)} />{category.isActive ? t('Visible', 'ظاهر', '可见') : t('Hidden', 'مخفي', '隐藏')}</label>
+              <Button type="button" size="sm" variant="outline" onClick={() => openEdit(category)} className="border-[#d9e1ec] bg-[#f7faff] text-[#07152e] hover:bg-[#eaf1f8] hover:text-[#07152e]"><Pencil className="h-3.5 w-3.5" />{t('Edit', 'تعديل', '编辑')}</Button>
             </div>
           </article>
         ))}
-        {!categories.length && <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed border-white/15 p-6 text-center text-white/55"><ImageIcon className="h-7 w-7" /><p className="mt-3 text-sm">{t('No categories yet', 'لا توجد فئات بعد', '暂无分类')}</p></div>}
+        {!categories.length && <div className="flex min-h-48 flex-col items-center justify-center rounded-lg border border-dashed border-[#d9e1ec] p-6 text-center text-[#53627a]"><ImageIcon className="h-7 w-7" /><p className="mt-3 text-sm">{t('No categories yet', 'لا توجد فئات بعد', '暂无分类')}</p></div>}
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>

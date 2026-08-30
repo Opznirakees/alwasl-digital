@@ -1351,10 +1351,10 @@ export default function AdminDashboard() {
   return (
     <div
       data-v2-admin
-      className={`v2-admin-page min-h-screen bg-gradient-to-b from-[#020817] via-[#06152f] to-[#020817] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}
+      className={`v2-admin-page min-h-screen bg-[#f4f7fb] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}
     >
       {/* Top Navigation */}
-      <header className="sticky top-0 z-50 border-b border-[#f7b928]/20 bg-[#020817]/95 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-[#d9e1ec] bg-white/95 shadow-[0_8px_24px_rgba(28,55,92,0.08)] backdrop-blur-xl">
         <div className="flex items-center justify-between gap-3 px-3 sm:px-4 h-16">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <Button
@@ -1366,7 +1366,7 @@ export default function AdminDashboard() {
                 : t('Open admin navigation', 'افتح قائمة الإدارة', '打开管理导航')}
               aria-expanded={mobileNavOpen}
               aria-controls="mobile-admin-navigation"
-              className="text-white hover:bg-white/10 md:hidden"
+              className="text-[#07152e] hover:bg-[#eaf1f8] md:hidden"
             >
               {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
@@ -1378,7 +1378,7 @@ export default function AdminDashboard() {
                 ? t('Collapse admin sidebar', 'طي الشريط الجانبي', '收起管理侧栏')
                 : t('Expand admin sidebar', 'توسيع الشريط الجانبي', '展开管理侧栏')}
               aria-expanded={sidebarOpen}
-              className="hidden text-white hover:bg-white/10 md:inline-flex"
+              className="hidden text-[#07152e] hover:bg-[#eaf1f8] md:inline-flex"
             >
               <Menu className="h-5 w-5" />
             </Button>
@@ -1391,8 +1391,8 @@ export default function AdminDashboard() {
                 />
               </div>
               <div className="min-w-0">
-                <h1 className="truncate text-sm font-bold text-white">{t('Admin Dashboard', 'لوحة التحكم')}</h1>
-                <p className="hidden truncate text-[10px] text-amber-300/80 sm:block">{t('Al-Wasl Digital Services', 'الوصل للخدمات الإلكترونية')}</p>
+                <h1 className="truncate text-sm font-bold text-[#07152e]">{t('Admin Dashboard', 'لوحة التحكم')}</h1>
+                <p className="hidden truncate text-[10px] text-[#94610b] sm:block">{t('Al-Wasl Digital Services', 'الوصل للخدمات الإلكترونية')}</p>
               </div>
             </div>
           </div>
@@ -1403,7 +1403,7 @@ export default function AdminDashboard() {
               size="icon"
               onClick={openAdminAlerts}
               aria-label={t('Admin alerts: {{count}}', 'تنبيهات الإدارة: {{count}}', '管理提醒：{{count}}').replace('{{count}}', String(adminAlertCount))}
-              className="relative flex-shrink-0 text-white hover:bg-white/10"
+              className="relative flex-shrink-0 text-[#07152e] hover:bg-[#eaf1f8]"
             >
               <Bell className="w-5 h-5" />
               {adminAlertCount > 0 && (
@@ -1413,7 +1413,7 @@ export default function AdminDashboard() {
               )}
             </Button>
             <Link href="/">
-              <Button variant="outline" size="sm" className="border-[#f7b928]/35 text-[#f7b928] hover:bg-[#f7b928]/10 hover:text-[#ffd05a]">
+              <Button variant="outline" size="sm" className="border-[#f7b928]/35 text-[#94610b] hover:bg-[#f7b928]/10 hover:text-[#ffd05a]">
                 <Globe className="w-4 h-4 sm:mr-2" />
                 <span className="hidden sm:inline">{t('View Site', 'عرض الموقع')}</span>
               </Button>
@@ -1430,7 +1430,7 @@ export default function AdminDashboard() {
             onClick={() => setMobileNavOpen(false)}
             className="absolute inset-0 bg-black/70"
           />
-          <aside className={`absolute inset-y-0 w-[min(20rem,calc(100vw-2rem))] border-white/10 bg-slate-950 shadow-2xl ${dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'}`}>
+          <aside className={`absolute inset-y-0 w-[min(20rem,calc(100vw-2rem))] border-[#d9e1ec] bg-white shadow-2xl ${dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'}`}>
             <nav aria-label={t('Admin sections', 'أقسام الإدارة', '管理栏目')} className="h-full space-y-1 overflow-y-auto p-4">
               {sidebarItems.map((item) => (
                 <button
@@ -1443,8 +1443,8 @@ export default function AdminDashboard() {
                   }}
                     className={`flex min-h-12 w-full items-center gap-3 rounded-md px-4 text-start text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928] ${
                       activeTab === item.id
-                      ? 'border border-[#f7b928]/30 bg-[#f7b928]/10 text-[#f7b928]'
-                      : 'text-white/75 hover:bg-white/10 hover:text-white'
+                      ? 'border border-[#f7b928]/30 bg-[#f7b928]/10 text-[#94610b]'
+                      : 'text-[#34445c] hover:bg-[#eaf1f8] hover:text-[#07152e]'
                   }`}
                 >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -1460,7 +1460,7 @@ export default function AdminDashboard() {
         {/* Sidebar */}
         <aside
           data-admin-sidebar
-          className={`fixed top-16 z-40 hidden h-[calc(100vh-4rem)] border-[#f7b928]/20 bg-[#06152f]/92 shadow-2xl backdrop-blur-xl transition-all duration-300 md:block ${
+          className={`fixed top-16 z-40 hidden h-[calc(100vh-4rem)] border-[#d9e1ec] bg-white/95 shadow-[8px_0_28px_rgba(28,55,92,0.08)] backdrop-blur-xl transition-all duration-300 md:block ${
             dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'
           } ${
             sidebarOpen ? 'w-64' : 'w-20'
@@ -1473,8 +1473,8 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab(item.id)}
                 className={`flex min-h-12 w-full items-center gap-3 rounded-md px-4 py-3 text-start transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f7b928] ${
                   activeTab === item.id
-                    ? 'border border-[#f7b928]/30 bg-[#f7b928]/10 text-[#f7b928]'
-                    : 'text-white/70 hover:bg-slate-800/50 hover:text-white'
+                    ? 'border border-[#f7b928]/30 bg-[#f7b928]/10 text-[#94610b]'
+                    : 'text-[#34445c] hover:bg-[#eef4fa] hover:text-[#07152e]'
                 }`}
               >
                 <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -1491,9 +1491,9 @@ export default function AdminDashboard() {
             : sidebarOpen ? 'md:ml-64' : 'md:ml-20'
         }`}>
           {isSummaryLoading && (
-            <Card role="status" aria-live="polite" className="mb-6 border-[#f7b928]/20 bg-[#081a38]/80 p-5">
-              <div className="flex items-center gap-3 text-sm font-medium text-white/75">
-                <RefreshCw className="h-4 w-4 animate-spin text-[#f7b928] motion-reduce:animate-none" />
+            <Card role="status" aria-live="polite" className="mb-6 border-[#f7b928]/20 bg-[#eef4fa]/80 p-5">
+              <div className="flex items-center gap-3 text-sm font-medium text-[#34445c]">
+                <RefreshCw className="h-4 w-4 animate-spin text-[#94610b] motion-reduce:animate-none" />
                 {t('Loading admin dashboard...', 'جارٍ تحميل لوحة التحكم...', '正在加载管理仪表板...')}
               </div>
             </Card>
@@ -1502,7 +1502,7 @@ export default function AdminDashboard() {
           {adminError && (
             <Card data-admin-error role="alert" className="mb-6 border-rose-500/30 bg-rose-500/10 p-4">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-sm text-rose-100">{adminError}</p>
+                <p className="text-sm font-medium text-rose-700">{adminError}</p>
                 {user && canViewAdminDashboard ? (
                   <Button
                     type="button"
@@ -1510,7 +1510,7 @@ export default function AdminDashboard() {
                     aria-label={t('Try loading admin data again', 'حاول تحميل بيانات الإدارة مرة أخرى', '重新加载管理数据')}
                     onClick={() => void retryAdminData()}
                     disabled={isSummaryLoading}
-                    className="border-rose-300/30 text-rose-100 hover:bg-rose-300/10 hover:text-white"
+                    className="border-rose-300 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
                   >
                     <RefreshCw className="h-4 w-4" />
                     {t('Try again', 'حاول مرة أخرى', '重试')}
@@ -1557,20 +1557,20 @@ export default function AdminDashboard() {
                     icon: RefreshCw,
                   },
                 ].map((stat, i) => (
-                  <Card key={i} className="bg-slate-900/50 border-emerald-800/20 p-5">
+                  <Card key={i} className="bg-[#f7faff] border-emerald-800/20 p-5">
                     <div className="flex items-start justify-between">
                       <div>
-                        <p className="text-xs text-white/50">{stat.label}</p>
-                        <p className="text-2xl font-bold text-white mt-1">
+                        <p className="text-xs text-[#53627a]">{stat.label}</p>
+                        <p className="text-2xl font-bold text-[#07152e] mt-1">
                           {stat.value}
-                          {stat.suffix && <span className="text-sm text-white/50 ml-1">{stat.suffix}</span>}
+                          {stat.suffix && <span className="text-sm text-[#53627a] ml-1">{stat.suffix}</span>}
                         </p>
                       </div>
                       <div className="rounded-lg bg-blue-500/10 p-2">
-                        <stat.icon className="h-5 w-5 text-blue-300" />
+                        <stat.icon className="h-5 w-5 text-blue-700" />
                       </div>
                     </div>
-                    <p className="mt-3 text-xs text-white/45">{stat.note}</p>
+                    <p className="mt-3 text-xs text-[#6b778a]">{stat.note}</p>
                   </Card>
                 ))}
               </div>
@@ -1578,9 +1578,9 @@ export default function AdminDashboard() {
               {/* Charts Row */}
               <div className="grid lg:grid-cols-3 gap-6">
                 {/* Revenue Chart */}
-                <Card className="lg:col-span-2 bg-slate-900/50 border-emerald-800/20 p-6">
+                <Card className="lg:col-span-2 bg-[#f7faff] border-emerald-800/20 p-6">
                   <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <h3 className="text-lg font-bold text-white">{t('Revenue Overview', 'نظرة عامة على الإيرادات')}</h3>
+                    <h3 className="text-lg font-bold text-[#07152e]">{t('Revenue Overview', 'نظرة عامة على الإيرادات')}</h3>
                     <Button
                       variant="outline"
                       size="sm"
@@ -1599,7 +1599,7 @@ export default function AdminDashboard() {
                           style={{ height: `${Math.max(data.revenue > 0 ? 6 : 1, (data.revenue / revenueMax) * 100)}%` }}
                           title={`${formatCurrency(data.revenue)} IQD`}
                         />
-                        <span className="text-[10px] text-white/50">
+                        <span className="text-[10px] text-[#53627a]">
                           {new Date(data.date).toLocaleDateString(locale, { weekday: 'short' })}
                         </span>
                       </div>
@@ -1608,8 +1608,8 @@ export default function AdminDashboard() {
                 </Card>
 
                 {/* Provider Status */}
-                <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
-                  <h3 className="text-lg font-bold text-white mb-4">{t('Provider Status', 'حالة الموردين')}</h3>
+                <Card className="bg-[#f7faff] border-emerald-800/20 p-6">
+                  <h3 className="text-lg font-bold text-[#07152e] mb-4">{t('Provider Status', 'حالة الموردين')}</h3>
                   <div className="space-y-4">
                     {providers.slice(0, 5).map((provider) => (
                       <div key={provider.id} className="flex items-center justify-between">
@@ -1618,7 +1618,7 @@ export default function AdminDashboard() {
                             provider.status === 'online' ? 'bg-emerald-400' :
                             provider.status === 'degraded' ? 'bg-amber-400' : 'bg-rose-400'
                           }`} />
-                          <span className="text-sm text-white">{t(provider.name, provider.name)}</span>
+                          <span className="text-sm text-[#07152e]">{t(provider.name, provider.name)}</span>
                         </div>
                         <Badge variant="outline" className={getStatusColor(provider.status)}>
                           {getStatusLabel(provider.status)}
@@ -1629,7 +1629,7 @@ export default function AdminDashboard() {
                       <button
                         type="button"
                         onClick={() => setActiveTab('providers')}
-                        className="text-sm font-semibold text-emerald-300 hover:text-emerald-200"
+                        className="text-sm font-semibold text-emerald-700 hover:text-emerald-800"
                       >
                         {t(
                           `View all ${providers.length} providers`,
@@ -1643,14 +1643,14 @@ export default function AdminDashboard() {
               </div>
 
               {/* Recent Orders */}
-              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+              <Card className="bg-[#f7faff] border-emerald-800/20 p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-bold text-white">{t('Recent Orders', 'الطلبات الأخيرة')}</h3>
+                  <h3 className="text-lg font-bold text-[#07152e]">{t('Recent Orders', 'الطلبات الأخيرة')}</h3>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setActiveTab('orders')}
-                    className="text-emerald-400 hover:text-emerald-300"
+                    className="text-emerald-700 hover:text-emerald-800"
                   >
                     {t('View All', 'عرض الكل')}
                     <ChevronRight className="w-4 h-4 ml-1" />
@@ -1659,18 +1659,18 @@ export default function AdminDashboard() {
                 <Table className="min-w-[42rem]">
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
-                      <TableHead className="text-white/50">{t('Order ID', 'رقم الطلب')}</TableHead>
-                      <TableHead className="text-white/50">{t('Product', 'المنتج', '产品')}</TableHead>
-                      <TableHead className="text-white/50">{t('Amount', 'المبلغ')}</TableHead>
-                      <TableHead className="text-white/50">{t('Status', 'الحالة')}</TableHead>
-                      <TableHead className="text-white/50">{t('Date', 'التاريخ')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Order ID', 'رقم الطلب')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Product', 'المنتج', '产品')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Amount', 'المبلغ')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Status', 'الحالة')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Date', 'التاريخ')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {orders.map((order) => (
                       <TableRow key={order.id} className="border-emerald-800/20">
-                        <TableCell className="font-mono text-sm text-white">{order.id}</TableCell>
-                        <TableCell className="text-white">{getOrderGameName(order)}</TableCell>
+                        <TableCell className="font-mono text-sm text-[#07152e]">{order.id}</TableCell>
+                        <TableCell className="text-[#07152e]">{getOrderGameName(order)}</TableCell>
                         <TableCell className="text-emerald-400 font-medium">
                           {formatCurrency(order.finalPrice)} IQD
                         </TableCell>
@@ -1679,7 +1679,7 @@ export default function AdminDashboard() {
                             {getStatusLabel(order.status)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-white/50 text-sm">{formatDate(order.createdAt)}</TableCell>
+                        <TableCell className="text-[#53627a] text-sm">{formatDate(order.createdAt)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -1691,12 +1691,12 @@ export default function AdminDashboard() {
           {activeTab === 'orders' && (
             <div className="space-y-6">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-2xl font-bold text-white">{t('Orders Management', 'إدارة الطلبات')}</h2>
+                <h2 className="text-2xl font-bold text-[#07152e]">{t('Orders Management', 'إدارة الطلبات')}</h2>
                 <div className="flex items-center gap-3">
                   <Button
                     variant="outline"
                     onClick={() => void downloadAdminExport('orders')}
-                    className="border-[#f7b928]/35 text-[#f7b928] hover:bg-[#f7b928]/10 hover:text-[#ffd05a]"
+                    className="border-[#f7b928]/35 text-[#94610b] hover:bg-[#f7b928]/10 hover:text-[#ffd05a]"
                   >
                     <Download className="h-4 w-4" />
                     {t('Export', 'تصدير')}
@@ -1711,33 +1711,33 @@ export default function AdminDashboard() {
                       <Card
                         key={order.id}
                         data-admin-mobile-order
-                        className="border-[#f7b928]/18 bg-[#081a38]/88 p-4 shadow-[0_16px_40px_rgba(0,0,0,0.18)]"
+                        className="border-[#f7b928]/18 bg-[#eef4fa]/88 p-4 shadow-[0_16px_40px_rgba(0,0,0,0.18)]"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="break-all font-mono text-xs font-semibold text-white">{order.id}</p>
-                            <p className="mt-1 text-sm font-semibold text-[#f7b928]">{getOrderPackageName(order)}</p>
+                            <p className="break-all font-mono text-xs font-semibold text-[#07152e]">{order.id}</p>
+                            <p className="mt-1 text-sm font-semibold text-[#94610b]">{getOrderPackageName(order)}</p>
                           </div>
                           <Badge variant="outline" className={`flex-shrink-0 ${getStatusColor(order.status)}`}>
                             {getStatusLabel(order.status)}
                           </Badge>
                         </div>
-                        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-white/10 pt-4 text-sm">
+                        <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-[#d9e1ec] pt-4 text-sm">
                           <div className="min-w-0">
-                            <dt className="text-xs text-white/45">{getOrderReferenceLabel(order)}</dt>
-                            <dd className="mt-1 break-all font-medium text-white">{getOrderReferenceValue(order)}</dd>
+                            <dt className="text-xs text-[#6b778a]">{getOrderReferenceLabel(order)}</dt>
+                            <dd className="mt-1 break-all font-medium text-[#07152e]">{getOrderReferenceValue(order)}</dd>
                           </div>
                           <div>
-                            <dt className="text-xs text-white/45">{t('Amount', 'المبلغ', '金额')}</dt>
-                            <dd className="mt-1 font-semibold tabular-nums text-[#f7b928]">{formatCurrency(order.finalPrice)} IQD</dd>
+                            <dt className="text-xs text-[#6b778a]">{t('Amount', 'المبلغ', '金额')}</dt>
+                            <dd className="mt-1 font-semibold tabular-nums text-[#94610b]">{formatCurrency(order.finalPrice)} IQD</dd>
                           </div>
                           <div>
-                            <dt className="text-xs text-white/45">{t('Payment', 'الدفع', '付款')}</dt>
-                            <dd className="mt-1 text-white/80">{getPaymentMethodLabel(order.paymentMethod)}</dd>
+                            <dt className="text-xs text-[#6b778a]">{t('Payment', 'الدفع', '付款')}</dt>
+                            <dd className="mt-1 text-[#34445c]">{getPaymentMethodLabel(order.paymentMethod)}</dd>
                           </div>
                           <div>
-                            <dt className="text-xs text-white/45">{t('Date', 'التاريخ', '日期')}</dt>
-                            <dd className="mt-1 text-white/70">{formatDate(order.createdAt)}</dd>
+                            <dt className="text-xs text-[#6b778a]">{t('Date', 'التاريخ', '日期')}</dt>
+                            <dd className="mt-1 text-[#34445c]">{formatDate(order.createdAt)}</dd>
                           </div>
                         </dl>
                         {canConfirmCashPayment(order) && (
@@ -1771,38 +1771,38 @@ export default function AdminDashboard() {
                     ))}
                   </div>
 
-                  <Card data-admin-desktop-orders className="hidden border-[#f7b928]/15 bg-[#081a38]/78 p-5 sm:block">
+                  <Card data-admin-desktop-orders className="hidden border-[#f7b928]/15 bg-[#eef4fa]/78 p-5 sm:block">
                     <Table className="min-w-[58rem]">
                       <TableHeader>
-                        <TableRow className="border-white/10">
-                          <TableHead className="text-white/50">{t('Order ID', 'رقم الطلب')}</TableHead>
-                          <TableHead className="text-white/50">{t('Product', 'المنتج', '产品')}</TableHead>
-                          <TableHead className="text-white/50">{t('Top-up amount', 'مبلغ الشحن', '充值金额')}</TableHead>
-                          <TableHead className="text-white/50">{t('Account / delivery', 'الحساب / التسليم', '账号 / 交付')}</TableHead>
-                          <TableHead className="text-white/50">{t('Amount', 'المبلغ')}</TableHead>
-                          <TableHead className="text-white/50">{t('Payment', 'الدفع')}</TableHead>
-                          <TableHead className="text-white/50">{t('Status', 'الحالة')}</TableHead>
-                          <TableHead className="text-white/50">{t('Date', 'التاريخ')}</TableHead>
-                          <TableHead className="text-white/50">{t('Action', 'الإجراء', '操作')}</TableHead>
+                        <TableRow className="border-[#d9e1ec]">
+                          <TableHead className="text-[#53627a]">{t('Order ID', 'رقم الطلب')}</TableHead>
+                          <TableHead className="text-[#53627a]">{t('Product', 'المنتج', '产品')}</TableHead>
+                          <TableHead className="text-[#53627a]">{t('Top-up amount', 'مبلغ الشحن', '充值金额')}</TableHead>
+                          <TableHead className="text-[#53627a]">{t('Account / delivery', 'الحساب / التسليم', '账号 / 交付')}</TableHead>
+                          <TableHead className="text-[#53627a]">{t('Amount', 'المبلغ')}</TableHead>
+                          <TableHead className="text-[#53627a]">{t('Payment', 'الدفع')}</TableHead>
+                          <TableHead className="text-[#53627a]">{t('Status', 'الحالة')}</TableHead>
+                          <TableHead className="text-[#53627a]">{t('Date', 'التاريخ')}</TableHead>
+                          <TableHead className="text-[#53627a]">{t('Action', 'الإجراء', '操作')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {orders.map((order) => (
-                          <TableRow key={order.id} className="border-white/10">
-                            <TableCell className="font-mono text-sm text-white">{order.id}</TableCell>
-                            <TableCell className="text-white">{getOrderGameName(order)}</TableCell>
-                            <TableCell className="text-[#f7b928]">{getOrderPackageName(order)}</TableCell>
-                            <TableCell className="text-white/70">{getOrderReferenceValue(order)}</TableCell>
-                            <TableCell className="font-medium text-[#f7b928]">
+                          <TableRow key={order.id} className="border-[#d9e1ec]">
+                            <TableCell className="font-mono text-sm text-[#07152e]">{order.id}</TableCell>
+                            <TableCell className="text-[#07152e]">{getOrderGameName(order)}</TableCell>
+                            <TableCell className="text-[#94610b]">{getOrderPackageName(order)}</TableCell>
+                            <TableCell className="text-[#34445c]">{getOrderReferenceValue(order)}</TableCell>
+                            <TableCell className="font-medium text-[#94610b]">
                               {formatCurrency(order.finalPrice)} IQD
                             </TableCell>
-                            <TableCell className="text-white/70">{getPaymentMethodLabel(order.paymentMethod)}</TableCell>
+                            <TableCell className="text-[#34445c]">{getPaymentMethodLabel(order.paymentMethod)}</TableCell>
                             <TableCell>
                               <Badge variant="outline" className={getStatusColor(order.status)}>
                                 {getStatusLabel(order.status)}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-sm text-white/50">{formatDate(order.createdAt)}</TableCell>
+                            <TableCell className="text-sm text-[#53627a]">{formatDate(order.createdAt)}</TableCell>
                             <TableCell>
                               {canConfirmCashPayment(order) ? (
                                 <Button
@@ -1821,7 +1821,7 @@ export default function AdminDashboard() {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => openManualFulfillment(order)}
-                                  className="border-[#f7b928]/35 text-[#f7b928] hover:bg-[#f7b928]/10 hover:text-[#ffd05a]"
+                                  className="border-[#f7b928]/35 text-[#94610b] hover:bg-[#f7b928]/10 hover:text-[#ffd05a]"
                                 >
                                   {order.status === 'completed'
                                     ? t('Resend', 'إعادة الإرسال', '重新发送')
@@ -1830,7 +1830,7 @@ export default function AdminDashboard() {
                                       : t('Complete', 'إكمال', '完成')}
                                 </Button>
                               ) : (
-                                <span className="text-xs text-white/30">-</span>
+                                <span className="text-xs text-[#7b8798]">-</span>
                               )}
                             </TableCell>
                           </TableRow>
@@ -1840,9 +1840,9 @@ export default function AdminDashboard() {
                   </Card>
                 </>
               ) : (
-                <Card className="border-[#f7b928]/15 bg-[#081a38]/78 p-8 text-center">
-                  <ShoppingCart className="mx-auto h-6 w-6 text-[#f7b928]" />
-                  <p className="mt-3 font-semibold text-white">{t('No orders yet', 'لا توجد طلبات بعد', '暂无订单')}</p>
+                <Card className="border-[#f7b928]/15 bg-[#eef4fa]/78 p-8 text-center">
+                  <ShoppingCart className="mx-auto h-6 w-6 text-[#94610b]" />
+                  <p className="mt-3 font-semibold text-[#07152e]">{t('No orders yet', 'لا توجد طلبات بعد', '暂无订单')}</p>
                 </Card>
               )}
             </div>
@@ -1855,14 +1855,14 @@ export default function AdminDashboard() {
               setFulfillmentNote('');
             }
           }}>
-            <DialogContent className="border-[#f7b928]/20 bg-[#06152f] text-white">
+            <DialogContent className="border-[#f7b928]/20 bg-white text-[#07152e]">
               <DialogHeader>
                 <DialogTitle>
                   {fulfillmentOrder?.fulfillmentMode === 'manual_code'
                     ? t('Deliver purchased code', 'تسليم الرمز المشترى', '交付购买代码')
                     : t('Complete manual top-up', 'إكمال الشحن اليدوي', '完成手动充值')}
                 </DialogTitle>
-                <DialogDescription className="text-white/60">
+                <DialogDescription className="text-[#53627a]">
                   {t(
                     'The customer receives a WhatsApp confirmation immediately after you complete this order.',
                     'يتلقى العميل تأكيداً عبر واتساب فور إكمال هذا الطلب.',
@@ -1881,9 +1881,9 @@ export default function AdminDashboard() {
                       minLength={3}
                       required
                       autoComplete="off"
-                      className="border-white/15 bg-white/5 font-mono text-white"
+                      className="border-[#d9e1ec] bg-[#f7faff] font-mono text-[#07152e]"
                     />
-                    <p className="text-xs text-white/45">
+                    <p className="text-xs text-[#6b778a]">
                       {t('The code is encrypted in the database and sent only to this customer.', 'يتم تشفير الرمز في قاعدة البيانات وإرساله لهذا العميل فقط.', '代码在数据库中加密，仅发送给该客户。')}
                     </p>
                   </div>
@@ -1895,11 +1895,11 @@ export default function AdminDashboard() {
                     value={fulfillmentNote}
                     onChange={(event) => setFulfillmentNote(event.target.value)}
                     placeholder={t('Optional operator note', 'ملاحظة اختيارية للموظف', '可选操作备注')}
-                    className="border-white/15 bg-white/5 text-white"
+                    className="border-[#d9e1ec] bg-[#f7faff] text-[#07152e]"
                   />
                 </div>
                 <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setFulfillmentOrder(null)} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                  <Button type="button" variant="outline" onClick={() => setFulfillmentOrder(null)} className="border-[#d9e1ec] bg-[#f7faff] text-[#07152e] hover:bg-[#eaf1f8] hover:text-[#07152e]">
                     {t('Cancel', 'إلغاء', '取消')}
                   </Button>
                   <Button type="submit" disabled={isMutating} className="bg-[#f7b928] text-[#07152e] hover:bg-[#ffd05a]">
@@ -1923,8 +1923,8 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">{t('Products and top-up amounts', 'المنتجات ومبالغ الشحن', '产品和充值金额')}</h2>
-                  <p className="mt-1 text-sm text-white/50">
+                  <h2 className="text-2xl font-bold text-[#07152e]">{t('Products and top-up amounts', 'المنتجات ومبالغ الشحن', '产品和充值金额')}</h2>
+                  <p className="mt-1 text-sm text-[#53627a]">
                     {t(
                       'Connect each product to a category and choose automatic or manual delivery.',
                       'اربط كل منتج بفئة واختر التسليم التلقائي أو اليدوي.',
@@ -1952,10 +1952,10 @@ export default function AdminDashboard() {
               </div>
 
               <Dialog open={productDialogOpen} onOpenChange={setProductDialogOpen}>
-                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto border-emerald-800/30 bg-slate-950 text-white">
+                <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto border-emerald-800/30 bg-white text-[#07152e]">
                   <DialogHeader>
                     <DialogTitle>{t('Add product', 'إضافة منتج', '添加产品')}</DialogTitle>
-                    <DialogDescription className="text-white/60">
+                    <DialogDescription className="text-[#53627a]">
                       {t(
                         'New products remain hidden until you have checked their packages and delivery method.',
                         'تبقى المنتجات الجديدة مخفية حتى تتحقق من الباقات وطريقة التسليم.',
@@ -1972,7 +1972,7 @@ export default function AdminDashboard() {
                           value={productForm.slug}
                           onChange={(event) => setProductForm((current) => ({ ...current, slug: event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') }))}
                           placeholder="new-top-up-product"
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -1981,7 +1981,7 @@ export default function AdminDashboard() {
                           id="product-category"
                           value={productForm.category}
                           onChange={(event) => setProductForm((current) => ({ ...current, category: event.target.value }))}
-                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                         >
                           <option value="TOP_UP">{t('Top-up', 'شحن', '充值')}</option>
                           <option value="APP">{t('App', 'تطبيق', '应用')}</option>
@@ -1996,7 +1996,7 @@ export default function AdminDashboard() {
                           id="product-name"
                           value={productForm.name}
                           onChange={(event) => setProductForm((current) => ({ ...current, name: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2005,7 +2005,7 @@ export default function AdminDashboard() {
                           id="product-name-ar"
                           value={productForm.nameAr}
                           onChange={(event) => setProductForm((current) => ({ ...current, nameAr: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                     </div>
@@ -2016,7 +2016,7 @@ export default function AdminDashboard() {
                           id="product-catalog-category"
                           value={productForm.catalogCategoryId}
                           onChange={(event) => setProductForm((current) => ({ ...current, catalogCategoryId: event.target.value }))}
-                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                           required
                         >
                           {categories.map((category) => (
@@ -2030,7 +2030,7 @@ export default function AdminDashboard() {
                           id="product-fulfillment"
                           value={productForm.fulfillmentMode}
                           onChange={(event) => setProductForm((current) => ({ ...current, fulfillmentMode: event.target.value }))}
-                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                         >
                           <option value="MANUAL_CODE">{t('Manual code by WhatsApp', 'رمز يدوي عبر واتساب', '通过 WhatsApp 手动发码')}</option>
                           <option value="MANUAL_TOPUP">{t('Manual account top-up', 'شحن حساب يدوي', '手动账号充值')}</option>
@@ -2045,7 +2045,7 @@ export default function AdminDashboard() {
                           id="product-description"
                           value={productForm.description}
                           onChange={(event) => setProductForm((current) => ({ ...current, description: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2054,7 +2054,7 @@ export default function AdminDashboard() {
                           id="product-description-ar"
                           value={productForm.descriptionAr}
                           onChange={(event) => setProductForm((current) => ({ ...current, descriptionAr: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                     </div>
@@ -2065,7 +2065,7 @@ export default function AdminDashboard() {
                           id="product-name-zh"
                           value={productForm.nameZh}
                           onChange={(event) => setProductForm((current) => ({ ...current, nameZh: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2074,7 +2074,7 @@ export default function AdminDashboard() {
                           id="product-description-zh"
                           value={productForm.descriptionZh}
                           onChange={(event) => setProductForm((current) => ({ ...current, descriptionZh: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                     </div>
@@ -2085,7 +2085,7 @@ export default function AdminDashboard() {
                           id="product-image"
                           value={productForm.image}
                           onChange={(event) => setProductForm((current) => ({ ...current, image: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2094,14 +2094,14 @@ export default function AdminDashboard() {
                           id="product-countries"
                           value={productForm.countries}
                           onChange={(event) => setProductForm((current) => ({ ...current, countries: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                     </div>
-                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-slate-900 px-3 py-2">
+                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-white px-3 py-2">
                       <div>
                         <Label htmlFor="product-requires-user-id">{t('Ask for an account ID', 'طلب معرف الحساب', '要求账号 ID')}</Label>
-                        <p className="mt-1 text-xs text-white/40">{t('Turn this off for products delivered as a purchased code.', 'أوقفه للمنتجات التي تُسلّم كرمز مشترى.', '购买代码类产品请关闭此项。')}</p>
+                        <p className="mt-1 text-xs text-[#6b778a]">{t('Turn this off for products delivered as a purchased code.', 'أوقفه للمنتجات التي تُسلّم كرمز مشترى.', '购买代码类产品请关闭此项。')}</p>
                       </div>
                       <Switch
                         id="product-requires-user-id"
@@ -2116,7 +2116,7 @@ export default function AdminDashboard() {
                           id="product-user-label"
                           value={productForm.userIdLabel}
                           onChange={(event) => setProductForm((current) => ({ ...current, userIdLabel: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2125,14 +2125,14 @@ export default function AdminDashboard() {
                           id="product-user-label-ar"
                           value={productForm.userIdLabelAr}
                           onChange={(event) => setProductForm((current) => ({ ...current, userIdLabelAr: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                     </div>
-                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-slate-900 px-3 py-2">
+                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-white px-3 py-2">
                       <div>
                         <Label htmlFor="product-active">{t('Activate publicly', 'تفعيل للعامة', '公开启用')}</Label>
-                        <p className="mt-1 text-xs text-white/40">{t('Leave off until provider and pricing are approved.', 'اتركه مغلقاً حتى يتم اعتماد المورد والتسعير.', '供应商和价格批准前请保持关闭。')}</p>
+                        <p className="mt-1 text-xs text-[#6b778a]">{t('Leave off until provider and pricing are approved.', 'اتركه مغلقاً حتى يتم اعتماد المورد والتسعير.', '供应商和价格批准前请保持关闭。')}</p>
                       </div>
                       <Switch
                         id="product-active"
@@ -2150,10 +2150,10 @@ export default function AdminDashboard() {
               </Dialog>
 
               <Dialog open={topupDialogOpen} onOpenChange={setTopupDialogOpen}>
-                <DialogContent className="border-emerald-800/30 bg-slate-950 text-white">
+                <DialogContent className="border-emerald-800/30 bg-white text-[#07152e]">
                   <DialogHeader>
                     <DialogTitle>{t('Add top-up amount', 'إضافة مبلغ شحن', '添加充值金额')}</DialogTitle>
-                    <DialogDescription className="text-white/60">
+                    <DialogDescription className="text-[#53627a]">
                       {t('Create the balance and customer price for the selected product.', 'أنشئ الرصيد وسعر العميل للمنتج المحدد.', '为所选产品创建余额和客户价格。')}
                     </DialogDescription>
                   </DialogHeader>
@@ -2165,7 +2165,7 @@ export default function AdminDashboard() {
                           id="topup-product"
                           value={topupForm.productId}
                           onChange={(event) => setTopupForm((current) => ({ ...current, productId: event.target.value }))}
-                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                         >
                           {[...products].sort((a, b) => Number(b.id === 'waho-top-up') - Number(a.id === 'waho-top-up')).map((product) => (
                             <option key={product.id} value={product.id}>{product.name}</option>
@@ -2179,7 +2179,7 @@ export default function AdminDashboard() {
                           value={topupForm.name}
                           onChange={(event) => setTopupForm((current) => ({ ...current, name: event.target.value }))}
                           placeholder={t('Generated when empty', 'يُنشأ تلقائياً عند تركه فارغاً', '留空时自动生成')}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2189,7 +2189,7 @@ export default function AdminDashboard() {
                           dir="rtl"
                           value={topupForm.nameAr}
                           onChange={(event) => setTopupForm((current) => ({ ...current, nameAr: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2200,7 +2200,7 @@ export default function AdminDashboard() {
                           min="1"
                           value={topupForm.amount}
                           onChange={(event) => setTopupForm((current) => ({ ...current, amount: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2211,7 +2211,7 @@ export default function AdminDashboard() {
                           min="1"
                           value={topupForm.basePrice}
                           onChange={(event) => setTopupForm((current) => ({ ...current, basePrice: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2222,7 +2222,7 @@ export default function AdminDashboard() {
                           min="1"
                           value={topupForm.salePrice}
                           onChange={(event) => setTopupForm((current) => ({ ...current, salePrice: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2231,7 +2231,7 @@ export default function AdminDashboard() {
                           id="topup-unit"
                           value={topupForm.unit}
                           onChange={(event) => setTopupForm((current) => ({ ...current, unit: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2241,10 +2241,10 @@ export default function AdminDashboard() {
                           dir="rtl"
                           value={topupForm.unitAr}
                           onChange={(event) => setTopupForm((current) => ({ ...current, unitAr: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
-                      <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-slate-900 px-3 py-2">
+                      <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-white px-3 py-2">
                         <Label htmlFor="topup-stock">{t('Available', 'متاح', '可用')}</Label>
                         <Switch
                           id="topup-stock"
@@ -2253,7 +2253,7 @@ export default function AdminDashboard() {
                         />
                       </div>
                     </div>
-                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-slate-900 px-3 py-2">
+                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-white px-3 py-2">
                       <Label htmlFor="topup-popular">{t('Mark as popular', 'تمييز كشائع', '标记为热门')}</Label>
                       <Switch
                         id="topup-popular"
@@ -2272,14 +2272,14 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {products.slice(0, 6).map((game) => (
-                  <Card key={game.id} className="bg-slate-900/50 border-emerald-800/20 p-4">
+                  <Card key={game.id} className="bg-[#f7faff] border-emerald-800/20 p-4">
                     <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 rounded-lg bg-slate-800 overflow-hidden">
+                      <div className="w-16 h-16 rounded-lg bg-[#eef4fa] overflow-hidden">
                         <img src={game.image} alt={t(game.name, game.nameAr)} className="w-full h-full object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-white">{t(game.name, game.nameAr)}</h3>
-                        <p className="text-xs text-white/50">{t(game.publisher, game.publisher)}</p>
+                        <h3 className="font-semibold text-[#07152e]">{t(game.name, game.nameAr)}</h3>
+                        <p className="text-xs text-[#53627a]">{t(game.publisher, game.publisher)}</p>
                         <div className="flex items-center gap-2 mt-2">
                           <Badge variant="outline" className="text-[10px] border-emerald-500/30 text-emerald-400">
                             {game.packages.length} {t('top-up amounts', 'مبالغ شحن', '充值金额')}
@@ -2299,10 +2299,10 @@ export default function AdminDashboard() {
                     </div>
                     <div className="mt-4 space-y-2 border-t border-emerald-800/20 pt-4">
                       {game.packages.map((pkg) => (
-                        <div key={pkg.id} className="flex items-center justify-between gap-3 rounded-md bg-slate-950/50 px-3 py-2">
+                        <div key={pkg.id} className="flex items-center justify-between gap-3 rounded-md bg-[#f7faff] px-3 py-2">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-medium text-white">{t(pkg.name, pkg.nameAr)}</p>
-                            <p className="text-xs text-white/50">{formatCurrency(pkg.basePrice)} {pkg.currency}</p>
+                            <p className="truncate text-sm font-medium text-[#07152e]">{t(pkg.name, pkg.nameAr)}</p>
+                            <p className="text-xs text-[#53627a]">{formatCurrency(pkg.basePrice)} {pkg.currency}</p>
                           </div>
                           <div className="flex items-center gap-3">
                             <Badge variant="outline" className={pkg.inStock ? getStatusColor('completed') : getStatusColor('failed')}>
@@ -2327,8 +2327,8 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">{t('Custom pricing', 'تسعير خاص', '自定义价格')}</h2>
-                  <p className="mt-1 text-sm text-white/50">
+                  <h2 className="text-2xl font-bold text-[#07152e]">{t('Custom pricing', 'تسعير خاص', '自定义价格')}</h2>
+                  <p className="mt-1 text-sm text-[#53627a]">
                     {t('Set WAHO prices for distributors, customer groups, or a specific user.', 'حدد أسعار WAHO للموزعين أو مجموعات العملاء أو مستخدم محدد.', '为分销商、客户组或指定用户设置 WAHO 价格。')}
                   </p>
                 </div>
@@ -2352,10 +2352,10 @@ export default function AdminDashboard() {
               </div>
 
               <Dialog open={pricingDialogOpen} onOpenChange={setPricingDialogOpen}>
-                <DialogContent className="border-emerald-800/30 bg-slate-950 text-white">
+                <DialogContent className="border-emerald-800/30 bg-white text-[#07152e]">
                   <DialogHeader>
                     <DialogTitle>{t('Add pricing rule', 'إضافة قاعدة تسعير', '添加价格规则')}</DialogTitle>
-                    <DialogDescription className="text-white/60">
+                    <DialogDescription className="text-[#53627a]">
                       {t('Rules are applied server-side before the order is stored.', 'يتم تطبيق القواعد من الخادم قبل حفظ الطلب.', '规则会在服务器端应用后再保存订单。')}
                     </DialogDescription>
                   </DialogHeader>
@@ -2366,7 +2366,7 @@ export default function AdminDashboard() {
                         id="pricing-name"
                         value={pricingForm.name}
                         onChange={(event) => setPricingForm((current) => ({ ...current, name: event.target.value }))}
-                        className="bg-slate-900 border-emerald-800/30 text-white"
+                        className="bg-white border-emerald-800/30 text-[#07152e]"
                       />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -2376,7 +2376,7 @@ export default function AdminDashboard() {
                           id="pricing-target"
                           value={pricingForm.targetType}
                           onChange={(event) => setPricingForm((current) => ({ ...current, targetType: event.target.value }))}
-                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                         >
                           <option value="DISTRIBUTOR">{t('Distributors', 'الموزعون', '分销商')}</option>
                           <option value="CUSTOMER">{t('Customers', 'العملاء', '客户')}</option>
@@ -2391,7 +2391,7 @@ export default function AdminDashboard() {
                           value={pricingForm.userId}
                           disabled={pricingForm.targetType !== 'USER'}
                           onChange={(event) => setPricingForm((current) => ({ ...current, userId: event.target.value }))}
-                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white disabled:opacity-40"
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e] disabled:opacity-40"
                         >
                           <option value="">{t('Select user', 'اختر مستخدماً', '选择用户')}</option>
                           {users.map((account) => (
@@ -2405,7 +2405,7 @@ export default function AdminDashboard() {
                           id="pricing-product"
                           value={pricingForm.productId}
                           onChange={(event) => setPricingForm((current) => ({ ...current, productId: event.target.value, packageId: '' }))}
-                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                         >
                           {products.map((product) => (
                             <option key={product.id} value={product.id}>{product.name}</option>
@@ -2418,7 +2418,7 @@ export default function AdminDashboard() {
                           id="pricing-package"
                           value={pricingForm.packageId}
                           onChange={(event) => setPricingForm((current) => ({ ...current, packageId: event.target.value }))}
-                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                         >
                           <option value="">{t('All amounts', 'كل المبالغ', '全部金额')}</option>
                           {pricingPackages.map((pkg) => (
@@ -2432,7 +2432,7 @@ export default function AdminDashboard() {
                           id="pricing-type"
                           value={pricingForm.priceType}
                           onChange={(event) => setPricingForm((current) => ({ ...current, priceType: event.target.value }))}
-                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                         >
                           <option value="FIXED_PRICE">{t('Fixed price', 'سعر ثابت', '固定价格')}</option>
                           <option value="PERCENTAGE_DISCOUNT">{t('Percentage discount', 'خصم بنسبة', '百分比折扣')}</option>
@@ -2447,7 +2447,7 @@ export default function AdminDashboard() {
                           min="0"
                           value={pricingForm.value}
                           onChange={(event) => setPricingForm((current) => ({ ...current, value: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2458,10 +2458,10 @@ export default function AdminDashboard() {
                           min="0"
                           value={pricingForm.priority}
                           onChange={(event) => setPricingForm((current) => ({ ...current, priority: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
-                      <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-slate-900 px-3 py-2">
+                      <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-white px-3 py-2">
                         <Label htmlFor="pricing-active">{t('Active', 'نشط', '启用')}</Label>
                         <Switch
                           id="pricing-active"
@@ -2470,7 +2470,7 @@ export default function AdminDashboard() {
                         />
                       </div>
                     </div>
-                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-slate-900 px-3 py-2">
+                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-white px-3 py-2">
                       <Label htmlFor="pricing-membership">{t('Also apply membership discount', 'تطبيق خصم العضوية أيضاً', '同时应用会员折扣')}</Label>
                       <Switch
                         id="pricing-membership"
@@ -2487,30 +2487,30 @@ export default function AdminDashboard() {
                 </DialogContent>
               </Dialog>
 
-              <Card className="overflow-hidden border-emerald-800/20 bg-slate-900/50">
+              <Card className="overflow-hidden border-emerald-800/20 bg-[#f7faff]">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
-                      <TableHead className="text-white/70">{t('Rule', 'القاعدة', '规则')}</TableHead>
-                      <TableHead className="text-white/70">{t('Target', 'الفئة', '目标')}</TableHead>
-                      <TableHead className="text-white/70">{t('Scope', 'النطاق', '范围')}</TableHead>
-                      <TableHead className="text-white/70">{t('Value', 'القيمة', '数值')}</TableHead>
-                      <TableHead className="text-white/70">{t('Status', 'الحالة', '状态')}</TableHead>
-                      <TableHead className="text-right text-white/70">{t('Active', 'نشط', '启用')}</TableHead>
+                      <TableHead className="text-[#34445c]">{t('Rule', 'القاعدة', '规则')}</TableHead>
+                      <TableHead className="text-[#34445c]">{t('Target', 'الفئة', '目标')}</TableHead>
+                      <TableHead className="text-[#34445c]">{t('Scope', 'النطاق', '范围')}</TableHead>
+                      <TableHead className="text-[#34445c]">{t('Value', 'القيمة', '数值')}</TableHead>
+                      <TableHead className="text-[#34445c]">{t('Status', 'الحالة', '状态')}</TableHead>
+                      <TableHead className="text-right text-[#34445c]">{t('Active', 'نشط', '启用')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {customPricingRules.map((rule) => (
                       <TableRow key={rule.id} className="border-emerald-800/10">
                         <TableCell>
-                          <p className="font-medium text-white">{rule.name}</p>
-                          <p className="text-xs text-white/40">{rule.priceType.replace(/_/g, ' ')}</p>
+                          <p className="font-medium text-[#07152e]">{rule.name}</p>
+                          <p className="text-xs text-[#6b778a]">{rule.priceType.replace(/_/g, ' ')}</p>
                         </TableCell>
-                        <TableCell className="text-white/70">{getPricingRuleTarget(rule)}</TableCell>
-                        <TableCell className="text-white/70">
+                        <TableCell className="text-[#34445c]">{getPricingRuleTarget(rule)}</TableCell>
+                        <TableCell className="text-[#34445c]">
                           {rule.packageName ?? rule.productName ?? t('All recharge products', 'كل منتجات الشحن', '全部充值产品')}
                         </TableCell>
-                        <TableCell className="font-semibold text-emerald-300">{getPricingRuleValue(rule)}</TableCell>
+                        <TableCell className="font-semibold text-emerald-700">{getPricingRuleValue(rule)}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={rule.isActive ? getStatusColor('completed') : getStatusColor('failed')}>
                             {rule.isActive ? t('Active', 'نشط', '启用') : t('Disabled', 'معطل', '已停用')}
@@ -2527,7 +2527,7 @@ export default function AdminDashboard() {
                     ))}
                     {customPricingRules.length === 0 && (
                       <TableRow className="border-emerald-800/10">
-                        <TableCell colSpan={6} className="py-8 text-center text-white/50">
+                        <TableCell colSpan={6} className="py-8 text-center text-[#53627a]">
                           {t('No custom pricing rules yet', 'لا توجد قواعد تسعير خاصة بعد', '暂无自定义价格规则')}
                         </TableCell>
                       </TableRow>
@@ -2541,7 +2541,7 @@ export default function AdminDashboard() {
           {activeTab === 'providers' && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-2xl font-bold text-white">{t('Delivery Partners', 'شركاء التسليم')}</h2>
+                <h2 className="text-2xl font-bold text-[#07152e]">{t('Delivery Partners', 'شركاء التسليم')}</h2>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button
                     variant="outline"
@@ -2562,10 +2562,10 @@ export default function AdminDashboard() {
               </div>
 
               <Dialog open={providerDialogOpen} onOpenChange={setProviderDialogOpen}>
-                <DialogContent className="border-emerald-800/30 bg-slate-950 text-white">
+                <DialogContent className="border-emerald-800/30 bg-white text-[#07152e]">
                   <DialogHeader>
                     <DialogTitle>{t('Add Provider', 'إضافة مورد')}</DialogTitle>
-                    <DialogDescription className="text-white/60">
+                    <DialogDescription className="text-[#53627a]">
                       {t('Add a fulfillment route with its own priority and balance threshold.', 'أضف مسار تنفيذ بأولوية وحد رصيد خاص به.', '添加履约路线，并设置其优先级和余额阈值。')}
                     </DialogDescription>
                   </DialogHeader>
@@ -2576,7 +2576,7 @@ export default function AdminDashboard() {
                         id="provider-name"
                         value={providerForm.name}
                         onChange={(event) => setProviderForm((current) => ({ ...current, name: event.target.value }))}
-                        className="bg-slate-900 border-emerald-800/30 text-white"
+                        className="bg-white border-emerald-800/30 text-[#07152e]"
                       />
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -2586,7 +2586,7 @@ export default function AdminDashboard() {
                           id="provider-type"
                           value={providerForm.type}
                           onChange={(event) => setProviderForm((current) => ({ ...current, type: event.target.value }))}
-                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                         >
                           <option value="WAHA_WHATSAPP">WAHA WhatsApp</option>
                           <option value="WAHO_API">WAHO API</option>
@@ -2600,7 +2600,7 @@ export default function AdminDashboard() {
                           min="1"
                           value={providerForm.priority}
                           onChange={(event) => setProviderForm((current) => ({ ...current, priority: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2611,7 +2611,7 @@ export default function AdminDashboard() {
                           min="0"
                           value={providerForm.balance}
                           onChange={(event) => setProviderForm((current) => ({ ...current, balance: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2622,7 +2622,7 @@ export default function AdminDashboard() {
                           min="0"
                           value={providerForm.lowBalanceThreshold}
                           onChange={(event) => setProviderForm((current) => ({ ...current, lowBalanceThreshold: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                     </div>
@@ -2632,10 +2632,10 @@ export default function AdminDashboard() {
                         id="provider-endpoint"
                         value={providerForm.apiEndpoint}
                         onChange={(event) => setProviderForm((current) => ({ ...current, apiEndpoint: event.target.value }))}
-                        className="bg-slate-900 border-emerald-800/30 text-white"
+                        className="bg-white border-emerald-800/30 text-[#07152e]"
                       />
                     </div>
-                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-slate-900 px-3 py-2">
+                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-white px-3 py-2">
                       <Label htmlFor="provider-active">{t('Active', 'نشط', '启用')}</Label>
                       <Switch
                         id="provider-active"
@@ -2658,26 +2658,26 @@ export default function AdminDashboard() {
                     <Card key={alert.id} className="border-amber-500/30 bg-amber-500/10 p-4">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-start gap-3">
-                          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+                          <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
                           <div>
-                            <p className="font-semibold text-white">
+                            <p className="font-semibold text-[#07152e]">
                               {t('Provider balance is low', 'رصيد المورد منخفض', '供应商余额不足')}
                             </p>
-                            <p className="mt-1 text-sm text-white/70">
+                            <p className="mt-1 text-sm text-[#34445c]">
                               {alert.providerAccountName ?? alert.providerName ?? alert.providerAccountId}
                             </p>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4 text-sm sm:text-right">
                           <div>
-                            <p className="text-white/50">{t('Available', 'المتاح', '可用')}</p>
-                            <p className="font-semibold text-amber-200">
+                            <p className="text-[#53627a]">{t('Available', 'المتاح', '可用')}</p>
+                            <p className="font-semibold text-amber-800">
                               {formatCurrency(alert.availableBalance)} {alert.currency}
                             </p>
                           </div>
                           <div>
-                            <p className="text-white/50">{t('Threshold', 'الحد', '阈值')}</p>
-                            <p className="font-semibold text-white">
+                            <p className="text-[#53627a]">{t('Threshold', 'الحد', '阈值')}</p>
+                            <p className="font-semibold text-[#07152e]">
                               {formatCurrency(alert.threshold)} {alert.currency}
                             </p>
                           </div>
@@ -2690,11 +2690,11 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {providers.map((provider) => (
-                  <Card key={provider.id} className="bg-slate-900/50 border-emerald-800/20 p-6">
+                  <Card key={provider.id} className="bg-[#f7faff] border-emerald-800/20 p-6">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-semibold text-white">{t(provider.name, provider.name)}</h3>
-                        <p className="text-xs text-white/50">{t('Connected top-up route', 'مسار شحن متصل')}</p>
+                        <h3 className="text-lg font-semibold text-[#07152e]">{t(provider.name, provider.name)}</h3>
+                        <p className="text-xs text-[#53627a]">{t('Connected top-up route', 'مسار شحن متصل')}</p>
                       </div>
                       <Badge variant="outline" className={getStatusColor(provider.status)}>
                         {getStatusLabel(provider.status)}
@@ -2703,37 +2703,37 @@ export default function AdminDashboard() {
 
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
-                        <p className="text-xs text-white/50">{t('Success Rate', 'معدل النجاح')}</p>
+                        <p className="text-xs text-[#53627a]">{t('Success Rate', 'معدل النجاح')}</p>
                         <div className="flex items-center gap-2 mt-1">
                           <Progress value={provider.successRate} className="h-2" />
                           <span className="text-sm text-emerald-400">{provider.successRate}%</span>
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs text-white/50">{t('Avg Response', 'متوسط الاستجابة')}</p>
-                        <p className="text-sm text-white mt-1">{provider.avgResponseTime}s</p>
+                        <p className="text-xs text-[#53627a]">{t('Avg Response', 'متوسط الاستجابة')}</p>
+                        <p className="text-sm text-[#07152e] mt-1">{provider.avgResponseTime}s</p>
                       </div>
                       <div>
-                        <p className="text-xs text-white/50">{t('Available balance', 'الرصيد المتاح')}</p>
-                        <p className="text-sm text-white mt-1">
+                        <p className="text-xs text-[#53627a]">{t('Available balance', 'الرصيد المتاح')}</p>
+                        <p className="text-sm text-[#07152e] mt-1">
                           {formatCurrency(provider.availableBalance ?? provider.balance ?? 0)} {provider.currency ?? 'IQD'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs text-white/50">{t('Account type', 'نوع الحساب')}</p>
-                        <p className="text-sm text-white mt-1">{provider.accountType ?? '-'}</p>
+                        <p className="text-xs text-[#53627a]">{t('Account type', 'نوع الحساب')}</p>
+                        <p className="text-sm text-[#07152e] mt-1">{provider.accountType ?? '-'}</p>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between pt-4 border-t border-emerald-800/20">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-white/50">{t('Priority:', 'الأولوية:')}</span>
+                        <span className="text-xs text-[#53627a]">{t('Priority:', 'الأولوية:')}</span>
                         <Badge variant="outline" className="border-emerald-500/30 text-emerald-400">
                           #{provider.priority}
                         </Badge>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-white/50">{t('Active:', 'نشط:')}</span>
+                        <span className="text-xs text-[#53627a]">{t('Active:', 'نشط:')}</span>
                         <Switch
                           checked={provider.isActive}
                           disabled={isMutating}
@@ -2750,7 +2750,7 @@ export default function AdminDashboard() {
           {activeTab === 'promotions' && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-2xl font-bold text-white">{t('Promotions', 'العروض')}</h2>
+                <h2 className="text-2xl font-bold text-[#07152e]">{t('Promotions', 'العروض')}</h2>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button
                     variant="outline"
@@ -2771,10 +2771,10 @@ export default function AdminDashboard() {
               </div>
 
               <Dialog open={promotionDialogOpen} onOpenChange={setPromotionDialogOpen}>
-                <DialogContent className="border-emerald-800/30 bg-slate-950 text-white">
+                <DialogContent className="border-emerald-800/30 bg-white text-[#07152e]">
                   <DialogHeader>
                     <DialogTitle>{t('Create Promotion', 'إنشاء عرض')}</DialogTitle>
-                    <DialogDescription className="text-white/60">
+                    <DialogDescription className="text-[#53627a]">
                       {t('Create a recharge offer that can be shown on the offers page.', 'أنشئ عرض شحن يمكن عرضه في صفحة العروض.', '创建可显示在优惠页的充值优惠。')}
                     </DialogDescription>
                   </DialogHeader>
@@ -2786,7 +2786,7 @@ export default function AdminDashboard() {
                           id="promotion-code"
                           value={promotionForm.code}
                           onChange={(event) => setPromotionForm((current) => ({ ...current, code: event.target.value.toUpperCase() }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2795,7 +2795,7 @@ export default function AdminDashboard() {
                           id="promotion-type"
                           value={promotionForm.type}
                           onChange={(event) => setPromotionForm((current) => ({ ...current, type: event.target.value }))}
-                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                          className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                         >
                           <option value="percentage">{t('Percentage', 'نسبة', '百分比')}</option>
                           <option value="fixed">{t('Fixed', 'مبلغ ثابت', '固定金额')}</option>
@@ -2809,7 +2809,7 @@ export default function AdminDashboard() {
                           min="1"
                           value={promotionForm.value}
                           onChange={(event) => setPromotionForm((current) => ({ ...current, value: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2820,7 +2820,7 @@ export default function AdminDashboard() {
                           min="0"
                           value={promotionForm.minPurchase}
                           onChange={(event) => setPromotionForm((current) => ({ ...current, minPurchase: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2831,7 +2831,7 @@ export default function AdminDashboard() {
                           min="0"
                           value={promotionForm.maxDiscount}
                           onChange={(event) => setPromotionForm((current) => ({ ...current, maxDiscount: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2842,7 +2842,7 @@ export default function AdminDashboard() {
                           min="1"
                           value={promotionForm.usageLimit}
                           onChange={(event) => setPromotionForm((current) => ({ ...current, usageLimit: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                     </div>
@@ -2853,10 +2853,10 @@ export default function AdminDashboard() {
                         type="datetime-local"
                         value={promotionForm.endDate}
                         onChange={(event) => setPromotionForm((current) => ({ ...current, endDate: event.target.value }))}
-                        className="bg-slate-900 border-emerald-800/30 text-white"
+                        className="bg-white border-emerald-800/30 text-[#07152e]"
                       />
                     </div>
-                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-slate-900 px-3 py-2">
+                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-white px-3 py-2">
                       <Label htmlFor="promotion-active">{t('Active', 'نشط', '启用')}</Label>
                       <Switch
                         id="promotion-active"
@@ -2873,31 +2873,31 @@ export default function AdminDashboard() {
                 </DialogContent>
               </Dialog>
 
-              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+              <Card className="bg-[#f7faff] border-emerald-800/20 p-6">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
-                      <TableHead className="text-white/50">{t('Code', 'الكود')}</TableHead>
-                      <TableHead className="text-white/50">{t('Type', 'النوع')}</TableHead>
-                      <TableHead className="text-white/50">{t('Value', 'القيمة')}</TableHead>
-                      <TableHead className="text-white/50">{t('Usage', 'الاستخدام')}</TableHead>
-                      <TableHead className="text-white/50">{t('Valid Until', 'صالح حتى')}</TableHead>
-                      <TableHead className="text-white/50">{t('Status', 'الحالة')}</TableHead>
-                      <TableHead className="text-white/50">{t('Actions', 'الإجراءات')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Code', 'الكود')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Type', 'النوع')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Value', 'القيمة')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Usage', 'الاستخدام')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Valid Until', 'صالح حتى')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Status', 'الحالة')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Actions', 'الإجراءات')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {promotions.map((promo) => (
                       <TableRow key={promo.id} className="border-emerald-800/20">
                         <TableCell className="font-mono font-bold text-emerald-400">{promo.code}</TableCell>
-                        <TableCell className="text-white">{promo.type === 'percentage' ? '%' : t('Fixed', 'مبلغ ثابت')}</TableCell>
-                        <TableCell className="text-white">
+                        <TableCell className="text-[#07152e]">{promo.type === 'percentage' ? '%' : t('Fixed', 'مبلغ ثابت')}</TableCell>
+                        <TableCell className="text-[#07152e]">
                           {promo.type === 'percentage' ? `${promo.value}%` : `${formatCurrency(promo.value)} IQD`}
                         </TableCell>
-                        <TableCell className="text-white/70">
+                        <TableCell className="text-[#34445c]">
                           {promo.usedCount} / {promo.usageLimit}
                         </TableCell>
-                        <TableCell className="text-white/50 text-sm">
+                        <TableCell className="text-[#53627a] text-sm">
                           {new Date(promo.endDate).toLocaleDateString(locale)}
                         </TableCell>
                         <TableCell>
@@ -2923,7 +2923,7 @@ export default function AdminDashboard() {
           {activeTab === 'banners' && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-2xl font-bold text-white">{t('Banners', 'الإعلانات', '横幅')}</h2>
+                <h2 className="text-2xl font-bold text-[#07152e]">{t('Banners', 'الإعلانات', '横幅')}</h2>
                 <div className="flex flex-wrap items-center gap-3">
                   <Button
                     variant="outline"
@@ -2947,12 +2947,12 @@ export default function AdminDashboard() {
                 setBannerDialogOpen(open);
                 if (!open) setEditingBannerId(null);
               }}>
-                <DialogContent className="max-h-[90vh] overflow-y-auto border-emerald-800/30 bg-slate-950 text-white">
+                <DialogContent className="max-h-[90vh] overflow-y-auto border-emerald-800/30 bg-white text-[#07152e]">
                   <DialogHeader>
                     <DialogTitle>{editingBannerId
                       ? t('Edit banner', 'تعديل الإعلان', '编辑横幅')
                       : t('Create banner', 'إنشاء إعلان', '创建横幅')}</DialogTitle>
-                    <DialogDescription className="text-white/60">
+                    <DialogDescription className="text-[#53627a]">
                       {t('Add a homepage slide with separate desktop and mobile artwork.', 'أضف شريحة للصفحة الرئيسية بصور منفصلة للكمبيوتر والهاتف.', '添加首页轮播，并分别设置桌面和手机图片。')}
                     </DialogDescription>
                   </DialogHeader>
@@ -2964,7 +2964,7 @@ export default function AdminDashboard() {
                           id="banner-title"
                           value={bannerForm.title}
                           onChange={(event) => setBannerForm((current) => ({ ...current, title: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2973,7 +2973,7 @@ export default function AdminDashboard() {
                           id="banner-title-ar"
                           value={bannerForm.titleAr}
                           onChange={(event) => setBannerForm((current) => ({ ...current, titleAr: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -2982,7 +2982,7 @@ export default function AdminDashboard() {
                           id="banner-title-zh"
                           value={bannerForm.titleZh}
                           onChange={(event) => setBannerForm((current) => ({ ...current, titleZh: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                     </div>
@@ -2993,7 +2993,7 @@ export default function AdminDashboard() {
                           id="banner-subtitle"
                           value={bannerForm.subtitle}
                           onChange={(event) => setBannerForm((current) => ({ ...current, subtitle: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -3002,7 +3002,7 @@ export default function AdminDashboard() {
                           id="banner-subtitle-ar"
                           value={bannerForm.subtitleAr}
                           onChange={(event) => setBannerForm((current) => ({ ...current, subtitleAr: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -3011,7 +3011,7 @@ export default function AdminDashboard() {
                           id="banner-subtitle-zh"
                           value={bannerForm.subtitleZh}
                           onChange={(event) => setBannerForm((current) => ({ ...current, subtitleZh: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                     </div>
@@ -3022,7 +3022,7 @@ export default function AdminDashboard() {
                           id="banner-image"
                           value={bannerForm.image}
                           onChange={(event) => setBannerForm((current) => ({ ...current, image: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -3033,7 +3033,7 @@ export default function AdminDashboard() {
                           min="0"
                           value={bannerForm.order}
                           onChange={(event) => setBannerForm((current) => ({ ...current, order: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                     </div>
@@ -3044,7 +3044,7 @@ export default function AdminDashboard() {
                         value={bannerForm.mobileImage}
                         onChange={(event) => setBannerForm((current) => ({ ...current, mobileImage: event.target.value }))}
                         placeholder={t('Optional: desktop image is used when empty', 'اختياري: تستخدم صورة الكمبيوتر عند تركه فارغاً', '可选：留空时使用桌面图片')}
-                        className="bg-slate-900 border-emerald-800/30 text-white"
+                        className="bg-white border-emerald-800/30 text-[#07152e]"
                       />
                     </div>
                     <div className="space-y-2">
@@ -3053,7 +3053,7 @@ export default function AdminDashboard() {
                         id="banner-link"
                         value={bannerForm.link}
                         onChange={(event) => setBannerForm((current) => ({ ...current, link: event.target.value }))}
-                        className="bg-slate-900 border-emerald-800/30 text-white"
+                        className="bg-white border-emerald-800/30 text-[#07152e]"
                       />
                     </div>
                     <div className="space-y-2">
@@ -3062,7 +3062,7 @@ export default function AdminDashboard() {
                         id="banner-product"
                         value={bannerForm.gameId}
                         onChange={(event) => setBannerForm((current) => ({ ...current, gameId: event.target.value }))}
-                        className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                        className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                       >
                         <option value="">{t('No product: use the link only', 'بدون منتج: استخدم الرابط فقط', '无产品：仅使用链接')}</option>
                         {products.map((product) => (
@@ -3078,7 +3078,7 @@ export default function AdminDashboard() {
                           type="datetime-local"
                           value={bannerForm.startDate}
                           onChange={(event) => setBannerForm((current) => ({ ...current, startDate: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                       <div className="space-y-2">
@@ -3088,11 +3088,11 @@ export default function AdminDashboard() {
                           type="datetime-local"
                           value={bannerForm.endDate}
                           onChange={(event) => setBannerForm((current) => ({ ...current, endDate: event.target.value }))}
-                          className="bg-slate-900 border-emerald-800/30 text-white"
+                          className="bg-white border-emerald-800/30 text-[#07152e]"
                         />
                       </div>
                     </div>
-                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-slate-900 px-3 py-2">
+                    <div className="flex items-center justify-between rounded-md border border-emerald-800/30 bg-white px-3 py-2">
                       <Label htmlFor="banner-active">{t('Active', 'نشط', '启用')}</Label>
                       <Switch
                         id="banner-active"
@@ -3109,16 +3109,16 @@ export default function AdminDashboard() {
                 </DialogContent>
               </Dialog>
 
-              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+              <Card className="bg-[#f7faff] border-emerald-800/20 p-6">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
-                      <TableHead className="text-white/50">{t('Banner', 'الإعلان', '横幅')}</TableHead>
-                      <TableHead className="text-white/50">{t('Schedule', 'الجدولة', '计划')}</TableHead>
-                      <TableHead className="text-white/50">{t('Link', 'الرابط', '链接')}</TableHead>
-                      <TableHead className="text-white/50">{t('Order', 'الترتيب', '排序')}</TableHead>
-                      <TableHead className="text-white/50">{t('Status', 'الحالة', '状态')}</TableHead>
-                      <TableHead className="text-white/50">{t('Actions', 'الإجراءات', '操作')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Banner', 'الإعلان', '横幅')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Schedule', 'الجدولة', '计划')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Link', 'الرابط', '链接')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Order', 'الترتيب', '排序')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Status', 'الحالة', '状态')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Actions', 'الإجراءات', '操作')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -3126,25 +3126,25 @@ export default function AdminDashboard() {
                       <TableRow key={banner.id} className="border-emerald-800/20">
                         <TableCell>
                           <div className="flex min-w-0 items-center gap-3">
-                            <div className="h-12 w-20 flex-shrink-0 overflow-hidden rounded-md bg-slate-800 ring-1 ring-emerald-800/30">
+                            <div className="h-12 w-20 flex-shrink-0 overflow-hidden rounded-md bg-[#eef4fa] ring-1 ring-emerald-800/30">
                               <img src={banner.image} alt={banner.title} className="h-full w-full object-cover" />
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate font-semibold text-white">{t(banner.title, banner.titleAr, banner.titleZh)}</p>
+                              <p className="truncate font-semibold text-[#07152e]">{t(banner.title, banner.titleAr, banner.titleZh)}</p>
                               {banner.subtitle && (
-                                <p className="mt-1 max-w-xs truncate text-xs text-white/50">
+                                <p className="mt-1 max-w-xs truncate text-xs text-[#53627a]">
                                   {t(banner.subtitle, banner.subtitleAr ?? banner.subtitle, banner.subtitleZh ?? banner.subtitle)}
                                 </p>
                               )}
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-xs text-white/60">
+                        <TableCell className="text-xs text-[#53627a]">
                           <p>{formatDate(banner.startDate)}</p>
                           <p>{formatDate(banner.endDate)}</p>
                         </TableCell>
-                        <TableCell className="max-w-48 truncate text-white/70">{banner.link ?? '-'}</TableCell>
-                        <TableCell className="text-white/70">#{banner.order}</TableCell>
+                        <TableCell className="max-w-48 truncate text-[#34445c]">{banner.link ?? '-'}</TableCell>
+                        <TableCell className="text-[#34445c]">#{banner.order}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={banner.isActive ? getStatusColor('completed') : getStatusColor('failed')}>
                             {banner.isActive ? t('Active', 'نشط', '启用') : t('Inactive', 'غير نشط', '停用')}
@@ -3157,7 +3157,7 @@ export default function AdminDashboard() {
                               disabled={isMutating}
                               onCheckedChange={(checked) => void toggleBannerActive(banner.id, checked)}
                             />
-                            <Button type="button" size="sm" variant="outline" onClick={() => openBannerEditor(banner)} className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white">
+                            <Button type="button" size="sm" variant="outline" onClick={() => openBannerEditor(banner)} className="border-[#d9e1ec] bg-[#f7faff] text-[#07152e] hover:bg-[#eaf1f8] hover:text-[#07152e]">
                               <FilePenLine className="h-3.5 w-3.5" />
                               {t('Edit', 'تعديل', '编辑')}
                             </Button>
@@ -3174,7 +3174,7 @@ export default function AdminDashboard() {
           {activeTab === 'currencies' && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-2xl font-bold text-white">{t('Currency & exchange rates', 'العملات وأسعار الصرف', '货币和汇率')}</h2>
+                <h2 className="text-2xl font-bold text-[#07152e]">{t('Currency & exchange rates', 'العملات وأسعار الصرف', '货币和汇率')}</h2>
                 <Button
                   variant="outline"
                   onClick={() => void downloadAdminExport('currencies')}
@@ -3192,19 +3192,19 @@ export default function AdminDashboard() {
                 t={t}
               />
 
-              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+              <Card className="bg-[#f7faff] border-emerald-800/20 p-6">
                 <div className="mb-5">
-                  <h3 className="text-lg font-bold text-white">{t('Set a new exchange rate', 'تعيين سعر صرف جديد', '设置新汇率')}</h3>
-                  <p className="mt-1 text-sm text-white/50">{t('The new rate applies to every price from the selected minute until a newer rate starts.', 'يُطبق السعر الجديد على جميع الأسعار من الدقيقة المحددة حتى يبدأ سعر أحدث.', '新汇率从所选分钟起应用于所有价格，直到更新的汇率生效。')}</p>
+                  <h3 className="text-lg font-bold text-[#07152e]">{t('Set a new exchange rate', 'تعيين سعر صرف جديد', '设置新汇率')}</h3>
+                  <p className="mt-1 text-sm text-[#53627a]">{t('The new rate applies to every price from the selected minute until a newer rate starts.', 'يُطبق السعر الجديد على جميع الأسعار من الدقيقة المحددة حتى يبدأ سعر أحدث.', '新汇率从所选分钟起应用于所有价格，直到更新的汇率生效。')}</p>
                 </div>
                 <form onSubmit={updateExchangeRate} className="grid gap-4 md:grid-cols-2 xl:grid-cols-[0.75fr_0.75fr_0.8fr_1fr_1.1fr_auto] xl:items-end">
                   <div className="space-y-2">
-                    <Label htmlFor="rate-base" className="text-white/70">{t('Base', 'الأساس', '基础货币')}</Label>
+                    <Label htmlFor="rate-base" className="text-[#34445c]">{t('Base', 'الأساس', '基础货币')}</Label>
                     <select
                       id="rate-base"
                       value={exchangeRateForm.baseCurrencyCode}
                       onChange={(event) => setExchangeRateForm((current) => ({ ...current, baseCurrencyCode: event.target.value }))}
-                      className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                      className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                     >
                       {currencyOptions.filter((currency) => currency.code !== exchangeRateForm.quoteCurrencyCode).map((currency) => (
                         <option key={currency.code} value={currency.code}>{currency.code} - {currency.name}</option>
@@ -3212,7 +3212,7 @@ export default function AdminDashboard() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="rate-quote" className="text-white/70">{t('Quote', 'عملة التسعير', '计价货币')}</Label>
+                    <Label htmlFor="rate-quote" className="text-[#34445c]">{t('Quote', 'عملة التسعير', '计价货币')}</Label>
                     <select
                       id="rate-quote"
                       value={exchangeRateForm.quoteCurrencyCode}
@@ -3221,7 +3221,7 @@ export default function AdminDashboard() {
                         quoteCurrencyCode: event.target.value,
                         rate: String(getManagedExchangeRate(current.baseCurrencyCode, event.target.value) || current.rate),
                       }))}
-                      className="h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                      className="h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                     >
                       {currencyOptions.filter((currency) => currency.code !== exchangeRateForm.baseCurrencyCode).map((currency) => (
                         <option key={currency.code} value={currency.code}>
@@ -3231,7 +3231,7 @@ export default function AdminDashboard() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="rate-value" className="text-white/70">{t('Manual rate', 'سعر الصرف اليدوي', '手动汇率')}</Label>
+                    <Label htmlFor="rate-value" className="text-[#34445c]">{t('Manual rate', 'سعر الصرف اليدوي', '手动汇率')}</Label>
                     <Input
                       id="rate-value"
                       type="number"
@@ -3239,12 +3239,12 @@ export default function AdminDashboard() {
                       step="0.00000001"
                       value={exchangeRateForm.rate}
                       onChange={(event) => setExchangeRateForm((current) => ({ ...current, rate: event.target.value }))}
-                      className="bg-slate-900 border-emerald-800/30 text-white"
+                      className="bg-white border-emerald-800/30 text-[#07152e]"
                     />
-                    <p className="text-[11px] text-white/40">1 {exchangeRateForm.baseCurrencyCode} = {exchangeRateForm.rate || '0'} {exchangeRateForm.quoteCurrencyCode}</p>
+                    <p className="text-[11px] text-[#6b778a]">1 {exchangeRateForm.baseCurrencyCode} = {exchangeRateForm.rate || '0'} {exchangeRateForm.quoteCurrencyCode}</p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="rate-effective-from" className="text-white/70">{t('Valid from', 'صالح من', '生效时间')}</Label>
+                    <Label htmlFor="rate-effective-from" className="text-[#34445c]">{t('Valid from', 'صالح من', '生效时间')}</Label>
                     <Input
                       id="rate-effective-from"
                       type="datetime-local"
@@ -3252,16 +3252,16 @@ export default function AdminDashboard() {
                       value={exchangeRateForm.effectiveFrom}
                       onChange={(event) => setExchangeRateForm((current) => ({ ...current, effectiveFrom: event.target.value }))}
                       required
-                      className="bg-slate-900 border-emerald-800/30 text-white"
+                      className="bg-white border-emerald-800/30 text-[#07152e]"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="rate-note" className="text-white/70">{t('Note', 'ملاحظة', '备注')}</Label>
+                    <Label htmlFor="rate-note" className="text-[#34445c]">{t('Note', 'ملاحظة', '备注')}</Label>
                     <Input
                       id="rate-note"
                       value={exchangeRateForm.note}
                       onChange={(event) => setExchangeRateForm((current) => ({ ...current, note: event.target.value }))}
-                      className="bg-slate-900 border-emerald-800/30 text-white"
+                      className="bg-white border-emerald-800/30 text-[#07152e]"
                     />
                   </div>
                   <Button type="submit" disabled={isMutating} className="bg-emerald-600 hover:bg-emerald-500">
@@ -3271,28 +3271,28 @@ export default function AdminDashboard() {
               </Card>
 
               <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-                <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
-                  <h3 className="mb-4 text-lg font-bold text-white">{t('Countries and local currency', 'البلدان والعملة المحلية', '国家和本地货币')}</h3>
+                <Card className="bg-[#f7faff] border-emerald-800/20 p-6">
+                  <h3 className="mb-4 text-lg font-bold text-[#07152e]">{t('Countries and local currency', 'البلدان والعملة المحلية', '国家和本地货币')}</h3>
                   <Table>
                     <TableHeader>
                       <TableRow className="border-emerald-800/20">
-                        <TableHead className="text-white/50">{t('Country', 'البلد', '国家')}</TableHead>
-                        <TableHead className="text-white/50">{t('Phone', 'الهاتف', '电话')}</TableHead>
-                        <TableHead className="text-white/50">{t('Currency', 'العملة', '货币')}</TableHead>
-                        <TableHead className="text-white/50">{t('Rate', 'السعر', '汇率')}</TableHead>
-                        <TableHead className="text-white/50">{t('Active', 'نشط', '启用')}</TableHead>
+                        <TableHead className="text-[#53627a]">{t('Country', 'البلد', '国家')}</TableHead>
+                        <TableHead className="text-[#53627a]">{t('Phone', 'الهاتف', '电话')}</TableHead>
+                        <TableHead className="text-[#53627a]">{t('Currency', 'العملة', '货币')}</TableHead>
+                        <TableHead className="text-[#53627a]">{t('Rate', 'السعر', '汇率')}</TableHead>
+                        <TableHead className="text-[#53627a]">{t('Active', 'نشط', '启用')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {countries.map((country) => (
                         <TableRow key={country.id} className="border-emerald-800/20">
-                          <TableCell className="text-white">
+                          <TableCell className="text-[#07152e]">
                             <span className="mr-2">{country.flag}</span>
                             {t(country.name, country.nameAr, country.nameZh)}
                           </TableCell>
-                          <TableCell className="text-white/70">{country.phoneCode}</TableCell>
-                          <TableCell className="text-white/70">
-                            {country.currency} <span className="text-white/40">({country.currencySymbol})</span>
+                          <TableCell className="text-[#34445c]">{country.phoneCode}</TableCell>
+                          <TableCell className="text-[#34445c]">
+                            {country.currency} <span className="text-[#6b778a]">({country.currencySymbol})</span>
                           </TableCell>
                           <TableCell className="text-emerald-400">
                             {new Intl.NumberFormat('en-US', { maximumFractionDigits: 8 }).format(country.exchangeRate || 0)}
@@ -3310,9 +3310,9 @@ export default function AdminDashboard() {
                   </Table>
                 </Card>
 
-                <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
-                  <h3 className="mb-1 text-lg font-bold text-white">{t('Exchange-rate history', 'سجل أسعار الصرف', '汇率历史')}</h3>
-                  <p className="mb-4 text-xs leading-5 text-white/45">{t('Every change is kept for audit and historical order checks.', 'يتم الاحتفاظ بكل تغيير للتدقيق ومراجعة الطلبات السابقة.', '每次变更都会保留，用于审计和历史订单核对。')}</p>
+                <Card className="bg-[#f7faff] border-emerald-800/20 p-6">
+                  <h3 className="mb-1 text-lg font-bold text-[#07152e]">{t('Exchange-rate history', 'سجل أسعار الصرف', '汇率历史')}</h3>
+                  <p className="mb-4 text-xs leading-5 text-[#6b778a]">{t('Every change is kept for audit and historical order checks.', 'يتم الاحتفاظ بكل تغيير للتدقيق ومراجعة الطلبات السابقة.', '每次变更都会保留，用于审计和历史订单核对。')}</p>
                   <div className="space-y-3">
                     {exchangeRates.map((rate) => {
                       const now = Date.now();
@@ -3320,9 +3320,9 @@ export default function AdminDashboard() {
                       const ends = rate.effectiveUntil ? new Date(rate.effectiveUntil).getTime() : Number.POSITIVE_INFINITY;
                       const status = !rate.isActive ? 'inactive' : starts > now ? 'scheduled' : ends <= now ? 'expired' : 'current';
                       return (
-                      <div key={rate.id} className="rounded-lg border border-emerald-800/20 bg-slate-950/50 p-4">
+                      <div key={rate.id} className="rounded-lg border border-emerald-800/20 bg-[#f7faff] p-4">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="font-mono text-sm font-semibold text-white">
+                          <p className="font-mono text-sm font-semibold text-[#07152e]">
                             {rate.baseCurrencyCode} → {rate.quoteCurrencyCode}
                           </p>
                           <Badge variant="outline" className={status === 'current' ? getStatusColor('completed') : status === 'scheduled' ? getStatusColor('processing') : getStatusColor('failed')}>
@@ -3338,9 +3338,9 @@ export default function AdminDashboard() {
                         <p className="mt-2 text-2xl font-bold text-emerald-400">
                           {new Intl.NumberFormat('en-US', { maximumFractionDigits: 8 }).format(rate.rate)}
                         </p>
-                        <p className="mt-1 text-xs text-white/50">{t('From', 'من', '从')} {formatDate(rate.effectiveFrom)}</p>
-                        {rate.effectiveUntil && <p className="mt-1 text-xs text-white/40">{t('Until', 'حتى', '至')} {formatDate(rate.effectiveUntil)}</p>}
-                        {rate.note && <p className="mt-2 text-xs text-white/50">{rate.note}</p>}
+                        <p className="mt-1 text-xs text-[#53627a]">{t('From', 'من', '从')} {formatDate(rate.effectiveFrom)}</p>
+                        {rate.effectiveUntil && <p className="mt-1 text-xs text-[#6b778a]">{t('Until', 'حتى', '至')} {formatDate(rate.effectiveUntil)}</p>}
+                        {rate.note && <p className="mt-2 text-xs text-[#53627a]">{rate.note}</p>}
                       </div>
                     );})}
                   </div>
@@ -3352,7 +3352,7 @@ export default function AdminDashboard() {
           {activeTab === 'users' && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-2xl font-bold text-white">{t('Users', 'المستخدمين')}</h2>
+                <h2 className="text-2xl font-bold text-[#07152e]">{t('Users', 'المستخدمين')}</h2>
                 <Button
                   variant="outline"
                   onClick={() => void downloadAdminExport('users')}
@@ -3362,26 +3362,26 @@ export default function AdminDashboard() {
                   {t('Export', 'تصدير')}
                 </Button>
               </div>
-              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+              <Card className="bg-[#f7faff] border-emerald-800/20 p-6">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
-                      <TableHead className="text-white/50">{t('Name', 'الاسم')}</TableHead>
-                      <TableHead className="text-white/50">{t('Phone Number', 'رقم الهاتف')}</TableHead>
-                      <TableHead className="text-white/50">{t('Access', 'الصلاحيات', '权限')}</TableHead>
-                      <TableHead className="text-white/50">{t('Wallet', 'المحفظة')}</TableHead>
-                      <TableHead className="text-white/50">{t('Total Spent', 'إجمالي الإنفاق')}</TableHead>
-                      <TableHead className="text-white/50">{t('Type', 'النوع', '类型')}</TableHead>
-                      <TableHead className="text-white/50">{t('Status', 'الحالة')}</TableHead>
-                      <TableHead className="text-white/50">{t('Last Login', 'آخر دخول')}</TableHead>
-                      <TableHead className="text-white/50">{t('Blocked', 'محظور', '已封锁')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Name', 'الاسم')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Phone Number', 'رقم الهاتف')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Access', 'الصلاحيات', '权限')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Wallet', 'المحفظة')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Total Spent', 'إجمالي الإنفاق')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Type', 'النوع', '类型')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Status', 'الحالة')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Last Login', 'آخر دخول')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Blocked', 'محظور', '已封锁')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {users.map((account) => (
                       <TableRow key={account.id} className="border-emerald-800/20">
-                        <TableCell className="text-white">{account.name}</TableCell>
-                        <TableCell className="text-white/70">{account.phone}</TableCell>
+                        <TableCell className="text-[#07152e]">{account.name}</TableCell>
+                        <TableCell className="text-[#34445c]">{account.phone}</TableCell>
                         <TableCell>
                           <div className="flex min-w-36 flex-col gap-2">
                             <select
@@ -3397,7 +3397,7 @@ export default function AdminDashboard() {
                                   account.staffPermissions ?? []
                                 );
                               }}
-                              className="h-9 rounded-md border border-emerald-800/30 bg-slate-950 px-2 text-xs text-white disabled:opacity-40"
+                              className="h-9 rounded-md border border-emerald-800/30 bg-white px-2 text-xs text-[#07152e] disabled:opacity-40"
                             >
                               <option value="USER">{t('Customer', 'عميل', '客户')}</option>
                               <option value="STAFF">{t('Staff', 'موظف', '员工')}</option>
@@ -3413,7 +3413,7 @@ export default function AdminDashboard() {
                                   event.target.value as StaffRoleValue,
                                   account.staffPermissions ?? []
                                 )}
-                                className="h-9 rounded-md border border-emerald-800/30 bg-slate-950 px-2 text-xs text-white disabled:opacity-40"
+                                className="h-9 rounded-md border border-emerald-800/30 bg-white px-2 text-xs text-[#07152e] disabled:opacity-40"
                               >
                                 {staffRoleOptions.map((role) => (
                                   <option key={role} value={role}>{role}</option>
@@ -3423,13 +3423,13 @@ export default function AdminDashboard() {
                           </div>
                         </TableCell>
                         <TableCell className="text-emerald-400">{formatCurrency(account.walletBalance)} IQD</TableCell>
-                        <TableCell className="text-white/70">{formatCurrency(account.totalSpent)} IQD</TableCell>
+                        <TableCell className="text-[#34445c]">{formatCurrency(account.totalSpent)} IQD</TableCell>
                         <TableCell>
                           <select
                             value={(account.accountType ?? 'customer').toUpperCase()}
                             disabled={isMutating || account.role === 'admin'}
                             onChange={(event) => void updateUserAccountType(account.id, event.target.value as 'CUSTOMER' | 'DISTRIBUTOR')}
-                            className="h-9 rounded-md border border-emerald-800/30 bg-slate-950 px-2 text-xs text-white disabled:opacity-40"
+                            className="h-9 rounded-md border border-emerald-800/30 bg-white px-2 text-xs text-[#07152e] disabled:opacity-40"
                           >
                             <option value="CUSTOMER">{t('Customer', 'عميل', '客户')}</option>
                             <option value="DISTRIBUTOR">{t('Distributor', 'موزع', '分销商')}</option>
@@ -3440,10 +3440,10 @@ export default function AdminDashboard() {
                             {account.isBlocked ? t('Blocked', 'محظور', '已封锁') : t('Active', 'نشط', '启用')}
                           </Badge>
                           {account.blockedReason && (
-                            <p className="mt-1 max-w-48 truncate text-xs text-white/40">{account.blockedReason}</p>
+                            <p className="mt-1 max-w-48 truncate text-xs text-[#6b778a]">{account.blockedReason}</p>
                           )}
                         </TableCell>
-                        <TableCell className="text-white/50 text-sm">{formatDate(account.lastLogin)}</TableCell>
+                        <TableCell className="text-[#53627a] text-sm">{formatDate(account.lastLogin)}</TableCell>
                         <TableCell>
                           <Switch
                             checked={account.isBlocked}
@@ -3475,7 +3475,7 @@ export default function AdminDashboard() {
           {activeTab === 'wallets' && (
             <div className="space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-2xl font-bold text-white">{t('Wallets', 'المحافظ')}</h2>
+                <h2 className="text-2xl font-bold text-[#07152e]">{t('Wallets', 'المحافظ')}</h2>
                 <Button
                   variant="outline"
                   onClick={() => void downloadAdminExport('wallets')}
@@ -3485,35 +3485,35 @@ export default function AdminDashboard() {
                   {t('Export', 'تصدير')}
                 </Button>
               </div>
-              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+              <Card className="bg-[#f7faff] border-emerald-800/20 p-6">
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <h3 className="font-semibold text-white">{t('Manual deposits', 'الإيداعات اليدوية', '手动充值')}</h3>
-                    <p className="text-xs text-white/50">
+                    <h3 className="font-semibold text-[#07152e]">{t('Manual deposits', 'الإيداعات اليدوية', '手动充值')}</h3>
+                    <p className="text-xs text-[#53627a]">
                       {t('Approve deposits only after matching the Transaction ID in the payment account.', 'اعتمد الإيداعات فقط بعد مطابقة رقم المعاملة في حساب الدفع.', '仅在付款账号中核对交易 ID 后批准充值。')}
                     </p>
                   </div>
-                  <Badge variant="outline" className="border-amber-500/30 text-amber-300">
+                  <Badge variant="outline" className="border-amber-500/40 text-amber-800">
                     {manualDeposits.filter((deposit) => deposit.status === 'pending').length} {t('pending', 'قيد الانتظار', '待处理')}
                   </Badge>
                 </div>
                 <Table>
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
-                      <TableHead className="text-white/50">{t('Transaction ID', 'رقم المعاملة', '交易 ID')}</TableHead>
-                      <TableHead className="text-white/50">{t('User', 'المستخدم', '用户')}</TableHead>
-                      <TableHead className="text-white/50">{t('Method', 'الطريقة', '方式')}</TableHead>
-                      <TableHead className="text-white/50">{t('Amount', 'المبلغ', '金额')}</TableHead>
-                      <TableHead className="text-white/50">{t('Status', 'الحالة', '状态')}</TableHead>
-                      <TableHead className="text-right text-white/50">{t('Action', 'الإجراء', '操作')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Transaction ID', 'رقم المعاملة', '交易 ID')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('User', 'المستخدم', '用户')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Method', 'الطريقة', '方式')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Amount', 'المبلغ', '金额')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Status', 'الحالة', '状态')}</TableHead>
+                      <TableHead className="text-right text-[#53627a]">{t('Action', 'الإجراء', '操作')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {manualDeposits.map((deposit) => (
                       <TableRow key={deposit.id} className="border-emerald-800/20">
-                        <TableCell className="font-mono text-xs text-white/80">{deposit.transactionId}</TableCell>
-                        <TableCell className="text-white/70">{deposit.userPhone ?? deposit.userId}</TableCell>
-                        <TableCell className="text-white/70">{deposit.paymentMethod}</TableCell>
+                        <TableCell className="font-mono text-xs text-[#34445c]">{deposit.transactionId}</TableCell>
+                        <TableCell className="text-[#34445c]">{deposit.userPhone ?? deposit.userId}</TableCell>
+                        <TableCell className="text-[#34445c]">{deposit.paymentMethod}</TableCell>
                         <TableCell className="text-emerald-400">{formatCurrency(deposit.amount)} {deposit.currency}</TableCell>
                         <TableCell>
                           <Badge
@@ -3545,20 +3545,20 @@ export default function AdminDashboard() {
                                 variant="outline"
                                 disabled={isMutating}
                                 onClick={() => void reviewManualDeposit(deposit.id, 'REJECTED')}
-                                className="border-rose-500/30 text-rose-300 hover:bg-rose-500/10"
+                                className="border-rose-500/30 text-rose-700 hover:bg-rose-50"
                               >
                                 {t('Reject', 'رفض', '拒绝')}
                               </Button>
                             </div>
                           ) : (
-                            <span className="text-xs text-white/40">{deposit.reviewedAt ? formatDate(deposit.reviewedAt) : '-'}</span>
+                            <span className="text-xs text-[#6b778a]">{deposit.reviewedAt ? formatDate(deposit.reviewedAt) : '-'}</span>
                           )}
                         </TableCell>
                       </TableRow>
                     ))}
                     {manualDeposits.length === 0 && (
                       <TableRow className="border-emerald-800/20">
-                        <TableCell colSpan={6} className="py-8 text-center text-white/50">
+                        <TableCell colSpan={6} className="py-8 text-center text-[#53627a]">
                           {t('No manual deposits yet', 'لا توجد إيداعات يدوية بعد', '暂无手动充值')}
                         </TableCell>
                       </TableRow>
@@ -3566,27 +3566,27 @@ export default function AdminDashboard() {
                   </TableBody>
                 </Table>
               </Card>
-              <Card className="bg-slate-900/50 border-emerald-800/20 p-6">
+              <Card className="bg-[#f7faff] border-emerald-800/20 p-6">
                 <Table>
                   <TableHeader>
                     <TableRow className="border-emerald-800/20">
-                      <TableHead className="text-white/50">{t('Reference', 'المرجع')}</TableHead>
-                      <TableHead className="text-white/50">{t('Description', 'الوصف')}</TableHead>
-                      <TableHead className="text-white/50">{t('Amount', 'المبلغ')}</TableHead>
-                      <TableHead className="text-white/50">{t('Balance', 'الرصيد')}</TableHead>
-                      <TableHead className="text-white/50">{t('Date', 'التاريخ')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Reference', 'المرجع')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Description', 'الوصف')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Amount', 'المبلغ')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Balance', 'الرصيد')}</TableHead>
+                      <TableHead className="text-[#53627a]">{t('Date', 'التاريخ')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {walletTransactions.map((transaction) => (
                       <TableRow key={transaction.id} className="border-emerald-800/20">
-                        <TableCell className="font-mono text-xs text-white/70">{transaction.reference ?? transaction.id}</TableCell>
-                        <TableCell className="text-white">{t(transaction.description, transaction.descriptionAr)}</TableCell>
+                        <TableCell className="font-mono text-xs text-[#34445c]">{transaction.reference ?? transaction.id}</TableCell>
+                        <TableCell className="text-[#07152e]">{t(transaction.description, transaction.descriptionAr)}</TableCell>
                         <TableCell className={transaction.amount >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
                           {transaction.amount >= 0 ? '+' : ''}{formatCurrency(transaction.amount)} IQD
                         </TableCell>
-                        <TableCell className="text-white/70">{formatCurrency(transaction.balance)} IQD</TableCell>
-                        <TableCell className="text-white/50 text-sm">{formatDate(transaction.createdAt)}</TableCell>
+                        <TableCell className="text-[#34445c]">{formatCurrency(transaction.balance)} IQD</TableCell>
+                        <TableCell className="text-[#53627a] text-sm">{formatDate(transaction.createdAt)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -3599,8 +3599,8 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">{t('Reports', 'التقارير', '报表')}</h2>
-                  <p className="mt-1 text-sm text-white/50">
+                  <h2 className="text-2xl font-bold text-[#07152e]">{t('Reports', 'التقارير', '报表')}</h2>
+                  <p className="mt-1 text-sm text-[#53627a]">
                     {t(
                       'Revenue, orders, refunds, deposits, and new users from live database records.',
                       'الإيرادات والطلبات والاستردادات والإيداعات والمستخدمون الجدد من سجلات قاعدة البيانات.',
@@ -3609,7 +3609,7 @@ export default function AdminDashboard() {
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="flex rounded-xl border border-emerald-800/30 bg-slate-950/40 p-1">
+                  <div className="flex rounded-xl border border-emerald-800/30 bg-[#f7faff] p-1">
                     {reportPeriodOptions.map((period) => {
                       const label = {
                         daily: t('Daily', 'يومي', '每日'),
@@ -3626,7 +3626,7 @@ export default function AdminDashboard() {
                           className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors sm:text-sm ${
                             reportPeriod === period
                               ? 'bg-emerald-500 text-slate-950'
-                              : 'text-white/60 hover:bg-slate-800/70 hover:text-white'
+                              : 'text-[#53627a] hover:bg-[#eaf1f8] hover:text-[#07152e]'
                           }`}
                         >
                           {label}
@@ -3646,8 +3646,8 @@ export default function AdminDashboard() {
               </div>
 
               {isReportLoading && (
-                <Card className="border-emerald-800/20 bg-slate-900/50 p-6">
-                  <p className="text-sm text-white/60">{t('Loading report data...', 'جاري تحميل بيانات التقرير...', '正在加载报表数据...')}</p>
+                <Card className="border-emerald-800/20 bg-[#f7faff] p-6">
+                  <p className="text-sm text-[#53627a]">{t('Loading report data...', 'جاري تحميل بيانات التقرير...', '正在加载报表数据...')}</p>
                 </Card>
               )}
 
@@ -3680,12 +3680,12 @@ export default function AdminDashboard() {
                         icon: Users,
                       },
                     ].map((metric) => (
-                      <Card key={metric.label} className="border-emerald-800/20 bg-slate-900/50 p-5">
+                      <Card key={metric.label} className="border-emerald-800/20 bg-[#f7faff] p-5">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="text-xs text-white/50">{metric.label}</p>
-                            <p className="mt-1 text-2xl font-bold text-white">{metric.value}</p>
-                            <p className="mt-2 text-xs text-white/40">{metric.detail}</p>
+                            <p className="text-xs text-[#53627a]">{metric.label}</p>
+                            <p className="mt-1 text-2xl font-bold text-[#07152e]">{metric.value}</p>
+                            <p className="mt-2 text-xs text-[#6b778a]">{metric.detail}</p>
                           </div>
                           <div className="rounded-lg bg-emerald-500/10 p-2">
                             <metric.icon className="h-5 w-5 text-emerald-400" />
@@ -3695,62 +3695,62 @@ export default function AdminDashboard() {
                     ))}
                   </div>
 
-                  <Card className="border-emerald-800/20 bg-slate-900/50 p-6">
+                  <Card className="border-emerald-800/20 bg-[#f7faff] p-6">
                     <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div>
-                        <h3 className="text-lg font-bold text-white">{t('Report range', 'نطاق التقرير', '报表范围')}</h3>
-                        <p className="text-sm text-white/50">
+                        <h3 className="text-lg font-bold text-[#07152e]">{t('Report range', 'نطاق التقرير', '报表范围')}</h3>
+                        <p className="text-sm text-[#53627a]">
                           {formatShortDate(adminReport.from)} - {formatShortDate(adminReport.to)}
                         </p>
                       </div>
-                      <p className="text-xs text-white/40">
+                      <p className="text-xs text-[#6b778a]">
                         {t('Grouped by selected period', 'مجمعة حسب الفترة المحددة', '按所选周期分组')}
                       </p>
                     </div>
                     <div className="flex h-72 items-end gap-2 overflow-x-auto pb-2">
                       {adminReport.buckets.map((bucket) => (
                         <div key={bucket.key} className="flex min-w-12 flex-1 flex-col items-center gap-2">
-                          <div className="flex h-56 w-full items-end rounded-t-lg bg-slate-950/40">
+                          <div className="flex h-56 w-full items-end rounded-t-lg bg-[#f7faff]">
                             <div
                               className="w-full rounded-t-lg bg-gradient-to-t from-emerald-500 to-teal-300 transition-opacity hover:opacity-80"
                               style={{ height: `${Math.max(4, (bucket.revenue / reportMaxRevenue) * 100)}%` }}
                               title={`${bucket.label}: ${formatCurrency(bucket.revenue)} IQD`}
                             />
                           </div>
-                          <span className="max-w-20 truncate text-center text-[10px] text-white/50">{bucket.label}</span>
+                          <span className="max-w-20 truncate text-center text-[10px] text-[#53627a]">{bucket.label}</span>
                         </div>
                       ))}
                     </div>
                   </Card>
 
-                  <Card className="overflow-hidden border-emerald-800/20 bg-slate-900/50 p-0">
+                  <Card className="overflow-hidden border-emerald-800/20 bg-[#f7faff] p-0">
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow className="border-emerald-800/20">
-                            <TableHead className="text-white/50">{t('Period', 'الفترة', '周期')}</TableHead>
-                            <TableHead className="text-white/50">{t('Orders', 'الطلبات', '订单')}</TableHead>
-                            <TableHead className="text-white/50">{t('Completed', 'مكتملة', '已完成')}</TableHead>
-                            <TableHead className="text-white/50">{t('Failed/refunded', 'فاشلة/مستردة', '失败/退款')}</TableHead>
-                            <TableHead className="text-white/50">{t('Revenue', 'الإيرادات', '收入')}</TableHead>
-                            <TableHead className="text-white/50">{t('Manual deposits', 'الإيداعات اليدوية', '手动充值')}</TableHead>
-                            <TableHead className="text-white/50">{t('New users', 'مستخدمون جدد', '新用户')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Period', 'الفترة', '周期')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Orders', 'الطلبات', '订单')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Completed', 'مكتملة', '已完成')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Failed/refunded', 'فاشلة/مستردة', '失败/退款')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Revenue', 'الإيرادات', '收入')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Manual deposits', 'الإيداعات اليدوية', '手动充值')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('New users', 'مستخدمون جدد', '新用户')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {adminReport.buckets.map((bucket) => (
                             <TableRow key={bucket.key} className="border-emerald-800/20">
-                              <TableCell className="min-w-36 text-white">{bucket.label}</TableCell>
-                              <TableCell className="text-white/70">{formatCurrency(bucket.orders)}</TableCell>
+                              <TableCell className="min-w-36 text-[#07152e]">{bucket.label}</TableCell>
+                              <TableCell className="text-[#34445c]">{formatCurrency(bucket.orders)}</TableCell>
                               <TableCell className="text-emerald-400">{formatCurrency(bucket.completedOrders)}</TableCell>
-                              <TableCell className="text-white/70">
+                              <TableCell className="text-[#34445c]">
                                 {formatCurrency(bucket.failedOrders)} / {formatCurrency(bucket.refundedOrders)}
                               </TableCell>
                               <TableCell className="font-medium text-emerald-400">{formatCurrency(bucket.revenue)} IQD</TableCell>
-                              <TableCell className="text-white/70">
+                              <TableCell className="text-[#34445c]">
                                 {formatCurrency(bucket.manualDepositAmount)} IQD
                               </TableCell>
-                              <TableCell className="text-white/70">{formatCurrency(bucket.newUsers)}</TableCell>
+                              <TableCell className="text-[#34445c]">{formatCurrency(bucket.newUsers)}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -3761,8 +3761,8 @@ export default function AdminDashboard() {
               )}
 
               {!isReportLoading && !adminReport && (
-                <Card className="border-emerald-800/20 bg-slate-900/50 p-6">
-                  <p className="text-sm text-white/60">{t('Report data is unavailable.', 'بيانات التقرير غير متاحة.', '报表数据不可用。')}</p>
+                <Card className="border-emerald-800/20 bg-[#f7faff] p-6">
+                  <p className="text-sm text-[#53627a]">{t('Report data is unavailable.', 'بيانات التقرير غير متاحة.', '报表数据不可用。')}</p>
                 </Card>
               )}
             </div>
@@ -3772,8 +3772,8 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-white">{t('Monitoring', 'المراقبة', '监控')}</h2>
-                  <p className="mt-1 text-sm text-white/50">
+                  <h2 className="text-2xl font-bold text-[#07152e]">{t('Monitoring', 'المراقبة', '监控')}</h2>
+                  <p className="mt-1 text-sm text-[#53627a]">
                     {t(
                       'Uptime checks, error events, and log retention for the production environment.',
                       'فحوصات التوفر وأحداث الأخطاء واحتفاظ السجلات لبيئة الإنتاج.',
@@ -3810,8 +3810,8 @@ export default function AdminDashboard() {
               </div>
 
               {isMonitoringLoading && (
-                <Card className="border-emerald-800/20 bg-slate-900/50 p-6">
-                  <p className="text-sm text-white/60">{t('Loading monitoring data...', 'جاري تحميل بيانات المراقبة...', '正在加载监控数据...')}</p>
+                <Card className="border-emerald-800/20 bg-[#f7faff] p-6">
+                  <p className="text-sm text-[#53627a]">{t('Loading monitoring data...', 'جاري تحميل بيانات المراقبة...', '正在加载监控数据...')}</p>
                 </Card>
               )}
 
@@ -3848,12 +3848,12 @@ export default function AdminDashboard() {
                         icon: Zap,
                       },
                     ].map((metric) => (
-                      <Card key={metric.label} className="border-emerald-800/20 bg-slate-900/50 p-5">
+                      <Card key={metric.label} className="border-emerald-800/20 bg-[#f7faff] p-5">
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="text-xs text-white/50">{metric.label}</p>
-                            <p className="mt-1 text-2xl font-bold text-white">{formatCurrency(metric.value)}</p>
-                            <p className="mt-2 text-xs text-white/40">{metric.detail}</p>
+                            <p className="text-xs text-[#53627a]">{metric.label}</p>
+                            <p className="mt-1 text-2xl font-bold text-[#07152e]">{formatCurrency(metric.value)}</p>
+                            <p className="mt-2 text-xs text-[#6b778a]">{metric.detail}</p>
                           </div>
                           <div className="rounded-lg bg-emerald-500/10 p-2">
                             <metric.icon className="h-5 w-5 text-emerald-400" />
@@ -3864,11 +3864,11 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.4fr_1fr]">
-                    <Card className="border-emerald-800/20 bg-slate-900/50 p-5">
+                    <Card className="border-emerald-800/20 bg-[#f7faff] p-5">
                       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                         <div>
-                          <h3 className="text-lg font-bold text-white">{t('External hooks', 'الربط الخارجي', '外部接口')}</h3>
-                          <p className="mt-2 break-all rounded-lg border border-emerald-800/20 bg-slate-950/50 px-3 py-2 text-xs text-emerald-300">
+                          <h3 className="text-lg font-bold text-[#07152e]">{t('External hooks', 'الربط الخارجي', '外部接口')}</h3>
+                          <p className="mt-2 break-all rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs text-emerald-800">
                             {monitoringDashboard.external.healthEndpoint}
                           </p>
                         </div>
@@ -3883,24 +3883,24 @@ export default function AdminDashboard() {
                       </div>
                     </Card>
 
-                    <Card className="border-emerald-800/20 bg-slate-900/50 p-5">
+                    <Card className="border-emerald-800/20 bg-[#f7faff] p-5">
                       <form onSubmit={updateMonitoringSettings} className="space-y-4">
                         <div>
-                          <h3 className="text-lg font-bold text-white">{t('Log retention', 'احتفاظ السجلات', '日志保留')}</h3>
-                          <p className="mt-1 text-xs text-white/40">
+                          <h3 className="text-lg font-bold text-[#07152e]">{t('Log retention', 'احتفاظ السجلات', '日志保留')}</h3>
+                          <p className="mt-1 text-xs text-[#6b778a]">
                             {t('Current events are retained by the configured period.', 'يتم الاحتفاظ بالأحداث حسب المدة المحددة.', '事件按配置周期保留。')}
                           </p>
                         </div>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
                           <div>
-                            <Label className="text-white/70">{t('Retention days', 'أيام الاحتفاظ', '保留天数')}</Label>
+                            <Label className="text-[#34445c]">{t('Retention days', 'أيام الاحتفاظ', '保留天数')}</Label>
                             <Input
                               type="number"
                               min="1"
                               max="365"
                               value={monitoringSettingsForm.logRetentionDays}
                               onChange={(event) => setMonitoringSettingsForm({ ...monitoringSettingsForm, logRetentionDays: event.target.value })}
-                              className="mt-2 bg-slate-950/60 border-emerald-800/30 text-white"
+                              className="mt-2 bg-white/95 border-emerald-800/30 text-[#07152e]"
                             />
                           </div>
                           <div className="flex items-end gap-2">
@@ -3908,7 +3908,7 @@ export default function AdminDashboard() {
                               checked={monitoringSettingsForm.uptimeEnabled}
                               onCheckedChange={(checked) => setMonitoringSettingsForm({ ...monitoringSettingsForm, uptimeEnabled: checked })}
                             />
-                            <span className="pb-2 text-sm text-white/60">{t('Uptime', 'التوفر', '可用性')}</span>
+                            <span className="pb-2 text-sm text-[#53627a]">{t('Uptime', 'التوفر', '可用性')}</span>
                           </div>
                         </div>
                         <div className="flex flex-col gap-2 sm:flex-row">
@@ -3920,7 +3920,7 @@ export default function AdminDashboard() {
                             variant="outline"
                             onClick={() => void pruneMonitoringLogs()}
                             disabled={isMutating}
-                            className="border-amber-500/30 text-amber-300"
+                            className="border-amber-500/40 text-amber-800"
                           >
                             {t('Prune logs', 'تنظيف السجلات', '清理日志')}
                           </Button>
@@ -3929,11 +3929,11 @@ export default function AdminDashboard() {
                     </Card>
                   </div>
 
-                  <Card className="overflow-hidden border-emerald-800/20 bg-slate-900/50 p-0">
+                  <Card className="overflow-hidden border-emerald-800/20 bg-[#f7faff] p-0">
                     <div className="flex items-center justify-between gap-4 border-b border-emerald-800/20 p-5">
                       <div>
-                        <h3 className="text-lg font-bold text-white">{t('Uptime targets', 'أهداف التوفر', '可用性目标')}</h3>
-                        <p className="mt-1 text-xs text-white/40">
+                        <h3 className="text-lg font-bold text-[#07152e]">{t('Uptime targets', 'أهداف التوفر', '可用性目标')}</h3>
+                        <p className="mt-1 text-xs text-[#6b778a]">
                           {t('Configured checks for the app and external dependencies.', 'فحوصات مكونة للتطبيق والاعتمادات الخارجية.', '应用和外部依赖的检查目标。')}
                         </p>
                       </div>
@@ -3942,28 +3942,28 @@ export default function AdminDashboard() {
                       <Table>
                         <TableHeader>
                           <TableRow className="border-emerald-800/20">
-                            <TableHead className="text-white/50">{t('Target', 'الهدف', '目标')}</TableHead>
-                            <TableHead className="text-white/50">{t('Status', 'الحالة', '状态')}</TableHead>
-                            <TableHead className="text-white/50">{t('Last check', 'آخر فحص', '上次检查')}</TableHead>
-                            <TableHead className="text-white/50">{t('Latency', 'الزمن', '延迟')}</TableHead>
-                            <TableHead className="text-white/50">{t('Actions', 'الإجراءات', '操作')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Target', 'الهدف', '目标')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Status', 'الحالة', '状态')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Last check', 'آخر فحص', '上次检查')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Latency', 'الزمن', '延迟')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Actions', 'الإجراءات', '操作')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {monitoringDashboard.targets.map((target) => (
                             <TableRow key={target.id} className="border-emerald-800/20">
                               <TableCell className="min-w-72">
-                                <div className="font-medium text-white">{target.name}</div>
-                                <div className="mt-1 max-w-md truncate text-xs text-white/40">{target.method} {target.url}</div>
-                                {target.lastError && <div className="mt-1 text-xs text-rose-300">{target.lastError}</div>}
+                                <div className="font-medium text-[#07152e]">{target.name}</div>
+                                <div className="mt-1 max-w-md truncate text-xs text-[#6b778a]">{target.method} {target.url}</div>
+                                {target.lastError && <div className="mt-1 text-xs text-rose-700">{target.lastError}</div>}
                               </TableCell>
                               <TableCell>
                                 <Badge className={getStatusColor(target.lastStatus)}>{getStatusLabel(target.lastStatus)}</Badge>
                               </TableCell>
-                              <TableCell className="text-white/60">
+                              <TableCell className="text-[#53627a]">
                                 {target.lastCheckedAt ? formatDate(target.lastCheckedAt) : t('Not checked', 'لم يتم الفحص', '未检查')}
                               </TableCell>
-                              <TableCell className="text-white/60">
+                              <TableCell className="text-[#53627a]">
                                 {target.lastLatencyMs !== undefined ? `${target.lastLatencyMs} ms` : '-'}
                               </TableCell>
                               <TableCell>
@@ -3983,7 +3983,7 @@ export default function AdminDashboard() {
                                     variant="outline"
                                     onClick={() => void updateMonitoringTarget(target.id, { isActive: !target.isActive })}
                                     disabled={isMutating}
-                                    className="border-white/20 text-white/70"
+                                    className="border-[#d9e1ec] text-[#34445c]"
                                   >
                                     {target.isActive ? t('Pause', 'إيقاف', '暂停') : t('Enable', 'تفعيل', '启用')}
                                   </Button>
@@ -3992,7 +3992,7 @@ export default function AdminDashboard() {
                                     variant="outline"
                                     onClick={() => void deleteMonitoringTarget(target.id)}
                                     disabled={isMutating}
-                                    className="border-rose-500/30 text-rose-300"
+                                    className="border-rose-500/30 text-rose-700"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </Button>
@@ -4002,7 +4002,7 @@ export default function AdminDashboard() {
                           ))}
                           {!monitoringDashboard.targets.length && (
                             <TableRow className="border-emerald-800/20">
-                              <TableCell colSpan={5} className="py-8 text-center text-white/50">
+                              <TableCell colSpan={5} className="py-8 text-center text-[#53627a]">
                                 {t('No monitoring targets configured.', 'لا توجد أهداف مراقبة مكونة.', '尚未配置监控目标。')}
                               </TableCell>
                             </TableRow>
@@ -4012,36 +4012,36 @@ export default function AdminDashboard() {
                     </div>
                   </Card>
 
-                  <Card className="overflow-hidden border-emerald-800/20 bg-slate-900/50 p-0">
+                  <Card className="overflow-hidden border-emerald-800/20 bg-[#f7faff] p-0">
                     <div className="border-b border-emerald-800/20 p-5">
-                      <h3 className="text-lg font-bold text-white">{t('Recent events', 'الأحداث الأخيرة', '最近事件')}</h3>
+                      <h3 className="text-lg font-bold text-[#07152e]">{t('Recent events', 'الأحداث الأخيرة', '最近事件')}</h3>
                     </div>
                     <div className="overflow-x-auto">
                       <Table>
                         <TableHeader>
                           <TableRow className="border-emerald-800/20">
-                            <TableHead className="text-white/50">{t('Time', 'الوقت', '时间')}</TableHead>
-                            <TableHead className="text-white/50">{t('Severity', 'الخطورة', '级别')}</TableHead>
-                            <TableHead className="text-white/50">{t('Source', 'المصدر', '来源')}</TableHead>
-                            <TableHead className="text-white/50">{t('Message', 'الرسالة', '消息')}</TableHead>
-                            <TableHead className="text-white/50">{t('Target', 'الهدف', '目标')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Time', 'الوقت', '时间')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Severity', 'الخطورة', '级别')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Source', 'المصدر', '来源')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Message', 'الرسالة', '消息')}</TableHead>
+                            <TableHead className="text-[#53627a]">{t('Target', 'الهدف', '目标')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {monitoringDashboard.events.map((event) => (
                             <TableRow key={event.id} className="border-emerald-800/20">
-                              <TableCell className="min-w-40 text-white/60">{formatDate(event.createdAt)}</TableCell>
+                              <TableCell className="min-w-40 text-[#53627a]">{formatDate(event.createdAt)}</TableCell>
                               <TableCell>
                                 <Badge className={getStatusColor(event.severity)}>{getStatusLabel(event.severity)}</Badge>
                               </TableCell>
-                              <TableCell className="text-white/70">{event.source}</TableCell>
-                              <TableCell className="min-w-80 text-white">{event.message}</TableCell>
-                              <TableCell className="text-white/60">{event.targetName ?? event.path ?? '-'}</TableCell>
+                              <TableCell className="text-[#34445c]">{event.source}</TableCell>
+                              <TableCell className="min-w-80 text-[#07152e]">{event.message}</TableCell>
+                              <TableCell className="text-[#53627a]">{event.targetName ?? event.path ?? '-'}</TableCell>
                             </TableRow>
                           ))}
                           {!monitoringDashboard.events.length && (
                             <TableRow className="border-emerald-800/20">
-                              <TableCell colSpan={5} className="py-8 text-center text-white/50">
+                              <TableCell colSpan={5} className="py-8 text-center text-[#53627a]">
                                 {t('No monitoring events yet.', 'لا توجد أحداث مراقبة بعد.', '暂无监控事件。')}
                               </TableCell>
                             </TableRow>
@@ -4052,75 +4052,75 @@ export default function AdminDashboard() {
                   </Card>
 
                   <Dialog open={monitoringDialogOpen} onOpenChange={setMonitoringDialogOpen}>
-                    <DialogContent className="border-emerald-800/30 bg-slate-950 text-white">
+                    <DialogContent className="border-emerald-800/30 bg-white text-[#07152e]">
                       <DialogHeader>
                         <DialogTitle>{t('Add monitoring target', 'إضافة هدف مراقبة', '添加监控目标')}</DialogTitle>
-                        <DialogDescription className="text-white/60">
+                        <DialogDescription className="text-[#53627a]">
                           {t('Create a production uptime check for this app or an external dependency.', 'أنشئ فحص توفر للإنتاج لهذا التطبيق أو اعتماد خارجي.', '为此应用或外部依赖创建生产可用性检查。')}
                         </DialogDescription>
                       </DialogHeader>
                       <form onSubmit={createMonitoringTarget} className="space-y-4">
                         <div>
-                          <Label className="text-white/70">{t('Name', 'الاسم', '名称')}</Label>
+                          <Label className="text-[#34445c]">{t('Name', 'الاسم', '名称')}</Label>
                           <Input
                             value={monitoringForm.name}
                             onChange={(event) => setMonitoringForm({ ...monitoringForm, name: event.target.value })}
-                            className="mt-2 bg-slate-900 border-emerald-800/30 text-white"
+                            className="mt-2 bg-white border-emerald-800/30 text-[#07152e]"
                           />
                         </div>
                         <div>
-                          <Label className="text-white/70">{t('URL', 'الرابط', '网址')}</Label>
+                          <Label className="text-[#34445c]">{t('URL', 'الرابط', '网址')}</Label>
                           <Input
                             value={monitoringForm.url}
                             onChange={(event) => setMonitoringForm({ ...monitoringForm, url: event.target.value })}
-                            className="mt-2 bg-slate-900 border-emerald-800/30 text-white"
+                            className="mt-2 bg-white border-emerald-800/30 text-[#07152e]"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <Label className="text-white/70">{t('Expected status', 'الحالة المتوقعة', '预期状态')}</Label>
+                            <Label className="text-[#34445c]">{t('Expected status', 'الحالة المتوقعة', '预期状态')}</Label>
                             <Input
                               type="number"
                               min="100"
                               max="599"
                               value={monitoringForm.expectedStatus}
                               onChange={(event) => setMonitoringForm({ ...monitoringForm, expectedStatus: event.target.value })}
-                              className="mt-2 bg-slate-900 border-emerald-800/30 text-white"
+                              className="mt-2 bg-white border-emerald-800/30 text-[#07152e]"
                             />
                           </div>
                           <div>
-                            <Label className="text-white/70">{t('Interval minutes', 'الدقائق بين الفحوصات', '间隔分钟')}</Label>
+                            <Label className="text-[#34445c]">{t('Interval minutes', 'الدقائق بين الفحوصات', '间隔分钟')}</Label>
                             <Input
                               type="number"
                               min="1"
                               max="1440"
                               value={monitoringForm.intervalMinutes}
                               onChange={(event) => setMonitoringForm({ ...monitoringForm, intervalMinutes: event.target.value })}
-                              className="mt-2 bg-slate-900 border-emerald-800/30 text-white"
+                              className="mt-2 bg-white border-emerald-800/30 text-[#07152e]"
                             />
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <Label className="text-white/70">{t('Method', 'الطريقة', '方法')}</Label>
+                            <Label className="text-[#34445c]">{t('Method', 'الطريقة', '方法')}</Label>
                             <select
                               value={monitoringForm.method}
                               onChange={(event) => setMonitoringForm({ ...monitoringForm, method: event.target.value })}
-                              className="mt-2 h-10 w-full rounded-md border border-emerald-800/30 bg-slate-900 px-3 text-sm text-white"
+                              className="mt-2 h-10 w-full rounded-md border border-emerald-800/30 bg-white px-3 text-sm text-[#07152e]"
                             >
                               <option value="GET">GET</option>
                               <option value="HEAD">HEAD</option>
                             </select>
                           </div>
                           <div>
-                            <Label className="text-white/70">{t('Timeout ms', 'مهلة ms', '超时毫秒')}</Label>
+                            <Label className="text-[#34445c]">{t('Timeout ms', 'مهلة ms', '超时毫秒')}</Label>
                             <Input
                               type="number"
                               min="1000"
                               max="30000"
                               value={monitoringForm.timeoutMs}
                               onChange={(event) => setMonitoringForm({ ...monitoringForm, timeoutMs: event.target.value })}
-                              className="mt-2 bg-slate-900 border-emerald-800/30 text-white"
+                              className="mt-2 bg-white border-emerald-800/30 text-[#07152e]"
                             />
                           </div>
                         </div>
@@ -4129,7 +4129,7 @@ export default function AdminDashboard() {
                             checked={monitoringForm.isActive}
                             onCheckedChange={(checked) => setMonitoringForm({ ...monitoringForm, isActive: checked })}
                           />
-                          <span className="text-sm text-white/70">{t('Active', 'نشط', '启用')}</span>
+                          <span className="text-sm text-[#34445c]">{t('Active', 'نشط', '启用')}</span>
                         </div>
                         <DialogFooter>
                           <Button type="button" variant="outline" onClick={() => setMonitoringDialogOpen(false)}>
@@ -4149,11 +4149,11 @@ export default function AdminDashboard() {
 
           {activeTab !== 'overview' && activeTab !== 'orders' && activeTab !== 'categories' && activeTab !== 'products' && activeTab !== 'pricing' && activeTab !== 'providers' && activeTab !== 'promotions' && activeTab !== 'banners' && activeTab !== 'currencies' && activeTab !== 'reports' && activeTab !== 'monitoring' && activeTab !== 'users' && activeTab !== 'access' && activeTab !== 'content' && activeTab !== 'wallets' && (
             <div className="flex flex-col items-center justify-center h-96">
-              <div className="w-20 h-20 rounded-full bg-slate-800/50 flex items-center justify-center mb-4">
-                <Activity className="w-10 h-10 text-white/20" />
+              <div className="w-20 h-20 rounded-full bg-[#eef4fa] flex items-center justify-center mb-4">
+                <Activity className="w-10 h-10 text-[#8b96a6]" />
               </div>
-              <h3 className="text-xl font-semibold text-white">{t('Coming Soon', 'قريباً')}</h3>
-              <p className="text-sm text-white/50 mt-1">
+              <h3 className="text-xl font-semibold text-[#07152e]">{t('Coming Soon', 'قريباً')}</h3>
+              <p className="text-sm text-[#53627a] mt-1">
                 {t('This section is under development', 'هذا القسم قيد التطوير')}
               </p>
             </div>
