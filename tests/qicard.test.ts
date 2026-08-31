@@ -2,19 +2,18 @@ import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { generateKeyPairSync, sign } from 'node:crypto';
 import { join } from 'node:path';
-import { NextRequest } from 'next/server';
-import { POST as handleQiCardWebhook } from '../src/app/api/webhooks/qicard/route';
 import {
   QiCardClient,
+  assertQiCardWebhookMatchesProvider,
   buildQiCardCallbackUrls,
   buildQiCardWebhookSigningString,
   classifyQiCardPayment,
+  getQiCardWebhookVerificationMode,
   getQiCardWebhookReadiness,
   getPublicRequestOrigin,
   isQiCardCheckoutEnabled,
   isQiCardWebhookEnabled,
   resolveQiCardConfig,
-  shouldAcknowledgeQiCardWebhookWhileDisabled,
   verifyQiCardWebhookSignature,
   type QiCardPayment,
 } from '../src/server/payments/qicard';
@@ -34,6 +33,14 @@ const completeEnv = {
   QICARD_TERMINAL_ID: '237984',
   QICARD_WEBHOOK_PUBLIC_KEY: qiWebhookTestKey,
   APP_BASE_URL: 'https://merchant.example',
+};
+
+const onboardingEnv = {
+  ...completeEnv,
+  NODE_ENV: 'production',
+  QICARD_ENABLED: 'false',
+  QICARD_WEBHOOK_MODE: 'onboarding',
+  QICARD_WEBHOOK_PUBLIC_KEY: '',
 };
 
 const createdPayment: QiCardPayment = {
@@ -99,6 +106,7 @@ describe('QiCard configuration', () => {
     const readiness = getQiCardWebhookReadiness({
       ...completeEnv,
       NODE_ENV: 'production',
+      QICARD_ENABLED: 'false',
       QICARD_BASE_URL: 'https://merchant-api.qi.example/api/v1',
       APP_BASE_URL: 'https://alwasl-digital-b8ngg.ondigitalocean.app',
     });
@@ -107,6 +115,9 @@ describe('QiCard configuration', () => {
       provider: 'qicard',
       configured: true,
       environment: 'production',
+      mode: 'production',
+      verification: 'signature-and-provider-api',
+      checkoutEnabled: false,
       webhookUrl: 'https://alwasl-digital-b8ngg.ondigitalocean.app/api/webhooks/qicard',
     });
     expect(JSON.stringify(readiness)).not.toContain('merchant-password');
@@ -127,15 +138,33 @@ describe('QiCard configuration', () => {
     expect(getQiCardWebhookReadiness(webhookOnlyEnv)).toMatchObject({
       configured: true,
       environment: 'production',
+      verification: 'signature-and-provider-api',
     });
   });
 
-  test('acknowledges without side effects only when checkout and webhook processing are both disabled', () => {
-    expect(shouldAcknowledgeQiCardWebhookWhileDisabled({ QICARD_ENABLED: 'false' })).toBe(true);
-    expect(shouldAcknowledgeQiCardWebhookWhileDisabled({ QICARD_ENABLED: 'true' })).toBe(false);
-    expect(shouldAcknowledgeQiCardWebhookWhileDisabled({
-      ...completeEnv,
-      QICARD_ENABLED: 'false',
+  test('enables provider-verified onboarding only for the official QiCard sandbox', () => {
+    expect(isQiCardCheckoutEnabled(onboardingEnv)).toBe(false);
+    expect(isQiCardWebhookEnabled(onboardingEnv)).toBe(true);
+    expect(getQiCardWebhookVerificationMode(onboardingEnv)).toBe('PROVIDER_API');
+    expect(getQiCardWebhookReadiness(onboardingEnv)).toMatchObject({
+      configured: true,
+      environment: 'sandbox',
+      mode: 'onboarding',
+      verification: 'provider-api',
+      checkoutEnabled: false,
+    });
+
+    expect(isQiCardWebhookEnabled({
+      ...onboardingEnv,
+      QICARD_WEBHOOK_MODE: 'disabled',
+    })).toBe(false);
+    expect(isQiCardWebhookEnabled({
+      ...onboardingEnv,
+      QICARD_BASE_URL: 'https://sandbox.attacker.example/api/v1',
+    })).toBe(false);
+    expect(isQiCardWebhookEnabled({
+      ...onboardingEnv,
+      QICARD_WEBHOOK_PUBLIC_KEY: 'malformed-key',
     })).toBe(false);
   });
 
@@ -177,6 +206,9 @@ describe('QiCard application contract', () => {
     expect(schema).toContain('providerRequestId');
     expect(schema).toContain('model PaymentWebhookEvent');
     expect(schema).toContain('eventKey');
+    expect(schema).toContain('providerVerified');
+    expect(schema).toContain('verificationMethod');
+    expect(schema).toContain('disposition');
     expect(schema).toContain('model PaymentRefund');
     expect(schema).toContain('requestId');
   });
@@ -193,8 +225,10 @@ describe('QiCard application contract', () => {
     expect(cancelRoute).toContain('requireUser');
     expect(webhookRoute).toContain('processQiCardWebhook');
     expect(webhookRoute).toContain('getQiCardWebhookReadiness');
+    expect(webhookRoute).toContain('assertRateLimit');
     expect(webhookRoute).toContain('export async function GET');
     expect(webhookRoute).not.toContain('requireUser');
+    expect(webhookRoute).not.toContain('shouldAcknowledgeQiCardWebhookWhileDisabled');
   });
 });
 
@@ -272,30 +306,20 @@ describe('QiCard REST client', () => {
 });
 
 describe('QiCard webhook verification and status mapping', () => {
-  test('returns 200 without side effects for a well-formed notification while QiCard is disabled', async () => {
-    const previousEnabled = process.env.QICARD_ENABLED;
-    const previousPublicKey = process.env.QICARD_WEBHOOK_PUBLIC_KEY;
-    process.env.QICARD_ENABLED = 'false';
-    delete process.env.QICARD_WEBHOOK_PUBLIC_KEY;
+  test('requires an exact provider match while tolerating QiCard timezone presentation differences', () => {
+    expect(() => assertQiCardWebhookMatchesProvider(
+      { ...createdPayment, creationDate: '2025-02-26T17:13:51' },
+      { ...createdPayment, creationDate: '2025-02-26T14:13:51' },
+    )).not.toThrow();
 
-    try {
-      const response = await handleQiCardWebhook(new NextRequest('https://merchant.example/api/webhooks/qicard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...createdPayment,
-          formUrl: undefined,
-        }),
-      }));
-
-      expect(response.status).toBe(200);
-      expect(await response.json()).toEqual({ received: true, replayed: false, ignored: true });
-    } finally {
-      if (previousEnabled === undefined) delete process.env.QICARD_ENABLED;
-      else process.env.QICARD_ENABLED = previousEnabled;
-      if (previousPublicKey === undefined) delete process.env.QICARD_WEBHOOK_PUBLIC_KEY;
-      else process.env.QICARD_WEBHOOK_PUBLIC_KEY = previousPublicKey;
-    }
+    expect(() => assertQiCardWebhookMatchesProvider(
+      { ...createdPayment, status: 'SUCCESS' },
+      { ...createdPayment, status: 'FAILED' },
+    )).toThrow('QICARD_PAYMENT_MISMATCH');
+    expect(() => assertQiCardWebhookMatchesProvider(
+      createdPayment,
+      { ...createdPayment, amount: createdPayment.amount + 1 },
+    )).toThrow('QICARD_PAYMENT_MISMATCH');
   });
 
   test('reconstructs the official IQD signing string and verifies RSA-SHA256', () => {

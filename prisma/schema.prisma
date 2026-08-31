@@ -104,6 +104,16 @@ enum PaymentWebhookProcessingStatus {
   FAILED
 }
 
+enum PaymentWebhookVerificationMethod {
+  SIGNATURE_AND_PROVIDER_API
+  PROVIDER_API
+}
+
+enum PaymentWebhookDisposition {
+  ORDER_RECONCILED
+  PROVIDER_TEST_VERIFIED
+}
+
 enum PaymentRefundStatus {
   PENDING
   PROCESSING
@@ -524,22 +534,31 @@ model PaymentAttempt {
 }
 
 model PaymentWebhookEvent {
-  id                String                         @id @default(cuid())
-  provider          String                         @default("QICARD")
-  eventKey          String                         @unique
-  providerPaymentId String
-  providerStatus    String
-  payloadHash       String
-  signatureHash     String
-  signatureValid    Boolean
-  processingStatus  PaymentWebhookProcessingStatus @default(RECEIVED)
-  paymentAttemptId  String?
-  paymentAttempt    PaymentAttempt?                @relation(fields: [paymentAttemptId], references: [id], onDelete: SetNull)
-  error             String?
-  receivedAt        DateTime                       @default(now())
-  processedAt       DateTime?
+  id                 String                            @id @default(cuid())
+  provider           String                            @default("QICARD")
+  eventKey           String                            @unique
+  providerPaymentId  String
+  providerRequestId  String?
+  providerStatus     String
+  amount             Decimal?                          @db.Decimal(18, 3)
+  currency           String?
+  providerCreatedAt  String?
+  sourceIpHash       String?
+  payloadHash        String
+  signatureHash      String
+  signatureValid     Boolean
+  providerVerified   Boolean                           @default(false)
+  verificationMethod PaymentWebhookVerificationMethod?
+  disposition        PaymentWebhookDisposition?
+  processingStatus   PaymentWebhookProcessingStatus    @default(RECEIVED)
+  paymentAttemptId   String?
+  paymentAttempt     PaymentAttempt?                   @relation(fields: [paymentAttemptId], references: [id], onDelete: SetNull)
+  error              String?
+  receivedAt         DateTime                          @default(now())
+  processedAt        DateTime?
 
   @@index([providerPaymentId, receivedAt])
+  @@index([providerRequestId, receivedAt])
   @@index([processingStatus, receivedAt])
   @@index([paymentAttemptId, receivedAt])
   @@map("payment_webhook_events")
@@ -868,25 +887,25 @@ model Country {
 }
 
 model ExchangeRate {
-  id                String   @id @default(cuid())
+  id                String    @id @default(cuid())
   baseCurrencyCode  String
-  baseCurrency      Currency @relation("ExchangeRateBaseCurrency", fields: [baseCurrencyCode], references: [code], onDelete: Restrict)
+  baseCurrency      Currency  @relation("ExchangeRateBaseCurrency", fields: [baseCurrencyCode], references: [code], onDelete: Restrict)
   quoteCurrencyCode String
-  quoteCurrency     Currency @relation("ExchangeRateQuoteCurrency", fields: [quoteCurrencyCode], references: [code], onDelete: Restrict)
-  rate              Decimal  @db.Decimal(18, 8)
-  isActive          Boolean  @default(true)
-  source            String   @default("manual")
+  quoteCurrency     Currency  @relation("ExchangeRateQuoteCurrency", fields: [quoteCurrencyCode], references: [code], onDelete: Restrict)
+  rate              Decimal   @db.Decimal(18, 8)
+  isActive          Boolean   @default(true)
+  source            String    @default("manual")
   note              String?
   updatedByAdminId  String?
-  updatedByAdmin    User?    @relation("ExchangeRateUpdatedBy", fields: [updatedByAdminId], references: [id], onDelete: SetNull)
-  effectiveFrom     DateTime @default(now())
+  updatedByAdmin    User?     @relation("ExchangeRateUpdatedBy", fields: [updatedByAdminId], references: [id], onDelete: SetNull)
+  effectiveFrom     DateTime  @default(now())
   effectiveUntil    DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
+  @@unique([baseCurrencyCode, quoteCurrencyCode, effectiveFrom])
   /// Exchange rate CHECK constraints are enforced in migration 20260620140000_add_currency_exchange_management.
   @@index([isActive, baseCurrencyCode, quoteCurrencyCode])
-  @@unique([baseCurrencyCode, quoteCurrencyCode, effectiveFrom])
   @@index([isActive, effectiveFrom, effectiveUntil])
   @@index([updatedByAdminId, updatedAt])
   @@map("exchange_rates")

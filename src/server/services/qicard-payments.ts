@@ -3,15 +3,18 @@ import { Prisma, type Order, type User } from '@prisma/client';
 import { prisma } from '../prisma';
 import {
   QiCardClient,
+  assertQiCardWebhookMatchesProvider,
   buildQiCardCallbackUrls,
   classifyQiCardPayment,
   createQiCardClient,
+  getQiCardWebhookVerificationMode,
   isQiCardWebhookEnabled,
   parseQiCardPaymentPayload,
   resolveQiCardConfig,
   verifyQiCardWebhookSignature,
   type QiCardPayment,
   type QiCardRefund,
+  type QiCardWebhookVerificationMethod,
 } from '../payments/qicard';
 import { fulfillPaidOrder, syncMembershipForUser } from './orders';
 import { notifyPaymentReceivedForOrder, notifyTopupFailureForOrder } from './whatsapp-notifications';
@@ -40,6 +43,7 @@ interface ProcessWebhookInput {
   rawBody: string;
   signature: string | null;
   terminalId: string | null;
+  sourceIp?: string | null;
 }
 
 const MAX_WEBHOOK_BODY_BYTES = 64 * 1024;
@@ -57,8 +61,11 @@ function resolveWebhookDependencies(dependencies: QiCardDependencies = {}) {
   const env = dependencies.env ?? process.env;
   if (!isQiCardWebhookEnabled(env)) throw new Error('QICARD_WEBHOOK_NOT_CONFIGURED');
   const config = resolveQiCardConfig(env);
+  const verificationMethod = getQiCardWebhookVerificationMode(env);
+  if (!verificationMethod) throw new Error('QICARD_WEBHOOK_NOT_CONFIGURED');
   return {
     config,
+    verificationMethod,
     // Checkout can be disabled while callbacks for already-created payments
     // still need to be authenticated and reconciled.
     client: dependencies.client ?? new QiCardClient(config),
@@ -67,6 +74,25 @@ function resolveWebhookDependencies(dependencies: QiCardDependencies = {}) {
 
 function sha256(value: string) {
   return createHash('sha256').update(value).digest('hex');
+}
+
+function buildWebhookEventKey(
+  payment: QiCardPayment,
+  verificationMethod: QiCardWebhookVerificationMethod,
+  validationMarker: string,
+) {
+  return sha256([
+    'QICARD',
+    verificationMethod,
+    validationMarker,
+    payment.paymentId,
+    payment.requestId,
+    payment.status.toUpperCase(),
+    payment.canceled ? 'cancelled' : 'active',
+    String(payment.amount),
+    payment.currency.toUpperCase(),
+    payment.confirmedAmount === undefined ? '' : String(payment.confirmedAmount),
+  ].join(':'));
 }
 
 function safeLocale(locale: string | undefined) {
@@ -351,13 +377,7 @@ export async function processQiCardWebhook(
   if (Buffer.byteLength(input.rawBody, 'utf8') > MAX_WEBHOOK_BODY_BYTES) {
     throw new Error('QICARD_WEBHOOK_TOO_LARGE');
   }
-  const { client, config } = resolveWebhookDependencies(dependencies);
-  if (!config.webhookPublicKey) throw new Error('QICARD_WEBHOOK_NOT_CONFIGURED');
-  // QiCard documents X-Signature as the webhook authentication header. Some
-  // environments also send X-Terminal-Id; validate it when present.
-  if (input.terminalId && input.terminalId !== config.terminalId) {
-    throw new Error('QICARD_WEBHOOK_TERMINAL_INVALID');
-  }
+  const { client, config, verificationMethod } = resolveWebhookDependencies(dependencies);
 
   let parsedBody: unknown;
   try {
@@ -368,16 +388,32 @@ export async function processQiCardWebhook(
   const payment = parseQiCardPaymentPayload(parsedBody);
   const payloadHash = sha256(input.rawBody);
   const signatureHash = sha256(input.signature || 'missing');
-  const signatureValid = verifyQiCardWebhookSignature(payment, input.signature, config.webhookPublicKey);
-  const eventKey = sha256(
-    `QICARD:${payment.paymentId}:${payment.creationDate}:${payment.status}:${payloadHash}:${signatureValid ? 'valid' : 'invalid'}`,
-  );
+  const signatureValid = verificationMethod === 'SIGNATURE_AND_PROVIDER_API'
+    && verifyQiCardWebhookSignature(payment, input.signature, config.webhookPublicKey);
+  const terminalValid = Boolean(input.terminalId) && input.terminalId === config.terminalId;
+  const validationError = !terminalValid
+    ? 'QICARD_WEBHOOK_TERMINAL_INVALID'
+    : verificationMethod === 'SIGNATURE_AND_PROVIDER_API' && !signatureValid
+      ? 'QICARD_WEBHOOK_SIGNATURE_INVALID'
+      : null;
+  const validationMarker = !terminalValid
+    ? `terminal-rejected-${sha256(input.terminalId || 'missing')}`
+    : verificationMethod === 'SIGNATURE_AND_PROVIDER_API' && !signatureValid
+      ? `signature-rejected-${signatureHash}`
+      : 'accepted';
+  const eventKey = buildWebhookEventKey(payment, verificationMethod, validationMarker);
   const attempt = await prisma.paymentAttempt.findFirst({
     where: {
       method: 'QICARD',
       OR: [{ providerRef: payment.paymentId }, { providerRequestId: payment.requestId }],
     },
-    select: { id: true },
+    select: {
+      id: true,
+      providerRef: true,
+      providerRequestId: true,
+      amount: true,
+      currency: true,
+    },
   });
 
   const event = await prisma.paymentWebhookEvent.upsert({
@@ -386,63 +422,81 @@ export async function processQiCardWebhook(
     create: {
       eventKey,
       providerPaymentId: payment.paymentId,
+      providerRequestId: payment.requestId,
       providerStatus: payment.status,
+      amount: payment.amount,
+      currency: payment.currency.toUpperCase(),
+      providerCreatedAt: payment.creationDate,
+      sourceIpHash: input.sourceIp ? sha256(input.sourceIp) : undefined,
       payloadHash,
       signatureHash,
       signatureValid,
-      processingStatus: signatureValid ? 'RECEIVED' : 'REJECTED',
+      providerVerified: false,
+      verificationMethod,
+      processingStatus: validationError ? 'REJECTED' : 'RECEIVED',
       paymentAttemptId: attempt?.id,
-      error: signatureValid ? undefined : 'QICARD_WEBHOOK_SIGNATURE_INVALID',
-      processedAt: signatureValid ? undefined : new Date(),
+      error: validationError || undefined,
+      processedAt: validationError ? new Date() : undefined,
     },
   });
 
-  if (!signatureValid || !event.signatureValid) {
-    throw new Error('QICARD_WEBHOOK_SIGNATURE_INVALID');
-  }
+  if (validationError) throw new Error(validationError);
   if (event.processingStatus === 'PROCESSED') {
-    return { replayed: true };
+    if (event.disposition === 'PROVIDER_TEST_VERIFIED') {
+      return { replayed: true, ignored: true, verified: true };
+    }
+    return { replayed: true, verified: true };
   }
 
-  // QiCard may send signed onboarding probes that were not created by this
-  // application. Acknowledge those without querying Qi or mutating an order.
-  if (!attempt) {
+  let providerVerified = false;
+  try {
+    // A callback only announces a state change. The authenticated Qi API is
+    // always the source of truth before acknowledging or mutating an order.
+    const authoritativePayment = await client.getPaymentStatus(payment.paymentId);
+    assertQiCardWebhookMatchesProvider(payment, authoritativePayment);
+    providerVerified = true;
     await prisma.paymentWebhookEvent.update({
       where: { id: event.id },
       data: {
-        processingStatus: 'PROCESSED',
-        processedAt: new Date(),
-        error: 'QICARD_PAYMENT_NOT_FOUND',
+        providerVerified: true,
+        providerStatus: authoritativePayment.status,
       },
     });
-    return { replayed: false, ignored: true };
-  }
 
-  try {
-    // The webhook announces a state change; the authenticated Qi API remains
-    // the source of truth before any order is fulfilled.
-    const authoritativePayment = await client.getPaymentStatus(payment.paymentId);
-    assertMatchingPayment({
-      providerRef: payment.paymentId,
-      providerRequestId: payment.requestId,
-      amount: payment.amount,
-      currency: payment.currency,
-    }, authoritativePayment);
+    // QiCard acceptance/onboarding payments are real provider records but are
+    // intentionally isolated from customer orders and financial ledgers.
+    if (!attempt) {
+      await prisma.paymentWebhookEvent.update({
+        where: { id: event.id },
+        data: {
+          disposition: 'PROVIDER_TEST_VERIFIED',
+          processingStatus: 'PROCESSED',
+          processedAt: new Date(),
+          error: null,
+        },
+      });
+      return { replayed: false, ignored: true, verified: true };
+    }
+
+    assertMatchingPayment(attempt, authoritativePayment);
     const order = await reconcileQiCardPayment(authoritativePayment);
     await prisma.paymentWebhookEvent.update({
       where: { id: event.id },
       data: {
         providerStatus: authoritativePayment.status,
+        providerVerified: true,
+        disposition: 'ORDER_RECONCILED',
         processingStatus: 'PROCESSED',
         processedAt: new Date(),
         error: null,
       },
     });
-    return { order, replayed: false };
+    return { order, replayed: false, verified: true };
   } catch (error) {
     await prisma.paymentWebhookEvent.update({
       where: { id: event.id },
       data: {
+        providerVerified,
         processingStatus: 'FAILED',
         processedAt: new Date(),
         error: error instanceof Error ? error.message.slice(0, 160) : 'QICARD_WEBHOOK_PROCESSING_FAILED',

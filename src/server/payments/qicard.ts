@@ -2,6 +2,7 @@ import { createPublicKey, createVerify } from 'node:crypto';
 import { z } from 'zod';
 
 const DEFAULT_TIMEOUT_MS = 15_000;
+const OFFICIAL_QICARD_SANDBOX_BASE_URL = 'https://uat-sandbox-3ds-api.qi.iq/api/v1';
 
 const paymentSchema = z.object({
   requestId: z.string().min(1),
@@ -49,6 +50,7 @@ const failedStatuses = new Set([
 export type QiCardPayment = z.infer<typeof paymentSchema>;
 export type QiCardRefund = z.infer<typeof refundSchema>;
 export type QiCardPaymentClassification = 'pending' | 'paid' | 'failed' | 'cancelled' | 'unknown';
+export type QiCardWebhookVerificationMethod = 'SIGNATURE_AND_PROVIDER_API' | 'PROVIDER_API';
 
 export interface QiCardConfig {
   baseUrl: string;
@@ -117,10 +119,18 @@ export function getQiCardWebhookReadiness(env: QiCardEnvironment = process.env) 
       webhookUrl = buildQiCardCallbackUrls(env.APP_BASE_URL, 'readiness').notificationUrl;
     }
     const config = resolveQiCardConfig(env);
+    const verificationMode = getQiCardWebhookVerificationMode(env);
     return {
       provider: 'qicard' as const,
-      configured: isQiCardWebhookEnabled(env),
+      configured: verificationMode !== null,
       environment: config.environment,
+      mode: env.QICARD_WEBHOOK_MODE === 'onboarding' ? 'onboarding' as const : 'production' as const,
+      verification: verificationMode === 'PROVIDER_API'
+        ? 'provider-api' as const
+        : verificationMode === 'SIGNATURE_AND_PROVIDER_API'
+          ? 'signature-and-provider-api' as const
+          : 'unconfigured' as const,
+      checkoutEnabled: isQiCardCheckoutEnabled(env),
       webhookUrl: buildQiCardCallbackUrls(config.appBaseUrl, 'readiness').notificationUrl,
     };
   } catch {
@@ -128,6 +138,9 @@ export function getQiCardWebhookReadiness(env: QiCardEnvironment = process.env) 
       provider: 'qicard' as const,
       configured: false,
       environment: 'unconfigured' as const,
+      mode: 'disabled' as const,
+      verification: 'unconfigured' as const,
+      checkoutEnabled: false,
       ...(webhookUrl ? { webhookUrl } : {}),
     };
   }
@@ -193,6 +206,7 @@ export function resolveQiCardConfig(env: QiCardEnvironment = process.env): QiCar
 
 export function isQiCardCheckoutEnabled(env: QiCardEnvironment = process.env) {
   if (env.QICARD_ENABLED !== 'true') return false;
+  if (env.QICARD_WEBHOOK_MODE === 'onboarding') return false;
   try {
     const config = resolveQiCardConfig(env);
     if (env.NODE_ENV === 'production' && config.environment === 'sandbox') return false;
@@ -203,18 +217,39 @@ export function isQiCardCheckoutEnabled(env: QiCardEnvironment = process.env) {
   }
 }
 
-export function isQiCardWebhookEnabled(env: QiCardEnvironment = process.env) {
+function isOfficialQiCardSandbox(config: QiCardConfig) {
+  return config.baseUrl === OFFICIAL_QICARD_SANDBOX_BASE_URL;
+}
+
+export function getQiCardWebhookVerificationMode(
+  env: QiCardEnvironment = process.env,
+): QiCardWebhookVerificationMethod | null {
+  const requestedMode = env.QICARD_WEBHOOK_MODE?.trim().toLowerCase();
+  if (requestedMode === 'disabled') return null;
+
   try {
     const config = resolveQiCardConfig(env);
-    if (env.NODE_ENV === 'production' && config.environment === 'sandbox') return false;
-    return isRsaPublicKey(config.webhookPublicKey);
+    const hasPublicKey = isRsaPublicKey(config.webhookPublicKey);
+
+    if (requestedMode === 'onboarding') {
+      if (env.QICARD_ENABLED === 'true' || !isOfficialQiCardSandbox(config)) return null;
+      // A malformed configured key must fail closed instead of silently
+      // downgrading to API-only verification.
+      if (config.webhookPublicKey && !hasPublicKey) return null;
+      return hasPublicKey ? 'SIGNATURE_AND_PROVIDER_API' : 'PROVIDER_API';
+    }
+
+    if (requestedMode && requestedMode !== 'production') return null;
+    if (requestedMode === 'production' && config.environment !== 'production') return null;
+    if (env.NODE_ENV === 'production' && config.environment === 'sandbox') return null;
+    return hasPublicKey ? 'SIGNATURE_AND_PROVIDER_API' : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-export function shouldAcknowledgeQiCardWebhookWhileDisabled(env: QiCardEnvironment = process.env) {
-  return env.QICARD_ENABLED !== 'true' && !isQiCardWebhookEnabled(env);
+export function isQiCardWebhookEnabled(env: QiCardEnvironment = process.env) {
+  return getQiCardWebhookVerificationMode(env) !== null;
 }
 
 function assertIdentifier(value: string) {
@@ -241,6 +276,29 @@ export function parseQiCardPaymentPayload(payload: unknown) {
   const result = paymentSchema.safeParse(payload);
   if (!result.success) throw new Error('QICARD_RESPONSE_INVALID');
   return result.data;
+}
+
+export function assertQiCardWebhookMatchesProvider(
+  webhookPayment: QiCardPayment,
+  providerPayment: QiCardPayment,
+) {
+  const webhook = paymentSchema.parse(webhookPayment);
+  const provider = paymentSchema.parse(providerPayment);
+  const sameConfirmedAmount = webhook.confirmedAmount === undefined
+    || provider.confirmedAmount === undefined
+    || webhook.confirmedAmount === provider.confirmedAmount;
+
+  if (
+    webhook.paymentId !== provider.paymentId
+    || webhook.requestId !== provider.requestId
+    || webhook.amount !== provider.amount
+    || webhook.currency.toUpperCase() !== provider.currency.toUpperCase()
+    || webhook.status.toUpperCase() !== provider.status.toUpperCase()
+    || webhook.canceled !== provider.canceled
+    || !sameConfirmedAmount
+  ) {
+    throw new Error('QICARD_PAYMENT_MISMATCH');
+  }
 }
 
 export function verifyQiCardWebhookSignature(

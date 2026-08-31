@@ -23,11 +23,19 @@ const env = {
   QICARD_WEBHOOK_PUBLIC_KEY: publicKeyPem,
   APP_BASE_URL: 'https://merchant.example',
 };
+const onboardingEnv = {
+  ...env,
+  NODE_ENV: 'production',
+  QICARD_ENABLED: 'false',
+  QICARD_WEBHOOK_MODE: 'onboarding',
+  QICARD_WEBHOOK_PUBLIC_KEY: '',
+};
 
 let user: User;
 let productId: string;
 let packageId: string;
 const orderIds: string[] = [];
+const standaloneWebhookPaymentIds: string[] = [];
 
 function paymentFor(attempt: PaymentAttempt, status: string): QiCardPayment {
   return {
@@ -118,6 +126,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await prisma.paymentWebhookEvent.deleteMany({
+    where: { providerPaymentId: { in: standaloneWebhookPaymentIds } },
+  });
   await prisma.paymentWebhookEvent.deleteMany({ where: { paymentAttempt: { orderId: { in: orderIds } } } });
   await prisma.paymentRefund.deleteMany({ where: { orderId: { in: orderIds } } });
   await prisma.whatsAppNotification.deleteMany({ where: { orderId: { in: orderIds } } });
@@ -206,7 +217,12 @@ describe('QiCard database payment flow', () => {
     const rawBody = JSON.stringify(paid);
     const signature = sign('RSA-SHA256', Buffer.from(buildQiCardWebhookSigningString(paid)), privateKey).toString('base64');
 
-    const first = await processQiCardWebhook({ rawBody, signature, terminalId: null }, {
+    await expect(processQiCardWebhook({ rawBody, signature, terminalId: null }, {
+      client: gateway(paid),
+      env: { ...env, QICARD_ENABLED: 'false' },
+    })).rejects.toThrow('QICARD_WEBHOOK_TERMINAL_INVALID');
+
+    const first = await processQiCardWebhook({ rawBody, signature, terminalId: env.QICARD_TERMINAL_ID }, {
       client: gateway(paid),
       env: { ...env, QICARD_ENABLED: 'false' },
     });
@@ -216,7 +232,16 @@ describe('QiCard database payment flow', () => {
     });
     expect(first.replayed).toBe(false);
     expect(replay.replayed).toBe(true);
-    expect(await prisma.paymentWebhookEvent.count({ where: { paymentAttemptId: valid.attempt.id } })).toBe(1);
+    expect(await prisma.paymentWebhookEvent.count({ where: { paymentAttemptId: valid.attempt.id } })).toBe(2);
+    expect(await prisma.paymentWebhookEvent.findFirstOrThrow({
+      where: { paymentAttemptId: valid.attempt.id, processingStatus: 'PROCESSED' },
+    })).toMatchObject({
+      signatureValid: true,
+      providerVerified: true,
+      verificationMethod: 'SIGNATURE_AND_PROVIDER_API',
+      disposition: 'ORDER_RECONCILED',
+      processingStatus: 'PROCESSED',
+    });
 
     const invalid = await createOrder();
     const invalidPayment = paymentFor(invalid.attempt, 'SUCCESS');
@@ -243,7 +268,7 @@ describe('QiCard database payment flow', () => {
     expect(await prisma.paymentWebhookEvent.count({ where: { paymentAttemptId: invalid.attempt.id } })).toBe(2);
   });
 
-  test('acknowledges a signed QiCard onboarding notification without changing an order', async () => {
+  test('provider-verifies, audits, and deduplicates an unsigned QiCard onboarding notification', async () => {
     const payment = {
       requestId: randomUUID(),
       paymentId: randomUUID(),
@@ -253,26 +278,75 @@ describe('QiCard database payment flow', () => {
       currency: 'IQD',
       creationDate: '2026-08-30T12:00:00',
     };
+    standaloneWebhookPaymentIds.push(payment.paymentId);
     const rawBody = JSON.stringify(payment);
-    const signature = sign(
-      'RSA-SHA256',
-      Buffer.from(buildQiCardWebhookSigningString(payment)),
-      privateKey,
-    ).toString('base64');
+    let statusCalls = 0;
+    const onboardingGateway = {
+      ...gateway(payment),
+      getPaymentStatus: async () => {
+        statusCalls += 1;
+        return { ...payment, creationDate: '2026-08-30T09:00:00' };
+      },
+    };
 
-    const result = await processQiCardWebhook({ rawBody, signature, terminalId: null }, {
-      client: gateway(payment),
-      env: { ...env, QICARD_ENABLED: 'false' },
+    const result = await processQiCardWebhook({
+      rawBody,
+      signature: null,
+      terminalId: onboardingEnv.QICARD_TERMINAL_ID,
+    }, {
+      client: onboardingGateway,
+      env: onboardingEnv,
     });
+    const replay = await processQiCardWebhook({
+      rawBody,
+      signature: null,
+      terminalId: onboardingEnv.QICARD_TERMINAL_ID,
+    }, { client: onboardingGateway, env: onboardingEnv });
 
-    expect(result).toEqual({ replayed: false, ignored: true });
+    expect(result).toEqual({ replayed: false, ignored: true, verified: true });
+    expect(replay).toEqual({ replayed: true, ignored: true, verified: true });
+    expect(statusCalls).toBe(1);
     expect(await prisma.paymentWebhookEvent.findFirstOrThrow({
       where: { providerPaymentId: payment.paymentId },
     })).toMatchObject({
-      signatureValid: true,
+      signatureValid: false,
+      providerVerified: true,
+      verificationMethod: 'PROVIDER_API',
+      disposition: 'PROVIDER_TEST_VERIFIED',
       processingStatus: 'PROCESSED',
       paymentAttemptId: null,
-      error: 'QICARD_PAYMENT_NOT_FOUND',
+      error: null,
+    });
+  });
+
+  test('rejects and audits onboarding data that does not match QiCard status', async () => {
+    const webhookPayment = {
+      requestId: randomUUID(),
+      paymentId: randomUUID(),
+      status: 'SUCCESS',
+      canceled: false,
+      amount: 2_000,
+      currency: 'IQD',
+      creationDate: '2026-08-30T12:10:00',
+    };
+    standaloneWebhookPaymentIds.push(webhookPayment.paymentId);
+
+    await expect(processQiCardWebhook({
+      rawBody: JSON.stringify(webhookPayment),
+      signature: null,
+      terminalId: onboardingEnv.QICARD_TERMINAL_ID,
+    }, {
+      client: gateway({ ...webhookPayment, status: 'FAILED' }),
+      env: onboardingEnv,
+    })).rejects.toThrow('QICARD_PAYMENT_MISMATCH');
+
+    expect(await prisma.paymentWebhookEvent.findFirstOrThrow({
+      where: { providerPaymentId: webhookPayment.paymentId },
+    })).toMatchObject({
+      providerVerified: false,
+      verificationMethod: 'PROVIDER_API',
+      processingStatus: 'FAILED',
+      error: 'QICARD_PAYMENT_MISMATCH',
     });
   });
 

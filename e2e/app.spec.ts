@@ -98,14 +98,14 @@ test.describe('WAHO production smoke', () => {
       localStorage.setItem('language', 'en');
     });
     await page.goto('/');
-    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Choose category');
+    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('View recharge options');
     await page.context().addCookies([{
       name: 'alwasl_session',
       value: sessionCookie,
       url: new URL(page.url()).origin,
     }]);
     await page.reload();
-    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('Choose category');
+    await expect(page.getByTestId('home-primary-topup')).toHaveAccessibleName('View recharge options');
 
     await page.goto('/top-up');
     await expect(page).toHaveURL(/\/#categories$/);
@@ -375,8 +375,10 @@ test.describe('WAHO production smoke', () => {
       data: {
         title: bannerTitle,
         titleAr: bannerTitle,
+        titleZh: bannerTitle,
         subtitle: 'E2E scheduled WAHO top-up banner',
         subtitleAr: 'E2E scheduled WAHO top-up banner',
+        subtitleZh: 'E2E scheduled WAHO top-up banner',
         image: '/brand/alwasl-banner.jpg',
         link: '/top-up/waho-top-up',
         gameId: 'waho-top-up',
