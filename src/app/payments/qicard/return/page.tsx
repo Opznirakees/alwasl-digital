@@ -9,20 +9,22 @@ import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
 import type { Order } from '@/types';
 
-type ViewState = 'checking' | 'paid' | 'pending' | 'failed' | 'error';
+type ViewState = 'checking' | 'paid' | 'pending' | 'failed' | 'error' | 'unlinked';
+
+const MAX_AUTOMATIC_STATUS_CHECKS = 8;
 
 function QiCardReturnContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { t, dir, refreshAccount } = useApp();
   const orderId = searchParams.get('orderId') || '';
-  const [state, setState] = useState<ViewState>('checking');
+  const [state, setState] = useState<ViewState>(orderId ? 'checking' : 'unlinked');
   const [order, setOrder] = useState<Order | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  const checkPayment = useCallback(async () => {
+  const checkPayment = useCallback(async (showFinalError = true) => {
     if (!orderId) {
-      setState('error');
+      setState('unlinked');
       return false;
     }
 
@@ -53,8 +55,12 @@ function QiCardReturnContent() {
       setState('pending');
       return true;
     } catch {
-      setState('error');
-      return false;
+      if (showFinalError) {
+        setState('error');
+        return false;
+      }
+      setState('checking');
+      return true;
     }
   }, [orderId, refreshAccount, router]);
 
@@ -65,9 +71,10 @@ function QiCardReturnContent() {
 
     async function poll() {
       if (!active) return;
-      const shouldContinue = await checkPayment();
+      const isFinalCheck = checks === MAX_AUTOMATIC_STATUS_CHECKS - 1;
+      const shouldContinue = await checkPayment(isFinalCheck);
       checks += 1;
-      if (active && shouldContinue && checks < 8) {
+      if (active && shouldContinue && checks < MAX_AUTOMATIC_STATUS_CHECKS) {
         timeoutId = setTimeout(poll, 2_000);
       }
     }
@@ -127,6 +134,16 @@ function QiCardReturnContent() {
       title: t('We could not check the payment yet', 'تعذر التحقق من الدفع الآن', '暂时无法检查付款'),
       description: t('Your order is saved. Try checking again or view it in your orders.', 'تم حفظ طلبك. حاول التحقق مرة أخرى أو شاهده في طلباتك.', '您的订单已保存。请重试或在订单中查看。'),
     },
+    unlinked: {
+      icon: ShieldCheck,
+      iconClass: 'text-[var(--v2-gold)]',
+      title: t('Open your order to check the payment', 'افتح طلبك للتحقق من الدفع', '打开订单以检查付款'),
+      description: t(
+        'Your payment status is securely linked to its order. Open your orders to continue.',
+        'حالة الدفع مرتبطة بالطلب بشكل آمن. افتح طلباتك للمتابعة.',
+        '付款状态已安全关联到对应订单。请打开订单继续。',
+      ),
+    },
   }[state];
   const StatusIcon = presentation.icon;
 
@@ -150,7 +167,7 @@ function QiCardReturnContent() {
           )}
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {(state === 'pending' || state === 'error') && (
+            {(state === 'pending' || state === 'error') && orderId && (
               <Button type="button" onClick={() => { setState('checking'); void checkPayment(); }} className="v2-primary-button">
                 <RotateCw className="h-4 w-4" />
                 {t('Check again', 'تحقق مرة أخرى', '再次检查')}

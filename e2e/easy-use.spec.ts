@@ -840,6 +840,46 @@ test.describe('generation 2 customer experience', () => {
     await captureVisual(page, testInfo.project.name, 'cash-order-placed');
   });
 
+  test('keeps checking a temporarily delayed QiCard result until it is confirmed', async ({ page }) => {
+    await mockCustomerApi(page, true);
+    let statusChecks = 0;
+    await page.route(`**/api/payments/qicard/${order.id}/status`, async (route) => {
+      statusChecks += 1;
+      if (statusChecks < 3) {
+        return route.fulfill({
+          status: 502,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'QiCard status is still being synchronized' }),
+        });
+      }
+      return route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          order: { ...order, paymentMethod: 'qicard', paymentStatus: 'completed', status: 'processing' },
+        }),
+      });
+    });
+
+    await page.goto(`/payments/qicard/return?orderId=${order.id}`);
+    await expect(page.getByRole('heading', { name: 'Checking your payment' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Payment confirmed' })).toBeVisible({ timeout: 8_000 });
+    expect(statusChecks).toBe(3);
+  });
+
+  test('handles a QiCard return without an order reference safely', async ({ page }, testInfo) => {
+    await mockCustomerApi(page, true);
+    await page.goto('/payments/qicard/return');
+
+    await expect(page.getByRole('heading', { name: 'Open your order to check the payment' })).toBeVisible();
+    await expect(page.getByText('Your payment status is securely linked to its order.')).toBeVisible();
+    await expect(page.getByText('Your order is saved.')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Check again' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'View my orders' })).toBeVisible();
+    await expectNoHorizontalOverflow(page);
+    await captureVisual(page, testInfo.project.name, 'qicard-return-without-order');
+  });
+
   test('keeps Chinese, Arabic RTL and the light theme complete', async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await mockCustomerApi(page, true);

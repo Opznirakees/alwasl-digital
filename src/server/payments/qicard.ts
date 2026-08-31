@@ -254,6 +254,13 @@ export function isQiCardWebhookEnabled(env: QiCardEnvironment = process.env) {
   return getQiCardWebhookVerificationMode(env) !== null;
 }
 
+export function isQiCardWebhookTerminalValid(
+  receivedTerminalId: string | null | undefined,
+  configuredTerminalId: string,
+) {
+  return !receivedTerminalId || receivedTerminalId === configuredTerminalId;
+}
+
 function assertIdentifier(value: string) {
   if (!/^[A-Za-z0-9-]{1,128}$/.test(value)) throw new Error('QICARD_REQUEST_INVALID');
 }

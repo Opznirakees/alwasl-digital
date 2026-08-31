@@ -8,6 +8,7 @@ import {
   classifyQiCardPayment,
   createQiCardClient,
   getQiCardWebhookVerificationMode,
+  isQiCardWebhookTerminalValid,
   isQiCardWebhookEnabled,
   parseQiCardPaymentPayload,
   resolveQiCardConfig,
@@ -390,7 +391,7 @@ export async function processQiCardWebhook(
   const signatureHash = sha256(input.signature || 'missing');
   const signatureValid = verificationMethod === 'SIGNATURE_AND_PROVIDER_API'
     && verifyQiCardWebhookSignature(payment, input.signature, config.webhookPublicKey);
-  const terminalValid = Boolean(input.terminalId) && input.terminalId === config.terminalId;
+  const terminalValid = isQiCardWebhookTerminalValid(input.terminalId, config.terminalId);
   const validationError = !terminalValid
     ? 'QICARD_WEBHOOK_TERMINAL_INVALID'
     : verificationMethod === 'SIGNATURE_AND_PROVIDER_API' && !signatureValid

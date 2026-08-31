@@ -356,13 +356,14 @@ paths:
     post:
       tags: [Payments]
       summary: Receive a signed QiCard status notification.
-      description: The server verifies RSA-SHA256, terminal ID, deduplication, and the authenticated Qi status endpoint before settlement.
+      description: The server verifies RSA-SHA256, an optional terminal claim when supplied, deduplication, and the authenticated Qi status endpoint before settlement. During sandbox onboarding without a public key, the authenticated Qi status endpoint remains mandatory.
       security:
         - QiSignature: []
       parameters:
         - name: X-Terminal-Id
           in: header
-          required: true
+          required: false
+          description: Optional for callbacks; a supplied value must match the configured merchant terminal.
           schema:
             type: string
       requestBody:

@@ -211,18 +211,18 @@ describe('QiCard database payment flow', () => {
     expect(storedUser.totalSpent).toBe(initialSpend);
   });
 
-  test('deduplicates signed webhooks and rejects an invalid signature without settlement', async () => {
+  test('accepts the documented signed webhook headers, deduplicates callbacks, and rejects invalid claims', async () => {
     const valid = await createOrder();
     const paid = paymentFor(valid.attempt, 'SUCCESS');
     const rawBody = JSON.stringify(paid);
     const signature = sign('RSA-SHA256', Buffer.from(buildQiCardWebhookSigningString(paid)), privateKey).toString('base64');
 
-    await expect(processQiCardWebhook({ rawBody, signature, terminalId: null }, {
+    await expect(processQiCardWebhook({ rawBody, signature, terminalId: 'wrong-terminal' }, {
       client: gateway(paid),
       env: { ...env, QICARD_ENABLED: 'false' },
     })).rejects.toThrow('QICARD_WEBHOOK_TERMINAL_INVALID');
 
-    const first = await processQiCardWebhook({ rawBody, signature, terminalId: env.QICARD_TERMINAL_ID }, {
+    const first = await processQiCardWebhook({ rawBody, signature, terminalId: null }, {
       client: gateway(paid),
       env: { ...env, QICARD_ENABLED: 'false' },
     });
@@ -292,7 +292,7 @@ describe('QiCard database payment flow', () => {
     const result = await processQiCardWebhook({
       rawBody,
       signature: null,
-      terminalId: onboardingEnv.QICARD_TERMINAL_ID,
+      terminalId: null,
     }, {
       client: onboardingGateway,
       env: onboardingEnv,
@@ -300,7 +300,7 @@ describe('QiCard database payment flow', () => {
     const replay = await processQiCardWebhook({
       rawBody,
       signature: null,
-      terminalId: onboardingEnv.QICARD_TERMINAL_ID,
+      terminalId: null,
     }, { client: onboardingGateway, env: onboardingEnv });
 
     expect(result).toEqual({ replayed: false, ignored: true, verified: true });

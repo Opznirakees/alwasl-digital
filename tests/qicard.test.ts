@@ -10,6 +10,7 @@ import {
   classifyQiCardPayment,
   getQiCardWebhookVerificationMode,
   getQiCardWebhookReadiness,
+  isQiCardWebhookTerminalValid,
   getPublicRequestOrigin,
   isQiCardCheckoutEnabled,
   isQiCardWebhookEnabled,
@@ -182,6 +183,13 @@ describe('QiCard configuration', () => {
     );
 
     expect(origin).toBe('https://alwasl-digital-b8ngg.ondigitalocean.app');
+  });
+
+  test('accepts the documented webhook without a terminal header but rejects a conflicting header', () => {
+    expect(isQiCardWebhookTerminalValid(null, '237984')).toBe(true);
+    expect(isQiCardWebhookTerminalValid(undefined, '237984')).toBe(true);
+    expect(isQiCardWebhookTerminalValid('237984', '237984')).toBe(true);
+    expect(isQiCardWebhookTerminalValid('wrong-terminal', '237984')).toBe(false);
   });
 });
 
