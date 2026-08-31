@@ -788,7 +788,7 @@ test.describe('generation 2 customer experience', () => {
     await expect(page.getByText('Account found', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Continue to payment' }).click();
 
-    await expect(page.getByRole('heading', { name: 'Cash payment' })).toBeFocused();
+    await expect(page.getByRole('heading', { name: 'Choose how to pay' })).toBeFocused();
     await expect(page.getByRole('radio', { name: /Cash payment/ })).toBeChecked();
     await expect(page.getByText('07842222556')).toBeVisible();
     await page.getByRole('button', { name: 'Review order' }).click();

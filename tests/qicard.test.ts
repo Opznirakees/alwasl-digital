@@ -38,7 +38,7 @@ const completeEnv = {
 const onboardingEnv = {
   ...completeEnv,
   NODE_ENV: 'production',
-  QICARD_ENABLED: 'false',
+  QICARD_ENABLED: 'true',
   QICARD_WEBHOOK_MODE: 'onboarding',
   QICARD_WEBHOOK_PUBLIC_KEY: '',
 };
@@ -143,7 +143,7 @@ describe('QiCard configuration', () => {
   });
 
   test('enables provider-verified onboarding only for the official QiCard sandbox', () => {
-    expect(isQiCardCheckoutEnabled(onboardingEnv)).toBe(false);
+    expect(isQiCardCheckoutEnabled(onboardingEnv)).toBe(true);
     expect(isQiCardWebhookEnabled(onboardingEnv)).toBe(true);
     expect(getQiCardWebhookVerificationMode(onboardingEnv)).toBe('PROVIDER_API');
     expect(getQiCardWebhookReadiness(onboardingEnv)).toMatchObject({
@@ -151,8 +151,11 @@ describe('QiCard configuration', () => {
       environment: 'sandbox',
       mode: 'onboarding',
       verification: 'provider-api',
-      checkoutEnabled: false,
+      checkoutEnabled: true,
     });
+
+    expect(isQiCardCheckoutEnabled({ ...onboardingEnv, QICARD_ENABLED: 'false' })).toBe(false);
+    expect(isQiCardWebhookEnabled({ ...onboardingEnv, QICARD_ENABLED: 'false' })).toBe(true);
 
     expect(isQiCardWebhookEnabled({
       ...onboardingEnv,
@@ -198,6 +201,7 @@ describe('QiCard application contract', () => {
       ...completeEnv,
       QICARD_BASE_URL: 'https://merchant-api.qi.example/api/v1',
     })).toBe(true);
+    expect(isOrderPaymentMethodEnabled('qicard', onboardingEnv)).toBe(true);
   });
 
   test('persists provider IDs, webhook deduplication, and external refund state', () => {
@@ -219,6 +223,8 @@ describe('QiCard application contract', () => {
     const statusRoute = readFileSync(join(root, 'src/app/api/payments/qicard/[orderId]/status/route.ts'), 'utf8');
     const cancelRoute = readFileSync(join(root, 'src/app/api/payments/qicard/[orderId]/cancel/route.ts'), 'utf8');
     const webhookRoute = readFileSync(join(root, 'src/app/api/webhooks/qicard/route.ts'), 'utf8');
+    const methodsRoute = readFileSync(join(root, 'src/app/api/payments/methods/route.ts'), 'utf8');
+    const checkoutPage = readFileSync(join(root, 'src/app/top-up/[slug]/page.tsx'), 'utf8');
 
     expect(createRoute).toContain('requireUser');
     expect(statusRoute).toContain('requireUser');
@@ -229,6 +235,11 @@ describe('QiCard application contract', () => {
     expect(webhookRoute).toContain('export async function GET');
     expect(webhookRoute).not.toContain('requireUser');
     expect(webhookRoute).not.toContain('shouldAcknowledgeQiCardWebhookWhileDisabled');
+    expect(methodsRoute).toContain('isQiCardCheckoutEnabled');
+    expect(methodsRoute).toContain("id: 'qicard'");
+    expect(checkoutPage).toContain("id: 'qicard'");
+    expect(checkoutPage).toContain("fetch('/api/payments/qicard/create'");
+    expect(checkoutPage).toContain('window.location.assign(checkoutUrl)');
   });
 });
 

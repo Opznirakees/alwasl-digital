@@ -11,6 +11,7 @@ import {
   BadgeCheck,
   Check,
   CheckCircle2,
+  CreditCard,
   Gem,
   Loader2,
   LockKeyhole,
@@ -37,6 +38,8 @@ import type { Game, GamePackage } from '@/types';
 interface TopUpPageProps {
   params: Promise<{ slug: string }>;
 }
+
+type CustomerPaymentMethodId = 'cash' | 'qicard';
 
 function createClientIdempotencyKey() {
   return globalThis.crypto?.randomUUID?.() ?? `order-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -67,7 +70,8 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
   const [zoneId, setZoneId] = useState('');
   const [verifiedUsername, setVerifiedUsername] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [paymentMethod, setPaymentMethod] = useState<CustomerPaymentMethodId>('cash');
+  const [availablePaymentMethodIds, setAvailablePaymentMethodIds] = useState<CustomerPaymentMethodId[]>(['cash']);
   const [financialOtp, setFinancialOtp] = useState('');
   const [otpRequested, setOtpRequested] = useState(false);
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
@@ -78,6 +82,37 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
   const hasRestoredCheckoutRef = useRef(false);
   const orderIdempotencyKeyRef = useRef<string | null>(null);
   const locale = language === 'ar' ? 'ar-IQ' : language === 'zh' ? 'zh-CN' : 'en-IQ';
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadPaymentMethods() {
+      try {
+        const response = await fetch('/api/payments/methods', {
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        if (!response.ok) return;
+        const payload = await response.json() as {
+          methods?: Array<{ id?: string; enabled?: boolean }>;
+        };
+        const enabledIds = (payload.methods ?? [])
+          .filter((method) => method.enabled && (method.id === 'cash' || method.id === 'qicard'))
+          .map((method) => method.id as CustomerPaymentMethodId);
+        if (!enabledIds.includes('cash')) enabledIds.unshift('cash');
+        if (!active) return;
+        setAvailablePaymentMethodIds(enabledIds);
+        setPaymentMethod((current) => enabledIds.includes(current) ? current : 'cash');
+      } catch {
+        // Cash remains the safe fallback if payment availability cannot load.
+      }
+    }
+
+    void loadPaymentMethods();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (isAccountLoading) return;
@@ -145,7 +180,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
 
       setUserId(pendingCheckout.userId?.slice(0, 80) ?? '');
       setZoneId(pendingCheckout.zoneId?.slice(0, 80) ?? '');
-      if (pendingCheckout.paymentMethod === 'cash') {
+      if (pendingCheckout.paymentMethod === 'cash' || pendingCheckout.paymentMethod === 'qicard') {
         setPaymentMethod(pendingCheckout.paymentMethod);
       }
       shouldFocusStepRef.current = true;
@@ -363,6 +398,27 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       const orderPayload = await orderResponse.json();
       if (!orderResponse.ok) throw new Error(orderPayload.error || 'ORDER_CREATION_FAILED');
 
+      if (paymentMethod === 'qicard') {
+        const checkoutResponse = await fetch('/api/payments/qicard/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ orderId: orderPayload.order.id, locale: language === 'ar' ? 'ar_IQ' : 'en_US' }),
+        });
+        const checkoutPayload = await checkoutResponse.json();
+        if (!checkoutResponse.ok) throw new Error(checkoutPayload.error || 'QICARD_CHECKOUT_FAILED');
+        const checkoutUrl = typeof checkoutPayload.checkoutUrl === 'string' ? checkoutPayload.checkoutUrl : '';
+        let parsedCheckoutUrl: URL;
+        try {
+          parsedCheckoutUrl = new URL(checkoutUrl);
+        } catch {
+          throw new Error('QICARD_CHECKOUT_FAILED');
+        }
+        if (parsedCheckoutUrl.protocol !== 'https:') throw new Error('QICARD_CHECKOUT_FAILED');
+        window.location.assign(checkoutUrl);
+        return;
+      }
+
       await refreshAccount();
       orderIdempotencyKeyRef.current = null;
       setFinancialOtp('');
@@ -391,6 +447,17 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
       icon: Banknote,
       disabled: false,
     },
+    ...(availablePaymentMethodIds.includes('qicard') ? [{
+      id: 'qicard' as const,
+      name: 'QiCard',
+      description: t(
+        'Continue to the secure QiCard payment page.',
+        'تابع إلى صفحة الدفع الآمنة من QiCard.',
+        '继续前往安全的 QiCard 支付页面。'
+      ),
+      icon: CreditCard,
+      disabled: false,
+    }] : []),
   ];
 
   const selectedPayment = paymentMethods.find((item) => item.id === paymentMethod) ?? paymentMethods[0];
@@ -641,13 +708,21 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
               {step === 'payment' && (
                 <>
                   <h2 ref={stepHeadingRef} tabIndex={-1} className="text-2xl font-semibold text-zinc-950 outline-none dark:text-white">
-                    {t('Cash payment', 'الدفع نقداً', '现金支付')}
+                    {t('Choose how to pay', 'اختر طريقة الدفع', '选择付款方式')}
                   </h2>
                   <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                    {t('Cash is currently available. We start your order after our team confirms receipt.', 'الدفع النقدي متاح حالياً. نبدأ طلبك بعد أن يؤكد فريقنا الاستلام.', '目前支持现金付款。客服确认收款后，我们会开始处理订单。')}
+                    {availablePaymentMethodIds.includes('qicard')
+                      ? t('Choose cash or pay securely with QiCard.', 'اختر الدفع النقدي أو ادفع بأمان عبر QiCard.', '选择现金付款，或通过 QiCard 安全支付。')
+                      : t('Cash is currently available. We start your order after our team confirms receipt.', 'الدفع النقدي متاح حالياً. نبدأ طلبك بعد أن يؤكد فريقنا الاستلام.', '目前支持现金付款。客服确认收款后，我们会开始处理订单。')}
                   </p>
 
-                  <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="mt-5 grid gap-3">
+                  <RadioGroup
+                    value={paymentMethod}
+                    onValueChange={(value) => {
+                      if (value === 'cash' || value === 'qicard') setPaymentMethod(value);
+                    }}
+                    className="mt-5 grid gap-3"
+                  >
                     {paymentMethods.map((method) => {
                       const isSelected = paymentMethod === method.id;
                       return (
@@ -676,19 +751,28 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                     })}
                   </RadioGroup>
 
-                  <a
-                    href={supportWhatsAppHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 flex min-h-14 items-center gap-3 rounded-lg border border-[#52d273]/25 bg-[#52d273]/10 p-3 text-start transition-colors hover:bg-[#52d273]/15"
-                  >
-                    <MessageCircle className="h-5 w-5 flex-shrink-0 text-[#52d273]" />
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold text-zinc-950 dark:text-white">{t('Arrange cash payment on WhatsApp', 'نسّق الدفع النقدي عبر واتساب', '通过 WhatsApp 安排现金付款')}</span>
-                      <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-300">{supportWhatsAppNumber}</span>
-                    </span>
-                    <ArrowRight className="ms-auto h-4 w-4 flex-shrink-0 text-[#52d273] rtl:rotate-180" />
-                  </a>
+                  {paymentMethod === 'cash' ? (
+                    <a
+                      href={supportWhatsAppHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 flex min-h-14 items-center gap-3 rounded-lg border border-[#52d273]/25 bg-[#52d273]/10 p-3 text-start transition-colors hover:bg-[#52d273]/15"
+                    >
+                      <MessageCircle className="h-5 w-5 flex-shrink-0 text-[#52d273]" />
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-zinc-950 dark:text-white">{t('Arrange cash payment on WhatsApp', 'نسّق الدفع النقدي عبر واتساب', '通过 WhatsApp 安排现金付款')}</span>
+                        <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-300">{supportWhatsAppNumber}</span>
+                      </span>
+                      <ArrowRight className="ms-auto h-4 w-4 flex-shrink-0 text-[#52d273] rtl:rotate-180" />
+                    </a>
+                  ) : (
+                    <div className="mt-4 flex min-h-14 items-center gap-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-start">
+                      <ShieldCheck className="h-5 w-5 flex-shrink-0 text-blue-700" />
+                      <span className="text-sm font-medium leading-5 text-zinc-700">
+                        {t('After confirmation, QiCard opens to complete your payment securely.', 'بعد التأكيد، تفتح صفحة QiCard لإكمال الدفع بأمان.', '确认后将打开 QiCard，以安全完成付款。')}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="mt-6 hidden grid-cols-[auto_minmax(0,1fr)] gap-3 lg:grid">
                     <Button type="button" variant="outline" onClick={() => goToStep('details')}>
@@ -815,7 +899,9 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
                         <ShieldCheck className="h-4 w-4" />
                       )}
                       {isAuthenticated
-                        ? t('Place cash order', 'إرسال طلب الدفع النقدي', '提交现金订单')
+                        ? paymentMethod === 'qicard'
+                          ? t('Continue to QiCard', 'تابع إلى QiCard', '继续前往 QiCard')
+                          : t('Place cash order', 'إرسال طلب الدفع النقدي', '提交现金订单')
                         : t('Log in to continue', 'سجل الدخول للمتابعة', '登录后继续')}
                     </Button>
                   </div>
@@ -928,7 +1014,9 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
             >
               {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
               {isAuthenticated
-                ? t('Place cash order', 'إرسال طلب الدفع النقدي', '提交现金订单')
+                ? paymentMethod === 'qicard'
+                  ? t('Continue to QiCard', 'تابع إلى QiCard', '继续前往 QiCard')
+                  : t('Place cash order', 'إرسال طلب الدفع النقدي', '提交现金订单')
                 : t('Log in to continue', 'سجل الدخول للمتابعة', '登录后继续')}
             </Button>
           )}

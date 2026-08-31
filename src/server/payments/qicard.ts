@@ -206,9 +206,11 @@ export function resolveQiCardConfig(env: QiCardEnvironment = process.env): QiCar
 
 export function isQiCardCheckoutEnabled(env: QiCardEnvironment = process.env) {
   if (env.QICARD_ENABLED !== 'true') return false;
-  if (env.QICARD_WEBHOOK_MODE === 'onboarding') return false;
   try {
     const config = resolveQiCardConfig(env);
+    if (env.QICARD_WEBHOOK_MODE?.trim().toLowerCase() === 'onboarding') {
+      return isOfficialQiCardSandbox(config) && getQiCardWebhookVerificationMode(env) !== null;
+    }
     if (env.NODE_ENV === 'production' && config.environment === 'sandbox') return false;
     if (env.NODE_ENV === 'production' && !isRsaPublicKey(config.webhookPublicKey)) return false;
     return true;
@@ -232,7 +234,7 @@ export function getQiCardWebhookVerificationMode(
     const hasPublicKey = isRsaPublicKey(config.webhookPublicKey);
 
     if (requestedMode === 'onboarding') {
-      if (env.QICARD_ENABLED === 'true' || !isOfficialQiCardSandbox(config)) return null;
+      if (!isOfficialQiCardSandbox(config)) return null;
       // A malformed configured key must fail closed instead of silently
       // downgrading to API-only verification.
       if (config.webhookPublicKey && !hasPublicKey) return null;

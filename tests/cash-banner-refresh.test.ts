@@ -8,8 +8,8 @@ import { isOrderPaymentMethodEnabled } from '../src/server/payment-policy';
 const root = join(import.meta.dir, '..');
 const read = (path: string) => readFileSync(join(root, path), 'utf8');
 
-describe('cash-only customer checkout', () => {
-  test('accepts cash orders in production while QiCard remains opt-in and hidden', () => {
+describe('managed customer checkout', () => {
+  test('always accepts cash and exposes QiCard only through its server-side feature gate', () => {
     expect(createOrderSchema.parse({
       productSlug: 'waho-top-up',
       packageId: 'waho-topup-10000',
@@ -23,9 +23,10 @@ describe('cash-only customer checkout', () => {
     const methodsRoute = read('src/app/api/payments/methods/route.ts');
     const checkout = read('src/app/top-up/[slug]/page.tsx');
     expect(methodsRoute).toContain("{ id: 'cash', enabled: true }");
-    expect(methodsRoute).not.toContain("id: 'qicard'");
+    expect(methodsRoute).toContain("id: 'qicard'");
+    expect(methodsRoute).toContain('isQiCardCheckoutEnabled');
     expect(checkout).toContain("id: 'cash'");
-    expect(checkout).not.toContain("id: 'qicard'");
+    expect(checkout).toContain("id: 'qicard'");
     expect(checkout).toContain("t('Cash payment', 'الدفع نقداً', '现金支付')");
   });
 

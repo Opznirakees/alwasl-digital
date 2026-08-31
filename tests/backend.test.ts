@@ -620,7 +620,7 @@ describe('fake payment rules', () => {
     expect(isOrderPaymentMethodEnabled('zaincash', { NODE_ENV: 'development', ENABLE_FAKE_PAYMENTS: 'true' })).toBe(true);
   });
 
-  test('keeps the protected wallet settlement path while exposing only cash in the customer UI', () => {
+  test('keeps internal payment methods hidden while allowing managed cash and QiCard checkout', () => {
     const repoRoot = join(import.meta.dir, '..');
     const ordersRoute = readFileSync(join(repoRoot, 'src/app/api/orders/route.ts'), 'utf8');
     const orderService = readFileSync(join(repoRoot, 'src/server/services/orders.ts'), 'utf8');
@@ -631,6 +631,7 @@ describe('fake payment rules', () => {
     expect(orderService).toContain('export async function confirmWalletPayment');
     expect(orderService).toContain("idempotency, 'wallet'");
     expect(topUpPage).toContain("id: 'cash'");
+    expect(topUpPage).toContain("id: 'qicard'");
     expect(topUpPage).not.toContain("id: 'wallet'");
     expect(topUpPage).not.toContain("id: 'zaincash'");
     expect(topUpPage).not.toContain("id: 'asiahawala'");
