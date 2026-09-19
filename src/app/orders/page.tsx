@@ -16,8 +16,6 @@ import {
 import { toast } from 'sonner';
 import { Header } from '@/components/layout/Header';
 import { AccountPageLoading } from '@/components/account/AccountPageLoading';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApp } from '@/contexts/AppContext';
 import { getOrderStatusGuidance } from '@/lib/easy-use';
@@ -33,12 +31,12 @@ const statusIcons = {
 } satisfies Record<OrderStatus, typeof Clock3>;
 
 const statusClasses: Record<OrderStatus, string> = {
-  pending: 'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-400/25 dark:bg-amber-400/10 dark:text-amber-200',
-  processing: 'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-400/25 dark:bg-blue-500/10 dark:text-blue-200',
-  completed: 'border-green-200 bg-green-50 text-green-800 dark:border-green-400/25 dark:bg-green-500/10 dark:text-green-200',
-  failed: 'border-red-200 bg-red-50 text-red-800 dark:border-red-400/25 dark:bg-red-500/10 dark:text-red-200',
-  refunded: 'border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-white/10 dark:bg-white/10 dark:text-zinc-200',
-  cancelled: 'border-zinc-200 bg-zinc-100 text-zinc-700 dark:border-white/10 dark:bg-white/10 dark:text-zinc-200',
+  pending: 'v2-status v2-status-warning',
+  processing: 'v2-status v2-status-info',
+  completed: 'v2-status v2-status-success',
+  failed: 'v2-status v2-status-danger',
+  refunded: 'v2-status v2-status-neutral',
+  cancelled: 'v2-status v2-status-neutral',
 };
 
 export default function OrdersPage() {
@@ -114,15 +112,17 @@ export default function OrdersPage() {
     return (
       <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
         <Header />
-        <main className="container mx-auto flex min-h-[65vh] max-w-xl flex-col items-center justify-center px-4 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-            <Package className="h-7 w-7" />
-          </div>
-          <h1 className="mt-5 text-2xl font-semibold text-zinc-950 dark:text-white">{t('Log in to see your orders', 'سجل الدخول لرؤية طلباتك', '登录后查看订单')}</h1>
-          <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-300">{t('Your order IDs and current delivery statuses are kept here.', 'تجد هنا أرقام طلباتك وحالات التسليم الحالية.', '您的订单号和当前交付状态会显示在这里。')}</p>
-          <Button asChild className="mt-5 bg-blue-600 text-white hover:bg-blue-700">
-            <Link href="/auth?next=%2Forders">{t('Log in', 'تسجيل الدخول', '登录')}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link>
-          </Button>
+        <main className="v2-container flex min-h-[65vh] max-w-xl flex-col items-center justify-center py-10 text-center">
+          <section className="v2-surface flex w-full flex-col items-center p-6 sm:p-8">
+            <span className="v2-icon-tile v2-icon-tile-gold h-14 w-14 rounded-2xl">
+              <Package className="h-7 w-7" />
+            </span>
+            <h1 className="mt-5 text-2xl font-extrabold tracking-tight text-[var(--v2-navy)]">{t('Log in to see your orders', 'سجل الدخول لرؤية طلباتك', '登录后查看订单')}</h1>
+            <p className="mt-2 text-sm leading-6 text-[var(--v2-muted)]">{t('Your order IDs and current delivery statuses are kept here.', 'تجد هنا أرقام طلباتك وحالات التسليم الحالية.', '您的订单号和当前交付状态会显示在这里。')}</p>
+            <Link href="/auth?next=%2Forders" className="v2-primary-button mt-6 w-full sm:w-auto">
+              {t('Log in', 'تسجيل الدخول', '登录')}<ArrowRight className="h-4 w-4 rtl:rotate-180" />
+            </Link>
+          </section>
         </main>
       </div>
     );
@@ -131,20 +131,20 @@ export default function OrdersPage() {
   return (
     <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
-      <main className="container mx-auto max-w-5xl px-4 py-6 sm:py-10">
-        <Link href="/" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-zinc-500 hover:text-blue-700 dark:text-zinc-400 dark:hover:text-blue-300">
+      <main className="v2-container max-w-5xl py-6 pb-24 sm:py-10 lg:pb-10">
+        <Link href="/" className="v2-ghost-link">
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           {t('Back home', 'العودة للرئيسية', '返回首页')}
         </Link>
 
-        <header className="mt-4">
-          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t('Your activity', 'نشاطك', '您的记录')}</p>
-          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white sm:text-4xl">{t('My orders', 'طلباتي', '我的订单')}</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">{t('See what is happening with every recharge order.', 'تابع ما يحدث في كل طلب شحن.', '查看每笔充值订单的进度。')}</p>
+        <header className="v2-page-header mt-4">
+          <p className="v2-kicker">{t('Your activity', 'نشاطك', '您的记录')}</p>
+          <h1>{t('My orders', 'طلباتي', '我的订单')}</h1>
+          <p>{t('See what is happening with every recharge order.', 'تابع ما يحدث في كل طلب شحن.', '查看每笔充值订单的进度。')}</p>
         </header>
 
         <Tabs value={filter} onValueChange={(value) => setFilter(value as OrderStatus | 'all')} className="mt-6">
-          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-lg border border-black/10 bg-white p-1 dark:border-white/10 dark:bg-zinc-900 sm:inline-flex sm:w-auto">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-2xl border border-[var(--v2-border)] bg-white p-1.5 shadow-[var(--v2-shadow-xs)] sm:inline-flex sm:w-auto sm:rounded-full">
             {[
               { value: 'all', label: t('All', 'الكل', '全部') },
               { value: 'pending', label: t('Waiting', 'انتظار', '等待中') },
@@ -152,7 +152,7 @@ export default function OrdersPage() {
               { value: 'completed', label: t('Completed', 'مكتمل', '已完成') },
               { value: 'failed', label: t('Attention', 'متابعة', '需处理') },
             ].map((item) => (
-              <TabsTrigger key={item.value} value={item.value} className="min-h-11 w-full px-3 last:col-span-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-500/15 dark:data-[state=active]:text-blue-200 sm:w-auto sm:last:col-span-1">
+              <TabsTrigger key={item.value} value={item.value} className="min-h-11 w-full rounded-full px-4 text-sm font-semibold text-[var(--v2-muted)] last:col-span-2 data-[state=active]:bg-[var(--v2-navy)] data-[state=active]:text-white data-[state=active]:shadow-[var(--v2-shadow-sm)] sm:w-auto sm:last:col-span-1">
                 {item.label}
               </TabsTrigger>
             ))}
@@ -160,7 +160,7 @@ export default function OrdersPage() {
         </Tabs>
 
         {filteredOrders.length > 0 ? (
-          <div className="mt-5 space-y-4">
+          <div className="mt-6 space-y-4">
             {filteredOrders.map((order) => {
               const product = products.find((item) => item.id === order.gameId);
               const pkg = product?.packages.find((item) => item.id === order.packageId);
@@ -175,58 +175,56 @@ export default function OrdersPage() {
               const hasAccountReference = Boolean(order.gameUserId && order.gameUserId !== 'manual-delivery');
 
               return (
-                <article key={order.id} className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
+                <article key={order.id} className="v2-surface p-5 sm:p-6">
                   <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-                    <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10">
+                    <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-[var(--v2-border)] bg-white shadow-[var(--v2-shadow-xs)]">
                       <img data-visual-required-image src={product?.image ?? '/brand/alwasl-mark.jpg'} alt="" className="h-full w-full object-contain p-1" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                          <h2 className="font-semibold text-zinc-950 dark:text-white">{productName}</h2>
-                          <p className="mt-1 text-sm font-semibold tabular-nums text-blue-700 dark:text-blue-300">{packageLabel}</p>
+                        <div className="min-w-0">
+                          <h2 className="text-base font-bold text-[var(--v2-navy)]">{productName}</h2>
+                          <p className="mt-1 text-sm font-semibold tabular-nums text-[var(--v2-gold-deep)]">{packageLabel}</p>
                         </div>
-                        <Badge variant="outline" className={`w-fit gap-1.5 ${statusClasses[order.status]}`}>
-                          <StatusIcon className={`h-3.5 w-3.5 ${order.status === 'processing' ? 'animate-spin' : ''}`} />
+                        <span className={`w-fit flex-shrink-0 ${statusClasses[order.status]}`}>
+                          <StatusIcon className={`h-3.5 w-3.5 ${order.status === 'processing' ? 'animate-spin motion-reduce:animate-none' : ''}`} />
                           {statusLabel(order.status)}
-                        </Badge>
+                        </span>
                       </div>
 
-                      <p className="mt-4 rounded-lg bg-zinc-100 p-3 text-sm leading-6 text-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+                      <p className="mt-4 rounded-xl bg-[var(--v2-surface-raised)] p-3.5 text-sm leading-6 text-[var(--v2-navy)]">
                         {getOrderStatusGuidance(order.status, language, order.fulfillmentMode)}
                       </p>
 
                       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                         <div>
-                          <dt className="text-xs text-zinc-500 dark:text-zinc-400">{t('Order ID', 'رقم الطلب', '订单号')}</dt>
+                          <dt className="text-xs font-semibold text-[var(--v2-subtle)]">{t('Order ID', 'رقم الطلب', '订单号')}</dt>
                           <dd className="mt-1 flex min-w-0 items-center gap-1">
-                            <span className="min-w-0 break-all font-mono text-xs font-semibold text-zinc-950 dark:text-white">{order.id}</span>
-                            <button onClick={() => void copyOrderId(order.id)} aria-label={t('Copy order ID', 'نسخ رقم الطلب', '复制订单号')} className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-md text-zinc-500 hover:bg-zinc-100 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:hover:bg-white/10 dark:hover:text-blue-300">
+                            <span className="min-w-0 break-all font-mono text-xs font-semibold text-[var(--v2-navy)]">{order.id}</span>
+                            <button onClick={() => void copyOrderId(order.id)} aria-label={t('Copy order ID', 'نسخ رقم الطلب', '复制订单号')} className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-[var(--v2-muted)] transition-colors hover:bg-[var(--v2-navy-soft)] hover:text-[var(--v2-navy)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)]">
                               <Copy className="h-4 w-4" />
                             </button>
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs text-zinc-500 dark:text-zinc-400">{hasAccountReference ? t('Account ID', 'معرف الحساب', '账号 ID') : t('Delivery', 'التسليم', '交付')}</dt>
-                          <dd className="mt-1 break-all font-medium text-zinc-950 dark:text-white">{hasAccountReference ? order.gameUserId : t('Through WhatsApp', 'عبر واتساب', '通过 WhatsApp')}</dd>
+                          <dt className="text-xs font-semibold text-[var(--v2-subtle)]">{hasAccountReference ? t('Account ID', 'معرف الحساب', '账号 ID') : t('Delivery', 'التسليم', '交付')}</dt>
+                          <dd className="mt-1 break-all font-medium text-[var(--v2-navy)]">{hasAccountReference ? order.gameUserId : t('Through WhatsApp', 'عبر واتساب', '通过 WhatsApp')}</dd>
                         </div>
                         <div>
-                          <dt className="text-xs text-zinc-500 dark:text-zinc-400">{t('Placed on', 'تاريخ الطلب', '下单时间')}</dt>
-                          <dd className="mt-1 text-zinc-700 dark:text-zinc-300">{formatDate(order.createdAt)}</dd>
+                          <dt className="text-xs font-semibold text-[var(--v2-subtle)]">{t('Placed on', 'تاريخ الطلب', '下单时间')}</dt>
+                          <dd className="mt-1 text-[var(--v2-muted)]">{formatDate(order.createdAt)}</dd>
                         </div>
                         <div>
-                          <dt className="text-xs text-zinc-500 dark:text-zinc-400">{t('Payment and total', 'الدفع والإجمالي', '付款及总计')}</dt>
-                          <dd className="mt-1 font-medium text-zinc-950 dark:text-white">{paymentLabel(order.paymentMethod)} · <span className="tabular-nums">{formatLocalAmount(order.finalPrice)}</span></dd>
+                          <dt className="text-xs font-semibold text-[var(--v2-subtle)]">{t('Payment and total', 'الدفع والإجمالي', '付款及总计')}</dt>
+                          <dd className="mt-1 font-medium text-[var(--v2-navy)]">{paymentLabel(order.paymentMethod)} · <span className="font-bold tabular-nums">{formatLocalAmount(order.finalPrice)}</span></dd>
                         </div>
                       </dl>
 
-                      <div className="mt-5 border-t border-black/10 pt-4 dark:border-white/10">
-                        <Button asChild variant="outline">
-                          <Link href={repeatHref}>
-                            <RefreshCw className="h-4 w-4" />
-                            {t('Top up this amount again', 'اشحن هذا المبلغ مرة أخرى', '再次充值此金额')}
-                          </Link>
-                        </Button>
+                      <div className="mt-5 border-t border-[var(--v2-border)] pt-4">
+                        <Link href={repeatHref} className="v2-secondary-button min-h-11 w-full text-sm sm:w-auto">
+                          <RefreshCw className="h-4 w-4" />
+                          {t('Top up this amount again', 'اشحن هذا المبلغ مرة أخرى', '再次充值此金额')}
+                        </Link>
                       </div>
                     </div>
                   </div>
@@ -235,11 +233,11 @@ export default function OrdersPage() {
             })}
           </div>
         ) : (
-          <section className="mt-5 flex min-h-72 flex-col items-center justify-center rounded-lg border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-zinc-900">
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-zinc-100 text-zinc-500 dark:bg-zinc-950 dark:text-zinc-400"><Package className="h-6 w-6" /></div>
-            <h2 className="mt-4 text-lg font-semibold text-zinc-950 dark:text-white">{orders.length ? t('No orders with this status', 'لا توجد طلبات بهذه الحالة', '没有此状态的订单') : t('No orders yet', 'لا توجد طلبات بعد', '暂无订单')}</h2>
-            <p className="mt-2 max-w-md text-sm leading-6 text-zinc-600 dark:text-zinc-300">{orders.length ? t('Choose another status above.', 'اختر حالة أخرى أعلاه.', '请在上方选择其他状态。') : t('Your first recharge order will appear here.', 'سيظهر أول طلب شحن لك هنا.', '您的第一笔充值订单会显示在这里。')}</p>
-            {!orders.length && <Button asChild className="mt-5 bg-blue-600 text-white hover:bg-blue-700"><Link href="/#categories">{t('Choose a category', 'اختر الفئة', '选择分类')}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link></Button>}
+          <section className="v2-empty mt-6 min-h-72">
+            <span className="v2-icon-tile v2-icon-tile-gold h-14 w-14 rounded-2xl"><Package className="h-6 w-6" /></span>
+            <h2 className="mt-4 text-lg font-bold text-[var(--v2-navy)]">{orders.length ? t('No orders with this status', 'لا توجد طلبات بهذه الحالة', '没有此状态的订单') : t('No orders yet', 'لا توجد طلبات بعد', '暂无订单')}</h2>
+            <p className="mt-2 max-w-md text-sm leading-6 text-[var(--v2-muted)]">{orders.length ? t('Choose another status above.', 'اختر حالة أخرى أعلاه.', '请在上方选择其他状态。') : t('Your first recharge order will appear here.', 'سيظهر أول طلب شحن لك هنا.', '您的第一笔充值订单会显示在这里。')}</p>
+            {!orders.length && <Link href="/#categories" className="v2-primary-button mt-6">{t('Choose a category', 'اختر الفئة', '选择分类')}<ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link>}
           </section>
         )}
       </main>

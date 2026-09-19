@@ -11,11 +11,11 @@ import {
   Settings,
   ShieldCheck,
   Star,
+  UserRound,
   Wallet,
 } from 'lucide-react';
 import { Header } from '@/components/layout/Header';
 import { AccountPageLoading } from '@/components/account/AccountPageLoading';
-import { Button } from '@/components/ui/button';
 import { useApp } from '@/contexts/AppContext';
 import { resolveMembershipForSpend } from '@/lib/membership';
 
@@ -28,22 +28,22 @@ export default function ProfilePage() {
     return (
       <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
         <Header />
-        <main className="container mx-auto flex min-h-[65vh] max-w-xl flex-col items-center justify-center px-4 text-center">
-          <span className="flex h-14 w-14 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300">
-            <ShieldCheck className="h-7 w-7" />
-          </span>
-          <h1 className="mt-5 text-2xl font-semibold text-zinc-950 dark:text-white">
-            {t('Log in to see your account', 'سجل الدخول لرؤية حسابك', '登录后查看您的账号')}
-          </h1>
-          <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-            {t('Your orders, wallet and account details stay together here.', 'تجد طلباتك ومحفظتك وبيانات حسابك هنا.', '您的订单、钱包和账号资料都集中在这里。')}
-          </p>
-          <Button asChild className="mt-5 bg-blue-600 text-white hover:bg-blue-700">
-            <Link href="/auth?next=%2Fprofile">
+        <main className="v2-container flex min-h-[65vh] max-w-xl flex-col items-center justify-center py-10 text-center">
+          <section className="v2-surface flex w-full flex-col items-center p-6 sm:p-8">
+            <span className="v2-icon-tile v2-icon-tile-gold h-14 w-14 rounded-2xl">
+              <ShieldCheck className="h-7 w-7" />
+            </span>
+            <h1 className="mt-5 text-2xl font-extrabold tracking-tight text-[var(--v2-navy)]">
+              {t('Log in to see your account', 'سجل الدخول لرؤية حسابك', '登录后查看您的账号')}
+            </h1>
+            <p className="mt-2 max-w-sm text-sm leading-6 text-[var(--v2-muted)]">
+              {t('Your orders, wallet and account details stay together here.', 'تجد طلباتك ومحفظتك وبيانات حسابك هنا.', '您的订单、钱包和账号资料都集中在这里。')}
+            </p>
+            <Link href="/auth?next=%2Fprofile" className="v2-primary-button mt-6 w-full sm:w-auto">
               {t('Log in', 'تسجيل الدخول', '登录')}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </Link>
-          </Button>
+          </section>
         </main>
       </div>
     );
@@ -96,50 +96,53 @@ export default function ProfilePage() {
     <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
-      <main className="container mx-auto max-w-5xl px-4 py-6 sm:py-10">
-        <Link href="/" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-zinc-500 hover:text-blue-700 dark:text-zinc-400 dark:hover:text-blue-300">
+      <main className="v2-container max-w-5xl py-6 pb-24 sm:py-10 lg:pb-10">
+        <Link href="/" className="v2-ghost-link">
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           {t('Back home', 'العودة للرئيسية', '返回首页')}
         </Link>
 
-        <header className="mt-4">
-          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t('Your account', 'حسابك', '您的账号')}</p>
-          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white sm:text-4xl">{t('Account overview', 'نظرة عامة على الحساب', '账号概览')}</h1>
+        <header className="v2-page-header mt-4">
+          <p className="v2-kicker">{t('Your account', 'حسابك', '您的账号')}</p>
+          <h1>{t('Account overview', 'نظرة عامة على الحساب', '账号概览')}</h1>
         </header>
 
         <div className="mt-6 grid items-start gap-5 lg:grid-cols-[320px_minmax(0,1fr)]">
-          <section className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-[#071b46] text-2xl font-semibold text-white">
+          <section className="v2-surface p-5 sm:p-6">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--v2-gold)] text-2xl font-extrabold text-[var(--v2-navy)] shadow-[var(--v2-shadow-sm)]">
               {initials}
             </div>
-            <h2 className="mt-4 break-words text-xl font-semibold text-zinc-950 dark:text-white">{displayName}</h2>
-            <p className="mt-1 break-all text-sm text-zinc-500 dark:text-zinc-400" dir="ltr">{user.phone}</p>
+            <h2 className="mt-4 break-words text-xl font-bold text-[var(--v2-navy)]">{displayName}</h2>
+            <p className="mt-1 break-all text-sm text-[var(--v2-muted)]" dir="ltr">{user.phone}</p>
 
-            <div className="mt-5 flex items-center gap-3 rounded-lg bg-[#fff8dd] p-3 dark:bg-[#ffd33d]/10">
-              <Star className="h-5 w-5 flex-shrink-0 text-[#8a5a00] dark:text-[#ffd966]" />
+            <div className="mt-5 flex items-center gap-3 rounded-xl bg-[var(--v2-gold-soft)] p-3">
+              <Star className="h-5 w-5 flex-shrink-0 text-[var(--v2-gold-deep)]" />
               <div className="min-w-0">
-                <p className="text-xs text-[#765600] dark:text-[#ffe89a]">{t('Membership', 'العضوية', '会员等级')}</p>
-                <p className="truncate text-sm font-semibold text-[#4b3600] dark:text-white">{t(level.en, level.ar, level.zh)}</p>
+                <p className="text-xs font-semibold text-[var(--v2-gold-deep)]">{t('Membership', 'العضوية', '会员等级')}</p>
+                <p className="truncate text-sm font-bold text-[var(--v2-navy)]">{t(level.en, level.ar, level.zh)}</p>
               </div>
             </div>
 
-            <div className="mt-5 border-t border-black/10 pt-4 dark:border-white/10">
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('Wallet balance', 'رصيد المحفظة', '钱包余额')}</p>
-              <p className="mt-1 break-words text-xl font-semibold tabular-nums text-zinc-950 dark:text-white">{formatLocalAmount(user.walletBalance)}</p>
+            <div className="mt-5 border-t border-[var(--v2-border)] pt-4">
+              <p className="text-xs font-semibold text-[var(--v2-subtle)]">{t('Wallet balance', 'رصيد المحفظة', '钱包余额')}</p>
+              <p className="mt-1 break-words text-xl font-extrabold tabular-nums tracking-tight text-[var(--v2-navy)]">{formatLocalAmount(user.walletBalance)}</p>
             </div>
           </section>
 
           <div className="min-w-0 space-y-5">
-            <section className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
-              <h2 className="text-xl font-semibold text-zinc-950 dark:text-white">{t('Account details', 'بيانات الحساب', '账号资料')}</h2>
-              <dl className="mt-4 divide-y divide-black/10 dark:divide-white/10">
+            <section className="v2-surface p-5 sm:p-6">
+              <div className="flex items-center gap-3">
+                <span className="v2-icon-tile v2-icon-tile-blue"><UserRound className="h-5 w-5" /></span>
+                <h2 className="text-base font-bold text-[var(--v2-navy)]">{t('Account details', 'بيانات الحساب', '账号资料')}</h2>
+              </div>
+              <dl className="mt-4 divide-y divide-[var(--v2-border)]">
                 {accountDetails.map((item) => (
                   <div key={item.label} className="grid gap-2 py-4 first:pt-0 last:pb-0 sm:grid-cols-[180px_minmax(0,1fr)] sm:items-center">
-                    <dt className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                      <item.icon className="h-4 w-4 text-blue-700 dark:text-blue-300" />
+                    <dt className="flex items-center gap-2 text-sm text-[var(--v2-muted)]">
+                      <item.icon className="h-4 w-4 text-[var(--v2-gold-deep)]" />
                       {item.label}
                     </dt>
-                    <dd className="break-words text-sm font-medium text-zinc-950 dark:text-white sm:text-end" dir={item.icon === Phone ? 'ltr' : undefined}>{item.value}</dd>
+                    <dd className="break-words text-sm font-semibold text-[var(--v2-navy)] sm:text-end" dir={item.icon === Phone ? 'ltr' : undefined}>{item.value}</dd>
                   </div>
                 ))}
               </dl>
@@ -148,13 +151,13 @@ export default function ProfilePage() {
             <section aria-labelledby="account-shortcuts" className="grid gap-3 sm:grid-cols-3">
               <h2 id="account-shortcuts" className="sr-only">{t('Account shortcuts', 'اختصارات الحساب', '账号快捷入口')}</h2>
               {shortcuts.map((shortcut) => (
-                <Link key={shortcut.href} href={shortcut.href} className="group flex min-h-36 flex-col rounded-lg border border-black/10 bg-white p-4 transition-colors hover:border-blue-300 hover:bg-blue-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-white/10 dark:bg-zinc-900 dark:hover:border-blue-500/50 dark:hover:bg-blue-500/10">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"><shortcut.icon className="h-5 w-5" /></span>
-                  <span className="mt-3 flex items-center justify-between gap-2 font-semibold text-zinc-950 dark:text-white">
+                <Link key={shortcut.href} href={shortcut.href} className="v2-surface v2-card-interactive group flex min-h-36 flex-col p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)]">
+                  <span className="v2-icon-tile v2-icon-tile-gold"><shortcut.icon className="h-5 w-5" /></span>
+                  <span className="mt-3 flex items-center justify-between gap-2 font-bold text-[var(--v2-navy)]">
                     {shortcut.title}
-                    <ArrowRight className="h-4 w-4 flex-shrink-0 text-zinc-400 transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
+                    <ArrowRight className="h-4 w-4 flex-shrink-0 text-[var(--v2-subtle)] transition-transform group-hover:translate-x-0.5 rtl:rotate-180 rtl:group-hover:-translate-x-0.5" />
                   </span>
-                  <span className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">{shortcut.description}</span>
+                  <span className="mt-1 text-xs leading-5 text-[var(--v2-muted)]">{shortcut.description}</span>
                 </Link>
               ))}
             </section>

@@ -39,26 +39,21 @@ export function InfoPage({ eyebrow, title, subtitle, sections, actions = [] }: I
     <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
-      <main className="container mx-auto max-w-5xl px-4 py-6 sm:py-10">
-        <Link href="/" className="inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-[var(--v2-muted)] hover:text-[var(--v2-gold)]">
+      <main className="v2-container max-w-5xl py-6 pb-24 sm:py-10 lg:pb-16">
+        <Link href="/" className="v2-ghost-link">
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           {t('Back home', 'العودة للرئيسية', '返回首页')}
         </Link>
 
-        <header className="mt-4 max-w-3xl">
+        <header className="v2-page-header mt-4">
           <p className="v2-kicker">{text(eyebrow)}</p>
-          <h1 className="mt-2 text-3xl font-semibold leading-tight text-zinc-950 dark:text-white sm:text-4xl">{text(title)}</h1>
-          <p className="mt-3 max-w-2xl text-base leading-7 text-zinc-600 dark:text-zinc-300">{text(subtitle)}</p>
+          <h1>{text(title)}</h1>
+          <p>{text(subtitle)}</p>
 
           {actions.length > 0 && (
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {actions.map((action, index) => {
-                const className = cn(
-                  'inline-flex min-h-12 items-center justify-center gap-2 rounded-md px-5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950',
-                  index === 0
-                    ? 'v2-primary-button'
-                    : 'border border-black/10 bg-white text-zinc-800 hover:bg-zinc-100 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-white/10'
-                );
+                const className = cn(index === 0 ? 'v2-primary-button' : 'v2-secondary-button');
                 const content = (
                   <>
                     {text(action.label)}
@@ -85,17 +80,20 @@ export function InfoPage({ eyebrow, title, subtitle, sections, actions = [] }: I
         </header>
 
         <section className="mt-8 grid gap-4 md:grid-cols-2" aria-label={text(eyebrow)}>
-          {sections.map((section) => (
-            <article key={section.title.en} className="v2-surface p-5 sm:p-6">
-              <h2 className="text-lg font-semibold text-zinc-950 dark:text-white">{text(section.title)}</h2>
+          {sections.map((section, index) => (
+            <article key={section.title.en} className="v2-surface relative overflow-hidden p-5 sm:p-6">
+              <span aria-hidden="true" className="absolute -end-4 -top-5 text-[4rem] font-black leading-none text-[var(--v2-navy-soft)] select-none">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <h2 className="relative text-lg font-bold text-[var(--v2-navy)]">{text(section.title)}</h2>
               {section.body && (
-                <p className="mt-3 text-sm leading-7 text-zinc-600 dark:text-zinc-300">{text(section.body)}</p>
+                <p className="relative mt-3 text-sm leading-7 text-[var(--v2-muted)]">{text(section.body)}</p>
               )}
               {section.items && (
-                <ul className="mt-4 space-y-3">
+                <ul className="relative mt-4 space-y-3">
                   {section.items.map((item) => (
-                    <li key={item.en} className="flex gap-3 text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-[var(--v2-gold)]" aria-hidden="true" />
+                    <li key={item.en} className="flex gap-3 text-sm leading-6 text-[var(--v2-muted)]">
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-[var(--v2-gold-deep)]" aria-hidden="true" />
                       <span>{text(item)}</span>
                     </li>
                   ))}

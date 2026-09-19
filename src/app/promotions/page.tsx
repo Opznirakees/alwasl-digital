@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Header } from '@/components/layout/Header';
-import { Button } from '@/components/ui/button';
 import { supportWhatsAppNormalizedNumber } from '@/config/contact';
 import { useApp } from '@/contexts/AppContext';
 import type { Game, Promotion } from '@/types';
@@ -106,48 +105,46 @@ export default function PromotionsPage() {
     <div className={`v2-page ${dir === 'rtl' ? 'rtl' : 'ltr'}`}>
       <Header />
 
-      <main className="container mx-auto max-w-5xl px-4 py-6 sm:py-10">
-        <Link href="/" className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-zinc-500 hover:text-blue-700 dark:text-zinc-400 dark:hover:text-blue-300">
+      <main className="v2-container max-w-5xl py-6 pb-24 sm:py-10 lg:pb-10">
+        <Link href="/" className="v2-ghost-link">
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           {t('Back home', 'العودة للرئيسية', '返回首页')}
         </Link>
 
-        <header className="mt-4 max-w-3xl">
-          <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{t('Recharge offers', 'عروض الشحن', '充值优惠')}</p>
-          <h1 className="mt-2 text-3xl font-semibold text-zinc-950 dark:text-white sm:text-4xl">
+        <header className="v2-page-header mt-4">
+          <p className="v2-kicker">{t('Recharge offers', 'عروض الشحن', '充值优惠')}</p>
+          <h1>
             {t('See which top-up offers are available', 'شاهد عروض الشحن المتاحة', '查看可用的充值优惠')}
           </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-300">
+          <p>
             {t('Found an offer you like? Send its code to WhatsApp support before paying so they can check it for you.', 'وجدت عرضاً مناسباً؟ أرسل رمزه إلى دعم واتساب قبل الدفع ليتحققوا منه لك.', '看到合适的优惠后，请在付款前将优惠码发送给 WhatsApp 客服进行确认。')}
           </p>
         </header>
 
         {isLoading ? (
-          <div className="mt-8 flex min-h-56 flex-col items-center justify-center rounded-lg border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-zinc-900" role="status">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-600 motion-reduce:animate-none" />
-            <p className="mt-3 text-sm font-medium text-zinc-700 dark:text-zinc-200">{t('Checking available offers...', 'جارٍ التحقق من العروض المتاحة...', '正在查看可用优惠...')}</p>
+          <div className="v2-empty mt-8" role="status">
+            <Loader2 className="h-6 w-6 animate-spin text-[var(--v2-gold-deep)] motion-reduce:animate-none" />
+            <p className="mt-3 text-sm font-semibold text-[var(--v2-navy)]">{t('Checking available offers...', 'جارٍ التحقق من العروض المتاحة...', '正在查看可用优惠...')}</p>
           </div>
         ) : loadError ? (
-          <div className="mt-8 flex min-h-56 flex-col items-center justify-center rounded-lg border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-zinc-900">
-            <RefreshCw className="h-6 w-6 text-zinc-400" />
-            <h2 className="mt-3 text-lg font-semibold text-zinc-950 dark:text-white">{t('Offers could not be loaded', 'تعذر تحميل العروض', '无法加载优惠')}</h2>
-            <p className="mt-1 max-w-sm text-sm leading-6 text-zinc-500 dark:text-zinc-400">{t('Check your connection and try again.', 'تحقق من الاتصال وحاول مرة أخرى.', '请检查网络后重试。')}</p>
-            <Button type="button" variant="outline" onClick={() => setLoadAttempt((value) => value + 1)} className="mt-4">
+          <div className="v2-empty mt-8">
+            <span className="v2-icon-tile"><RefreshCw className="h-5 w-5" /></span>
+            <h2 className="mt-4 text-lg font-bold text-[var(--v2-navy)]">{t('Offers could not be loaded', 'تعذر تحميل العروض', '无法加载优惠')}</h2>
+            <p className="mt-1 max-w-sm text-sm leading-6 text-[var(--v2-muted)]">{t('Check your connection and try again.', 'تحقق من الاتصال وحاول مرة أخرى.', '请检查网络后重试。')}</p>
+            <button type="button" onClick={() => setLoadAttempt((value) => value + 1)} className="v2-secondary-button mt-5">
               <RefreshCw className="h-4 w-4" />
               {t('Try again', 'حاول مرة أخرى', '重试')}
-            </Button>
+            </button>
           </div>
         ) : visiblePromotions.length === 0 ? (
-          <div className="mt-8 flex min-h-56 flex-col items-center justify-center rounded-lg border border-black/10 bg-white p-6 text-center dark:border-white/10 dark:bg-zinc-900">
-            <TicketPercent className="h-7 w-7 text-blue-700 dark:text-blue-300" />
-            <h2 className="mt-3 text-lg font-semibold text-zinc-950 dark:text-white">{t('No active offers right now', 'لا توجد عروض نشطة الآن', '目前没有可用优惠')}</h2>
-            <p className="mt-1 max-w-sm text-sm leading-6 text-zinc-500 dark:text-zinc-400">{t('You can still choose any available recharge category and amount.', 'لا يزال بإمكانك اختيار أي فئة ومبلغ شحن متاح.', '您仍可选择任意可用的充值分类和金额。')}</p>
-            <Button asChild className="mt-4 bg-blue-600 text-white hover:bg-blue-700">
-              <Link href="/#categories">
-                {t('Choose a category', 'اختر الفئة', '选择分类')}
-                <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-              </Link>
-            </Button>
+          <div className="v2-empty mt-8">
+            <span className="v2-icon-tile v2-icon-tile-gold h-14 w-14 rounded-2xl"><TicketPercent className="h-7 w-7" /></span>
+            <h2 className="mt-4 text-lg font-bold text-[var(--v2-navy)]">{t('No active offers right now', 'لا توجد عروض نشطة الآن', '目前没有可用优惠')}</h2>
+            <p className="mt-1 max-w-sm text-sm leading-6 text-[var(--v2-muted)]">{t('You can still choose any available recharge category and amount.', 'لا يزال بإمكانك اختيار أي فئة ومبلغ شحن متاح.', '您仍可选择任意可用的充值分类和金额。')}</p>
+            <Link href="/#categories" className="v2-primary-button mt-5">
+              {t('Choose a category', 'اختر الفئة', '选择分类')}
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+            </Link>
           </div>
         ) : (
           <section className="mt-8 grid gap-4 md:grid-cols-2" aria-label={t('Available recharge offers', 'عروض الشحن المتاحة', '可用充值优惠')}>
@@ -163,50 +160,46 @@ export default function PromotionsPage() {
               const copied = copiedCode === promotion.code;
 
               return (
-                <article key={promotion.id} className="rounded-lg border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-zinc-900 sm:p-6">
+                <article key={promotion.id} className="v2-surface flex flex-col p-5 sm:p-6">
                   <div className="flex items-start justify-between gap-4">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"><TicketPercent className="h-5 w-5" /></span>
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${state === 'upcoming' ? 'bg-zinc-100 text-zinc-600 dark:bg-white/10 dark:text-zinc-300' : 'bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-300'}`}>
+                    <span className="v2-icon-tile v2-icon-tile-gold"><TicketPercent className="h-5 w-5" /></span>
+                    <span className={`v2-status ${state === 'upcoming' ? 'v2-status-neutral' : 'v2-status-success'}`}>
                       {state === 'upcoming' ? t('Starts soon', 'يبدأ قريباً', '即将开始') : t('Available now', 'متاح الآن', '当前可用')}
                     </span>
                   </div>
 
-                  <h2 className="mt-5 text-2xl font-semibold text-zinc-950 dark:text-white">{discountText}</h2>
-                  <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
-                    {t('Minimum top-up', 'الحد الأدنى للشحن', '最低充值金额')}: <strong className="font-semibold text-zinc-950 dark:text-white">{formatLocalAmount(promotion.minPurchase)}</strong>
+                  <h2 className="mt-5 text-2xl font-extrabold tracking-tight text-[var(--v2-navy)]">{discountText}</h2>
+                  <p className="mt-2 text-sm text-[var(--v2-muted)]">
+                    {t('Minimum top-up', 'الحد الأدنى للشحن', '最低充值金额')}: <strong className="font-bold text-[var(--v2-navy)]">{formatLocalAmount(promotion.minPurchase)}</strong>
                   </p>
 
                   <button
                     type="button"
                     onClick={() => void copyCode(promotion.code)}
                     aria-label={t('Copy offer code {{code}}', 'انسخ رمز العرض {{code}}', '复制优惠码 {{code}}').replace('{{code}}', promotion.code)}
-                    className="mt-5 flex min-h-12 w-full items-center justify-between gap-3 rounded-lg border border-dashed border-blue-300 bg-blue-50 px-4 text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-blue-500/50 dark:bg-blue-500/10 dark:text-blue-100"
+                    className="mt-5 flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border border-dashed border-[var(--v2-gold)] bg-[var(--v2-gold-soft)] px-4 text-[var(--v2-navy)] transition-colors hover:border-solid hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--v2-gold)]"
                   >
-                    <span className="font-mono text-base font-semibold tracking-wide">{promotion.code}</span>
-                    <span className="flex items-center gap-2 text-xs font-semibold">
+                    <span className="font-mono text-base font-bold tracking-wide">{promotion.code}</span>
+                    <span className="flex items-center gap-2 text-xs font-bold text-[var(--v2-gold-deep)]">
                       {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                       {copied ? t('Copied', 'تم النسخ', '已复制') : t('Copy', 'نسخ', '复制')}
                     </span>
                   </button>
 
-                  <div className="mt-4 flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                    <CalendarDays className="h-4 w-4 flex-shrink-0" />
+                  <div className="mt-4 flex items-center gap-2 text-xs text-[var(--v2-muted)]">
+                    <CalendarDays className="h-4 w-4 flex-shrink-0 text-[var(--v2-subtle)]" />
                     <span>{formatDate(promotion.startDate)} - {formatDate(promotion.endDate)}</span>
                   </div>
 
-                  <div className="mt-5 grid gap-2 sm:grid-cols-2">
-                    <Button asChild className="bg-[#1f8f3a] text-white hover:bg-[#187631]">
-                      <a href={supportHref(promotion.code)} target="_blank" rel="noopener noreferrer">
-                        <MessageCircle className="h-4 w-4" />
-                        {t('Check this offer', 'تحقق من العرض', '咨询此优惠')}
-                      </a>
-                    </Button>
-                    <Button asChild variant="outline">
-                      <Link href={`/top-up/${product?.slug ?? 'waho-top-up'}`}>
-                        {t('Choose top-up', 'اختر الشحن', '选择充值')}
-                        <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-                      </Link>
-                    </Button>
+                  <div className="mt-auto grid gap-2 pt-5 sm:grid-cols-2">
+                    <a href={supportHref(promotion.code)} target="_blank" rel="noopener noreferrer" className="v2-primary-button min-h-11 text-sm">
+                      <MessageCircle className="h-4 w-4" />
+                      {t('Check this offer', 'تحقق من العرض', '咨询此优惠')}
+                    </a>
+                    <Link href={`/top-up/${product?.slug ?? 'waho-top-up'}`} className="v2-secondary-button min-h-11 text-sm">
+                      {t('Choose top-up', 'اختر الشحن', '选择充值')}
+                      <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+                    </Link>
                   </div>
                 </article>
               );
