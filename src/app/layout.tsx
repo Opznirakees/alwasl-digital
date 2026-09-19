@@ -33,6 +33,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="light" suppressHydrationWarning>
+      <head>
+        {/* Apply the stored theme before first paint to avoid a light flash in dark mode. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "(function(){try{var t=localStorage.getItem('alwasl-theme');var d=t==='dark'||((!t||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();",
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${notoKufiArabic.variable} bg-background font-sans text-foreground antialiased`}
       >

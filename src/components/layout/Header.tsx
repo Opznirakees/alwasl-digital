@@ -12,14 +12,18 @@ import {
   Loader2,
   LogOut,
   Menu,
+  MonitorSmartphone,
+  Moon,
   ReceiptText,
   Settings,
   Sparkles,
+  Sun,
   User,
   Wallet,
   Zap,
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
+import { useTheme, type ThemePreference } from '@/hooks/use-theme';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -60,6 +64,12 @@ export function Header() {
     formatLocalAmount,
   } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { preference: themePreference, resolved: resolvedTheme, setPreference: setThemePreference, toggle: toggleTheme } = useTheme();
+  const themeOptions: { id: ThemePreference; label: string; icon: typeof Sun }[] = [
+    { id: 'light', label: t('Light', 'فاتح', '浅色'), icon: Sun },
+    { id: 'dark', label: t('Dark', 'داكن', '深色'), icon: Moon },
+    { id: 'system', label: t('Auto', 'تلقائي', '自动'), icon: MonitorSmartphone },
+  ];
   const activeLanguage = languageOptions.find((option) => option.id === language) ?? languageOptions[0];
 
   const isRouteActive = (href: string) => {
@@ -131,7 +141,7 @@ export function Header() {
     <>
       <header data-v2-header className="v2-brand-header sticky top-0 z-50 w-full border-b backdrop-blur-xl">
         <div className="v2-container">
-          <div className="grid h-[68px] grid-cols-[90px_minmax(0,1fr)_90px] items-center gap-1 sm:grid-cols-[44px_minmax(0,1fr)_auto] sm:gap-2 lg:flex lg:h-[72px] lg:gap-6">
+          <div className="grid h-[68px] grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-1 sm:gap-2 lg:flex lg:h-[72px] lg:gap-6">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button
@@ -145,7 +155,7 @@ export function Header() {
               </SheetTrigger>
               <SheetContent
                 side={dir === 'rtl' ? 'right' : 'left'}
-                className="w-[calc(100vw-1.5rem)] max-w-sm overflow-y-auto border-[var(--v2-border)] bg-white p-5 text-[var(--v2-navy)]"
+                className="w-[calc(100vw-1.5rem)] max-w-sm overflow-y-auto border-[var(--v2-border)] bg-[var(--v2-surface)] p-5 text-[var(--v2-navy)]"
               >
                 <SheetHeader className={dir === 'rtl' ? 'text-right' : 'text-left'}>
                   <div className="flex items-center gap-3">
@@ -219,10 +229,39 @@ export function Header() {
                         className={cn(
                           'min-h-10 rounded-lg text-sm font-semibold transition-colors',
                           language === option.id
-                            ? 'bg-white text-[var(--v2-navy)] shadow-[var(--v2-shadow-xs)]'
+                            ? 'bg-[var(--v2-surface)] text-[var(--v2-navy)] shadow-[var(--v2-shadow-xs)]'
                             : 'text-[var(--v2-muted)] hover:text-[var(--v2-navy)]'
                         )}
                       >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="mt-6">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Moon className="h-4 w-4 text-[var(--v2-gold-deep)]" />
+                    <h2 className="text-sm font-semibold text-[var(--v2-navy)]">
+                      {t('Appearance', 'المظهر', '外观')}
+                    </h2>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 rounded-xl bg-[var(--v2-surface-raised)] p-1" role="radiogroup" aria-label={t('Appearance', 'المظهر', '外观')}>
+                    {themeOptions.map((option) => (
+                      <button
+                        key={option.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={themePreference === option.id}
+                        onClick={() => setThemePreference(option.id)}
+                        className={cn(
+                          'inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg text-sm font-semibold transition-colors',
+                          themePreference === option.id
+                            ? 'bg-[var(--v2-surface)] text-[var(--v2-navy)] shadow-[var(--v2-shadow-xs)]'
+                            : 'text-[var(--v2-muted)] hover:text-[var(--v2-navy)]'
+                        )}
+                      >
+                        <option.icon className="h-4 w-4" />
                         {option.label}
                       </button>
                     ))}
@@ -318,7 +357,7 @@ export function Header() {
               </div>
             </nav>
 
-            <div className="col-start-3 flex items-center justify-end gap-1 sm:gap-2">
+            <div className="col-start-3 flex items-center justify-end gap-0.5 sm:gap-2">
               <Link
                 href={protectedHref('/#categories')}
                 aria-current={pathname.startsWith('/top-up') || pathname.startsWith('/categories') ? 'page' : undefined}
@@ -327,6 +366,17 @@ export function Header() {
                 <Zap className="h-4 w-4" />
                 {t('Choose category', 'اختر الفئة', '选择分类')}
               </Link>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                aria-label={resolvedTheme === 'dark' ? t('Switch to light mode', 'التبديل إلى الوضع الفاتح', '切换到浅色模式') : t('Switch to dark mode', 'التبديل إلى الوضع الداكن', '切换到深色模式')}
+                className="h-11 w-11 rounded-full text-[var(--v2-muted)] hover:bg-[var(--v2-navy-soft)] hover:text-[var(--v2-navy)]"
+              >
+                {resolvedTheme === 'dark' ? <Sun className="h-[18px] w-[18px] text-[var(--v2-gold-deep)]" /> : <Moon className="h-[18px] w-[18px]" />}
+              </Button>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

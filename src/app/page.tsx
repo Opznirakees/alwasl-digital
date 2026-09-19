@@ -141,7 +141,7 @@ export default function HomePage() {
               <p className="v2-kicker justify-center sm:justify-start">{t('Simple from the first tap', 'بسيط من أول ضغطة', '从第一次点击就很简单')}</p>
               <h2 id="steps-heading" className="v2-title mt-2 text-2xl sm:text-3xl">{t('Recharge in 3 steps', 'اشحن في 3 خطوات', '3 步完成充值')}</h2>
             </div>
-            <ol data-v2-process-steps className="mt-5 grid grid-cols-3 gap-2 sm:gap-3 lg:mt-0">
+            <ol data-v2-process-steps className="mt-5 grid grid-cols-3 gap-2 sm:gap-3 lg:mt-0 lg:gap-3">
               {steps.map((step, index) => (
                 <li key={step.title} className="v2-step-card">
                   <span className="v2-step-number" aria-hidden="true">0{index + 1}</span>
@@ -156,7 +156,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="categories" className="scroll-mt-24 py-10 sm:py-16" aria-labelledby="categories-heading">
+        <section id="categories" className="v2-band scroll-mt-24 py-10 sm:py-16" aria-labelledby="categories-heading">
           <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="max-w-2xl">

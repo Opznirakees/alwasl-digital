@@ -8,7 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleHelp,
-  Clock3,
   ReceiptText,
   ShieldCheck,
   Smartphone,
@@ -122,52 +121,30 @@ export function HeroBanner({ banners, isLoading = false }: HeroBannerProps) {
           <div
             dir={dir}
             aria-live="polite"
-            className={`relative flex min-w-0 flex-col justify-center px-4 pb-[128px] pt-4 text-start sm:px-8 sm:pb-[116px] sm:pt-6 lg:px-12 lg:pb-28 lg:pt-8 ${isRedCampaign ? 'v2-hero-copy-red' : 'v2-hero-copy'}`}
+            className={`relative flex min-w-0 flex-col justify-center px-5 pb-[128px] pt-6 text-start sm:px-9 sm:pb-[116px] sm:pt-8 lg:px-14 lg:pb-28 ${isRedCampaign ? 'v2-hero-copy-red' : 'v2-hero-copy'}`}
           >
-            <div className="hidden items-center gap-3 sm:flex">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--v2-border)] bg-white shadow-[var(--v2-shadow-sm)]">
-                <Image src="/brand/alwasl-mark.jpg" alt="" width={40} height={40} className="h-9 w-9 object-contain" />
-              </span>
-              <span>
-                <span className="block text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--v2-subtle)]">Al-Wasl Digital</span>
-                <span className={`mt-0.5 flex items-center gap-1 text-xs font-semibold ${accentText}`}>
-                  <BadgeCheck className="h-3.5 w-3.5" />
-                  {t('Official recharge service', 'خدمة شحن موثوقة', '正规充值服务')}
-                </span>
-              </span>
-            </div>
+            <span aria-hidden="true" className={`v2-hero-orb ${isRedCampaign ? 'v2-hero-orb-red' : ''}`} />
 
-            <div className={`inline-flex max-w-max items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-bold sm:mt-5 ${isRedCampaign ? 'border-[#f5b3c9] bg-[#fff0f5] text-[#b0325f]' : 'border-[#bfe4f9] bg-[#edf9ff] text-[var(--v2-blue)]'}`}>
+            <div className={`v2-animate-in inline-flex max-w-max items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-bold ${isRedCampaign ? 'border-[#f5b3c9] bg-[#fff0f5] text-[#b0325f]' : 'border-[#bfe4f9] bg-[#edf9ff] text-[var(--v2-blue)]'}`}>
               {isRedCampaign ? <BadgeCheck className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
               {isRedCampaign
                 ? t('Selected WAHO offers', 'عروض واهو مختارة', '精选 WAHO 优惠')
-                : t('Fast and protected', 'سريع ومحمي', '快捷且安全')}
+                : t('Official recharge service', 'خدمة شحن موثوقة', '正规充值服务')}
             </div>
 
-            <h1 className="v2-title mt-2.5 max-w-[640px] text-[1.75rem] sm:mt-3 sm:text-[2.6rem] lg:text-[3.3rem]">
+            <h1 className="v2-title v2-animate-in v2-delay-1 mt-4 max-w-[560px] text-[1.9rem] sm:text-[2.7rem] lg:text-[3.4rem]">
               {localizedTitle}
             </h1>
-            <p className="mt-2 max-w-[560px] text-sm leading-6 text-[var(--v2-muted)] sm:mt-3 sm:text-base sm:leading-7">
+            <p className="v2-animate-in v2-delay-2 mt-3 max-w-[460px] text-[15px] leading-6 text-[var(--v2-muted)] sm:text-base sm:leading-7">
               {localizedSubtitle}
             </p>
 
-            <div className="mt-4 hidden flex-wrap gap-2 sm:flex">
-              <span className="v2-chip">
-                <Clock3 className={`h-4 w-4 ${accentText}`} />
-                {t('Fast handling', 'تنفيذ سريع', '快速处理')}
-              </span>
-              <span className="v2-chip">
-                <BadgeCheck className={`h-4 w-4 ${isRedCampaign ? 'text-[var(--v2-gold-deep)]' : 'text-[#7657d4]'}`} />
-                {t('Registered company', 'شركة مسجلة', '正规注册企业')}
-              </span>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2.5 sm:mt-6 sm:gap-3">
-              <Link data-testid="home-primary-topup" href={primaryHref} className={`v2-primary-button min-h-11 min-w-40 sm:min-h-12 sm:min-w-44 ${isRedCampaign ? 'v2-primary-button-red' : 'v2-primary-button-blue'}`}>
+            <div className="v2-animate-in v2-delay-3 mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 sm:mt-7">
+              <Link data-testid="home-primary-topup" href={primaryHref} className={`v2-primary-button min-h-11 min-w-40 sm:min-h-12 sm:min-w-48 ${isRedCampaign ? 'v2-primary-button-red' : 'v2-primary-button-blue'}`}>
                 {t('View recharge options', 'عرض خيارات الشحن', '查看充值选项')}
                 <ChevronRight className="h-4 w-4 rtl:rotate-180" />
               </Link>
-              <Link href="/help" className="v2-secondary-button min-h-11 sm:min-h-12">
+              <Link href="/help" className="v2-ghost-link text-[var(--v2-navy)] hover:text-[var(--v2-blue)]">
                 <CircleHelp className={`h-4 w-4 ${accentText}`} />
                 {t('How it works', 'كيف يعمل', '如何操作')}
               </Link>
@@ -182,8 +159,8 @@ export function HeroBanner({ banners, isLoading = false }: HeroBannerProps) {
               <img data-visual-required-image src={imageSource} alt="" className="h-full w-full object-cover object-center" />
             </picture>
           </div>
-          <div className={`absolute inset-0 ${dir === 'rtl' ? 'bg-[linear-gradient(90deg,rgba(255,255,255,0.12),rgba(255,255,255,0.9)_52%,#ffffff_94%)]' : 'bg-[linear-gradient(90deg,#ffffff_6%,rgba(255,255,255,0.9)_48%,rgba(255,255,255,0.12))]'}`} />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02)_36%,#ffffff_100%)]" />
+          <div className="v2-hero-fade absolute inset-0" />
+          <div className="v2-hero-fade-bottom absolute inset-0" />
 
           <div data-v2-brand-corner aria-hidden="true" className="v2-hero-brandmark pointer-events-none absolute right-0 top-0 z-20 hidden h-[168px] w-[192px] md:block lg:h-[198px] lg:w-[224px]">
             <span className="v2-hero-brandmark-accent absolute inset-0" />
@@ -196,18 +173,18 @@ export function HeroBanner({ banners, isLoading = false }: HeroBannerProps) {
 
           <div className="relative z-10 flex min-h-[610px] items-end px-5 pb-[120px] pt-20 sm:min-h-[560px] sm:items-center sm:px-10 sm:pb-32 sm:pt-8 lg:min-h-[520px] lg:px-12">
             <div className={`max-w-[630px] text-start ${dir === 'rtl' ? 'md:mr-[190px] lg:mr-[220px]' : ''}`}>
-              <div className="v2-chip v2-chip-blue backdrop-blur-md">
+              <div className="v2-chip v2-chip-blue v2-animate-in backdrop-blur-md">
                 <ShieldCheck className="h-4 w-4" />
                 {t('Secure digital recharge', 'شحن رقمي آمن', '安全数字充值')}
               </div>
-              <h1 className="v2-title mt-4 max-w-[560px] text-[2.1rem] sm:mt-5 sm:text-5xl lg:text-[3.5rem]">{localizedTitle}</h1>
-              <p className="mt-3 max-w-[540px] text-[15px] leading-7 text-[var(--v2-muted)] sm:mt-5 sm:text-lg sm:leading-8">{localizedSubtitle}</p>
-              <div className="mt-6 flex flex-wrap gap-3 sm:mt-7">
+              <h1 className="v2-title v2-animate-in v2-delay-1 mt-4 max-w-[560px] text-[2.1rem] sm:mt-5 sm:text-5xl lg:text-[3.5rem]">{localizedTitle}</h1>
+              <p className="v2-animate-in v2-delay-2 mt-3 max-w-[480px] text-[15px] leading-7 text-[var(--v2-muted)] sm:mt-4 sm:text-lg sm:leading-8">{localizedSubtitle}</p>
+              <div className="v2-animate-in v2-delay-3 mt-6 flex flex-wrap items-center gap-x-5 gap-y-3 sm:mt-7">
                 <Link data-testid="home-primary-topup" href={primaryHref} className="v2-primary-button min-h-12 min-w-44">
                   {t('Choose category', 'اختر الفئة', '选择分类')}
                   <ChevronRight className="h-4 w-4 rtl:rotate-180" />
                 </Link>
-                <Link href="/help" className="v2-secondary-button min-h-12 bg-white/90">
+                <Link href="/help" className="v2-ghost-link text-[var(--v2-navy)] hover:text-[var(--v2-blue)]">
                   <CircleHelp className="h-4 w-4 text-[var(--v2-blue)]" />
                   {t('How it works', 'كيف يعمل', '如何操作')}
                 </Link>
