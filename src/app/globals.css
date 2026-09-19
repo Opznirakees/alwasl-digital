@@ -724,8 +724,14 @@
 
   @media (min-width: 640px) {
     .v2-category-card {
-      grid-template-columns: minmax(0, 1fr) 150px;
+      grid-template-columns: minmax(0, 1fr) 120px;
       padding: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .v2-category-card {
+      grid-template-columns: minmax(0, 1fr) 150px;
     }
   }
 

@@ -209,7 +209,7 @@ export default function HomePage() {
                         </span>
                         <span className="v2-title mt-4 text-2xl sm:text-[1.75rem]">{content.name}</span>
                         <span className="mt-2 line-clamp-3 text-[13px] leading-6 text-[var(--v2-muted)] sm:text-sm">{content.description}</span>
-                        <span className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-full bg-[var(--v2-navy)] px-4 text-xs font-bold text-white transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5">
+                        <span className="mt-5 inline-flex min-h-10 items-center gap-2 whitespace-nowrap rounded-full bg-[var(--v2-navy)] px-4 text-xs font-bold text-white transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5">
                           {canOpen ? <Zap className="h-3.5 w-3.5 text-[var(--v2-gold)]" /> : <LockKeyhole className="h-3.5 w-3.5 text-[var(--v2-gold)]" />}
                           {canOpen
                             ? t('View prices', 'عرض الأسعار', '查看价格')
