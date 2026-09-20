@@ -151,7 +151,7 @@ export function HeroBanner({ banners, isLoading = false }: HeroBannerProps) {
         </div>
       ) : (
         <>
-          <div className="absolute inset-0" aria-live="polite">
+          <div className="v2-hero-fallback-visual absolute inset-0" aria-live="polite">
             <picture key={active.id}>
               {active.mobileImage && <source media="(max-width: 639px)" srcSet={active.mobileImage} />}
               <img data-visual-required-image src={imageSource} alt="" className="h-full w-full object-cover object-center" />
@@ -169,7 +169,7 @@ export function HeroBanner({ banners, isLoading = false }: HeroBannerProps) {
             </div>
           </div>
 
-          <div className="relative z-10 flex min-h-[610px] items-end px-5 pb-[120px] pt-20 sm:min-h-[560px] sm:items-center sm:px-10 sm:pb-32 sm:pt-8 lg:min-h-[520px] lg:px-12">
+          <div className="v2-hero-fallback-copy relative z-10 flex min-h-[610px] items-end px-5 pb-[120px] pt-20 sm:min-h-[560px] sm:items-center sm:px-10 sm:pb-32 sm:pt-8 lg:min-h-[520px] lg:px-12">
             <div className={`max-w-[630px] text-start ${dir === 'rtl' ? 'md:mr-[190px] lg:mr-[220px]' : ''}`}>
               <div className="v2-chip v2-chip-blue v2-animate-in">
                 <ShieldCheck className="h-4 w-4" />

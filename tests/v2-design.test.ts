@@ -104,6 +104,16 @@ describe('V2 multi-category visual system', () => {
     expect(home).not.toContain('blur-3xl');
   });
 
+  it('keeps the fallback artwork crisp on phones with a separate solid copy area', () => {
+    const styles = read('src/app/globals.css');
+    const hero = read('src/components/home/HeroBanner.tsx');
+
+    expect(hero).toContain('v2-hero-fallback-visual');
+    expect(hero).toContain('v2-hero-fallback-copy');
+    expect(styles).toContain('.v2-hero-fallback-copy');
+    expect(styles).toContain('.v2-hero-fade-bottom');
+  });
+
   it('keeps LEO out of the hero and exposes only a subtle footer contact', () => {
     const hero = read('src/components/home/HeroBanner.tsx');
     const home = read('src/app/page.tsx');

@@ -684,15 +684,40 @@
   }
 
   .v2-hero-fade {
-    background: linear-gradient(90deg, #ffffff 6%, rgba(255, 255, 255, 0.9) 48%, rgba(255, 255, 255, 0.12));
+    background: linear-gradient(90deg, #ffffff 0%, #ffffff 45%, rgba(255, 255, 255, 0.76) 60%, transparent 82%);
   }
 
   [dir="rtl"] .v2-hero-fade {
-    background: linear-gradient(90deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.9) 52%, #ffffff 94%);
+    background: linear-gradient(90deg, transparent 18%, rgba(255, 255, 255, 0.76) 40%, #ffffff 55%, #ffffff 100%);
   }
 
   .v2-hero-fade-bottom {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.02) 36%, #ffffff 100%);
+  }
+
+  @media (max-width: 639px) {
+    .v2-hero .v2-hero-fallback-visual {
+      bottom: auto;
+      height: 220px;
+    }
+
+    .v2-hero .v2-hero-fallback-visual picture,
+    .v2-hero .v2-hero-fallback-visual img {
+      display: block;
+      height: 100%;
+      width: 100%;
+      object-position: center 5%;
+    }
+
+    .v2-hero-fade,
+    .v2-hero-fade-bottom {
+      display: none;
+    }
+
+    .v2-hero .v2-hero-fallback-copy {
+      padding-top: 244px;
+      background: linear-gradient(180deg, transparent 0 220px, var(--v2-surface) 220px);
+    }
   }
 
   .v2-hero-metric {
@@ -1485,12 +1510,12 @@
 }
 
 :root[data-theme="dark"] .v2-hero-fade {
-  background: linear-gradient(90deg, #0f172c 6%, rgba(15, 23, 44, 0.9) 48%, rgba(15, 23, 44, 0.15));
+  background: linear-gradient(90deg, #0f172c 0%, #0f172c 45%, rgba(15, 23, 44, 0.76) 60%, transparent 82%);
 }
 
 :root[data-theme="dark"] [dir="rtl"] .v2-hero-fade,
 :root[data-theme="dark"][dir="rtl"] .v2-hero-fade {
-  background: linear-gradient(90deg, rgba(15, 23, 44, 0.15), rgba(15, 23, 44, 0.9) 52%, #0f172c 94%);
+  background: linear-gradient(90deg, transparent 18%, rgba(15, 23, 44, 0.76) 40%, #0f172c 55%, #0f172c 100%);
 }
 
 :root[data-theme="dark"] .v2-hero-fade-bottom {
