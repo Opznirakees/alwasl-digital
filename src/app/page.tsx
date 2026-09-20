@@ -204,7 +204,7 @@ export default function HomePage() {
                       style={{ '--category-accent': category.accentColor || fallbackAccent } as CSSProperties}
                     >
                       <span className="relative z-10 flex min-w-0 flex-col items-start justify-center text-start">
-                        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-[11px] font-bold text-[var(--v2-navy)] shadow-[var(--v2-shadow-xs)] backdrop-blur">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--v2-border)] bg-[var(--v2-surface)] px-2.5 py-1 text-[11px] font-bold text-[var(--v2-navy)]">
                           <span className="h-1.5 w-1.5 rounded-full bg-[var(--category-accent)]" />
                           {t('{{count}} service', '{{count}} خدمة', '{{count}} 项服务').replace('{{count}}', String(category.productCount))}
                         </span>
@@ -250,14 +250,13 @@ export default function HomePage() {
 
         <Reveal as="section" className="mx-auto max-w-[1200px] px-4 pb-12 sm:px-6 sm:pb-16" aria-labelledby="support-heading">
           <div className="v2-surface relative overflow-hidden p-6 sm:p-8 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-8">
-            <span aria-hidden="true" className="pointer-events-none absolute -end-16 -top-16 h-56 w-56 rounded-full bg-[var(--v2-gold)]/15 blur-3xl" />
             <div className="relative">
               <p className="v2-kicker">{t('WhatsApp support', 'دعم واتساب', 'WhatsApp 支持')}</p>
               <h2 id="support-heading" className="v2-title mt-3 text-2xl sm:text-3xl">{t('Questions? Message LEO on WhatsApp.', 'أسئلة؟ راسل ليو على واتساب.', '有疑问？在 WhatsApp 上联系 LEO。')}</h2>
               <p className="mt-3 max-w-xl text-[15px] leading-7 text-[var(--v2-muted)]">{t('Send your order ID and a short description. Never share a password or verification code.', 'أرسل رقم الطلب ووصفاً قصيراً. لا تشارك كلمة مرور أو رمز تحقق أبداً.', '发送订单号和简短说明。切勿分享密码或验证码。')}</p>
             </div>
             <div className="relative mt-6 flex flex-col gap-3 sm:flex-row sm:items-center lg:mt-0 lg:flex-col lg:items-stretch">
-              <a href={supportWhatsAppHref} target="_blank" rel="noopener noreferrer" className="v2-primary-button min-h-12 bg-[linear-gradient(180deg,#34c76a_0%,#1f9d55_60%,#178a49_100%)] text-white shadow-[0_12px_26px_-10px_rgba(31,157,85,0.7)]">
+              <a href={supportWhatsAppHref} target="_blank" rel="noopener noreferrer" className="v2-primary-button min-h-12 bg-[var(--v2-green)] !text-white shadow-none hover:bg-[#178a49]">
                 <MessageCircle className="h-4 w-4" />
                 {t('Open WhatsApp', 'افتح واتساب', '打开 WhatsApp')}
               </a>

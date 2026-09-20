@@ -959,7 +959,7 @@ function TopUpDetailPageContent({ params }: TopUpPageProps) {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-[calc(68px+env(safe-area-inset-bottom))] z-[55] border-t border-[var(--v2-border)] bg-white/90 p-3 shadow-[0_-14px_36px_rgba(7,21,46,0.12)] backdrop-blur-xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-[calc(68px+env(safe-area-inset-bottom))] z-[55] border-t border-[var(--v2-border)] bg-[var(--v2-surface)] p-3 lg:hidden">
         <div className={`mx-auto grid max-w-xl gap-3 ${step === 'package' ? 'grid-cols-1' : 'grid-cols-[48px_minmax(0,1fr)]'}`}>
           {step !== 'package' && (
             <Button

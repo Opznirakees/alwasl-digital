@@ -123,8 +123,6 @@ export function HeroBanner({ banners, isLoading = false }: HeroBannerProps) {
             aria-live="polite"
             className={`relative flex min-w-0 flex-col justify-center px-5 pb-[128px] pt-6 text-start sm:px-9 sm:pb-[116px] sm:pt-8 lg:px-14 lg:pb-28 ${isRedCampaign ? 'v2-hero-copy-red' : 'v2-hero-copy'}`}
           >
-            <span aria-hidden="true" className={`v2-hero-orb ${isRedCampaign ? 'v2-hero-orb-red' : ''}`} />
-
             <div className={`v2-animate-in inline-flex max-w-max items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-bold ${isRedCampaign ? 'border-[#f5b3c9] bg-[#fff0f5] text-[#b0325f]' : 'border-[#bfe4f9] bg-[#edf9ff] text-[var(--v2-blue)]'}`}>
               {isRedCampaign ? <BadgeCheck className="h-4 w-4" /> : <ShieldCheck className="h-4 w-4" />}
               {isRedCampaign
@@ -173,7 +171,7 @@ export function HeroBanner({ banners, isLoading = false }: HeroBannerProps) {
 
           <div className="relative z-10 flex min-h-[610px] items-end px-5 pb-[120px] pt-20 sm:min-h-[560px] sm:items-center sm:px-10 sm:pb-32 sm:pt-8 lg:min-h-[520px] lg:px-12">
             <div className={`max-w-[630px] text-start ${dir === 'rtl' ? 'md:mr-[190px] lg:mr-[220px]' : ''}`}>
-              <div className="v2-chip v2-chip-blue v2-animate-in backdrop-blur-md">
+              <div className="v2-chip v2-chip-blue v2-animate-in">
                 <ShieldCheck className="h-4 w-4" />
                 {t('Secure digital recharge', 'شحن رقمي آمن', '安全数字充值')}
               </div>
@@ -199,7 +197,7 @@ export function HeroBanner({ banners, isLoading = false }: HeroBannerProps) {
           <button type="button" onClick={goPrevious} title={t('Previous banner', 'البانر السابق', '上一张横幅')} aria-label={t('Previous banner', 'البانر السابق', '上一张横幅')} className="v2-carousel-button hidden sm:flex">
             <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
           </button>
-          <div className="flex gap-2 rounded-full bg-white/80 px-2.5 py-2 shadow-[var(--v2-shadow-xs)] backdrop-blur-md" role="tablist" aria-label={t('Choose banner', 'اختر البانر', '选择横幅')}>
+          <div className="flex gap-2 rounded-full border border-[var(--v2-border)] bg-[var(--v2-surface)] px-2.5 py-2" role="tablist" aria-label={t('Choose banner', 'اختر البانر', '选择横幅')}>
             {slides.map((slide, index) => (
               <button key={slide.id} type="button" onClick={() => setActiveIndex(index)} aria-label={`${t('Banner', 'بانر', '横幅')} ${index + 1}`} aria-selected={index === activeIndex} role="tab" className={`h-2 rounded-full transition-[width,background-color] duration-300 ${index === activeIndex ? `w-7 ${isRedCampaign ? 'bg-[#d54f78]' : 'bg-[var(--v2-navy)]'}` : 'w-2 bg-[var(--v2-border-strong)] hover:bg-[var(--v2-subtle)]'}`} />
             ))}
@@ -210,7 +208,7 @@ export function HeroBanner({ banners, isLoading = false }: HeroBannerProps) {
         </div>
       )}
 
-      <div data-v2-hero-metrics className="absolute inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-[var(--v2-border)] bg-white/95 px-1 py-2 backdrop-blur-xl sm:px-6 sm:py-3">
+      <div data-v2-hero-metrics className="absolute inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-[var(--v2-border)] bg-[var(--v2-surface)] px-1 py-2 sm:px-6 sm:py-3">
         {metrics.map((item, index) => (
           <div key={item.title} className="v2-hero-metric">
             <span className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg sm:h-9 sm:w-9 ${index % 2 ? 'bg-[#fff0f5] text-[#d54f78]' : 'bg-[var(--v2-blue-soft)] text-[var(--v2-blue)]'}`}>

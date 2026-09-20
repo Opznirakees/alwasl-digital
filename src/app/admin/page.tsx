@@ -1354,7 +1354,7 @@ export default function AdminDashboard() {
       className={`v2-admin-page min-h-screen bg-[#f4f7fb] ${dir === 'rtl' ? 'rtl' : 'ltr'}`}
     >
       {/* Top Navigation */}
-      <header className="sticky top-0 z-50 border-b border-[#d9e1ec] bg-white/95 shadow-[0_8px_24px_rgba(28,55,92,0.08)] backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-[#d9e1ec] bg-white">
         <div className="flex items-center justify-between gap-3 px-3 sm:px-4 h-16">
           <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <Button
@@ -1430,7 +1430,7 @@ export default function AdminDashboard() {
             onClick={() => setMobileNavOpen(false)}
             className="absolute inset-0 bg-black/70"
           />
-          <aside className={`absolute inset-y-0 w-[min(20rem,calc(100vw-2rem))] border-[#d9e1ec] bg-white shadow-2xl ${dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'}`}>
+          <aside className={`absolute inset-y-0 w-[min(20rem,calc(100vw-2rem))] border-[#d9e1ec] bg-white shadow-md ${dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'}`}>
             <nav aria-label={t('Admin sections', 'أقسام الإدارة', '管理栏目')} className="h-full space-y-1 overflow-y-auto p-4">
               {sidebarItems.map((item) => (
                 <button
@@ -1460,7 +1460,7 @@ export default function AdminDashboard() {
         {/* Sidebar */}
         <aside
           data-admin-sidebar
-          className={`fixed top-16 z-40 hidden h-[calc(100vh-4rem)] border-[#d9e1ec] bg-white/95 shadow-[8px_0_28px_rgba(28,55,92,0.08)] backdrop-blur-xl transition-all duration-300 md:block ${
+          className={`fixed top-16 z-40 hidden h-[calc(100vh-4rem)] border-[#d9e1ec] bg-white shadow-sm transition-all duration-300 md:block ${
             dir === 'rtl' ? 'right-0 border-l' : 'left-0 border-r'
           } ${
             sidebarOpen ? 'w-64' : 'w-20'
@@ -1711,7 +1711,7 @@ export default function AdminDashboard() {
                       <Card
                         key={order.id}
                         data-admin-mobile-order
-                        className="border-[#f7b928]/18 bg-[#eef4fa]/88 p-4 shadow-[0_16px_40px_rgba(0,0,0,0.18)]"
+                        className="border-[#f7b928]/18 bg-[#eef4fa] p-4 shadow-sm"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">

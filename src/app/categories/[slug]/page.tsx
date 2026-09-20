@@ -93,7 +93,6 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           <>
             <header className="v2-surface relative mt-3 grid min-h-[180px] gap-5 overflow-hidden p-5 sm:grid-cols-[1fr_180px] sm:items-center sm:p-8" style={{ '--category-accent': category.accentColor } as CSSProperties}>
               <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-[var(--category-accent)]" />
-              <span aria-hidden="true" className="pointer-events-none absolute -end-20 -top-20 h-72 w-72 rounded-full bg-[var(--category-accent)] opacity-20 blur-3xl" />
               <div>
                 <div className="v2-chip relative">
                   <span className="h-2 w-2 rounded-full bg-[var(--category-accent)]" />

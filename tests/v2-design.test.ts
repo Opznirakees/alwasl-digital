@@ -90,6 +90,20 @@ describe('V2 multi-category visual system', () => {
     expect(hero).not.toContain('transparent_58%,#ffffff_100%');
   });
 
+  it('keeps both themes matte without decorative glow layers', () => {
+    const styles = read('src/app/globals.css');
+    const hero = read('src/components/home/HeroBanner.tsx');
+    const header = read('src/components/layout/Header.tsx');
+    const home = read('src/app/page.tsx');
+
+    expect(styles).toContain(':root[data-theme="dark"]');
+    expect(styles).not.toContain('.v2-hero-orb');
+    expect(styles).not.toContain('0 10px 24px -10px rgba(226, 164, 23, 0.7)');
+    expect(hero).not.toContain('backdrop-blur');
+    expect(header).not.toContain('backdrop-blur-xl');
+    expect(home).not.toContain('blur-3xl');
+  });
+
   it('keeps LEO out of the hero and exposes only a subtle footer contact', () => {
     const hero = read('src/components/home/HeroBanner.tsx');
     const home = read('src/app/page.tsx');

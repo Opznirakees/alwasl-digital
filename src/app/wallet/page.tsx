@@ -172,8 +172,6 @@ export default function WalletPage() {
         <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0 space-y-5">
             <section className="relative overflow-hidden rounded-2xl bg-[var(--v2-navy)] p-6 text-white shadow-[var(--v2-shadow-md)] sm:p-8">
-              <span aria-hidden="true" className="pointer-events-none absolute -end-16 -top-16 h-56 w-56 rounded-full bg-[var(--v2-gold)] opacity-20 blur-3xl" />
-              <span aria-hidden="true" className="pointer-events-none absolute -bottom-20 -start-10 h-48 w-48 rounded-full bg-[var(--v2-blue)] opacity-25 blur-3xl" />
               <div className="relative flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--v2-gold)] rtl:tracking-normal">{t('Available balance', 'الرصيد المتاح', '可用余额')}</p>

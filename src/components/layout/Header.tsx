@@ -148,7 +148,7 @@ export function Header() {
 
   return (
     <>
-      <header data-v2-header data-scrolled={isScrolled ? 'true' : undefined} className="v2-brand-header sticky top-0 z-50 w-full border-b backdrop-blur-xl transition-[background-color,box-shadow] duration-300">
+      <header data-v2-header data-scrolled={isScrolled ? 'true' : undefined} className="v2-brand-header sticky top-0 z-50 w-full border-b">
         <div className="v2-container">
           <div className="grid h-[68px] grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-1 sm:gap-2 lg:flex lg:h-[72px] lg:gap-6">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -471,7 +471,7 @@ export function Header() {
       <nav
         data-mobile-tab-bar
         aria-label={t('Mobile navigation', 'التنقل عبر الهاتف', '移动导航')}
-        className="v2-mobile-navigation fixed inset-x-0 bottom-0 z-[60] border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+        className="v2-mobile-navigation fixed inset-x-0 bottom-0 z-[60] border-t pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         <div className="mx-auto grid max-w-lg grid-cols-5 px-1">
           {mobileTabs.map((item) => (
