@@ -17,6 +17,7 @@ export default defineConfig({
     : [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL,
+    colorScheme: process.env.E2E_COLOR_SCHEME === 'dark' ? 'dark' : 'light',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: process.env.PLAYWRIGHT_USE_SYSTEM_CHROME === 'true' ? 'off' : 'retain-on-failure',

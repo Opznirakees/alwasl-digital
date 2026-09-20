@@ -18,6 +18,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { HeroBanner } from '@/components/home/HeroBanner';
+import { Reveal } from '@/components/ui/reveal';
 import { Header } from '@/components/layout/Header';
 import { supportWhatsAppHref, supportWhatsAppNumber } from '@/config/contact';
 import { useApp } from '@/contexts/AppContext';
@@ -135,7 +136,7 @@ export default function HomePage() {
           <HeroBanner banners={banners} isLoading={isLoading} />
         </div>
 
-        <section className="mx-auto max-w-[1200px] px-4 pt-8 sm:px-6 sm:pt-10" aria-labelledby="steps-heading">
+        <Reveal as="section" className="mx-auto max-w-[1200px] px-4 pt-8 sm:px-6 sm:pt-10" aria-labelledby="steps-heading">
           <div className="lg:grid lg:grid-cols-[260px_minmax(0,1fr)] lg:items-center lg:gap-8">
             <div className="text-center sm:text-start">
               <p className="v2-kicker justify-center sm:justify-start">{t('Simple from the first tap', 'بسيط من أول ضغطة', '从第一次点击就很简单')}</p>
@@ -154,7 +155,7 @@ export default function HomePage() {
               ))}
             </ol>
           </div>
-        </section>
+        </Reveal>
 
         <section id="categories" className="v2-band scroll-mt-24 py-10 sm:py-16" aria-labelledby="categories-heading">
           <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
@@ -236,7 +237,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-[1200px] px-4 pb-12 sm:px-6 sm:pb-16" aria-label={t('Service promises', 'وعود الخدمة', '服务承诺')}>
+        <Reveal as="section" className="mx-auto max-w-[1200px] px-4 pb-12 sm:px-6 sm:pb-16" aria-label={t('Service promises', 'وعود الخدمة', '服务承诺')}>
           <div className="v2-surface grid grid-cols-2 gap-y-1 px-3 py-3 sm:px-4 lg:grid-cols-4">
             {promises.map((item) => (
               <div key={item.title} className="v2-feature">
@@ -245,9 +246,9 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-        </section>
+        </Reveal>
 
-        <section className="mx-auto max-w-[1200px] px-4 pb-12 sm:px-6 sm:pb-16" aria-labelledby="support-heading">
+        <Reveal as="section" className="mx-auto max-w-[1200px] px-4 pb-12 sm:px-6 sm:pb-16" aria-labelledby="support-heading">
           <div className="v2-surface relative overflow-hidden p-6 sm:p-8 lg:grid lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-8">
             <span aria-hidden="true" className="pointer-events-none absolute -end-16 -top-16 h-56 w-56 rounded-full bg-[var(--v2-gold)]/15 blur-3xl" />
             <div className="relative">
@@ -266,7 +267,7 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-        </section>
+        </Reveal>
       </main>
 
       <footer className="v2-footer pb-24 lg:pb-0">

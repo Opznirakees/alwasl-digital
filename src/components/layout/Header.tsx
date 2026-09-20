@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ChevronDown,
   Globe,
@@ -64,6 +64,14 @@ export function Header() {
     formatLocalAmount,
   } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setIsScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   const { preference: themePreference, resolved: resolvedTheme, setPreference: setThemePreference, toggle: toggleTheme } = useTheme();
   const themeOptions: { id: ThemePreference; label: string; icon: typeof Sun }[] = [
     { id: 'light', label: t('Light', 'فاتح', '浅色'), icon: Sun },
@@ -92,16 +100,17 @@ export function Header() {
   const mobileTabs = [
     { href: '/', label: t('Home', 'الرئيسية', '首页'), icon: Home, active: pathname === '/' },
     {
-      href: protectedHref('/#categories'),
-      label: t('Top up', 'اشحن', '充值'),
-      icon: Zap,
-      active: pathname.startsWith('/top-up'),
-    },
-    {
       href: protectedHref('/orders'),
       label: t('Orders', 'الطلبات', '订单'),
       icon: ReceiptText,
       active: pathname.startsWith('/orders'),
+    },
+    {
+      href: protectedHref('/#categories'),
+      label: t('Top up', 'اشحن', '充值'),
+      icon: Zap,
+      active: pathname.startsWith('/top-up') || pathname.startsWith('/categories'),
+      primary: true,
     },
     {
       href: protectedHref('/wallet'),
@@ -139,7 +148,7 @@ export function Header() {
 
   return (
     <>
-      <header data-v2-header className="v2-brand-header sticky top-0 z-50 w-full border-b backdrop-blur-xl">
+      <header data-v2-header data-scrolled={isScrolled ? 'true' : undefined} className="v2-brand-header sticky top-0 z-50 w-full border-b backdrop-blur-xl transition-[background-color,box-shadow] duration-300">
         <div className="v2-container">
           <div className="grid h-[68px] grid-cols-[44px_minmax(0,1fr)_auto] items-center gap-1 sm:gap-2 lg:flex lg:h-[72px] lg:gap-6">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -470,9 +479,13 @@ export function Header() {
               key={item.href}
               href={item.href}
               aria-current={item.active ? 'page' : undefined}
-              className="v2-mobile-tab"
+              className={cn('v2-mobile-tab', 'primary' in item && item.primary && 'v2-mobile-tab-primary')}
             >
-              <item.icon />
+              {'primary' in item && item.primary ? (
+                <span className="v2-mobile-tab-orb"><item.icon /></span>
+              ) : (
+                <item.icon />
+              )}
               <span className="max-w-full truncate">{item.label}</span>
             </Link>
           ))}
