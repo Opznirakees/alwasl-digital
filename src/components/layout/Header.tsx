@@ -163,12 +163,13 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent
+                dir={dir}
                 side={dir === 'rtl' ? 'right' : 'left'}
                 className="w-[calc(100vw-1.5rem)] max-w-sm overflow-y-auto border-[var(--v2-border)] bg-[var(--v2-surface)] p-5 text-[var(--v2-navy)]"
               >
-                <SheetHeader className={dir === 'rtl' ? 'text-right' : 'text-left'}>
+                <SheetHeader className={cn('pt-12', dir === 'rtl' ? 'text-right' : 'text-left')}>
                   <div className="flex items-center gap-3">
-                    <span className="relative h-11 w-11 overflow-hidden rounded-xl border border-[var(--v2-border)] bg-white shadow-[var(--v2-shadow-xs)]">
+                    <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-[var(--v2-border)] bg-white shadow-[var(--v2-shadow-xs)]">
                       <Image src="/brand/alwasl-mark.jpg" alt="" fill className="object-contain p-1" sizes="44px" />
                     </span>
                     <div>
