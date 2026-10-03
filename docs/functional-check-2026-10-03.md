@@ -12,7 +12,7 @@ volledig zijn geaccepteerd. Onderstaande beperkingen blijven van toepassing.
 | --- | --- |
 | Unit-tests | 195 geslaagd, 0 mislukt |
 | Database-integratietests | 13 geslaagd, 0 mislukt |
-| Playwright desktop en mobiel | 45 geslaagd, 0 mislukt, 9 bewust overgeslagen duplicaten |
+| Playwright Chrome, Firefox, WebKit, Pixel 5 en iPhone 13-emulatie | 117 geslaagd, 0 mislukt, 18 bewust overgeslagen duplicaten |
 | TypeScript applicatie en E2E | Geslaagd |
 | Productiebuild Next.js 15.5.27 | Geslaagd |
 | Installatie met frozen Bun-lockfile | Geslaagd |
@@ -20,8 +20,9 @@ volledig zijn geaccepteerd. Onderstaande beperkingen blijven van toepassing.
 | Live beschermde API's | Orders, wallet, admin en beschermde productdetails weigeren anonieme toegang |
 | Live publieke API's | Health, categorieen, productenoverzicht, landen en banners beantwoorden met HTTP 200 |
 
-De 9 overgeslagen Playwright-tests draaien al in het desktopproject met expliciet
-ingestelde mobiele viewports. Ze zijn niet overgeslagen wegens defecten.
+De 18 overgeslagen Playwright-tests draaien al in de desktopprojecten van dezelfde
+browserengine met expliciet ingestelde mobiele viewports. Ze zijn niet overgeslagen
+wegens defecten. De volledige afsluitende run duurde 3,3 minuten met een worker.
 
 ## Gedekte flows
 
@@ -41,7 +42,55 @@ Database- en API-tests gebruikten een aparte lokale database
 `alwasl_e2e_20261003`. UI-tests in `easy-use.spec.ts` gebruiken gemockte API's;
 `app.spec.ts` en de integratietests gebruiken echte lokale databasebewerkingen.
 QiCard-antwoorden en fulfillmentproviders zijn in die tests gesimuleerd.
-Er zijn geen echte betalingen, refunds of WhatsApp-berichten uitgevoerd.
+Deze lokale suites versturen geen echte betalingen, refunds of WhatsApp-berichten.
+De aanvullende externe controles hieronder gebruiken wel de echte WhatsApp-keten
+en de officiele QiCard-sandbox, zonder echte afschrijvingen.
+
+## Aanvullende externe acceptatiecontrole
+
+- Echte login-OTP verstuurd via de aangewezen WAHA-sessie. De gebruiker heeft
+  ontvangst bevestigd en de code aangeleverd. Live verificatie slaagde en gaf
+  een klantaccount terug. De code en sessiecookie worden niet opgeslagen in dit rapport.
+- `/api/auth/me` bevestigde daarna de sessie; `/api/orders` gaf HTTP 200 en
+  `/api/admin/summary` HTTP 403 voor datzelfde klantaccount.
+- Testsessie na afloop uitgelogd en het tijdelijke cookiebestand verwijderd.
+- Online homepage, login en Asiacell-pagina aanvullend met WebKit op 390 x 844
+  gecontroleerd: HTTP 200, geen JavaScript-pageerrors of horizontale overflow.
+  Screenshots van de online homepage/categorie en lokale mobiele checkout,
+  adminblokkades en valutabeheer visueel bekeken.
+- QiCard: echte hosted sandbox-betaalpagina doorlopen met de officieel
+  gedocumenteerde testkaart. Status vervolgens server-to-server opgevraagd:
+  `SUCCESS`, 1.000 IQD bevestigd. Geen echte kaart of geld gebruikt.
+- Diezelfde testbetaling volledig terugbetaald: HTTP 200, refund `SUCCESS`.
+- Een tweede sandboxbetaling aangemaakt en geannuleerd: HTTP 200,
+  `canceled: true`. QiCard houdt daarbij de status `CREATED`; de cancelvlag
+  is dus bepalend, niet alleen het statuswoord.
+- Provider-geinitieerde succeswebhook teruggevonden in de live database:
+  `providerVerified: true`, `processingStatus: PROCESSED`,
+  `disposition: PROVIDER_TEST_VERIFIED`, geen fout. Ontvangen om
+  `2026-10-03T11:48:18.366Z`. Hiervoor is geen callback handmatig nagebootst.
+
+| Onderdeel | Externe ID |
+| --- | --- |
+| Success, daarna volledig refunded | `8c2165a5-d556-4abd-a8cd-8deb43f6d87a` |
+| Refund-ID | `7f61083a-612e-474f-9f9d-da231eca2ea7` |
+| Cancel payment-ID | `b283ca3e-ebf8-41c9-92ce-6f73cf64f33f` |
+
+De verzoeken gebruikten de online callback
+`https://alwasl-digital-b8ngg.ondigitalocean.app/api/webhooks/qicard` en returnroute
+`https://alwasl-digital-b8ngg.ondigitalocean.app/payments/qicard/return`.
+Deze geisoleerde providerbetalingen hebben bewust geen klantorder: geen wallet,
+omzet of fulfillment is gewijzigd. De returnpagina vroeg daarom correct om
+een orderreferentie en vertrouwde niet blind op `status=SUCCESS` in de URL.
+
+Dit bewijst niet de volledige online keten van klantorder tot externe levering.
+De orderkoppeling, ledger en idempotentie zijn lokaal met echte PostgreSQL en
+gesimuleerde providerantwoorden getest. Voor refund/cancel is de externe
+API-respons bevestigd, maar geen afzonderlijke providercallback aangetroffen.
+
+Officiele testgegevens en refundcontract:
+- https://developers-gate.qi.iq/docs/api-auth/sandbox-test
+- https://developers-gate.qi.iq/docs/api-endpoints/refund-payment
 
 ## Wijzigingen
 
@@ -74,9 +123,11 @@ Vanuit de actieve appcontainer is bevestigd:
    main als `df453e1`. De aanvullende retry-fix en CI-splitsing zijn gepusht als
    `f23ad04`. Deploymentstatus moet worden gecontroleerd op de broncommit;
    een push alleen bewijst niet dat de nieuwe code live draait.
-2. Geen daadwerkelijke WhatsApp-verzending of OTP-ontvangst op een telefoon getest.
-3. Geen echte QiCard-transactie, externe refund of provider-geinitieerde callback
-   uitgevoerd. Hiervoor blijft een gecontroleerde merchantacceptatietest nodig.
+2. WhatsApp-login inclusief ontvangst is nu bevestigd. Automatische orderberichten
+   en daadwerkelijke codelevering zijn niet met een online klantorder bewezen.
+3. QiCard-sandbox success/refund/cancel en de succeswebhook zijn extern bevestigd.
+   Merchantproductiecredentials en de volledige online klantorderketen blijven
+   een aparte acceptatiestap.
 4. Een native WAHO API is nog niet beschikbaar; succesvolle automatische externe
    WAHO-opwaardering kan daarom niet worden bevestigd.
 5. `bun audit --audit-level=high` meldt nog een high advisory voor `braces`, via
@@ -89,8 +140,9 @@ Vanuit de actieve appcontainer is bevestigd:
    blijft daardoor rood; meldingen zijn niet onderdrukt.
 7. pg geeft een deprecation-waarschuwing over gelijktijdige queries binnen een
    client; de huidige integratietests slagen, maar een pg-majorupgrade vereist controle.
-8. Browserdekking is Chromium desktop en Pixel 5-emulatie, geen fysieke iPhone,
-   Safari/Firefox, belastingtest of volledige penetratietest.
+8. Browserdekking is uitgebreid met Firefox, WebKit en iPhone 13-emulatie.
+   WebKit-emulatie is geen fysieke iPhone of de daadwerkelijk geinstalleerde
+   Safari-app. Belastingtests en een volledige penetratietest ontbreken.
 9. GitHub Actions-run `37116708749` startte geen enkele jobstap. GitHub meldt:
    "The job was not started because your account is locked due to a billing issue."
    De accounteigenaar moet dit bij GitHub Billing herstellen. De testresultaten
@@ -120,3 +172,12 @@ PORT=3100 PLAYWRIGHT_USE_SYSTEM_CHROME=true bun run test:e2e --workers=1
 ```
 
 Een worker beperkt het RAM-gebruik. Lokale servers en browser zijn na de controle gestopt.
+
+De uitgebreide suite gebruikt een lokale HTTPS-proxy met een tijdelijk
+self-signed certificaat (OpenSSL nodig). Daardoor blijft de productie-CSP met
+`upgrade-insecure-requests` ook in WebKit actief. Alleen het lokale testcertificaat
+wordt vertrouwd; externe `E2E_BASE_URL`-verbindingen houden certificaatcontrole.
+Een anonieme API-assertie stuurt expliciet geen cookie mee, omdat de HTTPS-test
+nu terecht Secure-sessiecookies bewaart. Er is geen productiebeveiliging uitgezet.
+GitHub Actions blijft uitsluitend handmatig beschikbaar; er zijn geen Actions
+of handmatige DigitalOcean-builds gestart tijdens deze aanvullende controle.

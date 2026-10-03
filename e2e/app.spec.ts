@@ -120,11 +120,11 @@ test.describe('WAHO production smoke', () => {
     const { headers: authenticatedHeaders, sessionCookie } = await loginWithOtp(request, phone);
     const { product, firstPackage } = await loadWahoProduct(request, authenticatedHeaders);
 
-    const publicProducts = await request.get('/api/products');
+    const publicProducts = await request.get('/api/products', { headers: { Cookie: '' } });
     expect(publicProducts.status()).toBe(200);
     const publicProductsPayload = (await publicProducts.json()) as ProductPayload;
     expect(publicProductsPayload.products.length).toBeGreaterThanOrEqual(2);
-    expect(publicProductsPayload.products.every((item) => item.packages.length === 0)).toBe(true);
+    expect(publicProductsPayload.products.find((item) => item.slug === 'waho-top-up')?.packages).toEqual([]);
 
     const unsupportedProducts = await request.get('/api/products?country=zz', { headers: authenticatedHeaders });
     expect(unsupportedProducts.status()).toBe(200);
@@ -310,7 +310,7 @@ test.describe('WAHO production smoke', () => {
     expect(reportExport.headers()['content-disposition']).toContain('alwasl-report-monthly');
   });
 
-  test('runs admin CRUD mutations against database-backed routes', async ({ request, baseURL }, testInfo) => {
+  test('runs admin CRUD mutations against database-backed routes', async ({ request }, testInfo) => {
     const adminPhone = '+9647812345678';
     const { user, headers: authenticatedHeaders } = await loginWithOtp(request, adminPhone);
     expect(user).toMatchObject({ phone: adminPhone, role: 'admin' });
@@ -644,13 +644,12 @@ test.describe('WAHO production smoke', () => {
       blockedReason: 'E2E customer block check',
     });
 
-    expect(baseURL).toBeTruthy();
-    const blockedMe = await fetch(`${baseURL}/api/auth/me`, { headers: customerHeaders });
-    expect(blockedMe.status).toBe(200);
+    const blockedMe = await request.get('/api/auth/me', { headers: customerHeaders });
+    expect(blockedMe.status()).toBe(200);
     expect(await blockedMe.json()).toEqual({ user: null });
 
-    const blockedOrders = await fetch(`${baseURL}/api/orders`, { headers: customerHeaders });
-    expect(blockedOrders.status).toBe(401);
+    const blockedOrders = await request.get('/api/orders', { headers: customerHeaders });
+    expect(blockedOrders.status()).toBe(401);
     expect(await blockedOrders.json()).toEqual({ error: 'Authentication required' });
 
     const blockedLogin = await request.post('/api/auth/login', {

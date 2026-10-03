@@ -96,8 +96,8 @@ jobs:
       - name: Database integration tests
         run: bun run test:integration
 
-      - name: Install Playwright browser
-        run: bunx playwright install --with-deps chromium
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium firefox webkit
 
       - name: Playwright E2E
         run: bun run test:e2e

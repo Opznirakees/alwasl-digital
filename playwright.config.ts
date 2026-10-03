@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 const port = process.env.PORT ?? '3000';
-const baseURL = process.env.E2E_BASE_URL ?? `http://127.0.0.1:${port}`;
+const baseURL = process.env.E2E_BASE_URL ?? `https://127.0.0.1:${port}`;
 const localBrowser = process.env.PLAYWRIGHT_USE_SYSTEM_CHROME === 'true'
   ? { channel: 'chrome' as const }
   : {};
@@ -17,6 +17,7 @@ export default defineConfig({
     : [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL,
+    ignoreHTTPSErrors: !process.env.E2E_BASE_URL,
     colorScheme: process.env.E2E_COLOR_SCHEME === 'dark' ? 'dark' : 'light',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
@@ -25,8 +26,9 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: `PORT=${port} bun run start`,
+        command: `PORT=${port} bun scripts/e2e-server.mjs`,
         url: baseURL,
+        ignoreHTTPSErrors: true,
         reuseExistingServer: process.env.PLAYWRIGHT_REUSE_SERVER === 'true',
         timeout: 120_000,
         env: {
@@ -46,6 +48,18 @@ export default defineConfig({
     {
       name: 'mobile-chromium',
       use: { ...devices['Pixel 5'], ...localBrowser },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'mobile-webkit',
+      use: { ...devices['iPhone 13'] },
     },
   ],
 });

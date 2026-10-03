@@ -832,7 +832,7 @@ test.describe('generation 2 customer experience', () => {
   });
 
   test('shows only cash checkout and opens the correct WhatsApp contact', async ({ page }, testInfo) => {
-    await page.setViewportSize(testInfo.project.name === 'mobile-chromium'
+    await page.setViewportSize(testInfo.project.name.startsWith('mobile-')
       ? { width: 390, height: 844 }
       : { width: 1280, height: 900 });
     await mockCustomerApi(page, true);
@@ -994,7 +994,7 @@ test.describe('generation 2 customer experience', () => {
 
   test('keeps every customer page understandable and complete on mobile', async ({ page }, testInfo) => {
     test.setTimeout(60_000);
-    test.skip(testInfo.project.name !== 'chromium', 'The customer route matrix only needs one browser project.');
+    test.skip(testInfo.project.name.startsWith('mobile-'), 'The customer route matrix only needs one project per browser engine.');
     await page.setViewportSize({ width: 390, height: 844 });
     await mockCustomerApi(page, true);
 
@@ -1025,7 +1025,7 @@ test.describe('generation 2 customer experience', () => {
   });
 
   test('has no horizontal overflow at all required acceptance widths', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium', 'The responsive width matrix only needs one browser project.');
+    test.skip(testInfo.project.name.startsWith('mobile-'), 'The responsive width matrix only needs one project per browser engine.');
     await mockCustomerApi(page, true);
 
     for (const width of [320, 360, 390, 430, 768, 1024, 1440]) {
@@ -1057,7 +1057,7 @@ test.describe('generation 2 customer experience', () => {
   });
 
   test('keeps all admin sections reachable on a phone without fake alerts', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium', 'The admin mobile shell only needs one browser project.');
+    test.skip(testInfo.project.name.startsWith('mobile-'), 'The admin mobile shell only needs one project per browser engine.');
     await page.setViewportSize({ width: 390, height: 844 });
     await mockAdminApi(page);
     await page.goto('/admin');
@@ -1080,7 +1080,7 @@ test.describe('generation 2 customer experience', () => {
 
   test('keeps every admin workspace readable and reachable on a phone', async ({ page }, testInfo) => {
     test.setTimeout(60_000);
-    test.skip(testInfo.project.name !== 'chromium', 'The admin route matrix only needs one browser project.');
+    test.skip(testInfo.project.name.startsWith('mobile-'), 'The admin route matrix only needs one project per browser engine.');
     await page.setViewportSize({ width: 390, height: 844 });
     await mockAdminApi(page);
     await page.goto('/admin');
@@ -1115,7 +1115,7 @@ test.describe('generation 2 customer experience', () => {
   });
 
   test('keeps the new admin controls balanced on desktop', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium', 'The desktop admin visual pass only needs one browser project.');
+    test.skip(testInfo.project.name.startsWith('mobile-'), 'The desktop admin visual pass only needs one project per browser engine.');
     await page.setViewportSize({ width: 1440, height: 1000 });
     await mockAdminApi(page);
     await page.goto('/admin');
@@ -1138,7 +1138,7 @@ test.describe('generation 2 customer experience', () => {
   });
 
   test('lets an admin block access, send the reason, and edit website text on mobile', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium', 'The admin mutation flow only needs one browser project.');
+    test.skip(testInfo.project.name.startsWith('mobile-'), 'The admin mutation flow only needs one project per browser engine.');
     await page.setViewportSize({ width: 390, height: 844 });
     await mockAdminApi(page);
     await page.goto('/admin');
@@ -1174,7 +1174,7 @@ test.describe('generation 2 customer experience', () => {
   });
 
   test('keeps country price controls usable beside the world map', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium', 'The admin map flow only needs one browser project.');
+    test.skip(testInfo.project.name.startsWith('mobile-'), 'The admin map flow only needs one project per browser engine.');
     await page.setViewportSize({ width: 390, height: 844 });
     await mockAdminApi(page);
     await page.goto('/admin');
@@ -1196,7 +1196,7 @@ test.describe('generation 2 customer experience', () => {
   });
 
   test('lets an admin recover from a failed dashboard load without reloading the page', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium', 'The admin recovery flow only needs one browser project.');
+    test.skip(testInfo.project.name.startsWith('mobile-'), 'The admin recovery flow only needs one project per browser engine.');
     await page.setViewportSize({ width: 390, height: 844 });
     await mockAdminApi(page, { failSummaryOnce: true });
     await page.goto('/admin');
@@ -1211,7 +1211,7 @@ test.describe('generation 2 customer experience', () => {
   });
 
   test('places the desktop admin navigation on the reading side in Arabic', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name !== 'chromium', 'The RTL desktop shell only needs one browser project.');
+    test.skip(testInfo.project.name.startsWith('mobile-'), 'The RTL desktop shell only needs one project per browser engine.');
     await page.setViewportSize({ width: 1024, height: 900 });
     await page.addInitScript(() => {
       localStorage.setItem('alwasl-language', 'ar');
