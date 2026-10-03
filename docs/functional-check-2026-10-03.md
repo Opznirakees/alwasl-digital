@@ -71,8 +71,8 @@ Vanuit de actieve appcontainer is bevestigd:
 ## Nog open en releasegrenzen
 
 1. De eerste codewijzigingen en beveiligingsupdates zijn op verzoek gepusht naar
-   main als `df453e1`. De aanvullende retry-fix en CI-splitsing worden apart
-   gepubliceerd. Deploymentstatus moet worden gecontroleerd op de broncommit;
+   main als `df453e1`. De aanvullende retry-fix en CI-splitsing zijn gepusht als
+   `f23ad04`. Deploymentstatus moet worden gecontroleerd op de broncommit;
    een push alleen bewijst niet dat de nieuwe code live draait.
 2. Geen daadwerkelijke WhatsApp-verzending of OTP-ontvangst op een telefoon getest.
 3. Geen echte QiCard-transactie, externe refund of provider-geinitieerde callback
@@ -91,6 +91,10 @@ Vanuit de actieve appcontainer is bevestigd:
    client; de huidige integratietests slagen, maar een pg-majorupgrade vereist controle.
 8. Browserdekking is Chromium desktop en Pixel 5-emulatie, geen fysieke iPhone,
    Safari/Firefox, belastingtest of volledige penetratietest.
+9. GitHub Actions-run `37116708749` startte geen enkele jobstap. GitHub meldt:
+   "The job was not started because your account is locked due to a billing issue."
+   De accounteigenaar moet dit bij GitHub Billing herstellen. De testresultaten
+   hierboven zijn lokaal verkregen, niet via GitHub Actions.
 
 Next.js-advisory die de gerichte beveiligingsupdate motiveert:
 https://github.com/advisories/GHSA-2xp9-vwfh-vxw4
