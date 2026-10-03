@@ -1,10 +1,8 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  # Builds run on DigitalOcean; GitHub checks are manual-only.
+  workflow_dispatch:
 
 permissions:
   contents: read
