@@ -11,7 +11,7 @@ volledig zijn geaccepteerd. Onderstaande beperkingen blijven van toepassing.
 | Controle | Resultaat |
 | --- | --- |
 | Unit-tests | 195 geslaagd, 0 mislukt |
-| Database-integratietests | 12 geslaagd, 0 mislukt |
+| Database-integratietests | 13 geslaagd, 0 mislukt |
 | Playwright desktop en mobiel | 45 geslaagd, 0 mislukt, 9 bewust overgeslagen duplicaten |
 | TypeScript applicatie en E2E | Geslaagd |
 | Productiebuild Next.js 15.5.27 | Geslaagd |
@@ -50,6 +50,10 @@ Er zijn geen echte betalingen, refunds of WhatsApp-berichten uitgevoerd.
 - WAHA vereist nu een expliciete sessie en valt niet stil terug op `default`.
   Een eerst falende regressietest bewijst deze correctie.
 - Extra E2E-dekking voor de mobiele sluitknop en de volledige cash/codeorderketen.
+- Gelijktijdige retries van een mislukte WhatsApp-notificatie claimen het bericht
+  nu atomair. De regressietest verstuurde voor de fix vier keer en na de fix eenmaal.
+- Security-audits en functionele CI-tests draaien als onafhankelijke jobs.
+  Auditfouten blijven de workflow afkeuren, maar blokkeren geen E2E-uitvoering meer.
 - Next.js en ESLint-config bijgewerkt naar 15.5.27; gerichte patches voor sharp,
   brace-expansion, fast-uri, mysql2 en js-yaml. Beide lockfiles bijgewerkt.
 
@@ -66,8 +70,10 @@ Vanuit de actieve appcontainer is bevestigd:
 
 ## Nog open en releasegrenzen
 
-1. Codewijzigingen en beveiligingsupdates zijn lokaal; niet gecommit, gepusht of
-   gedeployed tijdens deze controle. Alleen de WAHA-configuratie is live gewijzigd.
+1. De eerste codewijzigingen en beveiligingsupdates zijn op verzoek gepusht naar
+   main als `df453e1`. De aanvullende retry-fix en CI-splitsing worden apart
+   gepubliceerd. Deploymentstatus moet worden gecontroleerd op de broncommit;
+   een push alleen bewijst niet dat de nieuwe code live draait.
 2. Geen daadwerkelijke WhatsApp-verzending of OTP-ontvangst op een telefoon getest.
 3. Geen echte QiCard-transactie, externe refund of provider-geinitieerde callback
    uitgevoerd. Hiervoor blijft een gecontroleerde merchantacceptatietest nodig.
@@ -79,7 +85,8 @@ Vanuit de actieve appcontainer is bevestigd:
    uitgevoerd om deze controle kunstmatig groen te maken.
 6. `npm audit --omit=dev` meldt na de updates 11 meldingen: 0 critical, 5 high,
    5 moderate, 1 low. De high meldingen omvatten ook afhankelijkheden van braces;
-   de npm- en Bun-resoluties zijn niet identiek. CI-audits blijven daardoor rood.
+   de npm- en Bun-resoluties zijn niet identiek. De afzonderlijke CI-securityjob
+   blijft daardoor rood; meldingen zijn niet onderdrukt.
 7. pg geeft een deprecation-waarschuwing over gelijktijdige queries binnen een
    client; de huidige integratietests slagen, maar een pg-majorupgrade vereist controle.
 8. Browserdekking is Chromium desktop en Pixel 5-emulatie, geen fysieke iPhone,
@@ -87,6 +94,9 @@ Vanuit de actieve appcontainer is bevestigd:
 
 Next.js-advisory die de gerichte beveiligingsupdate motiveert:
 https://github.com/advisories/GHSA-2xp9-vwfh-vxw4
+
+Braces-advisory opnieuw gecontroleerd: er is nog geen gepatchte uitgave vermeld.
+https://github.com/advisories/GHSA-vfj7-8cjw-p6xm
 
 ## Herhalen
 

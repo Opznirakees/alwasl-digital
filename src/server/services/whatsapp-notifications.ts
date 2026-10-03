@@ -93,14 +93,18 @@ export async function sendWhatsAppNotification(
       if (!existing || existing.status !== 'FAILED') {
         return { notification: existing, created: false };
       }
-      notification = await prisma.whatsAppNotification.update({
-        where: { id: existing.id },
+      const claim = await prisma.whatsAppNotification.updateMany({
+        where: { id: existing.id, status: 'FAILED' },
         data: {
           status: 'PENDING',
           message: input.storedMessage ?? input.message,
           error: null,
         },
       });
+      if (claim.count !== 1) {
+        return { notification: await findNotificationByDedupeKey(input.dedupeKey), created: false };
+      }
+      notification = await prisma.whatsAppNotification.findUniqueOrThrow({ where: { id: existing.id } });
       created = false;
     } else {
       throw error;
