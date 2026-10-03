@@ -58,9 +58,9 @@ function toChatId(phone: string) {
 export function validateWahaConfig(env: WahaEnv | NodeJS.ProcessEnv = process.env) {
   const baseUrl = env.WAHA_BASE_URL?.trim();
   const apiKey = env.WAHA_API_KEY?.trim();
-  const session = env.WAHA_SESSION?.trim() || 'default';
+  const session = env.WAHA_SESSION?.trim();
 
-  if (!baseUrl || !apiKey) {
+  if (!baseUrl || !apiKey || !session) {
     throw new Error('WAHA_NOT_CONFIGURED');
   }
 

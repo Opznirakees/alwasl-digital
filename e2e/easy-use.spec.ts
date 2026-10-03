@@ -610,6 +610,29 @@ async function expectAllInsideViewport(page: Page, selector: string) {
 }
 
 test.describe('generation 2 customer experience', () => {
+  test('keeps the mobile menu close target unobstructed in every language', async ({ page }) => {
+    await mockCustomerApi(page);
+    await page.goto('/');
+    for (const width of [320, 390]) {
+      await page.setViewportSize({ width, height: 844 });
+      for (const [language, closeLabel] of [['English', 'Close'], ['العربية', 'إغلاق'], ['中文', '关闭']]) {
+        await page.getByRole('button', { name: /Open menu|افتح القائمة|打开菜单/ }).click();
+        const dialog = page.getByRole('dialog');
+        await dialog.getByRole('button', { name: language, exact: true }).click();
+        const close = dialog.getByRole('button', { name: closeLabel, exact: true });
+        await expect(close).toBeVisible();
+        await expect.poll(async () => close.evaluate((element) => {
+          const rect = element.getBoundingClientRect();
+          const logo = element.closest('[role="dialog"]')?.querySelector('img')?.getBoundingClientRect();
+          return rect.width >= 44 && rect.height >= 44 && !!logo && rect.bottom <= logo.top
+            && element.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+        })).toBe(true);
+        await close.click();
+        await expect(dialog).not.toBeVisible();
+      }
+    }
+  });
+
   test('shows public Asiacell prices before login but protects the actual order', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await mockCustomerApi(page);

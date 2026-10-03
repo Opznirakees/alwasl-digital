@@ -71,6 +71,50 @@ async function loginWithOtp(request: APIRequestContext, phone: string) {
 }
 
 test.describe('WAHO production smoke', () => {
+  test('processes a cash code order through admin confirmation and manual fulfillment', async ({ request }, testInfo) => {
+    const customer = await loginWithOtp(request, uniquePhone(`cash-${testInfo.project.name}`, testInfo.workerIndex));
+    const catalog = await request.get('/api/products', { headers: customer.headers });
+    const { products } = await catalog.json() as ProductPayload;
+    const product = products.find((item) => item.slug === 'waho-asiacell-code');
+    const selected = product?.packages.find((item) => item.inStock);
+    expect(selected).toBeTruthy();
+    const challenge = await request.post('/api/auth/otp/request', {
+      headers: customer.headers, data: { purpose: 'ORDER_CONFIRMATION' },
+    });
+    expect(challenge.status()).toBe(200);
+    const { debugOtp } = await challenge.json();
+    const headers = { ...customer.headers, 'Idempotency-Key': `cash-order-${customer.user.id}` };
+    const data = { productSlug: product!.slug, packageId: selected!.id, paymentMethod: 'cash', otp: debugOtp };
+    const created = await request.post('/api/orders', { headers, data });
+    expect(created.status()).toBe(201);
+    const { order } = await created.json();
+    expect(order).toMatchObject({ status: 'pending', paymentStatus: 'pending', paymentMethod: 'cash' });
+    const replay = await request.post('/api/orders', { headers, data });
+    expect(replay.status()).toBe(200);
+    expect((await replay.json()).order.id).toBe(order.id);
+
+    const cashUrl = `/api/admin/orders/${order.id}/cash-payment`;
+    const denied = await request.post(cashUrl, { headers: customer.headers });
+    expect(denied.status()).toBe(403);
+    const admin = await loginWithOtp(request, '+9647812345678');
+    const paymentHeaders = { ...admin.headers, 'Idempotency-Key': `cash-payment-${order.id}` };
+    const paid = await request.post(cashUrl, { headers: paymentHeaders });
+    expect(paid.status()).toBe(200);
+    expect((await paid.json()).order).toMatchObject({ status: 'processing', paymentStatus: 'completed' });
+    const paidReplay = await request.post(cashUrl, { headers: paymentHeaders });
+    expect(paidReplay.status()).toBe(200);
+    expect((await paidReplay.json()).replayed).toBe(true);
+
+    const fulfilled = await request.post(`/api/admin/orders/${order.id}/fulfill`, {
+      headers: admin.headers, data: { code: `TEST-CODE-${order.id}` },
+    });
+    expect(fulfilled.status()).toBe(200);
+    expect((await fulfilled.json()).order).toMatchObject({ status: 'completed', paymentStatus: 'completed' });
+    const persisted = await request.get(`/api/orders/${order.id}`, { headers: customer.headers });
+    expect(persisted.status()).toBe(200);
+    expect((await persisted.json()).order.status).toBe('completed');
+  });
+
   test('renders the protected multi-category journey from seeded product data', async ({ page, request }, testInfo) => {
     const phone = uniquePhone(`catalog-${testInfo.project.name}`, testInfo.workerIndex);
     const { headers: authenticatedHeaders, sessionCookie } = await loginWithOtp(request, phone);

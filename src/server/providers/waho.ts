@@ -180,7 +180,7 @@ function createAccountEnv(account: ProviderAccount): WahoProviderEnv {
     ),
     WAHA_BASE_URL: configEnvValue(config, 'wahaBaseUrl', 'wahaBaseUrlEnv', 'WAHA_BASE_URL'),
     WAHA_API_KEY: configEnvValue(config, 'wahaApiKey', 'wahaApiKeyEnv', 'WAHA_API_KEY'),
-    WAHA_SESSION: configEnvValue(config, 'wahaSession', 'wahaSessionEnv', 'WAHA_SESSION') || 'default',
+    WAHA_SESSION: configEnvValue(config, 'wahaSession', 'wahaSessionEnv', 'WAHA_SESSION'),
   };
 }
 

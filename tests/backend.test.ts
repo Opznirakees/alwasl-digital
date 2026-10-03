@@ -1250,6 +1250,13 @@ describe('WAHA direct WhatsApp provider', () => {
     expect(() => validateWahaConfig({})).toThrow('WAHA_NOT_CONFIGURED');
   });
 
+  test('requires an explicit session instead of silently using another WhatsApp account', () => {
+    expect(() => validateWahaConfig({ ...wahaEnv, WAHA_SESSION: undefined })).toThrow('WAHA_NOT_CONFIGURED');
+    expect(() => validateWahaConfig({ ...wahaEnv, WAHA_SESSION: ' ' })).toThrow('WAHA_NOT_CONFIGURED');
+    expect(validateWahaConfig({ ...wahaEnv, WAHA_SESSION: 'session_01m3v3nq6bd1x319zknkk132g3' }).session)
+      .toBe('session_01m3v3nq6bd1x319zknkk132g3');
+  });
+
   test('normalizes Dutch and Iraqi WhatsApp phone numbers', () => {
     expect(normalizeWhatsAppPhone('0612345678')).toBe('31612345678');
     expect(normalizeWhatsAppPhone('+31612345678')).toBe('31612345678');
